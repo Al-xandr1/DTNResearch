@@ -12,6 +12,140 @@
 
 using namespace std::__1;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+#define PI 3.1415926
+
+class Levi {
+protected:
+    double c, alpha;  // Levi distribution parameters
+    double accuracy;   // accuracy for numerical calculation
+    double xinv[100], Finv[100];
+    int imax;
+    double Fmax;
+    double step;
+    double lim;  // numerical integraton parameters
+
+public:
+    // methods for probability density calculation
+    double integral(double x);
+    double probdens(double x);
+    // methods for distribution function calculation
+    double integralF(double x);
+    double distFun(double x);
+    // constructor with inverse function calculations
+    Levi(double ci, double ali, double aci);
+    // methods for r.v. generation
+    double get_Levi_rv();
+};
+
+double Levi::integral(double x) {
+    double h, t;
+    h = 0;
+    for (t = -lim + step / 2; t < lim; t += step)
+        h += cos(t * x) * exp(-pow(fabs(c * t), alpha)) * step;
+    return h;
+}
+
+double Levi::probdens(double x) {
+    double s1, s2;
+
+// ajusting partition
+    s2 = integral(x);
+    do {
+        s1 = s2;
+        step /= 2;
+        s2 = integral(x);
+    } while (fabs((s1 - s2) / s1) > accuracy);
+    step *= 2;
+    s2 = s1;
+// ajusting interval of integration
+    do {
+        s1 = s2;
+        lim += 1 / c;
+        s2 = integral(x);
+    } while (fabs((s1 - s2) / s1) > accuracy);
+    lim -= 1 / c;
+    return s1 / 2 / PI;
+}
+
+double Levi::integralF(double x) {
+    double h, hh, t;
+    h = 0;
+    for (t = -lim + step / 2; t < lim; t += step) {
+        hh = (t != 0) ? sin(t * x) / t : 1.0;
+        h += hh * exp(-pow(fabs(c * t), alpha)) * step;
+    }
+    return h;
+}
+
+double Levi::distFun(double x) {
+    double s1, s2;
+
+// ajusting partition
+    s2 = integralF(x);
+    do {
+        s1 = s2;
+        step /= 2;
+        s2 = integralF(x);
+    } while (fabs((s1 - s2) / (PI + s1)) > accuracy);
+    step *= 2;
+    s2 = s1;
+// ajusting interval of integration
+    do {
+        s1 = s2;
+        lim += 1 / c;
+        s2 = integralF(x);
+    } while (fabs((s1 - s2) / (PI + s1)) > accuracy);
+    lim -= 1 / c;
+    return 0.5 + s1 / 2 / PI;
+}
+
+Levi::Levi(double ci, double ali, double aci) {
+    c = ci;
+    alpha = ali;
+    accuracy = aci;
+    lim = 1 / c;
+    step = 0.01;
+    Fmax = 1000 * c;
+    printf("c=%g,  alpha=%g,  acc=%g\n", c, alpha, accuracy);
+    printf("step=%g,   lim=%g,  Fmax=%g    \n", step, lim, Fmax);
+
+// inverse function calculation
+    double arg, fun, stp;
+    fun = xinv[0] = 0.5;
+    Finv[0] = arg = imax = 0;
+    while (imax < 100 && fun < 0.99) {
+        stp = 1000;
+        while (distFun(arg + stp) > fun + 0.01)
+            stp /= 2;
+        fun = xinv[imax] = distFun(Finv[imax] = arg += stp);
+        printf("i=%d x=%g  Finv=%g  Fi=%g\n", imax, xinv[imax], Finv[imax],
+                tan(PI * (xinv[imax] - 0.5)));
+        imax++;
+    }
+    xinv[imax] = 1;
+    Finv[imax] = Fmax;
+}
+
+double Levi::get_Levi_rv() {
+    int i;
+    double rnd, h;
+    do
+        rnd = ((double) rand()) / RAND_MAX;
+    while (rnd < 0.5);
+    i = 0;
+    while (xinv[i] < rnd && i < imax)
+        i++;
+    h = Finv[i - 1]
+            + (rnd - xinv[i - 1]) * (Finv[i] - Finv[i - 1])
+                    / (xinv[i] - xinv[i - 1]);
+    return h;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 // Сетка для интегрирования
 class Grid {
 private:
@@ -26,9 +160,9 @@ private:
     }
 
     void updateN() {
-        cout << "               updateN: (2*_M)/_h = (2*" << _M << ")/" << _h << endl;
-        _N = floor((2 * _M) / _h);
-        cout << "               updateN: _N = " << _N << endl;
+//        cout << "               updateN: (2*_M)/_h = (2*" << _M << ")/" << _h << endl;
+        _N = round((2 * _M) / _h);
+//        cout << "               updateN: _N = " << _N << endl;
     }
 
     void updateGrid() {
@@ -47,7 +181,7 @@ public:
         this->_N = N;
         this->_M = M;
         this->_symmetric = symmetric;
-        cout << endl << "TRACE: Grid(long N, double M, bool symmetric): _N = " << _N << ", _M = " << _M << ", _symmetric = " << _symmetric << endl << endl ;
+//        cout << endl << "TRACE: Grid(long N, double M, bool symmetric): _N = " << _N << ", _M = " << _M << ", _symmetric = " << _symmetric << endl << endl ;
         updateH();
         updateGrid();
     }
@@ -58,14 +192,9 @@ public:
         this->_M = M;
         this->_h = h;
         this->_symmetric = symmetric;
-        cout << endl << "TRACE: Grid(double h, double M, bool symmetric, int fictiveVar) : _M = " << _M << ", _h = " << _h << ", _symmetric = " << _symmetric << endl << endl ;
+//        cout << endl << "TRACE: Grid(double h, double M, bool symmetric, int fictiveVar) : _M = " << _M << ", _h = " << _h << ", _symmetric = " << _symmetric << endl << endl ;
         updateN();
         updateGrid();
-    }
-
-    ~Grid() {
-//        ~_grid();
-        //todo описать удаление всех объектов
     }
 
     void set_N(long N) {
@@ -121,13 +250,12 @@ public:
     void static printVector(vector<double> vector) {
         for (long i = 0; i < vector.size(); i++) {
             cout << vector[i] << " ";
-            if (i % 20 == 0)
+            if (i % 10 == 0)
                 cout << endl;
         }
     }
 };
 
-#define CTpowALPHA(c, t, alpha) (pow(fabs(c * t), alpha))
 
 //Кдасс для расчёта плотности распределения Леви
 //и для последующей генерации случайных чисел.
@@ -145,10 +273,6 @@ public:
         this->_alpha = alpha;
         this->_c = c;
         this->_eps = eps;
-    }
-
-    ~LeavyGenerator() {
-        //todo описать удаление всех объектов
     }
 
     // генерирует новое число Леви
@@ -170,34 +294,51 @@ private:
         cout << "   Initializing of Probability Density..." << endl << endl;
 
         // Определяем нужные значения N & M
-        double x = 0;
-        double M = CTpowALPHA(_c, 1, _alpha);
-        long N = 10;
-        double H = 2 * M / N;
-
-        cout << "       Initial H = " << H << ", Initial M = " << M << endl;
-        double targetH = find_H(N, M, x, _eps, true);
-        double targetM = find_M(H, M, x, _eps, true);
-        cout << "       Target H = " << targetH << ", Target M = " << targetM << endl << endl;
+//        double x = 0;
+//        double M = 1/_c;
+//        long N = 10;
+//        double H = 2 * M / N;
+//        cout << "       Initial H = " << H << ", Initial M = " << M << endl;
+//        double targetH = find_H(N, M, x, _eps, true);
+//        double targetM = find_M(H, M, x, _eps, true);
+//        cout << "       Target H = " << targetH << ", Target M = " << targetM << endl << endl;
+//        Grid gridForIntegral(targetH, targetM, true, 1); // создаём сетку для интеграла с подзодящими N & M
 
         Grid gridForProbDensity(100, 100, false); // todo N & M для расчёта значений функции плотности
         vector<double> abscissa = gridForProbDensity.get_Grid();
-//        gridForProbDensity.printVector(); //todo remove
-        cout << endl << "           count integral.. " << endl << endl;
 
         probDensity.resize(abscissa.size());
-
-        Grid gridForIntegral(targetH, targetM, true, 1); // создаём сетку для интеграла с подзодящими N & M
-        cout << "           grid for integral..." << endl;
-//        gridForIntegral.printVector();
         for (int i = 0; i < abscissa.size(); i++) {
-            probDensity[i] = solveIntegral(abscissa[i], gridForIntegral);
+            probDensity[i] = autoSolveIntegral(abscissa[i]);
         }
 
         cout << endl << "   Probability density of Levy distribution:" << endl << endl;
         gridForProbDensity.printVector(probDensity);
         cout << endl << "   Sum of probability density = " << summ(probDensity) << endl << endl;
         cout << "   Initializing of Probability Density completed." << endl;
+    }
+
+    double autoSolveIntegral(double x){
+        int N = 10;
+        double M = 1/_c;
+        double s1, s2;
+        Grid grid(N, M, true);
+
+        s2 = solveIntegral(x, grid);
+        do {
+            s1 = s2;
+            grid.set_N(2 * grid.get_N());
+            s2 = solveIntegral(x, grid);
+        } while (norm(s1, s2) > _eps);
+
+        s2 = solveIntegral(x, grid);
+        do {
+            s1 = s2;
+            grid.set_M(2 * grid.get_M());
+            s2 = solveIntegral(x, grid);
+        } while (norm(s1, s2) > _eps);
+
+        return s1/2.0/3.14;
     }
 
     // Решение интеграла по формуле Котеса
@@ -217,15 +358,7 @@ private:
 
     // это подынтегральное выражение для любого x
     double func(double t, double x) {
-        if (x == 0)
-            return func_0(t);
-        else
-            return cos(t * x) * func_0(t);
-    }
-
-    // это подынтегральное выражение для x=0
-    double func_0(double t) {
-        return exp(-1 * CTpowALPHA(_c, t, _alpha));
+        return cos(t * x) * exp(-pow(fabs(_c * t), _alpha));
     }
 
     // Расчитывает функцию распрделения Леви
@@ -270,29 +403,17 @@ private:
     // return - подходящий интервал инегрирования
     double find_M(double H, double initialM,
             double x, double eps, bool symmetric) {
-        cout << "              !!! find_M start....  " << endl;
 
-        int i = 1;
         double s1, s2;
-        cout << "              !!! H = "<< H << ", M = " << initialM << endl;
         Grid grid(H, initialM, symmetric, 0);
 
         do {
             s1 = solveIntegral(x, grid);
 
             initialM = 2 * grid.get_M();
-//            cout << "              !!! first set initialM " << initialM << ", _h = " << grid.get_h() << endl;
             grid.set_M(initialM);
-//            cout << "              !!! after update initialM " << initialM << ", _h = " << grid.get_h()<< endl;
 
             s2 = solveIntegral(x, grid);
-
-//            if (i++ % 5 == 0) {
-//                cout << "            i = " << i++ << endl;
-//                cout << "           s1 = " << s1 << ", M = " << initialM << ", h = " << H << endl;
-//                cout << "           s2 = " << s2 << ", M = " << initialM << ", h = " << H << endl;
-//                cout << endl << endl;
-//            }
 
         } while (norm(s1, s2) > eps);
 
@@ -301,7 +422,7 @@ private:
 
     // Расчёт нормы погрешности
     static double norm(double s1, double s2) {
-        return fabsl(s1 - s2)/s1;         //todo правильно считается погрешность???
+        return fabs(s1 - s2)/s1;
     }
 
     static double summ(vector<double> vector) {
@@ -314,9 +435,14 @@ private:
 };
 
 int main() {
-    LeavyGenerator gen(1, 1, 0.00000001); // 0.1%
-    gen.initialize();
-//    cout << "nextVal = " << gen.nextValue() << endl;
+//    LeavyGenerator gen(1, 1, 0.0001);
+//    gen.initialize();
+
+        Levi a(1, 1, 0.0001);
+        for (int i = 1; i < 10; i++)
+            printf("%g   ", a.get_Levi_rv());
 
     return 0;
 }
+
+///--------------------------------------------------------
