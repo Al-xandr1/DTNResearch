@@ -241,6 +241,37 @@ endfunction
 
 
 
+//------------------ Функции для рисования Статистики -------------------------
+
+//Рисование Ex и Dx по имени файла
+//Рисование трассы по имени файла
+function drawStat(filename)
+    fd = mopen(PATH + filename, 'rt');
+    l = mfscanf(-1, fd, '%lg %lg %lg');  
+    
+    n = size(l, 1); 
+    areaCount = l(1:n, 1)';
+    disp(areaCount);
+    EX = l(1:n, 2); 
+        disp(EX);
+    DX = l(1:n, 3); 
+        disp(DX);
+
+    plot2d(areaCount, [EX DX], [6 9]);
+    
+    legenda = [ 'EX ' ; 'DX' ];
+
+    if (SHOW_LEGEND == 1) then
+        hl=legend(legenda);
+    end
+
+    xtitle("WayPoint Ex & Dx from: " + filename);
+    xgrid();
+    
+    mclose(fd);
+endfunction
+
+
 
 //-------------------------- Вспомогательные функции ---------------------------
 // Получаем файлы по указанному пути
@@ -265,5 +296,3 @@ function [invX] = invert(x)
         invX = [invX ; x(n - i + 1)];
     end
 endfunction
-
-
