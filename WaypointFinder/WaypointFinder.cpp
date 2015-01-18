@@ -12,78 +12,9 @@
 #include <cstdlib>
 #include <math.h>
 #include <queue>
+#include "Reader.cpp"
 
 using namespace std;
-
-struct TracePoint {
-    double t;
-    double x;
-    double y;
-
-    TracePoint(double t, double x, double y) {
-        this->t = t;
-        this->x = x;
-        this->y = y;
-    }
-
-    TracePoint(TracePoint* point) {
-        this->t = point->t;
-        this->x = point->x;
-        this->y = point->y;
-    }
-};
-
-typedef TracePoint WayPoint;
-
-class TraceReader {
-
-private:
-    ifstream* traceFile;
-    TracePoint* nextPoint;
-
-public:
-    TraceReader(char* fileName) {
-        traceFile = new ifstream(fileName);
-        nextPoint = NULL;
-    }
-
-    ~TraceReader() {
-        traceFile->close();
-    }
-
-    bool hasNext() {
-        nextPoint = NULL;
-        string s;
-        char *str_end = NULL;
-        if ((*traceFile)) {
-            try {
-                (*traceFile) >> s;
-//                double t = stod(s);
-                double t = strtod(s.c_str(), &str_end);
-
-                (*traceFile) >> s;
-//                double x = stod(s);
-                double x = strtod(s.c_str(), &str_end);
-
-                (*traceFile) >> s;
-//                double y = stod(s);
-                double y = strtod(s.c_str(), &str_end);
-
-                nextPoint = new TracePoint(t, x, y);
-            } catch (const exception& e) {
-                // в конце файла падаеет ошибка при преобразовании stod
-                // а при strtod в конце считываетс  0 0 0
-                cout << "ERROR while reading trace file: " << e.what() << endl;
-            }
-        }
-
-        return nextPoint != NULL;
-    }
-
-    TracePoint* next() {
-        return nextPoint;
-    }
-};
 
 class AnilizeQueue {
 private:
@@ -158,7 +89,7 @@ int test() {
 
     AnilizeQueue* queue = new AnilizeQueue();
 
-    TraceReader* reader = new TraceReader("NewYork_30sec_001.txt");
+    TracePointReader* reader = new TracePointReader("NewYork_30sec_001.txt");
     int row = 1;
     while (reader->hasNext()) {
         TracePoint* point = reader->next();

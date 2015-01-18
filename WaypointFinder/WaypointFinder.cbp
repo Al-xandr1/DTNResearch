@@ -37,6 +37,7 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="WaypointFinder.cpp" />
+		<Unit filename="WaypointGenerator.cpp" />
 		<Unit filename="main.cpp" />
 		<Unit filename="runWaypointFinder.bat" />
 		<Extensions>

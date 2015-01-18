@@ -1,0 +1,102 @@
+# depslib dependency file v1.0
+1421611233 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\waypointfinder.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	"Reader.cpp"
+
+1421611483 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\main.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	<windows.h>
+	"WaypointGenerator.cpp"
+
+1421615722 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\waypointgenerator.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	"Reader.cpp"
+
+1421588064 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\tracereader.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+
+1421588064 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\tracereader.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+
+1421615722 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\waypointgenerator.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	"Reader.cpp"
+
+1421611178 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\reader.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+
+1421611178 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\reader.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+

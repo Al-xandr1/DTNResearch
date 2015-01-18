@@ -9,6 +9,7 @@
 #include <math.h>
 #include <queue>
 #include <windows.h>
+#include "WaypointGenerator.cpp"
 
 using namespace std;
 
@@ -77,7 +78,6 @@ bool WaypointFinder::addPoint()
         return true;
     }
 }
-
 
 bool WaypointFinder::removePoint()
 {
@@ -256,8 +256,18 @@ int mainForFile(int argc, char** argv)
     return 0;
 }
 
+int mainForGenerator(int argc, char** argv){
+    //todo доработать удобнее
+    WaypointGenerator generator(1000, "bounds.bnd");
+    generator.analyze("NewYork_30sec_038.txt.wpt", "NewYork_30sec_038.txt.wpt.stat");
+
+    return 0;
+}
+
+
 int main(int argc, char** argv)
 {
 //    return mainForFile(argc, argv);
-    return mainForDirectory(argc, argv);
+//    return mainForDirectory(argc, argv);
+    return mainForGenerator(argc, argv);
 }
