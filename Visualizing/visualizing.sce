@@ -243,34 +243,52 @@ endfunction
 
 //------------------ Функции для рисования Статистики -------------------------
 
-//Рисование Ex и Dx по имени файла
-//Рисование трассы по имени файла
+//Рисование зависимости Dx от мастаба по имени файла
 function drawStat(filename)
     fd = mopen(PATH + filename, 'rt');
     l = mfscanf(-1, fd, '%lg %lg %lg');  
     
     n = size(l, 1); 
     areaCount = l(1:n, 1)';
-    disp(areaCount);
-    EX = l(1:n, 2); 
-        disp(EX);
-    DX = l(1:n, 3); 
-        disp(DX);
+    DX = l(1:n, 3)';  
 
-    plot2d(areaCount, [EX DX], [6 9]);
-    
-    legenda = [ 'EX ' ; 'DX' ];
+    plot2d(areaCount, DX, GRAPH_COLOR);
 
     if (SHOW_LEGEND == 1) then
-        hl=legend(legenda);
+        hl=legend([ 'DX' ]);
     end
 
-    xtitle("WayPoint Ex & Dx from: " + filename);
+    xtitle("Dx of points from: " + filename);
     xgrid();
     
     mclose(fd);
 endfunction
 
+
+//Рисование зависимости log(Dx) от log(мастаба) по имени файла
+function drawLogLogStat(filename)
+    fd = mopen(PATH + filename, 'rt');
+    l = mfscanf(-1, fd, '%lg %lg %lg');  
+    
+    n = size(l, 1); 
+    areaCount = l(1:n, 1)';
+    DX = l(1:n, 3)';  
+
+    plot2d(log2(areaCount), log2(DX), GRAPH_COLOR);
+    da=gda();
+    da.x_label.text="log(tree_level)";
+    da.y_label.text="log(DX)";  
+    a.labels_font_size=5;
+
+    if (SHOW_LEGEND == 1) then
+        hl=legend([ 'log2(DX)' ]);
+    end
+
+    xtitle("log-log Dx of points from: " + filename);
+    xgrid();
+    
+    mclose(fd);
+endfunction
 
 
 //-------------------------- Вспомогательные функции ---------------------------
