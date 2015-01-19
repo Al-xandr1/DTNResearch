@@ -271,17 +271,24 @@ function drawLogLogStat(filename)
     l = mfscanf(-1, fd, '%lg %lg %lg');  
     
     n = size(l, 1); 
-    areaCount = l(1:n, 1)';
-    DX = l(1:n, 3)';  
+    LOG_areaCount = log2(l(1:n, 1)');
+    LOG_DX = log2(l(1:n, 3)');  
 
-    plot2d(log2(areaCount), log2(DX), GRAPH_COLOR);
+    plot2d(LOG_areaCount, LOG_DX, GRAPH_COLOR);
     da=gda();
-    da.x_label.text="log(tree_level)";
-    da.y_label.text="log(DX)";  
-    a.labels_font_size=5;
-
+    da.x_label.text="log2( tree_level )";
+    da.y_label.text="log2( DX )"; 
+    
+    //Построение линии методом наименьших квадратов
+    z = [LOG_areaCount; LOG_DX];
+    c = [0; 0;];
+    [a,S] = datafit(F,z,c);
+    t = min(LOG_areaCount):0.01:max(LOG_areaCount);
+    Yt = a(1)*t + a(2);
+    plot2d(t, Yt, 5);  
+    
     if (SHOW_LEGEND == 1) then
-        hl=legend([ 'log2(DX)' ]);
+        hl=legend([ "log2( DX )" ; "Least squares line, k = " + string(atan(a(1)) * 180 / %pi) + " degrees"]);
     end
 
     xtitle("log-log Dx of points from: " + filename);
@@ -289,6 +296,12 @@ function drawLogLogStat(filename)
     
     mclose(fd);
 endfunction
+
+// функция для минимизации для построения линии МНК
+function [zr]=F(c,z)
+     zr=z(2)-c(1)*z(1)-c(2);
+endfunction
+     
 
 
 //-------------------------- Вспомогательные функции ---------------------------
