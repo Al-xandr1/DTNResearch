@@ -106,7 +106,7 @@ protected:
         double x, y, tMin, tMxB;
         (*traceFile) >> x >> y >> tMin >> tMxB;
 //todo считывает последнюю люшнюю строчку
-        nextPoint = new WayPoint(x, y, tMin, tMxB);
+        return new WayPoint(x, y, tMin, tMxB);
     }
 };
 
@@ -122,6 +122,6 @@ protected:
         double t, x, y;
         (*traceFile) >> t >> x >> y;
 //todo считывает последнюю люшнюю строчку
-        nextPoint = new TracePoint(t, x, y);
+        return new TracePoint(t, x, y);
     }
 };

@@ -100,3 +100,80 @@
 	<math.h>
 	<queue>
 
+1421685387 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\reader.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+
+1421652255 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\waypointfinder.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	"Reader.cpp"
+
+1421685387 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\reader.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+
+1421653311 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\main.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	<windows.h>
+	"WaypointGenerator.cpp"
+
+1421686209 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\waypointgenerator.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	"Reader.cpp"
+
+1421686209 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\waypointgenerator.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	"Reader.cpp"
+

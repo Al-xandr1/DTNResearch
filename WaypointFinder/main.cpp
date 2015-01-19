@@ -258,7 +258,7 @@ int mainForFile(int argc, char** argv)
 
 int mainForGenerator(int argc, char** argv){
     //todo доработать удобнее
-    WaypointGenerator generator(1000, "bounds.bnd");
+    WaypointGenerator generator(1000, "NewYork_30sec_038.txt.wpt.bnd");
     generator.analyze("NewYork_30sec_038.txt.wpt", "NewYork_30sec_038.txt.wpt.stat");
 
     return 0;

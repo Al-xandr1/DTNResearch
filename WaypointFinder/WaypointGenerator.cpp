@@ -74,18 +74,18 @@ public:
         return true;
     }
 
-    void computeLocalExDx() {
-        if (subAreas != NULL) {
-            this->EX = 0;
-            double ex2 = 0;
-            for(int i=0; i<SUB_AREAS_COUNT; i++) {
-                this->EX += subAreas[i]->n;
-                ex2 += (subAreas[i]->n * subAreas[i]->n);
-            }
-            this->EX /= SUB_AREAS_COUNT;
-            this->DX = (ex2 / SUB_AREAS_COUNT) - (this->EX * this->EX);
-        }
-    }
+//    void computeLocalExDx() {
+//        if (subAreas != NULL) {
+//            this->EX = 0;
+//            double ex2 = 0;
+//            for(int i=0; i<SUB_AREAS_COUNT; i++) {
+//                this->EX += subAreas[i]->n;
+//                ex2 += (subAreas[i]->n * subAreas[i]->n);
+//            }
+//            this->EX /= SUB_AREAS_COUNT;
+//            this->DX = (ex2 / SUB_AREAS_COUNT) - (this->EX * this->EX);
+//        }
+//    }
 
     static Area* createTreeStructure(double minX, double minY, double maxX, double maxY) {
         Area* initialArea = new Area(minX, minY, maxX, maxY);
@@ -149,7 +149,7 @@ public:
             }
 
             ExPerLevel[l] /= areasCount;
-            DxPerLevel[l] /= areasCount; DxPerLevel[l] -= DxPerLevel[l] * DxPerLevel[l];
+            DxPerLevel[l] /= areasCount; DxPerLevel[l] -= ExPerLevel[l] * ExPerLevel[l];
 
             areasCount *= SUB_AREAS_COUNT;
         }
@@ -199,7 +199,6 @@ public:
         while (reader->hasNext()) {
             WayPoint* point = reader->next();
             //cout << row++ << "  " << point->x << "  " << point->y << endl;
-
             if (!initialArea->putInArea(point->x, point->y)) {exit(-222);};
         }
         delete reader;
@@ -216,7 +215,7 @@ public:
         double areasCount = SUB_AREAS_COUNT;
         cout << endl << endl;
         for(int l=0; l<=LEVELS; l++){
-            cout << "Level " << l << " EX=" << ExDxPerLevel[0][l] << "\t DX=" << ExDxPerLevel[1][l] << endl;
+            cout << "Level= " << l << "  areas= " << areasCount << "\tEX=" << ExDxPerLevel[0][l] << "\tDX=" << ExDxPerLevel[1][l] << endl;
             (*statFile) << areasCount << "\t" << ExDxPerLevel[0][l] << "\t" << ExDxPerLevel[1][l] << endl;
             areasCount *= SUB_AREAS_COUNT;
         }
