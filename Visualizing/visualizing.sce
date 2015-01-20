@@ -274,7 +274,7 @@ function drawLogLogStat(filename)
     LOG_areaCount = log2(l(1:n, 1)');
     LOG_DX = log2(l(1:n, 3)');  
 
-    plot2d(LOG_areaCount, LOG_DX, GRAPH_COLOR);
+    plot2d(LOG_areaCount, LOG_DX, -4);
     da=gda();
     da.x_label.text="log2( tree_level )";
     da.y_label.text="log2( DX )"; 
