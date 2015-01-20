@@ -276,7 +276,7 @@ function drawLogLogStat(filename)
 
     plot2d(LOG_areaCount, LOG_DX, -4);
     da=gda();
-    da.x_label.text="log2( tree_level )";
+    da.x_label.text="log2( count_of_subareas_per_level )";
     da.y_label.text="log2( DX )"; 
     
     //Построение линии методом наименьших квадратов
@@ -285,6 +285,7 @@ function drawLogLogStat(filename)
     [a,S] = datafit(F,z,c);
     t = min(LOG_areaCount):0.01:max(LOG_areaCount);
     Yt = a(1)*t + a(2);
+
     plot2d(t, Yt, 5);  
     
     if (SHOW_LEGEND == 1) then
