@@ -13,6 +13,46 @@
 
 using namespace std;
 
+#define MIN(x, y) (x < y ? x : y)
+#define MAX(x, y) (x > y ? x : y)
+
+class Bounds {
+
+private:
+    double XMin, XMax, YMin, YMax;
+
+public:
+    Bounds() {
+        XMin = YMin = 10e10;
+        XMax = YMax = -10e10;
+    }
+
+    void changeBounds(double x, double y) {
+        XMin = MIN(x, XMin);
+        XMax = MAX(x, XMax);
+        YMin = MIN(y, YMin);
+        YMax = MAX(y, YMax);
+    }
+
+    double getXMin() {return XMin;}
+    double getXMax() {return XMax;}
+    double getYMin() {return YMin;}
+    double getYMax() {return YMax;}
+
+    void save(char* fileName) {
+        ofstream boundFile(fileName);
+        boundFile << XMin << "\t" << XMax << endl;
+        boundFile << YMin << "\t" << YMax << endl;
+        boundFile.close();
+    }
+
+    void print() {
+        cout << "Xmin=" << XMin << "\t Xmax=" << XMax << endl;
+        cout << "Ymin=" << YMin << "\t Ymax=" << YMax << endl;
+    }
+};
+
+
 class WaypointFinder {
 protected:
     double R2, T;      // main waypoint parameters (by default R2=5m*5m , T=30sec)
@@ -34,11 +74,18 @@ public:
     bool isStopTimeReached();
     void findWaypoints();
 
-    static double waypointXMin, waypointXMax, waypointYMin, waypointYMax;
+    void changeTraceBounds(double x, double y);
+    void changeWayPointBounds(double x, double y);
+
+    Bounds traceBounds;  //границы для одной трассы
+    static Bounds totalTraceBounds; //границы для всех трасс
+
+    Bounds wayPointBounds;   //границы для одного файла путевых точек
+    static Bounds totalWayPointBounds;  //границы для всех файлоа путевых точек
 };
 
-double WaypointFinder::waypointXMin=10e10; double WaypointFinder::waypointXMax=-10e10;
-double WaypointFinder::waypointYMin=10e10; double WaypointFinder::waypointYMax=-10e10;
+Bounds WaypointFinder::totalTraceBounds;
+Bounds WaypointFinder::totalWayPointBounds;
 
 WaypointFinder::WaypointFinder(char* trFileName, char* wpFileName, double range=5, double stopTime=30 )
 {
@@ -72,6 +119,10 @@ bool WaypointFinder::addPoint()
         (*traceFile)>>t>>x>>y;
         xcoord.push(x);  sumX+=x;
         ycoord.push(y);  sumY+=y;
+
+        traceBounds.changeBounds(x, y);
+        totalTraceBounds.changeBounds(x, y);
+
         time.push(t);
         if(xcoord.size()==1) tMin=tMxB=tMax=t;
         else  tMxB=tMax; tMax=t;
@@ -128,10 +179,10 @@ void WaypointFinder::findWaypoints()
         if (isStopTimeReached()) {
             waypointX=(sumX-xcoord.back())/(xcoord.size()-1);
             waypointY=(sumY-ycoord.back())/(ycoord.size()-1);
-            if(waypointX < waypointXMin) waypointXMin=waypointX;
-            if(waypointX > waypointXMax) waypointXMax=waypointX;
-            if(waypointY < waypointYMin) waypointYMin=waypointY;
-            if(waypointY > waypointYMax) waypointYMax=waypointY;
+
+            wayPointBounds.changeBounds(waypointX, waypointY);
+            totalWayPointBounds.changeBounds(waypointX, waypointY);
+
             (*waypointFile) << waypointX << "\t" << waypointY  << "\t" << tMin << "\t" << tMxB << endl;
             while(xcoord.size()>1) removePoint();
         }
@@ -139,15 +190,30 @@ void WaypointFinder::findWaypoints()
     }
 }
 
+
+
 //-----------------------------------------------------------------------------------------------------------------------------
 
-char* getWayPointFileName(char* traceFileName)
-{
-    return strcat(traceFileName, ".wpt");
+char* buildWayPointFileName(char* name) {
+    char* buffer = new char[256];
+    strcpy(buffer, name);
+    return strcat(buffer, ".wpt");
 }
 
-char* buildFullName(char* buffer, char* dir, char* fileName)
-{
+char* buildBoundsFileName(char* name) {
+    char* buffer = new char[256];
+    strcpy(buffer, name);
+    return strcat(name, ".bnd");
+}
+
+char* buildStatisticFileName(char* name) {
+    char* buffer = new char[256];
+    strcpy(buffer, name);
+    return strcat(name, ".stat");
+}
+
+char* buildFullName(char* dir, char* fileName) {
+    char* buffer = new char[256];
     strcpy(buffer, dir);
     strcat(buffer, "/");
     strcat(buffer, fileName);
@@ -187,8 +253,7 @@ int mainForDirectory(int argc, char** argv)
             cout << "error create output directory" << endl;
     }
 
-    char traceFileNamePattern[256];
-    buildFullName(traceFileNamePattern, traceFilesDir, "*.txt");
+    char* traceFileNamePattern = buildFullName(traceFilesDir, "*.txt");
     cout << "   traceFileNamePattern: " << traceFileNamePattern << endl << endl;
 
     HANDLE h = FindFirstFile(traceFileNamePattern, &f);
@@ -196,16 +261,21 @@ int mainForDirectory(int argc, char** argv)
     {
         do
         {
-            char inputFileName[256];
-            buildFullName(inputFileName, traceFilesDir, f.cFileName);
+            char* inputFileName = buildFullName(traceFilesDir, f.cFileName);
             cout << "       inputFileName: " << inputFileName << endl;
 
-            char outPutFileName[256];
-            buildFullName(outPutFileName, wayPointFilesDir, getWayPointFileName(f.cFileName));
+            char* wpFileName = buildWayPointFileName(f.cFileName);
+            char* outPutFileName = buildFullName(wayPointFilesDir, wpFileName);
             cout << "       outPutFileName: " << outPutFileName << endl << endl;
 
             WaypointFinder test(inputFileName, outPutFileName);
             test.findWaypoints();
+
+            //запись в отдельный файл границы ТРАССЫ
+            test.traceBounds.save(buildFullName(traceFilesDir, buildBoundsFileName(f.cFileName)));
+
+            //запись в отдельный файл границы ПУТЕВЫХ ТОЧЕК
+            test.wayPointBounds.save(buildFullName(wayPointFilesDir, buildBoundsFileName(wpFileName)));
         }
         while(FindNextFile(h, &f));
     }
@@ -214,45 +284,11 @@ int mainForDirectory(int argc, char** argv)
         fprintf(stderr, "Directory or files not found\n");
     }
 
-    cout << "Xmin=" << WaypointFinder::waypointXMin << "\t Xmax=" << WaypointFinder::waypointXMax << endl;
-    cout << "Ymin=" << WaypointFinder::waypointYMin << "\t Ymax=" << WaypointFinder::waypointYMax << endl;
-
-    char boundsFileName[256];
-    ofstream boundFile(buildFullName(boundsFileName, wayPointFilesDir, "bounds.bnd"));
-    boundFile << WaypointFinder::waypointXMin << "\t" << WaypointFinder::waypointXMax << endl;
-    boundFile << WaypointFinder::waypointYMin << "\t" << WaypointFinder::waypointYMax << endl;
-    boundFile.close();
+    WaypointFinder::totalWayPointBounds.print();
+    WaypointFinder::totalTraceBounds.save(buildFullName(traceFilesDir, "bounds.bnd"));
+    WaypointFinder::totalWayPointBounds.save(buildFullName(wayPointFilesDir, "bounds.bnd"));
 
     cout << "End." << endl;
-    return 0;
-}
-
-int mainForFile(int argc, char** argv)
-{
-    cout << "Hello world!" << endl;
-
-    char* trFileName;
-    char* wpFileName;
-    switch(argc) {
-        case 1 :  trFileName="test.txt"; wpFileName="test.wpt"; break;
-        case 2 :  trFileName=argv[1];    wpFileName="test.wpt"; break;
-        case 3 :
-        default:  trFileName=argv[1];    wpFileName=argv[2]; break;
-    }
-
-    cout << "Start find!" << endl;
-
-    WaypointFinder test(trFileName, wpFileName);
-    test.findWaypoints();
-
-    cout << "Xmin=" << WaypointFinder::waypointXMin << "\t Xmax=" << WaypointFinder::waypointXMax << endl;
-    cout << "Ymin=" << WaypointFinder::waypointYMin << "\t Ymax=" << WaypointFinder::waypointYMax << endl;
-
-    ofstream boundFile("bounds.bnd");
-    boundFile << WaypointFinder::waypointXMin << "\t" << WaypointFinder::waypointXMax << endl;
-    boundFile << WaypointFinder::waypointYMin << "\t" << WaypointFinder::waypointYMax << endl;
-    boundFile.close();
-
     return 0;
 }
 
@@ -267,7 +303,6 @@ int mainForGenerator(int argc, char** argv){
 
 int main(int argc, char** argv)
 {
-//    return mainForFile(argc, argv);
-//    return mainForDirectory(argc, argv);
-    return mainForGenerator(argc, argv);
+    return mainForDirectory(argc, argv);
+//    return mainForGenerator(argc, argv);
 }
