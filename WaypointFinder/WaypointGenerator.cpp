@@ -60,8 +60,8 @@ public:
     void write(char* fileName) {
         ofstream boundsFile(fileName);
         if (boundsFile == NULL) {
-            cout<<"Bounds write: bounds file "<< fileName <<" is not found." << endl;
-            exit(-111);
+            cout << "\t" << "Bounds write: bounds file "<< fileName <<" is not found." << endl;
+            exit(-112);
         }
         boundsFile << XMin << "\t" << XMax << endl;
         boundsFile << YMin << "\t" << YMax << endl;
@@ -71,8 +71,8 @@ public:
     void read(char* fileName) {
         ifstream boundsFile(fileName);
         if (boundsFile == NULL) {
-            cout<<"Bounds read: bounds file "<< fileName <<" is not found." << endl;
-            exit(-111);
+            cout << "\t" << "Bounds read: bounds file "<< fileName <<" is not found." << endl;
+            exit(-113);
         }
         boundsFile >> XMin >> XMax
                       >> YMin >> YMax;
@@ -80,8 +80,8 @@ public:
     }
 
     void print() {
-        cout << "Xmin=" << XMin << "\t Xmax=" << XMax << endl;
-        cout << "Ymin=" << YMin << "\t Ymax=" << YMax << endl;
+        cout << "\t" << "Xmin=" << XMin << "\t Xmax=" << XMax << endl;
+        cout << "\t" << "Ymin=" << YMin << "\t Ymax=" << YMax << endl;
     }
 };
 
@@ -199,12 +199,12 @@ public:
         return initialArea;
     }
 
-    static double** computeExDx(Area* area) {
+    static double** computeExDx(Area* rootArea) {
         double* ExPerLevel = new double[LEVELS+1];
         double* DxPerLevel = new double[LEVELS+1];
 
         queue<Area*> areasForProcess;
-        areasForProcess.push(area);
+        areasForProcess.push(rootArea);
         double areasCount = SUB_AREAS_COUNT;
 
         for (int l=0; l<LEVELS; l++) {
@@ -214,15 +214,15 @@ public:
             while(!areasForProcess.empty()) areasForProcess.pop();
 
             while(!areasPerLevel.empty()){
-                Area* area = areasPerLevel.front();
+                Area* rootArea = areasPerLevel.front();
                 areasPerLevel.pop();
 
-                if (area->subAreas != NULL) {
+                if (rootArea->subAreas != NULL) {
                     for(int i=0; i<SUB_AREAS_COUNT; i++) {
-                        ExPerLevel[l] += area->subAreas[i]->n;
-                        DxPerLevel[l] += (area->subAreas[i]->n * area->subAreas[i]->n);
+                        ExPerLevel[l] += rootArea->subAreas[i]->n;
+                        DxPerLevel[l] += (rootArea->subAreas[i]->n * rootArea->subAreas[i]->n);
 
-                        areasForProcess.push(area->subAreas[i]);
+                        areasForProcess.push(rootArea->subAreas[i]);
                     }
                 }
             }
@@ -236,6 +236,28 @@ public:
 
         return new double*[2]{ExPerLevel, DxPerLevel};
     }
+
+    static void writeStatistics(Area* rootArea, char* statFileName) {
+        ofstream statFile(statFileName);
+        if (statFile == NULL) {
+            cout << "\t" << "Area write(): Output file " << statFileName <<" opening failed." << endl;
+            exit(333);
+        }
+
+        double** ExDxPerLevel = Area::computeExDx(rootArea);
+        double areasCount = SUB_AREAS_COUNT;
+        cout << endl << endl;
+        for(int l=0; l<=LEVELS; l++){
+            cout << "\t" << "Level= " << l << "  areas= " << areasCount << "\tEX=" << ExDxPerLevel[0][l] << "\tDX=" << ExDxPerLevel[1][l] << endl;
+            statFile << areasCount << "\t" << ExDxPerLevel[0][l] << "\t" << ExDxPerLevel[1][l] << endl;
+            areasCount *= SUB_AREAS_COUNT;
+        }
+        delete ExDxPerLevel[0];
+        delete ExDxPerLevel[1];
+        delete ExDxPerLevel;
+
+        statFile.close();
+    }
 };
 
 
@@ -244,24 +266,29 @@ class WaypointGenerator {
 
 private:
     int n;
-    Bounds* bounds;
+    Bounds* bounds; //граница генерации путевых точек
+
+    Area* commonAreaTree; //дерево площадей для аналиха дисперсии многих трасс
 
 public:
     WaypointGenerator(int n, char* boundsFileName) {
         this->n = n;
         this->bounds = new Bounds(boundsFileName);
+
+        this->commonAreaTree = Area::createTreeStructure(this->bounds);
     }
 
     ~WaypointGenerator() {
         delete this->bounds;
+        delete this->commonAreaTree;
     }
 
     void generate() {
-        cout << "WayPoints generated!" << endl;
+        cout << "\t" << "WayPoints generated!" << endl;
     }
 
     void analyze(char* waypointFileName, char* statFileName) {
-        cout << "WayPoints analyzing start..." << endl;
+        cout << "\t" << "WayPoints analyzing start..." << endl;
 
         Area* initialArea = Area::createTreeStructure(this->bounds);
 
@@ -270,29 +297,20 @@ public:
         int row = 1;
         while (reader->hasNext()) {
             WayPoint* point = reader->next();
-            //cout << row++ << "  " << point->x << "  " << point->y << endl;
+            cout << "\t" << row++ << "  " << point->x << "  " << point->y << endl;
             if (!initialArea->putInArea(point->x, point->y)) {exit(-222);};
+            if (!commonAreaTree->putInArea(point->x, point->y)) {exit(-223);};
         }
         delete reader;
 
+        Area::writeStatistics(initialArea, statFileName);
+        delete initialArea;
 
-        ofstream* statFile = new ofstream(statFileName);
-        if (statFile == NULL) {
-            cout << "WaypointGenerator analyze(): Output file " << statFileName <<" opening failed." << endl;
-            exit(333);
-        }
+        cout << endl << "\t" << "WayPoints analyzed!" << endl << endl;
+    }
 
-
-        double** ExDxPerLevel = Area::computeExDx(initialArea);
-        double areasCount = SUB_AREAS_COUNT;
-        cout << endl << endl;
-        for(int l=0; l<=LEVELS; l++){
-            cout << "Level= " << l << "  areas= " << areasCount << "\tEX=" << ExDxPerLevel[0][l] << "\tDX=" << ExDxPerLevel[1][l] << endl;
-            (*statFile) << areasCount << "\t" << ExDxPerLevel[0][l] << "\t" << ExDxPerLevel[1][l] << endl;
-            areasCount *= SUB_AREAS_COUNT;
-        }
-
-        cout << endl << "WayPoints analyzed!" << endl;
+    void writeStatistics(char* statFileName) {
+        Area::writeStatistics(commonAreaTree, statFileName);
     }
 };
 

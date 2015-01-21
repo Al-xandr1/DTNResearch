@@ -232,9 +232,12 @@ int mainForWPFinder(int argc, char** argv)
 
             //запись в отдельный файл границы ТРАССЫ
             test.traceBounds.write(buildFullName(traceFilesDir, buildBoundsFileName(f.cFileName)));
-
             //запись в отдельный файл границы ПУТЕВЫХ ТОЧЕК
             test.wayPointBounds.write(buildFullName(wayPointFilesDir, buildBoundsFileName(wpFileName)));
+
+            delete inputFileName;
+            delete wpFileName;
+            delete outPutFileName;
         }
         while(FindNextFile(h, &f));
     }
@@ -251,21 +254,71 @@ int mainForWPFinder(int argc, char** argv)
     return 0;
 }
 
-int mainForGenerator(int argc, char** argv){
-    //todo доработать удобнее
-    WaypointGenerator generator(1000, "NewYork_30sec_038.txt.wpt.bnd");
-    generator.analyze("NewYork_30sec_038.txt.wpt", "NewYork_30sec_038.txt.wpt.stat");
+int mainForGenerator(int argc, char** argv) {
+    cout << "Analyzing start!" << endl << endl;
 
+    char* fileDir;    //full path name of directory
+    switch(argc)
+    {
+    case 2 :
+        fileDir="./waypointfiles";
+        break;
+    case 3 :
+    default:
+        fileDir=argv[2];
+        break;
+    }
+
+    WIN32_FIND_DATA f;
+    if (FindFirstFile(fileDir, &f) == INVALID_HANDLE_VALUE)
+    {
+        fprintf(stderr, "File directory for file analyzing not found.\n");
+        exit(-777);
+    }
+
+    char* fileNamePattern = buildFullName(fileDir, "*.wpt"); //todo или "*.txt" в параметр ком строки
+    cout << "   fileNamePattern: " << fileNamePattern << endl << endl;
+
+    WaypointGenerator generator(1000, buildFullName(fileDir, "bounds.bnd")); //todo 1000 в параметр ком строки и ГРАНИЦУ в параметр ком строки
+
+    HANDLE h = FindFirstFile(fileNamePattern, &f);
+    if(h != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            char* inputFileName = buildFullName(fileDir, f.cFileName);
+            cout << "       inputFileName: " << inputFileName << endl;
+
+            char* statFileName = buildStatisticFileName(f.cFileName);
+            char* outPutFileName = buildFullName(fileDir, statFileName);
+            cout << "       outPutFileName: " << outPutFileName << endl << endl;
+
+            generator.analyze(inputFileName, outPutFileName);
+
+            delete inputFileName;
+            delete statFileName;
+            delete outPutFileName;
+        }
+        while(FindNextFile(h, &f));
+    }
+    else
+    {
+        fprintf(stderr, "Directory or files not found\n");
+    }
+
+    generator.writeStatistics(buildFullName(fileDir, "statistics.stat"));
+
+    cout << "Analyzing end." << endl << endl;
     return 0;
 }
 
 
-#define STAT "stat" //команда для сбора статистики
-#define WP "wp" //команда для нахождения путевых точек
+#define STAT "-stat" //команда для сбора статистики
+#define WP "-wp" //команда для нахождения путевых точек
 
 int main(int argc, char** argv)
 {
-    argc = 2; argv = new char*[2] {"program", WP} ; //REMOVE HARDCORE!
+    argc = 2; argv = new char*[2] {"program", STAT} ; //REMOVE HARDCORE!
 
     cout << "Program start!" << endl << endl;
 

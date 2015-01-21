@@ -105,7 +105,7 @@ protected:
     virtual WayPoint* createPoint(){
         double x, y, tMin, tMxB;
         (*traceFile) >> x >> y >> tMin >> tMxB;
-//todo считывает последнюю люшнюю строчку
+//todo считывает последнюю люшнюю строчку. НУЖНО УБИРАТЬ ПОСЛЕДНЮЮ ПУСТУЮ СТРОКУ
         return new WayPoint(x, y, tMin, tMxB);
     }
 };
@@ -121,7 +121,7 @@ protected:
     virtual TracePoint* createPoint(){
         double t, x, y;
         (*traceFile) >> t >> x >> y;
-//todo считывает последнюю люшнюю строчку
+//todo считывает последнюю люшнюю строчку. НУЖНО УБИРАТЬ ПОСЛЕДНЮЮ ПУСТУЮ СТРОКУ
         return new TracePoint(t, x, y);
     }
 };
