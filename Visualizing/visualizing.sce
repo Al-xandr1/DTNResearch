@@ -289,7 +289,9 @@ function drawLogLogStat(filename)
     plot2d(t, Yt, 5);  
     
     if (SHOW_LEGEND == 1) then
-        hl=legend([ "log2( DX )" ; "Least squares line, k = " + string(atan(a(1)) * 180 / %pi) + " degrees"]);
+        b = atan(a(1));   
+        H = 1-abs(b)/2;
+        hl=legend([ "log2( DX )" ; "Least squares line, b = " + string(b) + ", H = " + string(H) ]);
     end
 
     xtitle("log-log Dx of points from: " + filename);
