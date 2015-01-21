@@ -247,7 +247,7 @@ public:
         double** ExDxPerLevel = Area::computeExDx(rootArea);
         double areasCount = SUB_AREAS_COUNT;
         cout << endl << endl;
-        for(int l=0; l<=LEVELS; l++){
+        for(int l=0; l<LEVELS; l++){
             cout << "\t" << "Level= " << l << "  areas= " << areasCount << "\tEX=" << ExDxPerLevel[0][l] << "\tDX=" << ExDxPerLevel[1][l] << endl;
             statFile << areasCount << "\t" << ExDxPerLevel[0][l] << "\t" << ExDxPerLevel[1][l] << endl;
             areasCount *= SUB_AREAS_COUNT;
