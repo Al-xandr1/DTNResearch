@@ -12,9 +12,83 @@
 
 using namespace std;
 
+
+#define MIN(x, y) (x < y ? x : y)
+#define MAX(x, y) (x > y ? x : y)
+
+class Bounds {
+
+private:
+    double XMin, XMax, YMin, YMax;
+
+public:
+    Bounds() {
+        XMin = YMin = 10e10;
+        XMax = YMax = -10e10;
+    }
+
+    Bounds(double XMin, double YMin, double XMax, double YMax) {
+        this->XMin = XMin;
+        this->YMin = YMin;
+        this->XMax = XMax;
+        this->YMax = YMax;
+    }
+
+    Bounds(Bounds* bounds) {
+        this->XMin = bounds->XMin;
+        this->YMin = bounds->YMin;
+        this->XMax = bounds->XMax;
+        this->YMax = bounds->YMax;
+    }
+
+    Bounds(char* fileName) {
+        read(fileName);
+    }
+
+    void changeBounds(double x, double y) {
+        XMin = MIN(x, XMin);
+        XMax = MAX(x, XMax);
+        YMin = MIN(y, YMin);
+        YMax = MAX(y, YMax);
+    }
+
+    double getXMin() {return XMin;}
+    double getXMax() {return XMax;}
+    double getYMin() {return YMin;}
+    double getYMax() {return YMax;}
+
+    void write(char* fileName) {
+        ofstream boundsFile(fileName);
+        if (boundsFile == NULL) {
+            cout<<"Bounds write: bounds file "<< fileName <<" is not found." << endl;
+            exit(-111);
+        }
+        boundsFile << XMin << "\t" << XMax << endl;
+        boundsFile << YMin << "\t" << YMax << endl;
+        boundsFile.close();
+    }
+
+    void read(char* fileName) {
+        ifstream boundsFile(fileName);
+        if (boundsFile == NULL) {
+            cout<<"Bounds read: bounds file "<< fileName <<" is not found." << endl;
+            exit(-111);
+        }
+        boundsFile >> XMin >> XMax
+                      >> YMin >> YMax;
+        boundsFile.close();
+    }
+
+    void print() {
+        cout << "Xmin=" << XMin << "\t Xmax=" << XMax << endl;
+        cout << "Ymin=" << YMin << "\t Ymax=" << YMax << endl;
+    }
+};
+
+
+
 #define LEVELS 9
 #define SUB_AREAS_COUNT 4
-
 
 class Area {
 
@@ -22,21 +96,29 @@ private:
     int n;              //count of point in this area
     double EX;
     double DX;
-    double minX, minY;  // bounds of this area
-    double maxX, maxY;
+    Bounds* bound;
 
     Area** subAreas;
 
 public:
-    Area(double minX, double minY, double maxX, double maxY){
+    Area(Bounds* bound){
         this->n = 0;
         this->EX = 0;
         this->DX = 0;
-        this->minX = minX;
-        this->minY = minY;
-        this->maxX = maxX;
-        this->maxY = maxY;
+        this->bound = new Bounds(bound);
         this->subAreas = NULL;
+    }
+
+    Area(double XMin, double YMin, double XMax, double YMax) {
+        this->n = 0;
+        this->EX = 0;
+        this->DX = 0;
+        this->bound = new Bounds(XMin, YMin, XMax, YMax);
+        this->subAreas = NULL;
+    }
+
+    ~Area() {
+        delete this->bound;
     }
 
     double getN(){return this->n;}
@@ -44,14 +126,11 @@ public:
     double getEX(){return this->EX;}
     double getDX(){return this->DX;}
 
-    double getMinX(){return this->minX;}
-    double getMinY(){return this->minY;}
-    double getMaxX(){return this->maxX;}
-    double getMaxY(){return this->maxY;}
+    Bounds* getBounds() {return this->bound;}
 
     bool isInArea(double x, double y) {
-        return (minX <= x && x <= maxX)
-                && (minY <= y && y <= maxY);
+        return (this->bound->getXMin() <= x && x <= this->bound->getXMax())
+                && (this->bound->getYMin() <= y && y <= this->bound->getYMax());
     }
 
     bool putInArea(double x, double y) {
@@ -74,21 +153,21 @@ public:
         return true;
     }
 
-//    void computeLocalExDx() {
-//        if (subAreas != NULL) {
-//            this->EX = 0;
-//            double ex2 = 0;
-//            for(int i=0; i<SUB_AREAS_COUNT; i++) {
-//                this->EX += subAreas[i]->n;
-//                ex2 += (subAreas[i]->n * subAreas[i]->n);
-//            }
-//            this->EX /= SUB_AREAS_COUNT;
-//            this->DX = (ex2 / SUB_AREAS_COUNT) - (this->EX * this->EX);
-//        }
-//    }
+    void computeLocalExDx() {
+        if (subAreas != NULL) {
+            this->EX = 0;
+            double ex2 = 0;
+            for(int i=0; i<SUB_AREAS_COUNT; i++) {
+                this->EX += subAreas[i]->n;
+                ex2 += (subAreas[i]->n * subAreas[i]->n);
+            }
+            this->EX /= SUB_AREAS_COUNT;
+            this->DX = (ex2 / SUB_AREAS_COUNT) - (this->EX * this->EX);
+        }
+    }
 
-    static Area* createTreeStructure(double minX, double minY, double maxX, double maxY) {
-        Area* initialArea = new Area(minX, minY, maxX, maxY);
+    static Area* createTreeStructure(Bounds* bounds) {
+        Area* initialArea = new Area(bounds);
 
         queue<Area*> areasForProcess;
         areasForProcess.push(initialArea);
@@ -103,13 +182,13 @@ public:
 
                 area->subAreas = new Area*[SUB_AREAS_COUNT];
 
-                double middleX = (area->minX + area->maxX) / 2;
-                double middleY = (area->minY + area->maxY) / 2;
+                double middleX = (area->bound->getXMin() + area->bound->getXMax()) / 2;
+                double middleY = (area->bound->getYMin() + area->bound->getYMax()) / 2;
 
-                area->subAreas[0] = new Area(area->minX, middleY, middleX, area->maxY);//S1
-                area->subAreas[1] = new Area(middleX, middleY, area->maxX, area->maxY);//S2
-                area->subAreas[2] = new Area(area->minX, area->minY, middleX, middleY);//S3
-                area->subAreas[3] = new Area(middleX, area->minY, area->maxX, middleY);//S4
+                area->subAreas[0] = new Area(area->bound->getXMin(), middleY, middleX, area->bound->getYMax());//S1
+                area->subAreas[1] = new Area(middleX, middleY, area->bound->getXMax(), area->bound->getYMax());//S2
+                area->subAreas[2] = new Area(area->bound->getXMin(), area->bound->getYMin(), middleX, middleY);//S3
+                area->subAreas[3] = new Area(middleX, area->bound->getYMin(), area->bound->getXMax(), middleY);//S4
 
                 if (l != LEVELS - 1) {
                     for(int i=0; i<SUB_AREAS_COUNT; i++) areasForProcess.push(area->subAreas[i]);
@@ -165,23 +244,16 @@ class WaypointGenerator {
 
 private:
     int n;
-    double minX, minY;
-    double maxX, maxY;
+    Bounds* bounds;
 
 public:
     WaypointGenerator(int n, char* boundsFileName) {
         this->n = n;
-
-        ifstream* boundsFile = new ifstream(boundsFileName);
-        if (boundsFile == NULL) {
-            cout<<"WaypointGenerator constructor: bounds file "<< boundsFileName <<" is not found." << endl;
-            exit(1);
-        }
-        (*boundsFile) >> minX >> maxX
-                      >> minY >> maxY;
+        this->bounds = new Bounds(boundsFileName);
     }
 
     ~WaypointGenerator() {
+        delete this->bounds;
     }
 
     void generate() {
@@ -191,7 +263,7 @@ public:
     void analyze(char* waypointFileName, char* statFileName) {
         cout << "WayPoints analyzing start..." << endl;
 
-        Area* initialArea = Area::createTreeStructure(minX, minY, maxX, maxY);
+        Area* initialArea = Area::createTreeStructure(this->bounds);
 
         //Filling of the tree structure
         WayPointReader* reader = new WayPointReader(waypointFileName);

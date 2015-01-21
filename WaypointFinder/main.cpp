@@ -13,45 +13,6 @@
 
 using namespace std;
 
-#define MIN(x, y) (x < y ? x : y)
-#define MAX(x, y) (x > y ? x : y)
-
-class Bounds {
-
-private:
-    double XMin, XMax, YMin, YMax;
-
-public:
-    Bounds() {
-        XMin = YMin = 10e10;
-        XMax = YMax = -10e10;
-    }
-
-    void changeBounds(double x, double y) {
-        XMin = MIN(x, XMin);
-        XMax = MAX(x, XMax);
-        YMin = MIN(y, YMin);
-        YMax = MAX(y, YMax);
-    }
-
-    double getXMin() {return XMin;}
-    double getXMax() {return XMax;}
-    double getYMin() {return YMin;}
-    double getYMax() {return YMax;}
-
-    void save(char* fileName) {
-        ofstream boundFile(fileName);
-        boundFile << XMin << "\t" << XMax << endl;
-        boundFile << YMin << "\t" << YMax << endl;
-        boundFile.close();
-    }
-
-    void print() {
-        cout << "Xmin=" << XMin << "\t Xmax=" << XMax << endl;
-        cout << "Ymin=" << YMin << "\t Ymax=" << YMax << endl;
-    }
-};
-
 
 class WaypointFinder {
 protected:
@@ -219,30 +180,28 @@ char* buildFullName(char* dir, char* fileName) {
     strcat(buffer, fileName);
 }
 
-int mainForDirectory(int argc, char** argv)
+int mainForWPFinder(int argc, char** argv)
 {
-    cout << "Hello world!" << endl;
+    cout << "Finder start!" << endl << endl;
 
     char* traceFilesDir;    //full path name of directory
     char* wayPointFilesDir; //full path name of directory
     switch(argc)
     {
-    case 1 :
+    case 2 :
         traceFilesDir="./tracefiles";
         wayPointFilesDir="./waypointfiles";
         break;
-    case 2 :
+    case 3 :
         traceFilesDir=argv[1];
         wayPointFilesDir="./waypointfiles";
         break;
-    case 3 :
+    case 4 :
     default:
         traceFilesDir=argv[1];
         wayPointFilesDir=argv[2];
         break;
     }
-
-    cout << "Start find..." << endl;
 
     WIN32_FIND_DATA f;
     if (FindFirstFile(wayPointFilesDir, &f) == INVALID_HANDLE_VALUE)
@@ -272,10 +231,10 @@ int mainForDirectory(int argc, char** argv)
             test.findWaypoints();
 
             //запись в отдельный файл границы ТРАССЫ
-            test.traceBounds.save(buildFullName(traceFilesDir, buildBoundsFileName(f.cFileName)));
+            test.traceBounds.write(buildFullName(traceFilesDir, buildBoundsFileName(f.cFileName)));
 
             //запись в отдельный файл границы ПУТЕВЫХ ТОЧЕК
-            test.wayPointBounds.save(buildFullName(wayPointFilesDir, buildBoundsFileName(wpFileName)));
+            test.wayPointBounds.write(buildFullName(wayPointFilesDir, buildBoundsFileName(wpFileName)));
         }
         while(FindNextFile(h, &f));
     }
@@ -285,10 +244,10 @@ int mainForDirectory(int argc, char** argv)
     }
 
     WaypointFinder::totalWayPointBounds.print();
-    WaypointFinder::totalTraceBounds.save(buildFullName(traceFilesDir, "bounds.bnd"));
-    WaypointFinder::totalWayPointBounds.save(buildFullName(wayPointFilesDir, "bounds.bnd"));
+    WaypointFinder::totalTraceBounds.write(buildFullName(traceFilesDir, "bounds.bnd"));
+    WaypointFinder::totalWayPointBounds.write(buildFullName(wayPointFilesDir, "bounds.bnd"));
 
-    cout << "End." << endl;
+    cout << "Finder end." << endl << endl;
     return 0;
 }
 
@@ -301,8 +260,37 @@ int mainForGenerator(int argc, char** argv){
 }
 
 
+#define STAT "stat" //команда для сбора статистики
+#define WP "wp" //команда для нахождения путевых точек
+
 int main(int argc, char** argv)
 {
-    return mainForDirectory(argc, argv);
-//    return mainForGenerator(argc, argv);
+    argc = 2; argv = new char*[2] {"program", WP} ; //REMOVE HARDCORE!
+
+    cout << "Program start!" << endl << endl;
+
+    int result = -1;
+    switch(argc)
+    {
+    case 1 :
+        fprintf(stderr, "You must specify command:\n\t %s \n\t %s\n", WP, STAT);
+        exit(-444);
+
+    case 2 :
+    default:
+        char* command = argv[1];
+        if (strcmp(command, WP) == 0) {
+            result = mainForWPFinder(argc, argv);
+
+        } else if (strcmp(command, STAT) == 0) {
+            result = mainForGenerator(argc, argv);
+
+        } else {
+            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s\n", command, WP, STAT);
+            exit(result = -555);
+        }
+    };
+
+    cout << endl << "Program complete." << endl << endl;
+    return result;
 }
