@@ -73,6 +73,7 @@ protected:
 
     virtual ~Reader() {
         traceFile->close();
+        delete traceFile;
     }
 
 public:

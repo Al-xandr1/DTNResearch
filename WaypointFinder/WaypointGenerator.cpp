@@ -119,6 +119,13 @@ public:
 
     ~Area() {
         delete this->bound;
+        if (subAreas != NULL) {
+            for (int i=0; i<SUB_AREAS_COUNT; i++)
+                if (this->subAreas[i] != NULL)
+                    delete this->subAreas[i];
+
+            delete this->subAreas;
+        }
     }
 
     double getN(){return this->n;}
@@ -297,9 +304,10 @@ public:
         int row = 1;
         while (reader->hasNext()) {
             WayPoint* point = reader->next();
-            cout << "\t" << row++ << "  " << point->x << "  " << point->y << endl;
+//            cout << "\t" << row++ << "  " << point->x << "  " << point->y << endl;
             if (!initialArea->putInArea(point->x, point->y)) {exit(-222);};
             if (!commonAreaTree->putInArea(point->x, point->y)) {exit(-223);};
+            delete point;
         }
         delete reader;
 
