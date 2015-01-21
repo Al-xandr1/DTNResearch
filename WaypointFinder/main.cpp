@@ -180,6 +180,13 @@ char* buildFullName(char* dir, char* fileName) {
     strcat(buffer, fileName);
 }
 
+
+
+#define DEF_TRACE_DIR "./tracefiles" //Директория по умолчанию для трасс
+#define DEF_WP_DIR "./waypointfiles" //Директория по умолчанию для путевых точек
+#define DEF_BND_FILE_NAME "bounds.bnd" //Имя файла по умолчанию с границами
+#define DEF_STAT_FILE_NAME "statistics.stat" //Имя файла по умолчанию со статистикой
+
 int mainForWPFinder(int argc, char** argv)
 {
     cout << "Finder start!" << endl << endl;
@@ -189,12 +196,12 @@ int mainForWPFinder(int argc, char** argv)
     switch(argc)
     {
     case 2 :
-        traceFilesDir="./tracefiles";
-        wayPointFilesDir="./waypointfiles";
+        traceFilesDir = DEF_TRACE_DIR;
+        wayPointFilesDir = DEF_WP_DIR;
         break;
     case 3 :
-        traceFilesDir=argv[1];
-        wayPointFilesDir="./waypointfiles";
+        traceFilesDir = argv[1];
+        wayPointFilesDir = DEF_WP_DIR;
         break;
     case 4 :
     default:
@@ -247,12 +254,14 @@ int mainForWPFinder(int argc, char** argv)
     }
 
     WaypointFinder::totalWayPointBounds.print();
-    WaypointFinder::totalTraceBounds.write(buildFullName(traceFilesDir, "bounds.bnd"));
-    WaypointFinder::totalWayPointBounds.write(buildFullName(wayPointFilesDir, "bounds.bnd"));
+    WaypointFinder::totalTraceBounds.write(buildFullName(traceFilesDir, DEF_BND_FILE_NAME));
+    WaypointFinder::totalWayPointBounds.write(buildFullName(wayPointFilesDir, DEF_BND_FILE_NAME));
 
     cout << "Finder end." << endl << endl;
     return 0;
 }
+
+
 
 int mainForGenerator(int argc, char** argv) {
     cout << "Analyzing start!" << endl << endl;
@@ -261,7 +270,7 @@ int mainForGenerator(int argc, char** argv) {
     switch(argc)
     {
     case 2 :
-        fileDir="./waypointfiles";
+        fileDir = DEF_WP_DIR;
         break;
     case 3 :
     default:
@@ -279,7 +288,7 @@ int mainForGenerator(int argc, char** argv) {
     char* fileNamePattern = buildFullName(fileDir, "*.wpt"); //todo или "*.txt" в параметр ком строки
     cout << "   fileNamePattern: " << fileNamePattern << endl << endl;
 
-    WaypointGenerator generator(1000, buildFullName(fileDir, "bounds.bnd")); //todo 1000 в параметр ком строки и ГРАНИЦУ в параметр ком строки
+    WaypointGenerator generator(1000, buildFullName(fileDir, DEF_BND_FILE_NAME)); //todo 1000 в параметр ком строки и ГРАНИЦУ в параметр ком строки
 
     HANDLE h = FindFirstFile(fileNamePattern, &f);
     if(h != INVALID_HANDLE_VALUE)
@@ -306,11 +315,12 @@ int mainForGenerator(int argc, char** argv) {
         fprintf(stderr, "Directory or files not found\n");
     }
 
-    generator.writeStatistics(buildFullName(fileDir, "statistics.stat"));
+    generator.writeStatistics(buildFullName(fileDir, DEF_STAT_FILE_NAME));
 
     cout << "Analyzing end." << endl << endl;
     return 0;
 }
+
 
 
 #define STAT "-stat" //команда для сбора статистики
