@@ -80,7 +80,7 @@ public:
     bool hasNext() {
         nextPoint = NULL;
         if (!traceFile->eof()) {
-            nextPoint = createPoint();
+            nextPoint = readPoint();
         }
         return nextPoint != NULL;
     }
@@ -90,7 +90,7 @@ public:
     }
 
 protected:
-    virtual Point* createPoint() {
+    virtual Point* readPoint() {
         return NULL;
     }
 };
@@ -103,11 +103,15 @@ public:
     }
 
 protected:
-    virtual WayPoint* createPoint(){
+    virtual WayPoint* readPoint(){
         double x, y, tMin, tMxB;
+        x = y = tMin = tMxB = -10e10;
         (*traceFile) >> x >> y >> tMin >> tMxB;
-//todo считывает последнюю люшнюю строчку. НУЖНО УБИРАТЬ ПОСЛЕДНЮЮ ПУСТУЮ СТРОКУ
-        return new WayPoint(x, y, tMin, tMxB);
+        //т.к. последняя строка (ПУСТАЯ) считывается криво
+        if (tMin != -10e10)
+            return new WayPoint(x, y, tMin, tMxB);
+        else
+            return NULL;
     }
 };
 
@@ -119,10 +123,14 @@ public:
     }
 
 protected:
-    virtual TracePoint* createPoint(){
+    virtual TracePoint* readPoint(){
         double t, x, y;
+        t = x = y = -10e10;
         (*traceFile) >> t >> x >> y;
-//todo считывает последнюю люшнюю строчку. НУЖНО УБИРАТЬ ПОСЛЕДНЮЮ ПУСТУЮ СТРОКУ
-        return new TracePoint(t, x, y);
+        //т.к. последняя строка (ПУСТАЯ) считывается криво
+        if (t != -10e10)
+            return new TracePoint(t, x, y);
+        else
+            return NULL;
     }
 };

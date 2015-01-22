@@ -70,6 +70,8 @@ WaypointFinder::~WaypointFinder()
 {
     traceFile->close();
     waypointFile->close();
+    delete traceFile;
+    delete waypointFile;
 }
 
 bool WaypointFinder::addPoint()
@@ -77,17 +79,22 @@ bool WaypointFinder::addPoint()
     double t,x,y;
     if( traceFile->eof() ) return false;
     else {
+        t=x=y=-10e10;
         (*traceFile)>>t>>x>>y;
-        xcoord.push(x);  sumX+=x;
-        ycoord.push(y);  sumY+=y;
+        //т.к. последн€€ строка (ѕ”—“јя) считываетс€ криво
+        if (t != -10e10) {
+            xcoord.push(x);  sumX+=x;
+            ycoord.push(y);  sumY+=y;
 
-        traceBounds.changeBounds(x, y);
-        totalTraceBounds.changeBounds(x, y);
+            traceBounds.changeBounds(x, y);
+            totalTraceBounds.changeBounds(x, y);
 
-        time.push(t);
-        if(xcoord.size()==1) tMin=tMxB=tMax=t;
-        else  tMxB=tMax; tMax=t;
-        return true;
+            time.push(t);
+            if(xcoord.size()==1) tMin=tMxB=tMax=t;
+            else  tMxB=tMax; tMax=t;
+            return true;
+        } else
+            return false;
     }
 }
 
@@ -134,6 +141,7 @@ bool WaypointFinder::isStopTimeReached()
 
 void WaypointFinder::findWaypoints()
 {
+    bool firstRow = true;
     double waypointX, waypointY;
     while( !traceFile->eof() ) {
         while( (addPoint()) && !isOutofRange() );
@@ -144,7 +152,10 @@ void WaypointFinder::findWaypoints()
             wayPointBounds.changeBounds(waypointX, waypointY);
             totalWayPointBounds.changeBounds(waypointX, waypointY);
 
-            (*waypointFile) << waypointX << "\t" << waypointY  << "\t" << tMin << "\t" << tMxB << endl;
+            if (firstRow) firstRow = false;
+            else (*waypointFile) << endl;
+
+            (*waypointFile) << waypointX << "\t" << waypointY  << "\t" << tMin << "\t" << tMxB;
             while(xcoord.size()>1) removePoint();
         }
         else while( (removePoint()) && isOutofRange() );
@@ -253,7 +264,12 @@ int mainForWPFinder(int argc, char** argv)
         fprintf(stderr, "Directory or files not found\n");
     }
 
+    cout << endl << "\t totalTraceBounds:" << endl;
+    WaypointFinder::totalTraceBounds.print();
+    cout << endl;
+    cout << "\t totalWayPointBounds:" << endl;
     WaypointFinder::totalWayPointBounds.print();
+
     WaypointFinder::totalTraceBounds.write(buildFullName(traceFilesDir, DEF_BND_FILE_NAME));
     WaypointFinder::totalWayPointBounds.write(buildFullName(wayPointFilesDir, DEF_BND_FILE_NAME));
 
@@ -328,7 +344,7 @@ int mainForGenerator(int argc, char** argv) {
 
 int main(int argc, char** argv)
 {
-    argc = 2; argv = new char*[2] {"program", STAT} ; //REMOVE HARDCORE!
+    argc = 2; argv = new char*[2] {"program", WP} ; //REMOVE HARDCORE!
 
     cout << "Program start!" << endl << endl;
 
