@@ -300,10 +300,12 @@ public:
         Area* initialArea = Area::createTreeStructure(this->bounds);
 
         //Filling of the tree structure
-        WayPointReader* reader = new WayPointReader(waypointFileName);
+//        WayPointReader* reader = new WayPointReader(waypointFileName);
+        TracePointReader* reader = new TracePointReader(waypointFileName);
         int row = 1;
         while (reader->hasNext()) {
-            WayPoint* point = reader->next();
+//            WayPoint* point = reader->next();
+            TracePoint* point = reader->next();
 //            cout << "\t" << row++ << "  " << point->x << "  " << point->y << endl;
             if (!initialArea->putInArea(point->x, point->y)) {exit(-222);};
             if (!commonAreaTree->putInArea(point->x, point->y)) {exit(-223);};

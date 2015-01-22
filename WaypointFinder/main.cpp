@@ -301,7 +301,7 @@ int mainForGenerator(int argc, char** argv) {
         exit(-777);
     }
 
-    char* fileNamePattern = buildFullName(fileDir, "*.wpt"); //todo или "*.txt" в параметр ком строки
+    char* fileNamePattern = buildFullName(fileDir, "*.txt"); //todo или "*.txt" в параметр ком строки
     cout << "   fileNamePattern: " << fileNamePattern << endl << endl;
 
     WaypointGenerator generator(1000, buildFullName(fileDir, DEF_BND_FILE_NAME)); //todo 1000 в параметр ком строки и ГРАНИЦУ в параметр ком строки
@@ -344,7 +344,7 @@ int mainForGenerator(int argc, char** argv) {
 
 int main(int argc, char** argv)
 {
-    argc = 2; argv = new char*[2] {"program", WP} ; //REMOVE HARDCORE!
+    argc = 2; argv = new char*[2] {"program", STAT} ; //REMOVE HARDCORE!
 
     cout << "Program start!" << endl << endl;
 
