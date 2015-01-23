@@ -13,7 +13,7 @@
 using namespace std;
 
 
-#define ERR 0.5   //проверяем границы с точностью до полуметра
+#define ERR 0.5   //нужно из-за ошибки округления при записи в файл
 #define MIN(x, y) (x < y ? x : y)
 #define MAX(x, y) (x > y ? x : y)
 
@@ -64,7 +64,6 @@ public:
             cout << "\t" << "Bounds write: bounds file "<< fileName <<" is not found." << endl;
             exit(-112);
         }
-        //сделать окугление в большую по модулю сторону
         boundsFile << (XMin-ERR) << "\t" << (XMax+ERR) << endl;
         boundsFile << (YMin-ERR) << "\t" << (YMax+ERR);
         boundsFile.close();
@@ -139,7 +138,7 @@ public:
 
     bool isInArea(double x, double y) {
         return (this->bound->getXMin() <= x && x <= this->bound->getXMax())
-                && (this->bound->getYMin() <= y && y <= this->bound->getYMax());
+            && (this->bound->getYMin() <= y && y <= this->bound->getYMax());
     }
 
     bool putInArea(double x, double y) {
@@ -162,18 +161,18 @@ public:
         return true;
     }
 
-    void computeLocalExDx() {
-        if (subAreas != NULL) {
-            this->EX = 0;
-            double ex2 = 0;
-            for(int i=0; i<SUB_AREAS_COUNT; i++) {
-                this->EX += subAreas[i]->n;
-                ex2 += (subAreas[i]->n * subAreas[i]->n);
-            }
-            this->EX /= SUB_AREAS_COUNT;
-            this->DX = (ex2 / SUB_AREAS_COUNT) - (this->EX * this->EX);
-        }
-    }
+//    void computeLocalExDx() {
+//        if (subAreas != NULL) {
+//            this->EX = 0;
+//            double ex2 = 0;
+//            for(int i=0; i<SUB_AREAS_COUNT; i++) {
+//                this->EX += subAreas[i]->n;
+//                ex2 += (subAreas[i]->n * subAreas[i]->n);
+//            }
+//            this->EX /= SUB_AREAS_COUNT;
+//            this->DX = (ex2 / SUB_AREAS_COUNT) - (this->EX * this->EX);
+//        }
+//    }
 
     static Area* createTreeStructure(Bounds* bounds) {
         Area* initialArea = new Area(bounds);
@@ -302,12 +301,12 @@ public:
         Area* initialArea = Area::createTreeStructure(this->bounds);
 
         //Filling of the tree structure
-//        WayPointReader* reader = new WayPointReader(waypointFileName);
-        TracePointReader* reader = new TracePointReader(waypointFileName);
+        WayPointReader* reader = new WayPointReader(waypointFileName);
+//        TracePointReader* reader = new TracePointReader(waypointFileName);
         int row = 1;
         while (reader->hasNext()) {
-//            WayPoint* point = reader->next();
-            TracePoint* point = reader->next();
+            WayPoint* point = reader->next();
+//            TracePoint* point = reader->next();
             if (!initialArea->putInArea(point->x, point->y)) {
                 cout << "\t" << row << "  " << point->x << "  " << point->y << endl;
                 exit(-222);
