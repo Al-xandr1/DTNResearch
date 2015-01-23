@@ -164,17 +164,16 @@ public:
     }
 
     void computeLocalExDx() {
-//        if (subAreas != NULL) {
-//            this->EX = 0;
-//            double ex2 = 0;
-//            for(int i=0; i<SUB_AREAS_COUNT; i++) {
-//                this->EX += subAreas[i]->n;
-//                ex2 += (subAreas[i]->n * subAreas[i]->n);
-//            }
-//            this->EX /= SUB_AREAS_COUNT;
-//            this->DX = (ex2 / SUB_AREAS_COUNT) - (this->EX * this->EX);
-//        }
-        this->DX = n / bound->getSquare();
+        if (subAreas != NULL) {
+            this->EX = 0;
+            double ex2 = 0;
+            for(int i=0; i<SUB_AREAS_COUNT; i++) {
+                this->EX += subAreas[i]->n;
+                ex2 += (subAreas[i]->n * subAreas[i]->n);
+            }
+            this->EX /= SUB_AREAS_COUNT;
+            this->DX = (ex2 / SUB_AREAS_COUNT) - (this->EX * this->EX);
+        }
     }
 
     static Area* createTreeStructure(Bounds* bounds) {
@@ -216,7 +215,7 @@ public:
 
         queue<Area*> areasForProcess;
         areasForProcess.push(rootArea);
-        double areasCount = 1;
+        double areasCount = SUB_AREAS_COUNT;
 
         for (int l=0; l<LEVELS; l++) {
             ExPerLevel[l] = DxPerLevel[l] = 0;
@@ -228,13 +227,10 @@ public:
                 Area* area = areasPerLevel.front();
                 areasPerLevel.pop();
 
-                area->computeLocalExDx();
-                DxPerLevel[l] += area->DX;
-
                 if (area->subAreas != NULL) {
                     for(int i=0; i<SUB_AREAS_COUNT; i++) {
-//                        ExPerLevel[l] += area->subAreas[i]->n;
-//                        DxPerLevel[l] += (area->subAreas[i]->n * area->subAreas[i]->n);
+                        ExPerLevel[l] += area->subAreas[i]->n;
+                        DxPerLevel[l] += (area->subAreas[i]->n * area->subAreas[i]->n);
 
                         areasForProcess.push(area->subAreas[i]);
                     }
@@ -242,7 +238,10 @@ public:
             }
 
             ExPerLevel[l] /= areasCount;
-            DxPerLevel[l] /= areasCount; //DxPerLevel[l] -= ExPerLevel[l] * ExPerLevel[l];
+
+            DxPerLevel[l] /= areasCount;
+            DxPerLevel[l] /= ExPerLevel[l] * ExPerLevel[l];
+            DxPerLevel[l] -= 1;
 
             areasCount *= SUB_AREAS_COUNT;
         }
@@ -253,7 +252,7 @@ public:
     static void writeStatistics(Area* rootArea, char* statFileName) {
         ofstream statFile(statFileName);
         if (statFile == NULL) {
-            cout << "\t" << "Area write(): Output file " << statFileName <<" opening failed." << endl;
+            cout << "\t" << "Area write(): Output file " << statFileName << " opening failed." << endl;
             exit(333);
         }
 
@@ -319,6 +318,7 @@ public:
             }
             if (!commonAreaTree->putInArea(point->x, point->y)) {
                 cout << "\t" << row << "  " << point->x << "  " << point->y << endl;
+                initialArea->getBounds()->print();
                 exit(-223);
             }
             delete point;
