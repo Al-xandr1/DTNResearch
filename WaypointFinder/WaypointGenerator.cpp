@@ -6,7 +6,7 @@
 #include <string.h>
 #include <string>
 #include <cstdlib>
-#include <math.h>
+#include <cmath>
 #include <queue>
 #include "Reader.cpp"
 
@@ -57,6 +57,8 @@ public:
     double getXMax() {return XMax;}
     double getYMin() {return YMin;}
     double getYMax() {return YMax;}
+
+    double getSquare() {return abs(XMax - XMin) * abs(YMax - YMin);}
 
     void write(char* fileName) {
         ofstream boundsFile(fileName);
@@ -161,7 +163,7 @@ public:
         return true;
     }
 
-//    void computeLocalExDx() {
+    void computeLocalExDx() {
 //        if (subAreas != NULL) {
 //            this->EX = 0;
 //            double ex2 = 0;
@@ -172,7 +174,8 @@ public:
 //            this->EX /= SUB_AREAS_COUNT;
 //            this->DX = (ex2 / SUB_AREAS_COUNT) - (this->EX * this->EX);
 //        }
-//    }
+        this->DX = n / bound->getSquare();
+    }
 
     static Area* createTreeStructure(Bounds* bounds) {
         Area* initialArea = new Area(bounds);
@@ -208,12 +211,12 @@ public:
     }
 
     static double** computeExDx(Area* rootArea) {
-        double* ExPerLevel = new double[LEVELS+1];
-        double* DxPerLevel = new double[LEVELS+1];
+        double* ExPerLevel = new double[LEVELS];
+        double* DxPerLevel = new double[LEVELS];
 
         queue<Area*> areasForProcess;
         areasForProcess.push(rootArea);
-        double areasCount = SUB_AREAS_COUNT;
+        double areasCount = 1;
 
         for (int l=0; l<LEVELS; l++) {
             ExPerLevel[l] = DxPerLevel[l] = 0;
@@ -222,25 +225,27 @@ public:
             while(!areasForProcess.empty()) areasForProcess.pop();
 
             while(!areasPerLevel.empty()){
-                Area* rootArea = areasPerLevel.front();
+                Area* area = areasPerLevel.front();
                 areasPerLevel.pop();
 
-                if (rootArea->subAreas != NULL) {
-                    for(int i=0; i<SUB_AREAS_COUNT; i++) {
-                        ExPerLevel[l] += rootArea->subAreas[i]->n;
-                        DxPerLevel[l] += (rootArea->subAreas[i]->n * rootArea->subAreas[i]->n);
+                area->computeLocalExDx();
+                DxPerLevel[l] += area->DX;
 
-                        areasForProcess.push(rootArea->subAreas[i]);
+                if (area->subAreas != NULL) {
+                    for(int i=0; i<SUB_AREAS_COUNT; i++) {
+//                        ExPerLevel[l] += area->subAreas[i]->n;
+//                        DxPerLevel[l] += (area->subAreas[i]->n * area->subAreas[i]->n);
+
+                        areasForProcess.push(area->subAreas[i]);
                     }
                 }
             }
 
             ExPerLevel[l] /= areasCount;
-            DxPerLevel[l] /= areasCount; DxPerLevel[l] -= ExPerLevel[l] * ExPerLevel[l];
+            DxPerLevel[l] /= areasCount; //DxPerLevel[l] -= ExPerLevel[l] * ExPerLevel[l];
 
             areasCount *= SUB_AREAS_COUNT;
         }
-        ExPerLevel[LEVELS] = DxPerLevel[LEVELS] = 0;
 
         return new double*[2]{ExPerLevel, DxPerLevel};
     }
@@ -309,6 +314,7 @@ public:
 //            TracePoint* point = reader->next();
             if (!initialArea->putInArea(point->x, point->y)) {
                 cout << "\t" << row << "  " << point->x << "  " << point->y << endl;
+                initialArea->getBounds()->print();
                 exit(-222);
             }
             if (!commonAreaTree->putInArea(point->x, point->y)) {

@@ -343,7 +343,7 @@ int mainForGenerator(int argc, char** argv) {
 
 int main(int argc, char** argv)
 {
-    argc = 2; argv = new char*[2] {"program", WP} ; //REMOVE HARDCORE!
+    argc = 2; argv = new char*[2] {"program", STAT} ; //REMOVE HARDCORE!
 
     cout << "Program start!" << endl << endl;
 
