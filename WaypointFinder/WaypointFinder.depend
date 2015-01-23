@@ -137,7 +137,7 @@
 	<math.h>
 	<queue>
 
-1422011974 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\main.cpp
+1422013055 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\main.cpp
 	<iostream>
 	<fstream>
 	<sstream>
@@ -151,7 +151,7 @@
 	<windows.h>
 	"WaypointGenerator.cpp"
 
-1422012514 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\waypointgenerator.cpp
+1422013108 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\waypointgenerator.cpp
 	<iostream>
 	<fstream>
 	<sstream>
@@ -160,7 +160,7 @@
 	<string.h>
 	<string>
 	<cstdlib>
-	<cmath>
+	<math.h>
 	<queue>
 	"Reader.cpp"
 

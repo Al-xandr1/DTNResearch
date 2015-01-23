@@ -13,7 +13,7 @@
 using namespace std;
 
 
-#define ERR 0.05   //проверяем границы с точностью до полуметра
+#define ERR 0.5   //проверяем границы с точностью до полуметра
 #define MIN(x, y) (x < y ? x : y)
 #define MAX(x, y) (x > y ? x : y)
 
