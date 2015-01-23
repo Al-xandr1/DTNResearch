@@ -321,7 +321,6 @@ int mainForGenerator(int argc, char** argv) {
             generator.analyze(inputFileName, outPutFileName);
 
             delete inputFileName;
-            delete statFileName;
             delete outPutFileName;
         }
         while(FindNextFile(h, &f));
