@@ -302,12 +302,12 @@ public:
         Area* initialArea = Area::createTreeStructure(this->bounds);
 
         //Filling of the tree structure
-        WayPointReader* reader = new WayPointReader(waypointFileName);
-//        TracePointReader* reader = new TracePointReader(waypointFileName);
+//        WayPointReader* reader = new WayPointReader(waypointFileName);
+        TracePointReader* reader = new TracePointReader(waypointFileName);
         int row = 1;
         while (reader->hasNext()) {
-            WayPoint* point = reader->next();
-//            TracePoint* point = reader->next();
+//            WayPoint* point = reader->next();
+            TracePoint* point = reader->next();
             if (!initialArea->putInArea(point->x, point->y)) {
                 cout << "\t" << row << "  " << point->x << "  " << point->y << endl;
                 exit(-222);
