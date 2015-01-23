@@ -13,6 +13,7 @@
 using namespace std;
 
 
+#define ERR 0.05   //проверяем границы с точностью до полуметра
 #define MIN(x, y) (x < y ? x : y)
 #define MAX(x, y) (x > y ? x : y)
 
@@ -63,8 +64,9 @@ public:
             cout << "\t" << "Bounds write: bounds file "<< fileName <<" is not found." << endl;
             exit(-112);
         }
-        boundsFile << XMin << "\t" << XMax << endl;
-        boundsFile << YMin << "\t" << YMax << endl;
+        //сделать окугление в большую по модулю сторону
+        boundsFile << (XMin-ERR) << "\t" << (XMax+ERR) << endl;
+        boundsFile << (YMin-ERR) << "\t" << (YMax+ERR);
         boundsFile.close();
     }
 
@@ -75,7 +77,7 @@ public:
             exit(-113);
         }
         boundsFile >> XMin >> XMax
-                      >> YMin >> YMax;
+                   >> YMin >> YMax;
         boundsFile.close();
     }
 
@@ -300,16 +302,22 @@ public:
         Area* initialArea = Area::createTreeStructure(this->bounds);
 
         //Filling of the tree structure
-//        WayPointReader* reader = new WayPointReader(waypointFileName);
-        TracePointReader* reader = new TracePointReader(waypointFileName);
+        WayPointReader* reader = new WayPointReader(waypointFileName);
+//        TracePointReader* reader = new TracePointReader(waypointFileName);
         int row = 1;
         while (reader->hasNext()) {
-//            WayPoint* point = reader->next();
-            TracePoint* point = reader->next();
-//            cout << "\t" << row++ << "  " << point->x << "  " << point->y << endl;
-            if (!initialArea->putInArea(point->x, point->y)) {exit(-222);};
-            if (!commonAreaTree->putInArea(point->x, point->y)) {exit(-223);};
+            WayPoint* point = reader->next();
+//            TracePoint* point = reader->next();
+            if (!initialArea->putInArea(point->x, point->y)) {
+                cout << "\t" << row << "  " << point->x << "  " << point->y << endl;
+                exit(-222);
+            }
+            if (!commonAreaTree->putInArea(point->x, point->y)) {
+                cout << "\t" << row << "  " << point->x << "  " << point->y << endl;
+                exit(-223);
+            }
             delete point;
+            row++;
         }
         delete reader;
 
