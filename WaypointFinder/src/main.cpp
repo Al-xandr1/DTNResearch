@@ -155,7 +155,7 @@ int mainForAnalyzer(int argc, char** argv) {
     char* fileNamePattern = buildFullName(fileDir, "*.wpt"); //todo или "*.txt" в параметр ком строки
     cout << "   fileNamePattern: " << fileNamePattern << endl << endl;
 
-    WaypointAnalyzer analyzer(1000, buildFullName(fileDir, DEF_BND_FILE_NAME)); //todo 1000 в параметр ком строки и ГРАНИЦУ в параметр ком строки
+    WaypointAnalyzer analyzer(buildFullName(fileDir, DEF_BND_FILE_NAME)); //todo 1000 в параметр ком строки и ГРАНИЦУ в параметр ком строки
 
     HANDLE h = FindFirstFile(fileNamePattern, &f);
     if(h != INVALID_HANDLE_VALUE)

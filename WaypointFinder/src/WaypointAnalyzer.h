@@ -210,14 +210,12 @@ public:
 class WaypointAnalyzer {
 
 private:
-    int n;
     Bounds* bounds; //граница генерации путевых точек
     Area* commonAreaTree; //дерево площадей для аналиха дисперсии многих трасс
 
 public:
-    WaypointAnalyzer(int n, char* boundsFileName)
+    WaypointAnalyzer(char* boundsFileName)
     {
-        this->n = n;
         this->bounds = new Bounds(boundsFileName);
         this->commonAreaTree = Area::createTreeStructure(this->bounds);
     }
