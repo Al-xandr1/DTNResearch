@@ -9,20 +9,26 @@
 #include <math.h>
 #include <queue>
 
+#ifndef READER_H_INCLUDED
+#define READER_H_INCLUDED
+
 using namespace std;
 
-struct TracePoint {
+struct TracePoint
+{
     double t;
     double x;
     double y;
 
-    TracePoint(double t, double x, double y) {
+    TracePoint(double t, double x, double y)
+    {
         this->t = t;
         this->x = x;
         this->y = y;
     }
 
-    TracePoint(TracePoint* point) {
+    TracePoint(TracePoint* point)
+    {
         this->t = point->t;
         this->x = point->x;
         this->y = point->y;
@@ -31,20 +37,23 @@ struct TracePoint {
 
 
 
-struct WayPoint {
+struct WayPoint
+{
     double x;
     double y;
     double tMin;
     double tMxB;
 
-    WayPoint(double x, double y, double tMin, double tMxB) {
+    WayPoint(double x, double y, double tMin, double tMxB)
+    {
         this->x = x;
         this->y = y;
         this->tMin = tMin;
         this->tMxB = tMxB;
     }
 
-    WayPoint(WayPoint* point) {
+    WayPoint(WayPoint* point)
+    {
         this->x = point->x;
         this->y = point->y;
         this->tMin = point->tMin;
@@ -55,14 +64,16 @@ struct WayPoint {
 
 
 template <typename Point>
-class Reader {
+class Reader
+{
 
 protected:
     ifstream* traceFile;
     Point* nextPoint;
 
 protected:
-    Reader(char* fileName) {
+    Reader(char* fileName)
+    {
         traceFile = new ifstream(fileName);
         if (traceFile == NULL) {
             cout<<"Reader constructor: Input file "<< fileName <<" is not found." << endl;
@@ -71,13 +82,15 @@ protected:
         nextPoint = NULL;
     }
 
-    virtual ~Reader() {
+    virtual ~Reader()
+    {
         traceFile->close();
         delete traceFile;
     }
 
 public:
-    bool hasNext() {
+    bool hasNext()
+    {
         nextPoint = NULL;
         if (!traceFile->eof()) {
             nextPoint = readPoint();
@@ -85,25 +98,28 @@ public:
         return nextPoint != NULL;
     }
 
-    Point* next() {
+    Point* next()
+    {
         return nextPoint;
     }
 
 protected:
-    virtual Point* readPoint() {
+    virtual Point* readPoint()
+    {
         return NULL;
     }
 };
 
 
 
-class WayPointReader : public Reader<WayPoint> {
+class WayPointReader : public Reader<WayPoint>
+{
 public:
-    WayPointReader(char* fileName) : Reader(fileName){
-    }
+    WayPointReader(char* fileName) : Reader(fileName){}
 
 protected:
-    virtual WayPoint* readPoint(){
+    virtual WayPoint* readPoint()
+    {
         double x, y, tMin, tMxB;
         x = y = tMin = tMxB = -10e10;
         (*traceFile) >> x >> y >> tMin >> tMxB;
@@ -117,13 +133,14 @@ protected:
 
 
 
-class TracePointReader : public Reader<TracePoint> {
+class TracePointReader : public Reader<TracePoint>
+{
 public:
-    TracePointReader(char* fileName) : Reader(fileName){
-    }
+    TracePointReader(char* fileName) : Reader(fileName){}
 
 protected:
-    virtual TracePoint* readPoint(){
+    virtual TracePoint* readPoint()
+    {
         double t, x, y;
         t = x = y = -10e10;
         (*traceFile) >> t >> x >> y;
@@ -134,3 +151,5 @@ protected:
             return NULL;
     }
 };
+
+#endif // READER_H_INCLUDED

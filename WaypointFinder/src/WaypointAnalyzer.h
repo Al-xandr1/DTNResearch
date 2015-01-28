@@ -8,87 +8,13 @@
 #include <cstdlib>
 #include <cmath>
 #include <queue>
-#include "Reader.cpp"
+#include "Reader.h"
+#include "Bounds.h"
+
+#ifndef WAYPOINTANALYZER_INCLUDED
+#define WAYPOINTANALYZER_INCLUDED
 
 using namespace std;
-
-
-#define ERR 0.5   //нужно из-за ошибки округления при записи в файл
-#define MIN(x, y) (x < y ? x : y)
-#define MAX(x, y) (x > y ? x : y)
-
-class Bounds {
-
-private:
-    double XMin, XMax, YMin, YMax;
-
-public:
-    Bounds() {
-        XMin = YMin = 10e10;
-        XMax = YMax = -10e10;
-    }
-
-    Bounds(double XMin, double YMin, double XMax, double YMax) {
-        this->XMin = XMin;
-        this->YMin = YMin;
-        this->XMax = XMax;
-        this->YMax = YMax;
-    }
-
-    Bounds(Bounds* bounds) {
-        this->XMin = bounds->XMin;
-        this->YMin = bounds->YMin;
-        this->XMax = bounds->XMax;
-        this->YMax = bounds->YMax;
-    }
-
-    Bounds(char* fileName) {
-        read(fileName);
-    }
-
-    void changeBounds(double x, double y) {
-        XMin = MIN(x, XMin);
-        XMax = MAX(x, XMax);
-        YMin = MIN(y, YMin);
-        YMax = MAX(y, YMax);
-    }
-
-    double getXMin() {return XMin;}
-    double getXMax() {return XMax;}
-    double getYMin() {return YMin;}
-    double getYMax() {return YMax;}
-
-    double getSquare() {return abs(XMax - XMin) * abs(YMax - YMin);}
-
-    void write(char* fileName) {
-        ofstream boundsFile(fileName);
-        if (boundsFile == NULL) {
-            cout << "\t" << "Bounds write: bounds file "<< fileName <<" is not found." << endl;
-            exit(-112);
-        }
-        boundsFile << (XMin-ERR) << "\t" << (XMax+ERR) << endl;
-        boundsFile << (YMin-ERR) << "\t" << (YMax+ERR);
-        boundsFile.close();
-    }
-
-    void read(char* fileName) {
-        ifstream boundsFile(fileName);
-        if (boundsFile == NULL) {
-            cout << "\t" << "Bounds read: bounds file "<< fileName <<" is not found." << endl;
-            exit(-113);
-        }
-        boundsFile >> XMin >> XMax
-                   >> YMin >> YMax;
-        boundsFile.close();
-    }
-
-    void print() {
-        cout << "\t" << "Xmin=" << XMin << "\t Xmax=" << XMax << endl;
-        cout << "\t" << "Ymin=" << YMin << "\t Ymax=" << YMax << endl;
-    }
-};
-
-
 
 #define LEVELS 9
 #define SUB_AREAS_COUNT 4
@@ -104,7 +30,8 @@ private:
     Area** subAreas;
 
 public:
-    Area(Bounds* bound){
+    Area(Bounds* bound)
+    {
         this->n = 0;
         this->EX = 0;
         this->DX = 0;
@@ -112,7 +39,8 @@ public:
         this->subAreas = NULL;
     }
 
-    Area(double XMin, double YMin, double XMax, double YMax) {
+    Area(double XMin, double YMin, double XMax, double YMax)
+    {
         this->n = 0;
         this->EX = 0;
         this->DX = 0;
@@ -120,7 +48,8 @@ public:
         this->subAreas = NULL;
     }
 
-    ~Area() {
+    ~Area()
+    {
         delete this->bound;
         if (subAreas != NULL) {
             for (int i=0; i<SUB_AREAS_COUNT; i++)
@@ -131,19 +60,19 @@ public:
         }
     }
 
-    double getN(){return this->n;}
-
-    double getEX(){return this->EX;}
-    double getDX(){return this->DX;}
-
+    double getN() {return this->n;}
+    double getEX() {return this->EX;}
+    double getDX() {return this->DX;}
     Bounds* getBounds() {return this->bound;}
 
-    bool isInArea(double x, double y) {
+    bool isInArea(double x, double y)
+    {
         return (this->bound->getXMin() <= x && x <= this->bound->getXMax())
             && (this->bound->getYMin() <= y && y <= this->bound->getYMax());
     }
 
-    bool putInArea(double x, double y) {
+    bool putInArea(double x, double y)
+    {
         if (!isInArea(x, y)) {
             return false;
         }
@@ -163,7 +92,8 @@ public:
         return true;
     }
 
-    void computeLocalExDx() {
+    void computeLocalExDx()
+    {
         if (subAreas != NULL) {
             this->EX = 0;
             double ex2 = 0;
@@ -176,7 +106,8 @@ public:
         }
     }
 
-    static Area* createTreeStructure(Bounds* bounds) {
+    static Area* createTreeStructure(Bounds* bounds)
+    {
         Area* initialArea = new Area(bounds);
 
         queue<Area*> areasForProcess;
@@ -209,7 +140,8 @@ public:
         return initialArea;
     }
 
-    static double** computeExDx(Area* rootArea) {
+    static double** computeExDx(Area* rootArea)
+    {
         double* ExPerLevel = new double[LEVELS];
         double* DxPerLevel = new double[LEVELS];
 
@@ -249,7 +181,8 @@ public:
         return new double*[2]{ExPerLevel, DxPerLevel};
     }
 
-    static void writeStatistics(Area* rootArea, char* statFileName) {
+    static void writeStatistics(Area* rootArea, char* statFileName)
+    {
         ofstream statFile(statFileName);
         if (statFile == NULL) {
             cout << "\t" << "Area write(): Output file " << statFileName << " opening failed." << endl;
@@ -274,32 +207,29 @@ public:
 
 
 
-class WaypointGenerator {
+class WaypointAnalyzer {
 
 private:
     int n;
     Bounds* bounds; //граница генерации путевых точек
-
     Area* commonAreaTree; //дерево площадей для аналиха дисперсии многих трасс
 
 public:
-    WaypointGenerator(int n, char* boundsFileName) {
+    WaypointAnalyzer(int n, char* boundsFileName)
+    {
         this->n = n;
         this->bounds = new Bounds(boundsFileName);
-
         this->commonAreaTree = Area::createTreeStructure(this->bounds);
     }
 
-    ~WaypointGenerator() {
+    ~WaypointAnalyzer()
+    {
         delete this->bounds;
         delete this->commonAreaTree;
     }
 
-    void generate() {
-        cout << "\t" << "WayPoints generated!" << endl;
-    }
-
-    void analyze(char* waypointFileName, char* statFileName) {
+    void analyze(char* waypointFileName, char* statFileName)
+    {
         cout << "\t" << "WayPoints analyzing start..." << endl;
 
         Area* initialArea = Area::createTreeStructure(this->bounds);
@@ -337,3 +267,4 @@ public:
     }
 };
 
+#endif //WAYPOINTANALYZER_INCLUDED

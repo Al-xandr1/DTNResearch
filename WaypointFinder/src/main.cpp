@@ -9,162 +9,18 @@
 #include <math.h>
 #include <queue>
 #include <windows.h>
-#include "WaypointGenerator.cpp"
+#include "WaypointFinder.h"
+#include "WaypointAnalyzer.h"
+#include "WaypointGenerator.h"
 
 using namespace std;
 
 
-class WaypointFinder {
-protected:
-    double R2, T;      // main waypoint parameters (by default R2=5m*5m , T=30sec)
+#define DEF_TRACE_DIR "./tracefiles" //Директория по умолчанию для трасс
+#define DEF_WP_DIR "./waypointfiles" //Директория по умолчанию для путевых точек
+#define DEF_BND_FILE_NAME "bounds.bnd" //Имя файла по умолчанию с границами
+#define DEF_STAT_FILE_NAME "statistics.stat" //Имя файла по умолчанию со статистикой
 
-    ifstream* traceFile;
-    ofstream* waypointFile;
-
-    queue<double> xcoord;
-    queue<double> ycoord;
-    queue<double> time;
-    double sumX, sumY, tMin, tMxB, tMax;
-
-public:
-    WaypointFinder(char* trFileName, char* wpFileName, double range, double stopTime );
-    ~WaypointFinder();
-    bool addPoint();
-    bool removePoint();
-    bool isOutofRange();
-    bool isStopTimeReached();
-    void findWaypoints();
-
-    void changeTraceBounds(double x, double y);
-    void changeWayPointBounds(double x, double y);
-
-    Bounds traceBounds;  //границы для одной трассы
-    static Bounds totalTraceBounds; //границы для всех трасс
-
-    Bounds wayPointBounds;   //границы для одного файла путевых точек
-    static Bounds totalWayPointBounds;  //границы для всех файлоа путевых точек
-};
-
-Bounds WaypointFinder::totalTraceBounds;
-Bounds WaypointFinder::totalWayPointBounds;
-
-WaypointFinder::WaypointFinder(char* trFileName, char* wpFileName, double range=5, double stopTime=30 )
-{
-    R2=range*range;  T=stopTime;
-    sumX=sumY=tMin=tMxB=tMax=0;
-
-    traceFile = new ifstream(trFileName);
-    if(traceFile == NULL){
-        cout<<"WaypointFinder constructor: Input trace file "<<trFileName<<" is not found."<<endl;
-        exit(1);
-    }
-
-    waypointFile = new ofstream(wpFileName);
-    if(waypointFile == NULL){
-        cout<<"WaypointFinder constructor: Output file "<<wpFileName<<" opening failed."<<endl;
-        exit(2);
-    }
-}
-
-WaypointFinder::~WaypointFinder()
-{
-    traceFile->close();
-    waypointFile->close();
-    delete traceFile;
-    delete waypointFile;
-}
-
-bool WaypointFinder::addPoint()
-{
-    double t,x,y;
-    if( traceFile->eof() ) return false;
-    else {
-        t=x=y=-10e10;
-        (*traceFile)>>t>>x>>y;
-        //т.к. последняя строка (ПУСТАЯ) считывается криво
-        if (t != -10e10) {
-            xcoord.push(x);  sumX+=x;
-            ycoord.push(y);  sumY+=y;
-
-            traceBounds.changeBounds(x, y);
-            totalTraceBounds.changeBounds(x, y);
-
-            time.push(t);
-            if(xcoord.size()==1) tMin=tMxB=tMax=t;
-            else  tMxB=tMax; tMax=t;
-            return true;
-        } else
-            return false;
-    }
-}
-
-bool WaypointFinder::removePoint()
-{
-    if(xcoord.size()>1) {
-        sumX-=xcoord.front();  xcoord.pop();
-        sumY-=ycoord.front();  ycoord.pop();
-        time.pop();   tMin=time.front();
-        if(xcoord.size()==1) tMxB=tMax;
-        return true;
-    }
-    else return false;
-}
-
-
-bool WaypointFinder::isOutofRange()
-{
-    double xwp=0, ywp=0, dx, dy;
-    queue<double> xc(xcoord);
-    queue<double> yc(ycoord);
-    bool outofRange = false;
-
-    if(xcoord.size()>0) {
-        xwp=sumX/xcoord.size();
-        ywp=sumY/ycoord.size();
-        dx=xc.back()-xwp;  dy=yc.back()-ywp;
-        if( dx*dx+dy*dy > R2 ) return true;
-    }
-    while( xc.size()>1 ) {
-        dx=xc.front()-xwp; dy=yc.front()-ywp;
-        if( dx*dx+dy*dy <= R2 ) { xc.pop(); yc.pop(); }
-        else { outofRange = true; break; }
-    }
-    return outofRange;
-}
-
-
-bool WaypointFinder::isStopTimeReached()
-{
-    return tMxB-tMin > T;
-}
-
-
-void WaypointFinder::findWaypoints()
-{
-    bool firstRow = true;
-    double waypointX, waypointY;
-    while( !traceFile->eof() ) {
-        while( (addPoint()) && !isOutofRange() );
-        if (isStopTimeReached()) {
-            waypointX=(sumX-xcoord.back())/(xcoord.size()-1);
-            waypointY=(sumY-ycoord.back())/(ycoord.size()-1);
-
-            wayPointBounds.changeBounds(waypointX, waypointY);
-            totalWayPointBounds.changeBounds(waypointX, waypointY);
-
-            if (firstRow) firstRow = false;
-            else (*waypointFile) << endl;
-
-            (*waypointFile) << waypointX << "\t" << waypointY  << "\t" << tMin << "\t" << tMxB;
-            while(xcoord.size()>1) removePoint();
-        }
-        else while( (removePoint()) && isOutofRange() );
-    }
-}
-
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
 
 char* buildWayPointFileName(char* name) {
     char* buffer = new char[256];
@@ -192,11 +48,6 @@ char* buildFullName(char* dir, char* fileName) {
 }
 
 
-
-#define DEF_TRACE_DIR "./tracefiles" //Директория по умолчанию для трасс
-#define DEF_WP_DIR "./waypointfiles" //Директория по умолчанию для путевых точек
-#define DEF_BND_FILE_NAME "bounds.bnd" //Имя файла по умолчанию с границами
-#define DEF_STAT_FILE_NAME "statistics.stat" //Имя файла по умолчанию со статистикой
 
 int mainForWPFinder(int argc, char** argv)
 {
@@ -279,7 +130,7 @@ int mainForWPFinder(int argc, char** argv)
 
 
 
-int mainForGenerator(int argc, char** argv) {
+int mainForAnalyzer(int argc, char** argv) {
     cout << "Analyzing start!" << endl << endl;
 
     char* fileDir;    //full path name of directory
@@ -304,7 +155,7 @@ int mainForGenerator(int argc, char** argv) {
     char* fileNamePattern = buildFullName(fileDir, "*.wpt"); //todo или "*.txt" в параметр ком строки
     cout << "   fileNamePattern: " << fileNamePattern << endl << endl;
 
-    WaypointGenerator generator(1000, buildFullName(fileDir, DEF_BND_FILE_NAME)); //todo 1000 в параметр ком строки и ГРАНИЦУ в параметр ком строки
+    WaypointAnalyzer analyzer(1000, buildFullName(fileDir, DEF_BND_FILE_NAME)); //todo 1000 в параметр ком строки и ГРАНИЦУ в параметр ком строки
 
     HANDLE h = FindFirstFile(fileNamePattern, &f);
     if(h != INVALID_HANDLE_VALUE)
@@ -318,7 +169,7 @@ int mainForGenerator(int argc, char** argv) {
             char* outPutFileName = buildFullName(fileDir, statFileName);
             cout << "       outPutFileName: " << outPutFileName << endl << endl;
 
-            generator.analyze(inputFileName, outPutFileName);
+            analyzer.analyze(inputFileName, outPutFileName);
 
             delete inputFileName;
             delete outPutFileName;
@@ -330,7 +181,7 @@ int mainForGenerator(int argc, char** argv) {
         fprintf(stderr, "Directory or files not found\n");
     }
 
-    generator.writeStatistics(buildFullName(fileDir, DEF_STAT_FILE_NAME));
+    analyzer.writeStatistics(buildFullName(fileDir, DEF_STAT_FILE_NAME));
 
     cout << "Analyzing end." << endl << endl;
     return 0;
@@ -361,7 +212,7 @@ int main(int argc, char** argv)
             result = mainForWPFinder(argc, argv);
 
         } else if (strcmp(command, STAT) == 0) {
-            result = mainForGenerator(argc, argv);
+            result = mainForAnalyzer(argc, argv);
 
         } else {
             fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s\n", command, WP, STAT);

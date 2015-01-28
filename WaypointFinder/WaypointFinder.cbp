@@ -36,9 +36,11 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
-		<Unit filename="Reader.cpp" />
-		<Unit filename="WaypointFinder.cpp" />
-		<Unit filename="WaypointGenerator.cpp" />
+		<Unit filename="Bounds.h" />
+		<Unit filename="Reader.h" />
+		<Unit filename="WaypointAnalyzer.h" />
+		<Unit filename="WaypointFinder.h" />
+		<Unit filename="WaypointGenerator.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="runWaypointFinder.bat" />
 		<Extensions>
