@@ -14,49 +14,66 @@
 
 using namespace std;
 
-struct TracePoint
-{
-    double t;
-    double x;
-    double y;
 
-    TracePoint(double t, double x, double y)
+class Point
+{
+public:
+    double x, y;
+
+    Point(double x, double y)
     {
-        this->t = t;
         this->x = x;
         this->y = y;
     }
 
-    TracePoint(TracePoint* point)
+    Point(Point* point)
     {
-        this->t = point->t;
         this->x = point->x;
         this->y = point->y;
+    }
+
+    void print()
+    {
+        cout << "x= " << this->x << "  y= " << this->y << endl;
+    }
+
+
+
+    //todo base methods for points
+};
+
+
+
+class TracePoint : public Point
+{
+public:
+    double t;
+
+    TracePoint(double t, double x, double y) : Point(x, y)
+    {
+        this->t = t;
+    }
+
+    TracePoint(TracePoint* point) : Point(point)
+    {
+        this->t = point->t;
     }
 };
 
 
 
-struct WayPoint
+class WayPoint : public TracePoint
 {
-    double x;
-    double y;
-    double tMin;
+public:
     double tMxB;
 
-    WayPoint(double x, double y, double tMin, double tMxB)
+    WayPoint(double x, double y, double t, double tMxB) : TracePoint(t, x, y)
     {
-        this->x = x;
-        this->y = y;
-        this->tMin = tMin;
         this->tMxB = tMxB;
     }
 
-    WayPoint(WayPoint* point)
+    WayPoint(WayPoint* point) : TracePoint(point)
     {
-        this->x = point->x;
-        this->y = point->y;
-        this->tMin = point->tMin;
         this->tMxB = point->tMxB;
     }
 };
@@ -66,7 +83,6 @@ struct WayPoint
 template <typename Point>
 class Reader
 {
-
 protected:
     ifstream* traceFile;
     Point* nextPoint;

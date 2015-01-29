@@ -24,6 +24,7 @@ class Bounds
 {
 
 private:
+    //todo XMin, XMax, YMin, YMax;  -> Point minPoint, maxPoint;
     double XMin, XMax, YMin, YMax;
 
 public:

@@ -65,22 +65,22 @@ public:
     double getDX() {return this->DX;}
     Bounds* getBounds() {return this->bound;}
 
-    bool isInArea(double x, double y)
+    bool isInArea(Point* point)
     {
-        return (this->bound->getXMin() <= x && x <= this->bound->getXMax())
-            && (this->bound->getYMin() <= y && y <= this->bound->getYMax());
+        return (this->bound->getXMin() <= point->x && point->x <= this->bound->getXMax())
+            && (this->bound->getYMin() <= point->y && point->y <= this->bound->getYMax());
     }
 
-    bool putInArea(double x, double y)
+    bool putInArea(Point* point)
     {
-        if (!isInArea(x, y)) {
+        if (!isInArea(point)) {
             return false;
         }
         n++;
 
         if (subAreas != NULL) {
             for(int i=0; i<SUB_AREAS_COUNT; i++) {
-                bool isPutted = subAreas[i]->putInArea(x, y);
+                bool isPutted = subAreas[i]->putInArea(point);
                 if (isPutted) {
                     return true;
                 }
@@ -207,45 +207,45 @@ public:
 
 
 
-class WaypointAnalyzer {
+class PointsAnalyzer {
 
 private:
     Bounds* bounds; //граница генерации путевых точек
     Area* commonAreaTree; //дерево площадей для аналиха дисперсии многих трасс
 
 public:
-    WaypointAnalyzer(char* boundsFileName)
+    PointsAnalyzer(char* boundsFileName)
     {
         this->bounds = new Bounds(boundsFileName);
         this->commonAreaTree = Area::createTreeStructure(this->bounds);
     }
 
-    ~WaypointAnalyzer()
+    ~PointsAnalyzer()
     {
         delete this->bounds;
         delete this->commonAreaTree;
     }
 
-    void analyze(char* waypointFileName, char* statFileName)
+    void analyze(char* pointsFileName, char* statFileName)
     {
-        cout << "\t" << "WayPoints analyzing start..." << endl;
+        cout << "\t" << "Points analyzing start..." << endl;
 
         Area* initialArea = Area::createTreeStructure(this->bounds);
 
         //Filling of the tree structure
-        WayPointReader* reader = new WayPointReader(waypointFileName);
-//        TracePointReader* reader = new TracePointReader(waypointFileName);
+        WayPointReader* reader = new WayPointReader(pointsFileName);
+//        TracePointReader* reader = new TracePointReader(pointsFileName);
         int row = 1;
         while (reader->hasNext()) {
             WayPoint* point = reader->next();
 //            TracePoint* point = reader->next();
-            if (!initialArea->putInArea(point->x, point->y)) {
-                cout << "\t" << row << "  " << point->x << "  " << point->y << endl;
+            if (!initialArea->putInArea(point)) {
+                cout << "\t" << row << "  "; point->print();
                 initialArea->getBounds()->print();
                 exit(-222);
             }
-            if (!commonAreaTree->putInArea(point->x, point->y)) {
-                cout << "\t" << row << "  " << point->x << "  " << point->y << endl;
+            if (!commonAreaTree->putInArea(point)) {
+                cout << "\t" << row << "  "; point->print();
                 initialArea->getBounds()->print();
                 exit(-223);
             }
@@ -257,7 +257,7 @@ public:
         Area::writeStatistics(initialArea, statFileName);
         delete initialArea;
 
-        cout << endl << "\t" << "WayPoints analyzed!" << endl << endl;
+        cout << endl << "\t" << "Points analyzed!" << endl << endl;
     }
 
     void writeStatistics(char* statFileName) {
