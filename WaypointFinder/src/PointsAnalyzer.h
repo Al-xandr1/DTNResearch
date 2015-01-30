@@ -236,11 +236,20 @@ public:
     {
         bool success = areaTree->putInArea(point);
 
-        if (previous != NULL)
+        if (previous)
         {
             double dist = previous->distance(point);
             double flyDur = previous->flyDuration(point);
             double pause = previous->pauseDuration();
+
+            if (dist<0 || flyDur<=0 || pause<=0)
+            {
+                cout << endl << "\t" << "Statistics addPoint(): unexpected magnitude of value: " << endl;
+                cout << "\t\tdist= " << dist << ",   flyDur= " << flyDur << ",   pause= " << pause << endl;
+                cout << "\t\tprevious:  ";   previous->print();
+                cout << "\t\tpoint:  ";       point->print();
+                exit(334);
+            }
 
             lengthHist->push_back(dist);
             velocityHist->push_back(dist/flyDur);
@@ -251,6 +260,12 @@ public:
         previous = new WayPoint(point);
 
         return success;
+    }
+
+    void resetStat()
+    {
+        if (this->previous) delete previous;
+        previous = NULL;
     }
 
     void printParams()
@@ -274,8 +289,9 @@ public:
     void write(char* statFileName)
     {
         ofstream statFile(statFileName);
-        if (statFile == NULL) {
-            cout << "\t" << "Statistics write(): Output file " << statFileName << " opening failed." << endl;
+        if (statFile == NULL)
+        {
+            cout << endl << "\t" << "Statistics write(): Output file " << statFileName << " opening failed." << endl;
             exit(333);
         }
         statFile << "<?xml version=\'1.0' ?>" << endl;
@@ -340,6 +356,7 @@ public:
         statPerFile->write(statFileName);
 
         delete statPerFile;
+        this->commonStat->resetStat();
         cout << endl << "\t" << "Points analyzed!" << endl << endl;
         cout << "------------------------------------------------------------------------------" << endl;
     }

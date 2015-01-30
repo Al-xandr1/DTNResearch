@@ -372,7 +372,7 @@
 	"Reader.h"
 	"Bounds.h"
 
-1422624424 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\reader.h
+1422626473 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\reader.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -398,7 +398,7 @@
 	"Reader.h"
 	"Bounds.h"
 
-1422624529 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\pointsanalyzer.h
+1422626484 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\pointsanalyzer.h
 	<iostream>
 	<fstream>
 	<sstream>

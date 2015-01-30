@@ -32,10 +32,10 @@ public:
         this->y = point->y;
     }
 
-    double distance(Point* that)
+    double distance(Point* follower)
     {
-        return sqrt((that->x - this->x)*(that->x - this->x)
-                    + (that->y - this->y)*(that->y - this->y));
+        return sqrt((follower->x - this->x)*(follower->x - this->x)
+                    + (follower->y - this->y)*(follower->y - this->y));
     }
 
     void print()
