@@ -16,10 +16,15 @@
 using namespace std;
 
 
-#define DEF_TRACE_DIR "./tracefiles" //Директория по умолчанию для трасс
-#define DEF_WP_DIR "./waypointfiles" //Директория по умолчанию для путевых точек
-#define DEF_BND_FILE_NAME "bounds.bnd" //Имя файла по умолчанию с границами
-#define DEF_STAT_FILE_NAME "statistics.stat" //Имя файла по умолчанию со статистикой
+#define DEF_TRACE_DIR "./tracefiles"        //Директория по умолчанию для трасс
+#define DEF_WP_DIR "./waypointfiles"        //Директория по умолчанию для путевых точек
+#define DEF_BND_FILE_NAME "bounds.bnd"      //Имя файла по умолчанию с границами
+#define DEF_STAT_FILE_NAME "statistics.stat"//Имя файла по умолчанию со статистикой
+
+#define WPFIND "-wp" //команда для нахождения путевых точек
+#define STAT "-stat" //команда для сбора статистики
+#define WPT "--wpt"  //параметр для сбора статистики для путевых точек
+#define TXT "--txt"  //параметр для сбора статистики для трассы
 
 
 char* buildWayPointFileName(char* name) {
@@ -69,7 +74,6 @@ int mainForWPFinder(int argc, char** argv)
     default:
         traceFilesDir=argv[1];
         wayPointFilesDir=argv[2];
-        break;
     }
 
     WIN32_FIND_DATA f;
@@ -137,12 +141,27 @@ int mainForAnalyzer(int argc, char** argv) {
     switch(argc)
     {
     case 2 :
+        fprintf(stderr, "You must specify parameter of the command -stat:\n\t %s \n\t %s\n", WPT, TXT);
+        exit(-446);
+
+    case 3 :
         fileDir = DEF_WP_DIR;
         break;
-    case 3 :
+    case 4:
     default:
-        fileDir=argv[2];
-        break;
+        fileDir = argv[3];
+    }
+
+    char* fileType;
+    if (strcmp(argv[2], WPT) == 0) {
+        fileType = "*.wpt";
+    }
+    else if (strcmp(argv[2], TXT) == 0) {
+        fileType = "*.txt";
+    }
+    else {
+        fprintf(stderr, "Unknown parameter of command -stat: %s. Permitted parameters:\n\t %s \n\t %s\n", argv[3], WPT, TXT);
+        exit(-523);
     }
 
     WIN32_FIND_DATA f;
@@ -152,10 +171,10 @@ int mainForAnalyzer(int argc, char** argv) {
         exit(-777);
     }
 
-    char* fileNamePattern = buildFullName(fileDir, "*.wpt"); //todo или "*.txt" в параметр ком строки
+    char* fileNamePattern = buildFullName(fileDir, fileType);
     cout << "   fileNamePattern: " << fileNamePattern << endl << endl;
 
-    PointsAnalyzer analyzer(buildFullName(fileDir, DEF_BND_FILE_NAME)); //todo 1000 в параметр ком строки и ГРАНИЦУ в параметр ком строки
+    PointsAnalyzer analyzer(buildFullName(fileDir, DEF_BND_FILE_NAME));
 
     HANDLE h = FindFirstFile(fileNamePattern, &f);
     if(h != INVALID_HANDLE_VALUE)
@@ -189,12 +208,9 @@ int mainForAnalyzer(int argc, char** argv) {
 
 
 
-#define STAT "-stat" //команда для сбора статистики
-#define WP "-wp" //команда для нахождения путевых точек
-
 int main(int argc, char** argv)
 {
-    argc = 2; argv = new char*[2] {"program", STAT} ; //REMOVE HARDCORE!
+    argc = 3; argv = new char*[3] {"program", STAT, WPT} ; //REMOVE HARDCORE!
 
     cout << "Program start!" << endl << endl;
 
@@ -202,20 +218,20 @@ int main(int argc, char** argv)
     switch(argc)
     {
     case 1 :
-        fprintf(stderr, "You must specify command:\n\t %s \n\t %s\n", WP, STAT);
+        fprintf(stderr, "You must specify command:\n\t %s \n\t %s\n", WPFIND, STAT);
         exit(-444);
 
     case 2 :
     default:
         char* command = argv[1];
-        if (strcmp(command, WP) == 0) {
+        if (strcmp(command, WPFIND) == 0) {
             result = mainForWPFinder(argc, argv);
 
         } else if (strcmp(command, STAT) == 0) {
             result = mainForAnalyzer(argc, argv);
 
         } else {
-            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s\n", command, WP, STAT);
+            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s\n", command, WPFIND, STAT);
             exit(result = -555);
         }
     };
