@@ -56,7 +56,7 @@ public:
         this->t = t;
     }
 
-    TracePoint(TracePoint* point) : Point(point)
+    TracePoint(TracePoint* point) : Point((Point*)point)
     {
         this->t = point->t;
     }
@@ -79,7 +79,7 @@ public:
         this->tMxB = tMxB;
     }
 
-    WayPoint(WayPoint* point) : TracePoint(point)
+    WayPoint(WayPoint* point) : TracePoint((TracePoint*)point)
     {
         this->tMxB = point->tMxB;
     }

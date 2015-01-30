@@ -229,7 +229,7 @@ public:
         delete this->lengthHist;
         delete this->velocityHist;
         delete this->pauseHist;
-//        if (previous != NULL) delete previous;
+        if (previous != NULL) delete previous;
     }
 
     bool addPoint(WayPoint* point)
@@ -248,7 +248,7 @@ public:
 
             delete previous;
         }
-        previous = point;
+        previous = new WayPoint(point);
 
         return success;
     }
@@ -333,6 +333,7 @@ public:
                 exit(-223);
             }
             row++;
+            delete point;
         }
         delete reader;
 
