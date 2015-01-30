@@ -37,8 +37,9 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="src/Bounds.h" />
+		<Unit filename="src/PointsAnalyzer.h" />
 		<Unit filename="src/Reader.h" />
-		<Unit filename="src/WaypointAnalyzer.h" />
+		<Unit filename="src/TrafficHistogram.cpp" />
 		<Unit filename="src/WaypointFinder.h" />
 		<Unit filename="src/WaypointGenerator.h" />
 		<Unit filename="src/main.cpp" />

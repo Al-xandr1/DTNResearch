@@ -32,14 +32,16 @@ public:
         this->y = point->y;
     }
 
+    double distance(Point* that)
+    {
+        return sqrt((that->x - this->x)*(that->x - this->x)
+                    + (that->y - this->y)*(that->y - this->y));
+    }
+
     void print()
     {
         cout << "x= " << this->x << "  y= " << this->y << endl;
     }
-
-
-
-    //todo base methods for points
 };
 
 
@@ -58,6 +60,11 @@ public:
     {
         this->t = point->t;
     }
+
+    double flyDuration(TracePoint* follower)
+    {
+        return follower->t - this->t;
+    }
 };
 
 
@@ -75,6 +82,16 @@ public:
     WayPoint(WayPoint* point) : TracePoint(point)
     {
         this->tMxB = point->tMxB;
+    }
+
+    double flyDuration(WayPoint* follower)
+    {
+        return follower->t - this->tMxB;
+    }
+
+    double pauseDuration()
+    {
+        return this->tMxB - this->t;
     }
 };
 
@@ -128,27 +145,6 @@ protected:
 
 
 
-class WayPointReader : public Reader<WayPoint>
-{
-public:
-    WayPointReader(char* fileName) : Reader(fileName){}
-
-protected:
-    virtual WayPoint* readPoint()
-    {
-        double x, y, tMin, tMxB;
-        x = y = tMin = tMxB = -10e10;
-        (*traceFile) >> x >> y >> tMin >> tMxB;
-        //т.к. последн€€ строка (ѕ”—“јя) считываетс€ криво
-        if (tMin != -10e10)
-            return new WayPoint(x, y, tMin, tMxB);
-        else
-            return NULL;
-    }
-};
-
-
-
 class TracePointReader : public Reader<TracePoint>
 {
 public:
@@ -163,6 +159,27 @@ protected:
         //т.к. последн€€ строка (ѕ”—“јя) считываетс€ криво
         if (t != -10e10)
             return new TracePoint(t, x, y);
+        else
+            return NULL;
+    }
+};
+
+
+
+class WayPointReader : public Reader<WayPoint>
+{
+public:
+    WayPointReader(char* fileName) : Reader(fileName){}
+
+protected:
+    virtual WayPoint* readPoint()
+    {
+        double x, y, tMin, tMxB;
+        x = y = tMin = tMxB = -10e10;
+        (*traceFile) >> x >> y >> tMin >> tMxB;
+        //т.к. последн€€ строка (ѕ”—“јя) считываетс€ криво
+        if (tMin != -10e10)
+            return new WayPoint(x, y, tMin, tMxB);
         else
             return NULL;
     }

@@ -10,6 +10,7 @@
 #include <queue>
 #include "Reader.h"
 #include "Bounds.h"
+#include "TrafficHistogram.cpp"
 
 #ifndef WAYPOINTANALYZER_INCLUDED
 #define WAYPOINTANALYZER_INCLUDED
@@ -181,87 +182,170 @@ public:
         return new double*[2]{ExPerLevel, DxPerLevel};
     }
 
-    static void writeStatistics(Area* rootArea, char* statFileName)
+    static void writeStatistics(ofstream* out, Area* rootArea)
     {
-        ofstream statFile(statFileName);
-        if (statFile == NULL) {
-            cout << "\t" << "Area write(): Output file " << statFileName << " opening failed." << endl;
-            exit(333);
-        }
-
         double** ExDxPerLevel = Area::computeExDx(rootArea);
         double areasCount = SUB_AREAS_COUNT;
         cout << endl << endl;
+        cout << "\t<EX-DX-STAT>" << endl;
+        *out << "  <EX-DX-STAT>" << endl;
         for(int l=0; l<LEVELS; l++){
             cout << "\t" << "Level= " << l << "  areas= " << areasCount << "\tEX=" << ExDxPerLevel[0][l] << "\tDX=" << ExDxPerLevel[1][l] << endl;
-            statFile << areasCount << "\t" << ExDxPerLevel[0][l] << "\t" << ExDxPerLevel[1][l] << endl;
+            *out << areasCount << "\t" << ExDxPerLevel[0][l] << "\t" << ExDxPerLevel[1][l] << endl;
             areasCount *= SUB_AREAS_COUNT;
         }
+        cout << "\t</EX-DX-STAT>" << endl;
+        *out << "  </EX-DX-STAT>" << endl;
         delete ExDxPerLevel[0];
         delete ExDxPerLevel[1];
         delete ExDxPerLevel;
+    }
+};
 
-        statFile.close();
+
+
+class Statistics
+{
+private:
+    Area* areaTree; //дерево площадей для аналиха дисперсии многих трасс
+    vector<double>* lengthHist;
+    vector<double>* velocityHist;
+    vector<double>* pauseHist;
+    WayPoint *previous;
+
+public:
+    Statistics(Bounds* bounds)
+    {
+        this->areaTree = Area::createTreeStructure(bounds);
+        this->lengthHist = new vector<double>();
+        this->velocityHist = new vector<double>();
+        this->pauseHist = new vector<double>();
+        this->previous = NULL;
+    }
+
+    ~Statistics()
+    {
+        delete this->areaTree;
+        delete this->lengthHist;
+        delete this->velocityHist;
+        delete this->pauseHist;
+//        if (previous != NULL) delete previous;
+    }
+
+    bool addPoint(WayPoint* point)
+    {
+        bool success = areaTree->putInArea(point);
+
+        if (previous != NULL)
+        {
+            double dist = previous->distance(point);
+            double flyDur = previous->flyDuration(point);
+            double pause = previous->pauseDuration();
+
+            lengthHist->push_back(dist);
+            velocityHist->push_back(dist/flyDur);
+            pauseHist->push_back(pause);
+
+            delete previous;
+        }
+        previous = point;
+
+        return success;
+    }
+
+    void printParams()
+    {
+        this->areaTree->getBounds()->print();
+    }
+
+    void writeVector(ofstream* out, char* tag, vector<double>* vec)
+    {
+        cout << "\t<" << tag << ">" << endl;
+        *out << "  <" << tag << ">" << endl;
+        for (int i=0; i<vec->size(); i++)
+        {
+            cout << (*vec)[i] << "  ";
+            *out << (*vec)[i] << "  ";
+        }
+        cout << endl << "\t</" << tag << ">" << endl;
+        *out << endl << "  </" << tag << ">" << endl;
+    }
+
+    void write(char* statFileName)
+    {
+        ofstream statFile(statFileName);
+        if (statFile == NULL) {
+            cout << "\t" << "Statistics write(): Output file " << statFileName << " opening failed." << endl;
+            exit(333);
+        }
+        statFile << "<?xml version=\'1.0' ?>" << endl;
+        statFile << "<STATISTICS>" << endl;
+        Area::writeStatistics(&statFile, areaTree);
+        writeVector(&statFile, "LENGTH-HIST",   this->lengthHist);
+        writeVector(&statFile, "VELOCITY-HIST", this->velocityHist);
+        writeVector(&statFile, "PAUSE-HIST",    this->pauseHist);
+        statFile << "</STATISTICS>" << endl;
     }
 };
 
 
 
 class PointsAnalyzer {
+    //todo доработать для испольщования для трасс
 
 private:
     Bounds* bounds; //граница генерации путевых точек
-    Area* commonAreaTree; //дерево площадей для аналиха дисперсии многих трасс
+    Statistics* commonStat;
 
 public:
     PointsAnalyzer(char* boundsFileName)
     {
         this->bounds = new Bounds(boundsFileName);
-        this->commonAreaTree = Area::createTreeStructure(this->bounds);
+        this->commonStat = new Statistics(this->bounds);
     }
 
     ~PointsAnalyzer()
     {
         delete this->bounds;
-        delete this->commonAreaTree;
+        delete this->commonStat;
     }
 
     void analyze(char* pointsFileName, char* statFileName)
     {
-        cout << "\t" << "Points analyzing start..." << endl;
+        cout << "\t" << "Points analyzing start...";
+        Statistics* statPerFile = new Statistics(this->bounds);
 
-        Area* initialArea = Area::createTreeStructure(this->bounds);
-
-        //Filling of the tree structure
         WayPointReader* reader = new WayPointReader(pointsFileName);
-//        TracePointReader* reader = new TracePointReader(pointsFileName);
+        WayPoint *point = NULL;
         int row = 1;
         while (reader->hasNext()) {
-            WayPoint* point = reader->next();
-//            TracePoint* point = reader->next();
-            if (!initialArea->putInArea(point)) {
+            point = reader->next();
+            if (!statPerFile->addPoint(point))
+            {
                 cout << "\t" << row << "  "; point->print();
-                initialArea->getBounds()->print();
+                statPerFile->printParams();
                 exit(-222);
             }
-            if (!commonAreaTree->putInArea(point)) {
+            if (!commonStat->addPoint(point))
+            {
                 cout << "\t" << row << "  "; point->print();
-                initialArea->getBounds()->print();
+                commonStat->printParams();
                 exit(-223);
             }
-            delete point;
             row++;
         }
         delete reader;
 
-        Area::writeStatistics(initialArea, statFileName);
-        delete initialArea;
+        statPerFile->write(statFileName);
 
+        delete statPerFile;
         cout << endl << "\t" << "Points analyzed!" << endl << endl;
+        cout << "------------------------------------------------------------------------------" << endl;
     }
 
-    void writeStatistics(char* statFileName) {
-        Area::writeStatistics(commonAreaTree, statFileName);
+    void writeStatistics(char* statFileName)
+    {
+        this->commonStat->write(statFileName);
     }
 };
 
