@@ -10,7 +10,7 @@
 #include <queue>
 #include "Reader.h"
 #include "Bounds.h"
-#include "TrafficHistogram.cpp"
+#include "Histogram.cpp"
 
 #ifndef WAYPOINTANALYZER_INCLUDED
 #define WAYPOINTANALYZER_INCLUDED
@@ -203,23 +203,27 @@ public:
 };
 
 
+#define MAX_VELOCITY 10
+#define MAX_PAUSE 100000
+#define HIST_CELLS 100
+
 
 class Statistics
 {
 private:
     Area* areaTree; //дерево площадей для аналиха дисперсии многих трасс
-    vector<double>* lengthHist;
-    vector<double>* velocityHist;
-    vector<double>* pauseHist;
+    Histogram* lengthHist;
+    Histogram* velocityHist;
+    Histogram* pauseHist;
     WayPoint *previous;
 
 public:
     Statistics(Bounds* bounds)
     {
         this->areaTree = Area::createTreeStructure(bounds);
-        this->lengthHist = new vector<double>();
-        this->velocityHist = new vector<double>();
-        this->pauseHist = new vector<double>();
+        this->lengthHist = new Histogram(HIST_CELLS, bounds->getDiagLength());
+        this->velocityHist = new Histogram(HIST_CELLS, MAX_VELOCITY);
+        this->pauseHist = new Histogram(HIST_CELLS, MAX_PAUSE);
         this->previous = NULL;
     }
 
@@ -251,9 +255,9 @@ public:
                 exit(334);
             }
 
-            lengthHist->push_back(dist);
-            velocityHist->push_back(dist/flyDur);
-            pauseHist->push_back(pause);
+            lengthHist->put(dist);
+            velocityHist->put(dist/flyDur);
+            pauseHist->put(pause);
 
             delete previous;
         }
@@ -273,11 +277,17 @@ public:
         this->areaTree->getBounds()->print();
     }
 
-    void writeVector(ofstream* out, char* tag, vector<double>* vec)
+    void writeVector(ofstream* out, char* tag, Histogram* hist)
     {
-        cout << "\t<" << tag << ">" << endl;
-        *out << "  <" << tag << ">" << endl;
-        for (int i=0; i<vec->size(); i++)
+        cout << "\t<" << tag << " checkSum=\"" << hist->getCheckSum()
+                             << "\" underflowValues=\"" << hist->getUnderflowValues()
+                             << "\" overflowValues=\"" << hist->getOverflowValues() << "\">"<< endl;
+        *out << "  <" << tag << " checkSum=\"" << hist->getCheckSum()
+                             << "\" underflowValues=\"" << hist->getUnderflowValues()
+                             << "\" overflowValues=\"" << hist->getOverflowValues() << "\">"<< endl;
+
+        vector<double>* vec = hist->toVector();
+        for (int i = 0; i < vec->size(); i++)
         {
             cout << (*vec)[i] << "  ";
             *out << (*vec)[i] << "  ";

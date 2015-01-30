@@ -61,6 +61,11 @@ public:
     double getYMax() {return YMax;}
 
     double getSquare() {return abs(XMax - XMin) * abs(YMax - YMin);}
+    double getDiagLength()
+    {
+        return sqrt((XMax - XMin)*(XMax - XMin)
+                  + (YMax - YMin)*(YMax - YMin));
+    }
 
     void changeBounds(double x, double y)
     {

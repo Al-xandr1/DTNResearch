@@ -11,13 +11,13 @@
 65536	4.57764e-005	36407.9
 262144	1.14441e-005	145635
   </EX-DX-STAT>
-  <LENGTH-HIST>
-5.09812  14.2838  
+  <LENGTH-HIST checkSum="1" underflowValues="0" overflowValues="0">
+1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  
   </LENGTH-HIST>
-  <VELOCITY-HIST>
-0.0566458  0.476126  
+  <VELOCITY-HIST checkSum="1" underflowValues="0" overflowValues="0">
+0.5  0  0  0  0.5  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  
   </VELOCITY-HIST>
-  <PAUSE-HIST>
-60  60  
+  <PAUSE-HIST checkSum="1" underflowValues="0" overflowValues="0">
+1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  
   </PAUSE-HIST>
 </STATISTICS>

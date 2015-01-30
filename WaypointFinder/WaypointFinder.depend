@@ -346,7 +346,7 @@
 	<windows.h>
 	"Bounds.h"
 
-1422560677 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\bounds.h
+1422629575 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\bounds.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -398,7 +398,7 @@
 	"Reader.h"
 	"Bounds.h"
 
-1422626484 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\pointsanalyzer.h
+1422631194 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\pointsanalyzer.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -411,7 +411,7 @@
 	<queue>
 	"Reader.h"
 	"Bounds.h"
-	"TrafficHistogram.cpp"
+	"Histogram.cpp"
 
 1422471620 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\traffichistogram.cc
 	"math.h"
@@ -424,4 +424,12 @@
 
 1422471620 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\traffichistogram.cpp
 	"math.h"
+
+1422630286 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\histogram.cpp
+	"math.h"
+	<queue>
+
+1422630286 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\histogram.cpp
+	"math.h"
+	<queue>
 
