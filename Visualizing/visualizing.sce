@@ -251,7 +251,7 @@ function drawAllHistograms(filename)
 endfunction
 
 //Рисование гистрограммы из одного файла статистики
-function drawHistograms(filename, tag, xleg)
+function drawHistograms(filename, tag, xlable)
     doc = xmlRead(PATH + filename);
     
     cells = getDoubleFromXml(doc, "//" + tag + "/CELLS/text()");
@@ -269,33 +269,21 @@ function drawHistograms(filename, tag, xleg)
     if (SHOW_LEGEND == 1) then
         hl=legend([ 'PDF' ]);
     end
-    xtitle("PDF for "+ tag + " from: " + filename);
-    xgrid();
-    da=gca();
-    da.x_label.text=xleg;
-    da.y_label.text="PDF"; 
+    prepareGraphic("PDF for "+ tag + " from: " + filename, xlable, "PDF");
 
     scf();
     plot2d(len, cdf, GRAPH_COLOR);
     if (SHOW_LEGEND == 1) then
         hl=legend([ 'CDF' ]);
     end
-    xtitle("CDF for "+ tag + " from: " + filename);
-    xgrid();
-    da=gca();
-    da.x_label.text=xleg;
-    da.y_label.text="CDF P(X < x))"; 
+    prepareGraphic("CDF for "+ tag + " from: " + filename, xlable, "CDF P(X < x))");
 
     scf();
     plot2d(len, ccdf, GRAPH_COLOR);
     if (SHOW_LEGEND == 1) then
         hl=legend([ 'CCDF' ]);
     end
-    xtitle("CCDF for "+ tag + " from: " + filename);
-    xgrid();
-    da=gca();
-    da.x_label.text=xleg;
-    da.y_label.text="CCDF P(X > x)";
+    prepareGraphic("CCDF for "+ tag + " from: " + filename, xlable, "CCDF P(X > x)");
 
     xmlDelete(doc);
 endfunction
@@ -309,16 +297,13 @@ function drawDX(filename)
     base = getDoubleFromXml(doc, "//BASE/text()");
     level = getDoubleFromXml(doc, "//LEVELS/text()");
     levels = 1:1:level;
-    areaCount = base^levels;
     DX = getVector(doc, "//DX/text()", level); 
 
-    plot2d(areaCount, DX, GRAPH_COLOR);
+    plot2d(base^levels, DX, GRAPH_COLOR);
     if (SHOW_LEGEND == 1) then
         hl=legend([ 'DX' ]);
     end
-
-    xtitle("Dx of points from: " + filename);
-    xgrid();
+    prepareGraphic("Dx of points from: " + filename, "count_of_subareas_per_level", "DX");
     
     xmlDelete(doc);
 endfunction
@@ -332,15 +317,10 @@ function drawLogLogDX(filename)
     base = getDoubleFromXml(doc, "//BASE/text()");
     level = getDoubleFromXml(doc, "//LEVELS/text()");
     levels = 1:1:level;
-    
     LOG_areaCount = log2(base^levels);
     LOG_DX = log2(getVector(doc, "//DX/text()", level)');  
 
     plot2d(LOG_areaCount, LOG_DX, -4);
-    da=gca();
-    da.x_label.text="log2( count_of_subareas_per_level )";
-    da.y_label.text="log2( DX )"; 
-    
     //Построение линии методом наименьших квадратов
     z = [LOG_areaCount; LOG_DX];
     c = [0; 0;];
@@ -354,9 +334,7 @@ function drawLogLogDX(filename)
         H = 1-abs(b)/2;
         hl=legend([ "log2( DX )" ; "Least squares line, b = " + string(b) + ", H = " + string(H) ]);
     end
-
-    xtitle("log-log Dx of points from: " + filename);
-    xgrid();
+    prepareGraphic("log-log Dx of points from: " + filename, "log2( count_of_subareas_per_level )", "log2( DX )");
     
     xmlDelete(doc);
 endfunction
@@ -365,10 +343,21 @@ endfunction
 function [zr]=F(c,z)
      zr=z(2)-c(1)*z(1)-c(2);
 endfunction
-     
+
 
 
 //-------------------------- Вспомогательные функции ---------------------------
+//Общие настройки текущего графика
+function prepareGraphic(title1, xlable, ylable) 
+    xtitle(title1);
+    xgrid();
+    a=gca();
+    a.x_label.text=xlable;
+    a.x_label.font_size=3;
+    a.y_label.text=ylable;
+    a.Y_label.font_size=3;
+endfunction
+
 // Получаем файлы по указанному пути
 function [files] = getFiles(path, pattern)
     cd(path);

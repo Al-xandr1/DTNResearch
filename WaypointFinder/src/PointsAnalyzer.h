@@ -294,9 +294,11 @@ public:
     void writeStatistics(ofstream* out, char* tag, Histogram* hist)
     {
         cout << "\t<" << tag << " checkSum=\"" << hist->getCheckSum()
+                             << "\" totalValues=\"" << hist->getTotalValues()
                              << "\" underflowValues=\"" << hist->getUnderflowValues()
                              << "\" overflowValues=\"" << hist->getOverflowValues() << "\">"<< endl;
         *out << "  <" << tag << " checkSum=\"" << hist->getCheckSum()
+                             << "\" totalValues=\"" << hist->getTotalValues()
                              << "\" underflowValues=\"" << hist->getUnderflowValues()
                              << "\" overflowValues=\"" << hist->getOverflowValues() << "\">"<< endl;
 

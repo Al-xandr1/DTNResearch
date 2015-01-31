@@ -94,6 +94,7 @@ class Histogram {
 		double getRightBound()         {return rightBound;}
 		double getLeftBound()          {return 0;}
 		double getWidthOfCell()        {return widthOfCell;}
+		long getTotalValues()          {return puttedValues;}
 		long getOverflowValues()       {return overflowValues;}
 		long getUnderflowValues()      {return underflowValues;}
 
