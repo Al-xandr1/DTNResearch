@@ -290,7 +290,7 @@ public:
         this->areaTree->getBounds()->print();
     }
 
-    void writeVector(ofstream* out, char* tag, Histogram* hist)
+    void writePDF(ofstream* out, char* tag, Histogram* hist)
     {
         cout << "\t<" << tag << " checkSum=\"" << hist->getCheckSum()
                              << "\" underflowValues=\"" << hist->getUnderflowValues()
@@ -313,7 +313,7 @@ public:
         vector<double>* vec = hist->toVector();
         for (int i = 0; i < vec->size(); i++)
         {
-            cout << (*vec)[i]; if (i != vec->size()-1) cout << "  "; else cout << endl;
+//            cout << (*vec)[i]; if (i != vec->size()-1) cout << "  "; else cout << endl;
             *out << (*vec)[i]; if (i != vec->size()-1) *out << "  "; else *out << endl;
         }
         cout << "\t  </HIST-VALS>" << endl;
@@ -333,9 +333,9 @@ public:
         statFile << "<?xml version=\'1.0' ?>" << endl;
         statFile << "<STATISTICS>" << endl;
         Area::writeStatistics(&statFile, areaTree);
-        writeVector(&statFile, "FLIGHT-LENGTH",   this->lengthHist);
-        writeVector(&statFile, "VELOCITY", this->velocityHist);
-        writeVector(&statFile, "PAUSE",    this->pauseHist);
+        writePDF(&statFile, "FLIGHT-LENGTH-PDF",   this->lengthHist);
+        writePDF(&statFile, "VELOCITY-PDF", this->velocityHist);
+        writePDF(&statFile, "PAUSE-PDF",    this->pauseHist);
         statFile << "</STATISTICS>" << endl;
     }
 };

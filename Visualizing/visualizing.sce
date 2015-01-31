@@ -243,33 +243,11 @@ endfunction
 
 //------------------ Функции для рисования Статистики -------------------------
 
-//Рисование зависимости Dx от масштаба по имени файла
-function drawStat(filename)
-    doc = xmlRead(PATH + filename);
-    
-    base = getDoubleFromXml(doc, "//BASE/text()");
-    level = getDoubleFromXml(doc, "//LEVELS/text()");
-    levels = 1:1:level;
-    areaCount = base^levels;
-    DX = getVector(doc, "//DX/text()", level); 
-
-    plot2d(areaCount, DX, GRAPH_COLOR);
-    if (SHOW_LEGEND == 1) then
-        hl=legend([ 'DX' ]);
-    end
-
-    xtitle("Dx of points from: " + filename);
-    xgrid();
-    
-    xmlDelete(doc);
-endfunction
-
-
 //Рисование всех гистрограмм из одного файла статистики
 function drawAllCCDF(filename)
-    scf();  drawCCDF(filename, "FLIGHT-LENGTH");
-    scf();  drawCCDF(filename, "VELOCITY");
-    scf();  drawCCDF(filename, "PAUSE");
+    scf();  drawCCDF(filename, "FLIGHT-LENGTH-PDF");
+    scf();  drawCCDF(filename, "VELOCITY-PDF");
+    scf();  drawCCDF(filename, "PAUSE-PDF");
 endfunction
 
 //Рисование гистрограммы из одного файла статистики
@@ -290,6 +268,29 @@ function drawCCDF(filename, tag)
     end
 
     xtitle("PDF for "+ tag + " from: " + filename);
+    xgrid();
+    
+    xmlDelete(doc);
+endfunction
+
+
+
+//Рисование зависимости Dx от масштаба по имени файла
+function drawStat(filename)
+    doc = xmlRead(PATH + filename);
+    
+    base = getDoubleFromXml(doc, "//BASE/text()");
+    level = getDoubleFromXml(doc, "//LEVELS/text()");
+    levels = 1:1:level;
+    areaCount = base^levels;
+    DX = getVector(doc, "//DX/text()", level); 
+
+    plot2d(areaCount, DX, GRAPH_COLOR);
+    if (SHOW_LEGEND == 1) then
+        hl=legend([ 'DX' ]);
+    end
+
+    xtitle("Dx of points from: " + filename);
     xgrid();
     
     xmlDelete(doc);
