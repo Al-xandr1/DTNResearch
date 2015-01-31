@@ -244,14 +244,14 @@ endfunction
 //------------------ Функции для рисования Статистики -------------------------
 
 //Рисование всех гистрограмм из одного файла статистики
-function drawAllCCDF(filename)
-    scf();  drawCCDF(filename, "FLIGHT-LENGTH-HISTOGRAM");
-    scf();  drawCCDF(filename, "VELOCITY-HISTOGRAM");
-    scf();  drawCCDF(filename, "PAUSE-HISTOGRAM");
+function drawAllHistograms(filename)
+    drawHistograms(filename, "FLIGHT-LENGTH-HISTOGRAM", "Flight length, meters");
+    drawHistograms(filename, "VELOCITY-HISTOGRAM", "Velocity magnitude, meters/sec");
+    drawHistograms(filename, "PAUSE-HISTOGRAM", "Pause time, sec");
 endfunction
 
 //Рисование гистрограммы из одного файла статистики
-function drawCCDF(filename, tag)
+function drawHistograms(filename, tag, xleg)
     doc = xmlRead(PATH + filename);
     
     cells = getDoubleFromXml(doc, "//" + tag + "/CELLS/text()");
@@ -259,24 +259,52 @@ function drawCCDF(filename, tag)
     leftBound = getDoubleFromXml(doc, "//" + tag + "/LEFT-BOUND/text()");
     rightBound = getDoubleFromXml(doc, "//" + tag + "/RIGHT-BOUND/text()");
     pdf = getVector(doc, "//" + tag + "/PDF-VALS/text()", cells);
+    cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells);
+    ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells);
 
+    //todo Косяк в отрисовке осей!!!!!
+    scf();
     //рисуем полигон частот
     len = (leftBound+cellWidth/2):cellWidth:rightBound;
     plot2d(len, pdf, GRAPH_COLOR);
     if (SHOW_LEGEND == 1) then
-        hl=legend([ 'Histogram of PDF' ]);
+        hl=legend([ 'PDF' ]);
     end
-
     xtitle("PDF for "+ tag + " from: " + filename);
     xgrid();
-    
+    da=gca();
+    da.x_label.text=xleg;
+    da.y_label.text="PDF"; 
+
+    scf();
+    plot2d(len, cdf, GRAPH_COLOR);
+    if (SHOW_LEGEND == 1) then
+        hl=legend([ 'CDF' ]);
+    end
+    xtitle("CDF for "+ tag + " from: " + filename);
+    xgrid();
+    da=gca();
+    da.x_label.text=xleg;
+    da.y_label.text="CDF P(X < x))"; 
+
+    scf();
+    plot2d(len, ccdf, GRAPH_COLOR);
+    if (SHOW_LEGEND == 1) then
+        hl=legend([ 'CCDF' ]);
+    end
+    xtitle("CCDF for "+ tag + " from: " + filename);
+    xgrid();
+    da=gca();
+    da.x_label.text=xleg;
+    da.y_label.text="CCDF P(X > x)";
+
     xmlDelete(doc);
 endfunction
 
 
 
 //Рисование зависимости Dx от масштаба по имени файла
-function drawStat(filename)
+function drawDX(filename)
     doc = xmlRead(PATH + filename);
     
     base = getDoubleFromXml(doc, "//BASE/text()");
@@ -299,7 +327,7 @@ endfunction
 
 
 //Рисование зависимости log(Dx) от log(масштаба) по имени файла
-function drawLogLogStat(filename)
+function drawLogLogDX(filename)
     doc = xmlRead(PATH + filename);
     
     base = getDoubleFromXml(doc, "//BASE/text()");
@@ -310,7 +338,7 @@ function drawLogLogStat(filename)
     LOG_DX = log2(getVector(doc, "//DX/text()", level)');  
 
     plot2d(LOG_areaCount, LOG_DX, -4);
-    da=gda();
+    da=gca();
     da.x_label.text="log2( count_of_subareas_per_level )";
     da.y_label.text="log2( DX )"; 
     

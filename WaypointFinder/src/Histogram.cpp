@@ -3,13 +3,20 @@
 
 using namespace std;
 
+struct Cell
+{
+    double value;
+    double leftBound;
+    double rightBound;
+};
+
 class Histogram {
 	private:
 		double* hist;		//histogram of values
 		int cells;		    //intervals count for histogram
-		double rightBound;		    //maximum accountable value
+		double rightBound;	//maximum accountable value
 		double widthOfCell;
-		long countValues;	//total count of putted values
+		long puttedValues;	//total count of putted values
 		long overflowValues;
 		long underflowValues;
 
@@ -18,7 +25,7 @@ class Histogram {
 			this->cells = cells;
 			this->rightBound = rightBound;
 			this->widthOfCell = rightBound / (1.0 * cells);
-			this->countValues = 0;
+			this->puttedValues = 0;
 			this->overflowValues = 0;
 			this->underflowValues = 0;
 
@@ -41,15 +48,45 @@ class Histogram {
 			return checkSum;
 		};
 
-		vector<double>* toVector()
+		vector<double>* toPDFVector()
 		{
-		    vector<double>* vec = new vector<double>();
+		    vector<double>* pdf = new vector<double>();
             for (int i = 0; i < this->cells; i++)
-                vec->push_back(getHistValue(i));
-            return vec;
+                pdf->push_back(getHistValue(i));
+            return pdf;
 		}
 
-		double getHistValue(int index) {return hist[index] / countValues;}
+		vector<double>* toCDFVector()
+		{
+		    vector<double>* cdf = new vector<double>();
+            for (int i = 0; i < this->cells; i++)
+            {
+                double val = 0;
+                for (int j = 0; j < i; j++) val+= getHistValue(j); //todo check !!!
+                cdf->push_back(val);
+            }
+            return cdf;
+		}
+
+		vector<double>* toCCDFVector()
+		{
+		    vector<double>* ccdf = new vector<double>();
+		    vector<double>* cdf = toCDFVector();
+            for (int i = 0; i < this->cells; i++) ccdf->push_back(1 - (*cdf)[i]); //todo check !!!
+            delete cdf;
+            return ccdf;
+		}
+
+		Cell getCell(int index)
+		{
+		    Cell cell;
+		    cell.value = hist[index] / this->puttedValues;
+		    cell.leftBound = this->widthOfCell * index;
+		    cell.rightBound = this->widthOfCell * (index+1);
+		    return cell;
+        }
+
+		double getHistValue(int index) {return getCell(index).value;}
 		int getCells()                 {return cells;}
 		double getRightBound()         {return rightBound;}
 		double getLeftBound()          {return 0;}
@@ -94,7 +131,7 @@ class Histogram {
 			int res = isIntoRange(index, val);
 			if (res == 0){
 				hist[index]++;
-				countValues++;
+				puttedValues++;
 				return index;
 			} else if(res < 0){//go left
 				return recursivePut(val, index--);//index-1
