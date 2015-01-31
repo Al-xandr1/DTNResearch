@@ -71,9 +71,12 @@ class Histogram {
 		vector<double>* toCCDFVector()
 		{
 		    vector<double>* ccdf = new vector<double>();
-		    vector<double>* cdf = toCDFVector();
-            for (int i = 0; i < this->cells; i++) ccdf->push_back(1 - (*cdf)[i]); //todo check !!!
-            delete cdf;
+            for (int i = 0; i < this->cells; i++)
+            {
+                double val = 0;
+                for (int j = i; j < this->cells; j++) val+= getHistValue(j); //todo check !!!
+                ccdf->push_back(val);
+            }
             return ccdf;
 		}
 

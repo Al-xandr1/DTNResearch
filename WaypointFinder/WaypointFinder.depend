@@ -372,7 +372,7 @@
 	"Reader.h"
 	"Bounds.h"
 
-1422626473 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\reader.h
+1422731488 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\reader.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -398,7 +398,7 @@
 	"Reader.h"
 	"Bounds.h"
 
-1422715872 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\pointsanalyzer.h
+1422731066 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\pointsanalyzer.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -425,11 +425,11 @@
 1422471620 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\traffichistogram.cpp
 	"math.h"
 
-1422720440 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\histogram.cpp
+1422730401 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\histogram.cpp
 	"math.h"
 	<queue>
 
-1422720440 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\histogram.cpp
+1422730401 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\histogram.cpp
 	"math.h"
 	<queue>
 

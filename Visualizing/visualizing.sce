@@ -262,7 +262,6 @@ function drawHistograms(filename, tag, xleg)
     cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells);
     ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells);
 
-    //todo Косяк в отрисовке осей!!!!!
     scf();
     //рисуем полигон частот
     len = (leftBound+cellWidth/2):cellWidth:rightBound;

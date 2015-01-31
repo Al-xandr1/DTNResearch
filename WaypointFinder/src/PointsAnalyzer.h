@@ -216,10 +216,6 @@ public:
 };
 
 
-#define MAX_VELOCITY 10
-#define MAX_PAUSE 100000
-#define HIST_CELLS 100
-
 
 class Statistics
 {
@@ -234,9 +230,9 @@ public:
     Statistics(Bounds* bounds)
     {
         this->areaTree = Area::createTreeStructure(bounds);
-        this->lengthHist = new Histogram(HIST_CELLS, bounds->getDiagLength());
-        this->velocityHist = new Histogram(HIST_CELLS, MAX_VELOCITY);
-        this->pauseHist = new Histogram(1000, MAX_PAUSE);
+        this->lengthHist =   new Histogram(10000, bounds->getDiagLength());
+        this->velocityHist = new Histogram(1000, 10);
+        this->pauseHist =    new Histogram(1000, 100000);
         this->previous = NULL;
     }
 
@@ -253,25 +249,30 @@ public:
     {
         bool success = areaTree->putInArea(point);
 
+        double pause = point->pauseDuration();
+        if (pause <= 0)
+        {
+            cout << endl << "\t" << "Statistics addPoint(): unexpected magnitude of value: " << endl;
+            cout << "\t\tpause= " << pause << endl;
+            cout << "\t\tpoint:  ";  point->print();
+            exit(334);
+        }
+        pauseHist->put(pause);
+
         if (previous)
         {
             double dist = previous->distance(point);
             double flyDur = previous->flyDuration(point);
-            double pause = previous->pauseDuration();
-
-            if (dist<0 || flyDur<=0 || pause<=0)
+            if (dist<0 || flyDur<=0)
             {
                 cout << endl << "\t" << "Statistics addPoint(): unexpected magnitude of value: " << endl;
-                cout << "\t\tdist= " << dist << ",   flyDur= " << flyDur << ",   pause= " << pause << endl;
+                cout << "\t\tdist= " << dist << ",   flyDur= " << flyDur << endl;
                 cout << "\t\tprevious:  ";   previous->print();
-                cout << "\t\tpoint:  ";       point->print();
-                exit(334);
+                cout << "\t\tpoint:  ";      point->print();
+                exit(335);
             }
-
             lengthHist->put(dist);
             velocityHist->put(dist/flyDur);
-            pauseHist->put(pause);
-
             delete previous;
         }
         previous = new WayPoint(point);

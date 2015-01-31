@@ -35,7 +35,7 @@ public:
     double distance(Point* follower)
     {
         return sqrt((follower->x - this->x)*(follower->x - this->x)
-                    + (follower->y - this->y)*(follower->y - this->y));
+                  + (follower->y - this->y)*(follower->y - this->y));
     }
 
     void print()
@@ -56,7 +56,7 @@ public:
         this->t = t;
     }
 
-    TracePoint(TracePoint* point) : Point((Point*)point)
+    TracePoint(TracePoint* point) : Point(point->x, point->y)
     {
         this->t = point->t;
     }
@@ -79,7 +79,7 @@ public:
         this->tMxB = tMxB;
     }
 
-    WayPoint(WayPoint* point) : TracePoint((TracePoint*)point)
+    WayPoint(WayPoint* point) : TracePoint(point->t, point->x, point->y)
     {
         this->tMxB = point->tMxB;
     }
