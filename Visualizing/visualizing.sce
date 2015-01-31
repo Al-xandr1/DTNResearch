@@ -1,8 +1,8 @@
 //---------------------------- Параметры ---------------------------------------
 // Директория, в которой лежат нужные файлы или папки
 //PATH = '/Volumes/Macintosh/Users/Alexander/soft/omnetpp-4.5/GitHub/WaypointGenerator/';
-PATH = '/Volumes/Macintosh/Users/Alexander/Dropbox/Postgraduate/Dissertation/';
-SEPARATOR = '/';
+PATH = 'C:\omnetpp-4.6\GitHub\DTNResearch\WaypointFinder\waypointfiles\';
+SEPARATOR = '\';
 
 GRAPH_COLOR = 2;    // Цвет первого графика
 COLOR_OFFSET = 0.25;   // дробление цветового диапазона (для большого числа трасс ставить меньше значение)
@@ -243,17 +243,17 @@ endfunction
 
 //------------------ Функции для рисования Статистики -------------------------
 
-//Рисование зависимости Dx от мастаба по имени файла
+//Рисование зависимости Dx от масштаба по имени файла
 function drawStat(filename)
-    fd = mopen(PATH + filename, 'rt');
-    l = mfscanf(-1, fd, '%lg %lg %lg');  
+    doc = xmlRead(PATH + filename);
     
-    n = size(l, 1); 
-    areaCount = l(1:n, 1)';
-    DX = l(1:n, 3)';  
+    base = getDoubleFromXml(doc, "//BASE/text()");
+    level = getDoubleFromXml(doc, "//LEVELS/text()");
+    levels = 1:1:level;
+    areaCount = base^levels;
+    DX = getVector(doc, "//DX/text()", level); 
 
     plot2d(areaCount, DX, GRAPH_COLOR);
-
     if (SHOW_LEGEND == 1) then
         hl=legend([ 'DX' ]);
     end
@@ -261,18 +261,20 @@ function drawStat(filename)
     xtitle("Dx of points from: " + filename);
     xgrid();
     
-    mclose(fd);
+    xmlDelete(doc);
 endfunction
 
 
-//Рисование зависимости log(Dx) от log(мастаба) по имени файла
+//Рисование зависимости log(Dx) от log(масштаба) по имени файла
 function drawLogLogStat(filename)
-    fd = mopen(PATH + filename, 'rt');
-    l = mfscanf(-1, fd, '%lg %lg %lg');  
+    doc = xmlRead(PATH + filename);
     
-    n = size(l, 1); 
-    LOG_areaCount = log2(l(1:n, 1)');
-    LOG_DX = log2(l(1:n, 3)');  
+    base = getDoubleFromXml(doc, "//BASE/text()");
+    level = getDoubleFromXml(doc, "//LEVELS/text()");
+    levels = 1:1:level;
+    
+    LOG_areaCount = log2(base^levels);
+    LOG_DX = log2(getVector(doc, "//DX/text()", level)');  
 
     plot2d(LOG_areaCount, LOG_DX, -4);
     da=gda();
@@ -287,7 +289,6 @@ function drawLogLogStat(filename)
     Yt = a(1)*t + a(2);
 
     plot2d(t, Yt, 5);  
-    
     if (SHOW_LEGEND == 1) then
         b = atan(a(1));   
         H = 1-abs(b)/2;
@@ -297,7 +298,7 @@ function drawLogLogStat(filename)
     xtitle("log-log Dx of points from: " + filename);
     xgrid();
     
-    mclose(fd);
+    xmlDelete(doc);
 endfunction
 
 // функция для минимизации для построения линии МНК
@@ -330,3 +331,22 @@ function [invX] = invert(x)
         invX = [invX ; x(n - i + 1)];
     end
 endfunction
+
+// Чтение вещественного числа из xml тега
+function [field] = getDoubleFromXml(doc, xmlPath)
+    xmlList = xmlXPath(doc, xmlPath);//take element from xmlPath
+    field = strtod(xmlList(1).content);
+endfunction
+
+// Чтение большой строки чисел как вектор маленьких строк
+function [result] = getVector(doc, xmlPath, limit)
+    xmlList = xmlXPath(doc, xmlPath);//take element from xmlPath
+    bigString = xmlList(1).content;
+    strs = strsplit(bigString(1), "  ", limit);
+    for i = 1 : limit
+       vec(i) = strtod(strs(i));
+    end
+    result = vec;
+endfunction
+
+

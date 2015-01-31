@@ -189,13 +189,26 @@ public:
         cout << endl << endl;
         cout << "\t<EX-DX-STAT>" << endl;
         *out << "  <EX-DX-STAT>" << endl;
-        for(int l=0; l<LEVELS; l++){
-            cout << "\t" << "Level= " << l << "  areas= " << areasCount << "\tEX=" << ExDxPerLevel[0][l] << "\tDX=" << ExDxPerLevel[1][l] << endl;
-            *out << areasCount << "\t" << ExDxPerLevel[0][l] << "\t" << ExDxPerLevel[1][l] << endl;
+        *out << "    <BASE>" << SUB_AREAS_COUNT << "</BASE>" << endl;
+        *out << "    <LEVELS>" << LEVELS << "</LEVELS>" << endl;
+        *out << "    <EX>";
+        for(int l = 0; l < LEVELS; l++)
+        {
+            cout << "\t" << "Level= " << (l+1) << "  areas= " << areasCount << "\tEX=" << ExDxPerLevel[0][l] << "\tDX=" << ExDxPerLevel[1][l] << endl;
             areasCount *= SUB_AREAS_COUNT;
+            *out << ExDxPerLevel[0][l];
+            if (l != LEVELS-1) *out << "  ";
         }
-        cout << "\t</EX-DX-STAT>" << endl;
+        *out << "</EX>" << endl;
+        *out << "    <DX>";
+        for(int l = 0; l < LEVELS; l++)
+        {
+            *out << ExDxPerLevel[1][l];
+            if (l != LEVELS-1) *out << "  ";
+        }
+        *out << "</DX>" << endl;
         *out << "  </EX-DX-STAT>" << endl;
+        cout << "\t</EX-DX-STAT>" << endl;
         delete ExDxPerLevel[0];
         delete ExDxPerLevel[1];
         delete ExDxPerLevel;
