@@ -265,6 +265,38 @@ function drawStat(filename)
 endfunction
 
 
+//Рисование всех гистрограмм из одного файла статистики
+function drawAllCCDF(filename)
+    scf();  drawCCDF(filename, "FLIGHT-LENGTH");
+    scf();  drawCCDF(filename, "VELOCITY");
+    scf();  drawCCDF(filename, "PAUSE");
+endfunction
+
+//Рисование гистрограммы из одного файла статистики
+function drawCCDF(filename, tag)
+    doc = xmlRead(PATH + filename);
+    
+    cells = getDoubleFromXml(doc, "//" + tag + "/CELLS/text()");
+    leftBound = getDoubleFromXml(doc, "//" + tag + "/LEFT-BOUND/text()");
+    rightBound = getDoubleFromXml(doc, "//" + tag + "/RIGHT-BOUND/text()");
+    cellWidth = getDoubleFromXml(doc, "//" + tag + "/CELL-WIDTH/text()");
+    hist = getVector(doc, "//" + tag + "/HIST-VALS/text()", cells);
+
+    //рисуем полигон частот
+    len = (leftBound+cellWidth/2):cellWidth:rightBound;
+    plot2d(len, hist, GRAPH_COLOR);
+    if (SHOW_LEGEND == 1) then
+        hl=legend([ 'Histogram of PDF' ]);
+    end
+
+    xtitle("PDF for "+ tag + " from: " + filename);
+    xgrid();
+    
+    xmlDelete(doc);
+endfunction
+
+
+
 //Рисование зависимости log(Dx) от log(масштаба) по имени файла
 function drawLogLogStat(filename)
     doc = xmlRead(PATH + filename);
@@ -333,9 +365,9 @@ function [invX] = invert(x)
 endfunction
 
 // Чтение вещественного числа из xml тега
-function [field] = getDoubleFromXml(doc, xmlPath)
+function [result] = getDoubleFromXml(doc, xmlPath)
     xmlList = xmlXPath(doc, xmlPath);//take element from xmlPath
-    field = strtod(xmlList(1).content);
+    result = strtod(xmlList(1).content);
 endfunction
 
 // Чтение большой строки чисел как вектор маленьких строк

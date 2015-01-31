@@ -236,7 +236,7 @@ public:
         this->areaTree = Area::createTreeStructure(bounds);
         this->lengthHist = new Histogram(HIST_CELLS, bounds->getDiagLength());
         this->velocityHist = new Histogram(HIST_CELLS, MAX_VELOCITY);
-        this->pauseHist = new Histogram(HIST_CELLS, MAX_PAUSE);
+        this->pauseHist = new Histogram(1000, MAX_PAUSE);
         this->previous = NULL;
     }
 
@@ -299,14 +299,27 @@ public:
                              << "\" underflowValues=\"" << hist->getUnderflowValues()
                              << "\" overflowValues=\"" << hist->getOverflowValues() << "\">"<< endl;
 
+        cout << "\t  <CELLS>" << hist->getCells() << "</CELLS>" << endl;
+        *out << "    <CELLS>" << hist->getCells() << "</CELLS>" << endl;
+        cout << "\t  <CELL-WIDTH>" << hist->getWidthOfCell() << "</CELL-WIDTH>" << endl;
+        *out << "    <CELL-WIDTH>" << hist->getWidthOfCell() << "</CELL-WIDTH>" << endl;
+        cout << "\t  <LEFT-BOUND>" << hist->getLeftBound() << "</LEFT-BOUND>" << endl;
+        *out << "    <LEFT-BOUND>" << hist->getLeftBound() << "</LEFT-BOUND>" << endl;
+        cout << "\t  <RIGHT-BOUND>" << hist->getRightBound() << "</RIGHT-BOUND>" << endl;
+        *out << "    <RIGHT-BOUND>" << hist->getRightBound() << "</RIGHT-BOUND>" << endl;
+        cout << "\t  <HIST-VALS>" << endl;
+        *out << "    <HIST-VALS>" << endl;
+
         vector<double>* vec = hist->toVector();
         for (int i = 0; i < vec->size(); i++)
         {
-            cout << (*vec)[i] << "  ";
-            *out << (*vec)[i] << "  ";
+            cout << (*vec)[i]; if (i != vec->size()-1) cout << "  "; else cout << endl;
+            *out << (*vec)[i]; if (i != vec->size()-1) *out << "  "; else *out << endl;
         }
-        cout << endl << "\t</" << tag << ">" << endl;
-        *out << endl << "  </" << tag << ">" << endl;
+        cout << "\t  </HIST-VALS>" << endl;
+        *out << "    </HIST-VALS>" << endl;
+        cout << "\t</" << tag << ">" << endl;
+        *out << "  </" << tag << ">" << endl;
     }
 
     void write(char* statFileName)
@@ -320,9 +333,9 @@ public:
         statFile << "<?xml version=\'1.0' ?>" << endl;
         statFile << "<STATISTICS>" << endl;
         Area::writeStatistics(&statFile, areaTree);
-        writeVector(&statFile, "LENGTH-HIST",   this->lengthHist);
-        writeVector(&statFile, "VELOCITY-HIST", this->velocityHist);
-        writeVector(&statFile, "PAUSE-HIST",    this->pauseHist);
+        writeVector(&statFile, "FLIGHT-LENGTH",   this->lengthHist);
+        writeVector(&statFile, "VELOCITY", this->velocityHist);
+        writeVector(&statFile, "PAUSE",    this->pauseHist);
         statFile << "</STATISTICS>" << endl;
     }
 };

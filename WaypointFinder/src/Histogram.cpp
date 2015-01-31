@@ -7,17 +7,17 @@ class Histogram {
 	private:
 		double* hist;		//histogram of values
 		int cells;		    //intervals count for histogram
-		double maxVal;		    //maximum accountable value
+		double rightBound;		    //maximum accountable value
 		double widthOfCell;
 		long countValues;	//total count of putted values
 		long overflowValues;
 		long underflowValues;
 
 	public:
-		Histogram(int cells, double maxVal){
+		Histogram(int cells, double rightBound){
 			this->cells = cells;
-			this->maxVal = maxVal;
-			this->widthOfCell = maxVal / (1.0 * cells);
+			this->rightBound = rightBound;
+			this->widthOfCell = rightBound / (1.0 * cells);
 			this->countValues = 0;
 			this->overflowValues = 0;
 			this->underflowValues = 0;
@@ -51,7 +51,8 @@ class Histogram {
 
 		double getHistValue(int index) {return hist[index] / countValues;}
 		int getCells()                 {return cells;}
-		double getAccountableMaxVal()  {return maxVal;}
+		double getRightBound()         {return rightBound;}
+		double getLeftBound()          {return 0;}
 		double getWidthOfCell()        {return widthOfCell;}
 		long getOverflowValues()       {return overflowValues;}
 		long getUnderflowValues()      {return underflowValues;}
