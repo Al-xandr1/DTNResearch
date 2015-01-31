@@ -290,7 +290,7 @@ public:
         this->areaTree->getBounds()->print();
     }
 
-    void writePDF(ofstream* out, char* tag, Histogram* hist)
+    void writeStatistics(ofstream* out, char* tag, Histogram* hist)
     {
         cout << "\t<" << tag << " checkSum=\"" << hist->getCheckSum()
                              << "\" underflowValues=\"" << hist->getUnderflowValues()
@@ -307,19 +307,45 @@ public:
         *out << "    <LEFT-BOUND>" << hist->getLeftBound() << "</LEFT-BOUND>" << endl;
         cout << "\t  <RIGHT-BOUND>" << hist->getRightBound() << "</RIGHT-BOUND>" << endl;
         *out << "    <RIGHT-BOUND>" << hist->getRightBound() << "</RIGHT-BOUND>" << endl;
-        cout << "\t  <HIST-VALS>" << endl;
-        *out << "    <HIST-VALS>" << endl;
 
-        vector<double>* vec = hist->toVector();
-        for (int i = 0; i < vec->size(); i++)
+        cout << "\t  <PDF-VALS>" << endl;
+        *out << "    <PDF-VALS>" << endl;
+        vector<double>* pdf = hist->toPDFVector();
+        for (int i = 0; i < pdf->size(); i++)
         {
-//            cout << (*vec)[i]; if (i != vec->size()-1) cout << "  "; else cout << endl;
-            *out << (*vec)[i]; if (i != vec->size()-1) *out << "  "; else *out << endl;
+//            cout << (*pdf)[i]; if (i != pdf->size()-1) cout << "  "; else cout << endl;
+            *out << (*pdf)[i]; if (i != pdf->size()-1) *out << "  "; else *out << endl;
         }
-        cout << "\t  </HIST-VALS>" << endl;
-        *out << "    </HIST-VALS>" << endl;
+        cout << "\t  </PDF-VALS>" << endl;
+        *out << "    </PDF-VALS>" << endl;
+
+        cout << "\t  <CDF-VALS>" << endl;
+        *out << "    <CDF-VALS>" << endl;
+        vector<double>* cdf = hist->toCDFVector();
+        for (int i = 0; i < cdf->size(); i++)
+        {
+//            cout << (*cdf)[i]; if (i != cdf->size()-1) cout << "  "; else cout << endl;
+            *out << (*cdf)[i]; if (i != cdf->size()-1) *out << "  "; else *out << endl;
+        }
+        cout << "\t  </CDF-VALS>" << endl;
+        *out << "    </CDF-VALS>" << endl;
+
+        cout << "\t  <CCDF-VALS>" << endl;
+        *out << "    <CCDF-VALS>" << endl;
+        vector<double>* ccdf = hist->toCCDFVector();
+        for (int i = 0; i < ccdf->size(); i++)
+        {
+//            cout << (*ccdf)[i]; if (i != ccdf->size()-1) cout << "  "; else cout << endl;
+            *out << (*ccdf)[i]; if (i != ccdf->size()-1) *out << "  "; else *out << endl;
+        }
+        cout << "\t  </CCDF-VALS>" << endl;
+        *out << "    </CCDF-VALS>" << endl;
+
         cout << "\t</" << tag << ">" << endl;
         *out << "  </" << tag << ">" << endl;
+        delete pdf;
+        delete cdf;
+        delete ccdf;
     }
 
     void write(char* statFileName)
@@ -333,9 +359,9 @@ public:
         statFile << "<?xml version=\'1.0' ?>" << endl;
         statFile << "<STATISTICS>" << endl;
         Area::writeStatistics(&statFile, areaTree);
-        writePDF(&statFile, "FLIGHT-LENGTH-PDF",   this->lengthHist);
-        writePDF(&statFile, "VELOCITY-PDF", this->velocityHist);
-        writePDF(&statFile, "PAUSE-PDF",    this->pauseHist);
+        writeStatistics(&statFile, "FLIGHT-LENGTH-HISTOGRAM",   this->lengthHist);
+        writeStatistics(&statFile, "VELOCITY-HISTOGRAM", this->velocityHist);
+        writeStatistics(&statFile, "PAUSE-HISTOGRAM",    this->pauseHist);
         statFile << "</STATISTICS>" << endl;
     }
 };

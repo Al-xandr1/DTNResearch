@@ -245,9 +245,9 @@ endfunction
 
 //Рисование всех гистрограмм из одного файла статистики
 function drawAllCCDF(filename)
-    scf();  drawCCDF(filename, "FLIGHT-LENGTH-PDF");
-    scf();  drawCCDF(filename, "VELOCITY-PDF");
-    scf();  drawCCDF(filename, "PAUSE-PDF");
+    scf();  drawCCDF(filename, "FLIGHT-LENGTH-HISTOGRAM");
+    scf();  drawCCDF(filename, "VELOCITY-HISTOGRAM");
+    scf();  drawCCDF(filename, "PAUSE-HISTOGRAM");
 endfunction
 
 //Рисование гистрограммы из одного файла статистики
@@ -255,14 +255,14 @@ function drawCCDF(filename, tag)
     doc = xmlRead(PATH + filename);
     
     cells = getDoubleFromXml(doc, "//" + tag + "/CELLS/text()");
+    cellWidth = getDoubleFromXml(doc, "//" + tag + "/CELL-WIDTH/text()");
     leftBound = getDoubleFromXml(doc, "//" + tag + "/LEFT-BOUND/text()");
     rightBound = getDoubleFromXml(doc, "//" + tag + "/RIGHT-BOUND/text()");
-    cellWidth = getDoubleFromXml(doc, "//" + tag + "/CELL-WIDTH/text()");
-    hist = getVector(doc, "//" + tag + "/HIST-VALS/text()", cells);
+    pdf = getVector(doc, "//" + tag + "/PDF-VALS/text()", cells);
 
     //рисуем полигон частот
     len = (leftBound+cellWidth/2):cellWidth:rightBound;
-    plot2d(len, hist, GRAPH_COLOR);
+    plot2d(len, pdf, GRAPH_COLOR);
     if (SHOW_LEGEND == 1) then
         hl=legend([ 'Histogram of PDF' ]);
     end
