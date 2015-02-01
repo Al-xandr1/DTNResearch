@@ -280,7 +280,7 @@ function drawHistograms(filename, tag, xlable)
     if (SHOW_LEGEND == 1) then
         hl=legend([ 'CDF' ]);
     end
-    prepareGraphic("CDF for "+ tag + " from: " + filename, xlable, "CDF P(X < x))");
+    prepareGraphic("CDF for "+ tag + " from: " + filename, xlable, "CDF : P(X < x))");
 
     scf();    
     for i=1:cells 
@@ -291,7 +291,7 @@ function drawHistograms(filename, tag, xlable)
     if (SHOW_LEGEND == 1) then
         hl=legend([ 'CCDF' ]);
     end
-    prepareGraphic("CCDF for "+ tag + " from: " + filename, "LOG( " + xlable + " )", "LOG( CCDF=P(X > x) )");
+    prepareGraphic("CCDF for "+ tag + " from: " + filename, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
 
     xmlDelete(doc);
 endfunction
