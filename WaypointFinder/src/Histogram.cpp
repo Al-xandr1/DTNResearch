@@ -62,7 +62,7 @@ class Histogram {
             for (int i = 0; i < this->cells; i++)
             {
                 double val = 0;
-                for (int j = 0; j < i; j++) val+= getHistValue(j); //todo check !!!
+                for (int j = 0; j <= i; j++) val+= getHistValue(j);
                 cdf->push_back(val);
             }
             return cdf;
@@ -74,7 +74,7 @@ class Histogram {
             for (int i = 0; i < this->cells; i++)
             {
                 double val = 0;
-                for (int j = i; j < this->cells; j++) val+= getHistValue(j); //todo check !!!
+                for (int j = i+1; j < this->cells; j++) val+= getHistValue(j);
                 ccdf->push_back(val);
             }
             return ccdf;
@@ -87,6 +87,17 @@ class Histogram {
 		    cell.leftBound = this->widthOfCell * index;
 		    cell.rightBound = this->widthOfCell * (index+1);
 		    return cell;
+        }
+
+        void truncate()
+        {
+            int maxCellIndex = 0;
+            for (int i = 0; i < this->cells; i++) if (hist[i] > 0) maxCellIndex = i;
+            if (maxCellIndex < this->cells - 1)
+            {
+                this->cells = maxCellIndex + 1;
+                this->rightBound = this->widthOfCell * this->cells;
+            }
         }
 
 		double getHistValue(int index) {return getCell(index).value;}

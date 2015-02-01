@@ -362,6 +362,9 @@ public:
         statFile << "<?xml version=\'1.0' ?>" << endl;
         statFile << "<STATISTICS>" << endl;
         Area::writeStatistics(&statFile, areaTree);
+        this->lengthHist->truncate();
+        this->velocityHist->truncate();
+        this->pauseHist->truncate();
         writeStatistics(&statFile, "FLIGHT-LENGTH-HISTOGRAM",   this->lengthHist);
         writeStatistics(&statFile, "VELOCITY-HISTOGRAM", this->velocityHist);
         writeStatistics(&statFile, "PAUSE-HISTOGRAM",    this->pauseHist);

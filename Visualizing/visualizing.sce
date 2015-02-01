@@ -272,18 +272,26 @@ function drawHistograms(filename, tag, xlable)
     prepareGraphic("PDF for "+ tag + " from: " + filename, xlable, "PDF");
 
     scf();
-    plot2d(len, cdf, GRAPH_COLOR);
+    for i=1:cells 
+        if (cdf(i) < 1) then cdf1(i) = cdf(i); else break; end;
+    end
+    for i=1:size(cdf1, 1) meters(i) = len(i); end
+    plot2d(meters, cdf1, GRAPH_COLOR);
     if (SHOW_LEGEND == 1) then
         hl=legend([ 'CDF' ]);
     end
     prepareGraphic("CDF for "+ tag + " from: " + filename, xlable, "CDF P(X < x))");
 
-    scf();
-    plot2d(len, ccdf, GRAPH_COLOR);
+    scf();    
+    for i=1:cells 
+        if (ccdf(i) > 0) then ccdf1(i) = ccdf(i); else break; end;
+    end
+    for i=1:size(ccdf1, 1) secs(i) = len(i); end
+    plot2d(log2(secs), log2(ccdf1), GRAPH_COLOR);
     if (SHOW_LEGEND == 1) then
         hl=legend([ 'CCDF' ]);
     end
-    prepareGraphic("CCDF for "+ tag + " from: " + filename, xlable, "CCDF P(X > x)");
+    prepareGraphic("CCDF for "+ tag + " from: " + filename, "LOG( " + xlable + " )", "LOG( CCDF=P(X > x) )");
 
     xmlDelete(doc);
 endfunction
