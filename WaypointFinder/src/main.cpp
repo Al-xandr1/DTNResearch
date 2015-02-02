@@ -21,7 +21,8 @@ using namespace std;
 #define DEF_BND_FILE_NAME "bounds.bnd"      //Имя файла по умолчанию с границами
 #define DEF_STAT_FILE_NAME "statistics.stat"//Имя файла по умолчанию со статистикой
 
-#define WPFIND "-wp" //команда для нахождения путевых точек
+#define WPFIND "-wpfind" //команда для нахождения путевых точек
+#define WPGEN "-wpgen" //команда для нахождения путевых точек
 #define STAT "-stat" //команда для сбора статистики
 #define WPT "--wpt"  //параметр для сбора статистики для путевых точек
 #define TXT "--txt"  //параметр для сбора статистики для трассы
@@ -208,9 +209,32 @@ int mainForAnalyzer(int argc, char** argv) {
 
 
 
+int mainForGenerator(int argc, char** argv) {
+    cout << "Generating start!" << endl << endl;
+
+    char* fileDir;    //full path name of directory
+    switch(argc)
+    {
+    case 2 :
+        fileDir = DEF_WP_DIR;
+        break;
+    case 4:
+    default:
+        fileDir = argv[3];
+    }
+
+    WaypointGenerator generator(10000, 1.0, buildFullName(fileDir, DEF_BND_FILE_NAME)); //todo N и R сделать параметрами или ещё что
+//    generator.generate(buildFullName(fileDir, "generatedWayPoints.wpt"));               //todo сделать правильное формирование файла
+//
+//    cout << "Generating end." << endl << endl;
+    return 0;
+}
+
+
+
 int main(int argc, char** argv)
 {
-    argc = 3; argv = new char*[3] {"program", STAT, WPT} ; //REMOVE HARDCORE!
+    argc = 3; argv = new char*[3] {"program", WPGEN, WPT} ; //REMOVE HARDCORE!
 
     cout << "Program start!" << endl << endl;
 
@@ -230,8 +254,11 @@ int main(int argc, char** argv)
         } else if (strcmp(command, STAT) == 0) {
             result = mainForAnalyzer(argc, argv);
 
+        } else if (strcmp(command, WPGEN) == 0) {
+            result = mainForGenerator(argc, argv);
+
         } else {
-            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s\n", command, WPFIND, STAT);
+            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s \n\t %s\n", command, WPFIND, WPGEN, STAT);
             exit(result = -555);
         }
     };

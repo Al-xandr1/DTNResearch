@@ -10,6 +10,7 @@
 #include <queue>
 #include "Reader.h"
 #include "Bounds.h"
+#include "Area.h"
 
 #ifndef WAYPOINTGENERATOR_INCLUDED
 #define WAYPOINTGENERATOR_INCLUDED
@@ -21,24 +22,39 @@ class WaypointGenerator {
 
 private:
     int n;
+    double R;
     Bounds* bounds; //граница генерации путевых точек
-
-//    Area* commonAreaTree; //дерево площадей для аналиха дисперсии многих трасс
+    Area* areaTree; //дерево площадей для аналиха дисперсии многих трасс
 
 public:
-    WaypointGenerator(int n, char* boundsFileName) {
-        this->n = n;
-        this->bounds = new Bounds(boundsFileName);
-
-//        this->commonAreaTree = Area::createTreeStructure(this->bounds);
+    WaypointGenerator(int n, double R, char* boundsFileName)
+    {
+//        this->n = n;
+//        this->R = R;
+//        this->bounds = new Bounds(boundsFileName);
+//        this->areaTree = Area::createTreeStructure(this->bounds);
     }
 
-    ~WaypointGenerator() {
+    ~WaypointGenerator()
+    {
         delete this->bounds;
-//        delete this->commonAreaTree;
+        delete this->areaTree;
     }
 
-    void generate() {
+    void generate(char* wayPointsFileName) {
+        cout << "\t" << "WayPoints generating start..." << endl;
+
+        cout << "!!!! R are not used !!!!" << endl;                     //todo
+
+        ofstream* wayPointsFile = new ofstream(wayPointsFileName);
+        if (wayPointsFile == NULL)
+        {
+            cout << endl << "\t" << "WaypointGenerator generate(): Output file " << wayPointsFileName << " opening failed." << endl;
+            exit(344);
+        }
+        Area::generateNperAreaAndSave(this->areaTree, this->n, wayPointsFile);
+        wayPointsFile->close();
+        delete wayPointsFile;
         cout << "\t" << "WayPoints generated!" << endl;
     }
 };

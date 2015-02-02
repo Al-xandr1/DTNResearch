@@ -36,6 +36,7 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="src/Area.h" />
 		<Unit filename="src/Bounds.h" />
 		<Unit filename="src/Histogram.cpp" />
 		<Unit filename="src/PointsAnalyzer.h" />

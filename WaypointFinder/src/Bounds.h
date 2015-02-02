@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <queue>
+#include "Reader.h"
 
 #ifndef BOUNDS_H_INCLUDED
 #define BOUNDS_H_INCLUDED
@@ -65,6 +66,13 @@ public:
     {
         return sqrt((XMax - XMin)*(XMax - XMin)
                   + (YMax - YMin)*(YMax - YMin));
+    }
+
+    Point* generateRandomPoint()
+    {
+        double x = this->getXMin() + this->getXMax() * rand() / RAND_MAX;
+        double y = this->getYMin() + this->getYMax() * rand() / RAND_MAX;
+        return new Point(x, y);
     }
 
     void changeBounds(double x, double y)
