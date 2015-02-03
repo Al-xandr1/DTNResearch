@@ -39,8 +39,9 @@ public:
 
     ~Area()
     {
-        delete this->bound;
-        if (subAreas) {
+        if (this->bound) delete this->bound;
+        if (this->subAreas)
+        {
             for (int i=0; i<SUB_AREAS_COUNT; i++)
                 if (this->subAreas[i])
                     delete this->subAreas[i];
@@ -50,7 +51,7 @@ public:
     }
 
     void setN(int n) {this->n = n;}
-    double getN() {return this->n;}
+    int getN() {return this->n;}
     double getEX() {return this->EX;}
     double getDX() {return this->DX;}
     Bounds* getBounds() {return this->bound;}
@@ -79,6 +80,56 @@ public:
             exit(-111);
         }
 
+        return true;
+    }
+
+    void distributePoints(int n, int level)
+    {
+        this->setN(n);
+        if (this->subAreas)
+        {
+            double n[4];
+            if (!Area::GVrand(1.0, n[0], n[1], n[2], n[3]))                //todo брать очередной R
+            {
+                cout << endl << "Negative value!" << endl;
+                cout << n[0] << "\t" << n[1] << "\t" << n[2] << "\t" << n[3] << "\t" << n[0]*n[0]+n[1]*n[1]+n[2]*n[2]+n[3]*n[3] << endl;
+                exit(234);
+            }
+
+            //из-за округлени€ сумма не получаетс€ равной начальному значению
+            int remaining = this->getN();
+            for(int i = 0; i < SUB_AREAS_COUNT-1; i++)
+            {
+                int subN = round(this->getN() * n[i]);                     //todo изменить округление
+                remaining -= subN;
+                while (remaining < 0) {subN--; remaining++;}
+                this->subAreas[i]->setN(subN);
+            }
+            this->subAreas[3]->setN(remaining);
+
+            if (!this->validDistributionOfN())
+            {
+                cout << endl << "Incorrect distribution of N!" << endl;
+                cout << this->getN()*n[0] << "\t" << this->getN()*n[1] << "\t" << this->getN()*n[2] << "\t" <<
+                        this->getN()*n[3] << "\tN=" << this->getN() << endl;
+                exit(235);
+            }
+        }
+    }
+
+    bool validDistributionOfN()
+    {
+        if (this->getN() < 0) return false;
+        if (this->subAreas)
+        {
+            int checkSum = 0;
+            for (int i = 0; i < SUB_AREAS_COUNT; i++)
+            {
+                if (this->subAreas[i]->getN() < 0) return false;
+                checkSum += this->subAreas[i]->getN();
+            }
+            if (checkSum != this->getN()) return false;
+        }
         return true;
     }
 
@@ -209,6 +260,7 @@ public:
 
     //----------------------------------------need to replace this logic for generating points ----------------------------------------
 
+    //–аспихать метод по классу distributePoints(int n) & writeStatistics(ofstream* waypointFile)
     static void generateNperAreaAndSave(Area* rootArea, int initialN, ofstream* waypointFile)
     {
         bool firstRow = true;
@@ -230,24 +282,29 @@ public:
                 if (area->subAreas)
                 {
                     double n[4];
-                    if (!Area::GVrand(1.0, n[0], n[1], n[2], n[3]))                                     //todo или вместо 1.0 использовать n
+                    if (!Area::GVrand(1.0, n[0], n[1], n[2], n[3]))                //todo брать очередной R
                     {
                         cout << endl << "Negative value!" << endl;
                         cout << n[0] << "\t" << n[1] << "\t" << n[2] << "\t" << n[3] << "\t" << n[0]*n[0]+n[1]*n[1]+n[2]*n[2]+n[3]*n[3] << endl;
                         exit(234);
                     }
 
-                    int checkSum = 0;
-                    for(int i=0; i<SUB_AREAS_COUNT; i++)
+                    int remaining = area->getN();
+                    for(int i=0; i<SUB_AREAS_COUNT-1; i++)
                     {
-                        int subN = round(area->getN() * n[i]);                                                     //todo check
-                        checkSum += subN;
+                        int subN = round(area->getN() * n[i]);                     //todo изменить округление
+                        remaining -= subN;
+                        while (remaining < 0) {subN--; remaining++;}
                         area->subAreas[i]->setN(subN);
                         areasForProcess.push(area->subAreas[i]);
                     }
-                    if (checkSum != area->getN())
+                    //из-за округлени€ сумма не получаетс€ равной начальному значению, поэтому последнюю часть рассчитыаем так
+                    area->subAreas[3]->setN(remaining);
+                    areasForProcess.push(area->subAreas[3]);
+
+                    if (!area->validDistributionOfN())
                     {
-                        cout << endl << "Incorrect check sum!" << endl;
+                        cout << endl << "Incorrect distribution of N!" << endl;
                         cout << area->getN()*n[0] << "\t" << area->getN()*n[1] << "\t" << area->getN()*n[2] << "\t" <<
                                 area->getN()*n[3] << "\tN=" << area->getN() << endl;
                         exit(235);

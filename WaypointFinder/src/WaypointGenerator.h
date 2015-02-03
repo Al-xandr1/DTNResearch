@@ -29,16 +29,16 @@ private:
 public:
     WaypointGenerator(int n, double R, char* boundsFileName)
     {
-//        this->n = n;
-//        this->R = R;
-//        this->bounds = new Bounds(boundsFileName);
-//        this->areaTree = Area::createTreeStructure(this->bounds);
+        this->n = n;
+        this->R = R;
+        this->bounds = new Bounds(boundsFileName);
+        this->areaTree = Area::createTreeStructure(this->bounds);
     }
 
     ~WaypointGenerator()
     {
-        delete this->bounds;
-        delete this->areaTree;
+        if (this->bounds) delete this->bounds;
+        if (this->areaTree) delete this->areaTree;
     }
 
     void generate(char* wayPointsFileName) {
