@@ -441,3 +441,29 @@
 
 1423070600 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\statistics.h
 
+1418486178 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\lib\pugixml-1.5\src\pugixml.cpp
+	"pugixml.hpp"
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<assert.h>
+	<wchar.h>
+	<math.h>
+	<float.h>
+	<setjmp.h>
+	<istream>
+	<ostream>
+	<string>
+	<new>
+	<stdint.h>
+
+1416845842 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\lib\pugixml-1.5\src\pugixml.hpp
+	"pugiconfig.hpp"
+	<stddef.h>
+	<exception>
+	<iterator>
+	<iosfwd>
+	<string>
+
+1416845842 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\lib\pugixml-1.5\src\pugiconfig.hpp
+
