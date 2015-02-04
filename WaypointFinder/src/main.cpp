@@ -12,6 +12,7 @@
 #include "WaypointFinder.h"
 #include "PointsAnalyzer.h"
 #include "WaypointGenerator.h"
+#include "../libs/pugixml-1.5/src/pugixml.hpp"
 
 using namespace std;
 
@@ -26,33 +27,6 @@ using namespace std;
 #define STAT "-stat" //команда для сбора статистики
 #define WPT "--wpt"  //параметр для сбора статистики для путевых точек
 #define TXT "--txt"  //параметр для сбора статистики для трассы
-
-
-char* buildWayPointFileName(char* name) {
-    char* buffer = new char[256];
-    strcpy(buffer, name);
-    return strcat(buffer, ".wpt");
-}
-
-char* buildBoundsFileName(char* name) {
-    char* buffer = new char[256];
-    strcpy(buffer, name);
-    return strcat(name, ".bnd");
-}
-
-char* buildStatisticFileName(char* name) {
-    char* buffer = new char[256];
-    strcpy(buffer, name);
-    return strcat(name, ".stat");
-}
-
-char* buildFullName(char* dir, char* fileName) {
-    char* buffer = new char[256];
-    strcpy(buffer, dir);
-    strcat(buffer, "/");
-    strcat(buffer, fileName);
-}
-
 
 
 int mainForWPFinder(int argc, char** argv)
@@ -234,7 +208,7 @@ int mainForGenerator(int argc, char** argv) {
 
 int main(int argc, char** argv)
 {
-    argc = 2; argv = new char*[3] {"program", WPGEN, WPT} ; //REMOVE HARDCORE!
+    argc = 3; argv = new char*[3] {"program", STAT, WPT} ; //REMOVE HARDCORE!
 
     cout << "Program start!" << endl << endl;
 

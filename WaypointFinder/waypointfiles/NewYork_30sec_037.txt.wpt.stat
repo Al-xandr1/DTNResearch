@@ -1,5 +1,6 @@
 <?xml version='1.0' ?>
 <STATISTICS>
+  <SAMPLED-POINTS>8</SAMPLED-POINTS>
   <EX-DX-STAT>
     <BASE>4</BASE>
     <LEVELS>9</LEVELS>

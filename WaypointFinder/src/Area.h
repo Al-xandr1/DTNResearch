@@ -42,7 +42,7 @@ public:
         if (this->bound) delete this->bound;
         if (this->subAreas)
         {
-            for (int i=0; i<SUB_AREAS_COUNT; i++)
+            for (int i = 0; i < getSubAreasCount(); i++)
                 if (this->subAreas[i])
                     delete this->subAreas[i];
 
@@ -55,6 +55,8 @@ public:
     double getEX() {return this->EX;}
     double getDX() {return this->DX;}
     Bounds* getBounds() {return this->bound;}
+    static int getLevels() {return LEVELS;}
+    static int getSubAreasCount() {return SUB_AREAS_COUNT;}
 
     bool isInArea(Point* point)
     {
@@ -70,7 +72,7 @@ public:
         n++;
 
         if (subAreas) {
-            for(int i=0; i<SUB_AREAS_COUNT; i++) {
+            for(int i = 0; i < getSubAreasCount(); i++) {
                 bool isPutted = subAreas[i]->putInArea(point);
                 if (isPutted) {
                     return true;
@@ -98,7 +100,7 @@ public:
 
             //из-за округления сумма не получается равной начальному значению
             int remaining = this->getN();
-            for(int i = 0; i < SUB_AREAS_COUNT-1; i++)
+            for(int i = 0; i < getSubAreasCount()-1; i++)
             {
                 int subN = round(this->getN() * n[i]);                     //todo изменить округление
                 remaining -= subN;
@@ -123,7 +125,7 @@ public:
         if (this->subAreas)
         {
             int checkSum = 0;
-            for (int i = 0; i < SUB_AREAS_COUNT; i++)
+            for (int i = 0; i < getSubAreasCount(); i++)
             {
                 if (this->subAreas[i]->getN() < 0) return false;
                 checkSum += this->subAreas[i]->getN();
@@ -133,20 +135,6 @@ public:
         return true;
     }
 
-    void computeLocalExDx()
-    {
-        if (subAreas) {
-            this->EX = 0;
-            double ex2 = 0;
-            for(int i=0; i<SUB_AREAS_COUNT; i++) {
-                this->EX += subAreas[i]->n;
-                ex2 += (subAreas[i]->n * subAreas[i]->n);
-            }
-            this->EX /= SUB_AREAS_COUNT;
-            this->DX = (ex2 / SUB_AREAS_COUNT) - (this->EX * this->EX);
-        }
-    }
-
     static Area* createTreeStructure(Bounds* bounds)
     {
         Area* initialArea = new Area(bounds);
@@ -154,7 +142,7 @@ public:
         queue<Area*> areasForProcess;
         areasForProcess.push(initialArea);
 
-        for (int l=0; l<LEVELS; l++)
+        for (int l = 0; l < getLevels(); l++)
         {
             queue<Area*> areasPerLevel(areasForProcess);
             while(!areasForProcess.empty()) areasForProcess.pop();
@@ -164,7 +152,7 @@ public:
                 Area* area = areasPerLevel.front();
                 areasPerLevel.pop();
 
-                area->subAreas = new Area*[SUB_AREAS_COUNT];
+                area->subAreas = new Area*[getSubAreasCount()];
 
                 double middleX = (area->bound->getXMin() + area->bound->getXMax()) / 2;
                 double middleY = (area->bound->getYMin() + area->bound->getYMax()) / 2;
@@ -174,8 +162,8 @@ public:
                 area->subAreas[2] = new Area(area->bound->getXMin(), area->bound->getYMin(), middleX, middleY);//S3
                 area->subAreas[3] = new Area(middleX, area->bound->getYMin(), area->bound->getXMax(), middleY);//S4
 
-                if (l != LEVELS - 1) {
-                    for(int i=0; i<SUB_AREAS_COUNT; i++) areasForProcess.push(area->subAreas[i]);
+                if (l != getLevels() - 1) {
+                    for(int i = 0; i < getSubAreasCount(); i++) areasForProcess.push(area->subAreas[i]);
                 }
             }
         }
@@ -185,14 +173,14 @@ public:
 
     static double** computeExDx(Area* rootArea)
     {
-        double* ExPerLevel = new double[LEVELS];
-        double* DxPerLevel = new double[LEVELS];
+        double* ExPerLevel = new double[getLevels()];
+        double* DxPerLevel = new double[getLevels()];
 
         queue<Area*> areasForProcess;
         areasForProcess.push(rootArea);
-        double areasCount = SUB_AREAS_COUNT;
+        double areasCount = getSubAreasCount();
 
-        for (int l=0; l<LEVELS; l++)
+        for (int l = 0; l < getLevels(); l++)
         {
             ExPerLevel[l] = DxPerLevel[l] = 0;
 
@@ -205,7 +193,7 @@ public:
                 areasPerLevel.pop();
 
                 if (area->subAreas != NULL) {
-                    for(int i=0; i<SUB_AREAS_COUNT; i++) {
+                    for(int i = 0; i < getSubAreasCount(); i++) {
                         ExPerLevel[l] += area->subAreas[i]->n;
                         DxPerLevel[l] += (area->subAreas[i]->n * area->subAreas[i]->n);
 
@@ -220,42 +208,10 @@ public:
             DxPerLevel[l] /= ExPerLevel[l] * ExPerLevel[l];
             DxPerLevel[l] -= 1;
 
-            areasCount *= SUB_AREAS_COUNT;
+            areasCount *= getSubAreasCount();
         }
 
         return new double*[2]{ExPerLevel, DxPerLevel};
-    }
-
-    static void writeStatistics(ofstream* out, Area* rootArea)
-    {
-        double** ExDxPerLevel = Area::computeExDx(rootArea);
-        double areasCount = SUB_AREAS_COUNT;
-        cout << endl << endl;
-        cout << "\t<EX-DX-STAT>" << endl;
-        *out << "  <EX-DX-STAT>" << endl;
-        *out << "    <BASE>" << SUB_AREAS_COUNT << "</BASE>" << endl;
-        *out << "    <LEVELS>" << LEVELS << "</LEVELS>" << endl;
-        *out << "    <EX>";
-        for(int l = 0; l < LEVELS; l++)
-        {
-            cout << "\t" << "Level= " << (l+1) << "  areas= " << areasCount << "\tEX=" << ExDxPerLevel[0][l] << "\tDX=" << ExDxPerLevel[1][l] << endl;
-            areasCount *= SUB_AREAS_COUNT;
-            *out << ExDxPerLevel[0][l];
-            if (l != LEVELS-1) *out << "  ";
-        }
-        *out << "</EX>" << endl;
-        *out << "    <DX>";
-        for(int l = 0; l < LEVELS; l++)
-        {
-            *out << ExDxPerLevel[1][l];
-            if (l != LEVELS-1) *out << "  ";
-        }
-        *out << "</DX>" << endl;
-        *out << "  </EX-DX-STAT>" << endl;
-        cout << "\t</EX-DX-STAT>" << endl;
-        delete ExDxPerLevel[0];
-        delete ExDxPerLevel[1];
-        delete ExDxPerLevel;
     }
 
     //----------------------------------------need to replace this logic for generating points ----------------------------------------
@@ -290,7 +246,7 @@ public:
                     }
 
                     int remaining = area->getN();
-                    for(int i=0; i<SUB_AREAS_COUNT-1; i++)
+                    for(int i = 0; i < getSubAreasCount()-1; i++)
                     {
                         int subN = round(area->getN() * n[i]);                     //todo изменить округление
                         remaining -= subN;
