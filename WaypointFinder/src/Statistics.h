@@ -60,8 +60,16 @@ public:
     vector<double>* getDXperLevel() { return parseDoubleVector(loadedStatistics.select_node("/STATISTICS/EX-DX-STAT/DX").node().text().as_string());}
     vector<double>* getEXperLevel() { return parseDoubleVector(loadedStatistics.select_node("/STATISTICS/EX-DX-STAT/EX").node().text().as_string());}
 
-    void printParams() { this->areaTree->getBounds()->print();}
+    double getRealDX(int level)
+    {
+        if (level < 0 || level > getLevels()) {return -1;}
+        vector<double>* dxPerLevel = getDXperLevel();
+        double dx = (*dxPerLevel)[level];
+        delete dxPerLevel;
+        return dx;
+    }
 
+    void printParams() { this->areaTree->getBounds()->print();}
 
     bool addPoint(WayPoint* point)
     {

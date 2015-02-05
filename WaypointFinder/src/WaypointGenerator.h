@@ -65,8 +65,10 @@ private:
         queue<Area*> areasForProcess;
         areasForProcess.push(this->areaTree);
 
-        while (!areasForProcess.empty())
+        for (int level = 0; level < Area::getLevels(); level++)
         {
+            double dx = statistics->getRealDX(level); cout << "\t  Level = " << level << "  DX = " << dx << endl;
+
             queue<Area*> areasPerLevel(areasForProcess);
             while(!areasForProcess.empty()) areasForProcess.pop();
 
@@ -78,7 +80,7 @@ private:
                 if (area->getSubAreas())
                 {
                     double n[4];
-                    if (!GVrand(1.0, n[0], n[1], n[2], n[3]))                //todo брать очередной R
+                    if (!GVrand(1.0, n[0], n[1], n[2], n[3]))                       //todo брать из файла dx
                     {
                         cout << endl << "Negative value!" << endl;
                         cout << n[0] << "\t" << n[1] << "\t" << n[2] << "\t" << n[3] << "\t" << n[0]*n[0]+n[1]*n[1]+n[2]*n[2]+n[3]*n[3] << endl;
@@ -135,14 +137,19 @@ private:
     }
 
 public:
-    void testDVrand()
+    void testDVrand(double R = 1.0)
     {
         cout << "Test of generator..." << endl;
-        double q1,q2,q3,q4, R=1.0;
+        double q1,q2,q3,q4;
         for(int i=0; i<1000; i++){
             if (GVrand(R, q1, q2, q3, q4))
                 cout<<q1<<"\t"<<q2<<"\t"<<q3<<"\t"<<q4<<"\t"<<q1*q1+q2*q2+q3*q3+q4*q4<<endl;
-            else { cout<<"Negative value!"<<endl; exit(1); }
+            else
+            {
+                cout << endl << "Negative value!" << endl;
+                cout<<q1<<"\t"<<q2<<"\t"<<q3<<"\t"<<q4<<"\t"<<q1*q1+q2*q2+q3*q3+q4*q4<<endl;
+                exit(234);
+            }
         }
         cout << "Test of generator finish!" << endl;
     }
