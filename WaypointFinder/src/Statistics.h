@@ -53,6 +53,7 @@ public:
         if (this->previous) delete this->previous;
     }
 
+    int getSampledPoints() {return loadedStatistics.select_node("/STATISTICS/SAMPLED-POINTS").node().text().as_int();}
     int getBase() {return loadedStatistics.select_node("/STATISTICS/EX-DX-STAT/BASE").node().text().as_int();}
     int getLevels() {return loadedStatistics.select_node("/STATISTICS/EX-DX-STAT/LEVELS").node().text().as_int();}
 

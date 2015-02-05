@@ -505,3 +505,138 @@
 
 1423084038 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\developmenthelper.h
 
+1422945039 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\histogram.cpp
+	"math.h"
+	<queue>
+
+1423148210 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\libs\pugixml-1.5\src\pugixml.cpp
+	"pugixml.hpp"
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<assert.h>
+	<wchar.h>
+	<math.h>
+	<float.h>
+	<setjmp.h>
+	<istream>
+	<ostream>
+	<string>
+	<new>
+	<stdint.h>
+
+1423148210 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\libs\pugixml-1.5\src\pugixml.hpp
+	"pugiconfig.hpp"
+	<stddef.h>
+	<exception>
+	<iterator>
+	<iosfwd>
+	<string>
+
+1423148210 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\libs\pugixml-1.5\src\pugiconfig.hpp
+
+1423150262 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\main.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	<windows.h>
+	"WaypointFinder.h"
+	"PointsAnalyzer.h"
+	"WaypointGenerator.h"
+	"../libs/pugixml-1.5/src/pugixml.hpp"
+
+1422945039 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\waypointfinder.h
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	<windows.h>
+	"Bounds.h"
+
+1422945039 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\bounds.h
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<cmath>
+	<queue>
+	"Reader.h"
+
+1422945039 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\reader.h
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+
+1423148210 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\pointsanalyzer.h
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<cmath>
+	<queue>
+	"Reader.h"
+	"Bounds.h"
+	"Histogram.cpp"
+	"Area.h"
+	"Statistics.h"
+
+1422945039 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\histogram.cpp
+	"math.h"
+	<queue>
+
+1423153165 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\area.h
+
+1423148905 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\statistics.h
+	"../libs/pugixml-1.5/src/pugixml.hpp"
+	"../libs/Tokenizer.h"
+	<iostream>
+	<string>
+	"DevelopmentHelper.h"
+
+1423148209 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\libs\tokenizer.h
+
+1423148210 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\developmenthelper.h
+
+1423152911 c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\waypointgenerator.h
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<cmath>
+	<queue>
+	"Reader.h"
+	"Bounds.h"
+	"Area.h"
+

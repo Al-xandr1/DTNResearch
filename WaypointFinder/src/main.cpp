@@ -197,8 +197,12 @@ int mainForGenerator(int argc, char** argv) {
         fileDir = argv[2];
     }
 
-    WaypointGenerator generator(1000, 1.0, buildFullName(fileDir, DEF_BND_FILE_NAME)); //todo N и R сделать параметрами или ещё что
-    generator.generate(buildFullName(fileDir, "generatedWayPoints.wpt"));             //todo сделать правильное формирование файла
+    char* boundFileName = buildFullName(fileDir, DEF_BND_FILE_NAME);
+    char* statFileName = buildFullName(fileDir, DEF_STAT_FILE_NAME);
+    char* generatedWPFileName = buildFullName(fileDir, "generatedWayPoints.wpt");  //todo сделать гибкое формирование файла
+
+    WaypointGenerator generator(boundFileName, statFileName);
+    generator.generate(generatedWPFileName);
 
     cout << "Generating end." << endl << endl;
     return 0;
