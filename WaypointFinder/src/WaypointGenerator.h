@@ -80,7 +80,7 @@ private:
                 if (area->getSubAreas())
                 {
                     double n[4];
-                    if (!GVrand(1.0, n[0], n[1], n[2], n[3]))                       //todo брать из файла dx
+                    if (!GVrand(dx, n[0], n[1], n[2], n[3]))                       //todo брать из файла dx
                     {
                         cout << endl << "Negative value!" << endl;
                         cout << n[0] << "\t" << n[1] << "\t" << n[2] << "\t" << n[3] << "\t" << n[0]*n[0]+n[1]*n[1]+n[2]*n[2]+n[3]*n[3] << endl;
@@ -114,24 +114,35 @@ private:
 
     bool GVrand(double R, double& q1, double& q2, double& q3, double& q4)
     {
-        double r,phi,theta,z1,x2,x3;
+        if( R<0 ) { cout<<"Wrong argument"<<endl; return false; }
 
-        r=sqrt(R)/2;
-        for(int i=0; i<1000; i++)
-        {
-           phi=2*PI*(double)rand()/RAND_MAX;
-           theta=PI*(double)rand()/RAND_MAX;
+        if( R>3 ) R=3;
 
-           z1=r*sin(theta)*cos(phi);
-           x2=r*sin(theta)*sin(phi);
-           x3=r*cos(theta);
+        if( R>2 ) {
+            double epsilon=(24-sqrt(24*24-4*39*(3-R)))/2/39;
+            double q[]={epsilon, epsilon, epsilon, epsilon};
+            q[rand()%4]=1-3*epsilon;
+            q1=q[0]; q2=q[1]; q3=q[2]; q4=q[3];
+            return true;
+        }
+        else {
+            double r,phi,theta,z1,x2,x3;
+            r=sqrt(R)/2;
+            for(int i=0; i<1000; i++){
+               phi=2*PI*(double)rand()/RAND_MAX;
+               theta=PI*(double)rand()/RAND_MAX;
 
-           q1=z1/2/sqrt(3)-x3*2/sqrt(6)+0.25;
-           q2=z1/2/sqrt(3)+x2/sqrt(2)+x3/sqrt(6)+0.25;
-           q3=z1/2/sqrt(3)-x2/sqrt(2)+x3/sqrt(6)+0.25;
-           q4=1-q1-q2-q3;
+               z1=r*sin(theta)*cos(phi);
+               x2=r*sin(theta)*sin(phi);
+               x3=r*cos(theta);
 
-           if(q1>=0 && q2>=0 && q3>=0 && q4>=0 ) return true;
+               q1=z1/2/sqrt(3)-x3*2/sqrt(6)+0.25;
+               q2=z1/2/sqrt(3)+x2/sqrt(2)+x3/sqrt(6)+0.25;
+               q3=z1/2/sqrt(3)-x2/sqrt(2)+x3/sqrt(6)+0.25;
+               q4=1-q1-q2-q3;
+
+              if(q1>=0 && q2>=0 && q3>=0 && q4>=0 ) return true;
+           }
         }
         return false;
     }
