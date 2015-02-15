@@ -10,7 +10,7 @@
 #include <string>
 #include "DevelopmentHelper.cpp"
 
-class INET_API LevyMobility : public LineSegmentsMobilityBase
+class LevyMobility : public LineSegmentsMobilityBase
 {
   protected:
     bool nextMoveIsWait;
