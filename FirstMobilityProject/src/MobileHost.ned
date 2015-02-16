@@ -1,4 +1,5 @@
 import inet.mobility.contract.IMobility;
+import inet.mobility.single.BonnMotionMobility;
 
 //
 // A host for demonstrating mobility models only -- it contains
@@ -7,6 +8,8 @@ import inet.mobility.contract.IMobility;
 module MobileHost
 {
     parameters:
+        string mobilityType = default("LevyMobility");
+        
         @node();
         @display("i=device/pocketpc_s");
         @statistic[coordX](title="coord X"; source="xCoord(mobilityPos(mobilityStateChanged))"; record=vector; interpolationmode=linear);
@@ -15,8 +18,9 @@ module MobileHost
         
         int indexOfNode = default(0);
     submodules:
-        mobility: LevyMobility {
-            parameters: 
-            	fileSuffix = indexOfNode;
-        }
+        mobility: <mobilityType> like IMobility;
+//        mobility: LevyMobility {
+//            parameters: 
+//            	fileSuffix = indexOfNode;
+//        }
 }

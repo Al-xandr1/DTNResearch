@@ -53,6 +53,7 @@ INCLUDE_PATH = \
     -I$(INET_PROJ)/src/transport/udp \
     -I$(INET_PROJ)/src/mobility/common \
     -I. \
+    -Iresults \
     -Isrc \
     -Isrc/oldimplementation
 
@@ -149,6 +150,7 @@ clean:
 	$(Q)-rm -rf $O
 	$(Q)-rm -f FirstMobilityProject FirstMobilityProject.exe libFirstMobilityProject.so libFirstMobilityProject.a libFirstMobilityProject.dll libFirstMobilityProject.dylib
 	$(Q)-rm -f ./*_m.cpp ./*_m.h
+	$(Q)-rm -f results/*_m.cpp results/*_m.h
 	$(Q)-rm -f src/*_m.cpp src/*_m.h
 	$(Q)-rm -f src/oldimplementation/*_m.cpp src/oldimplementation/*_m.h
 
@@ -157,7 +159,7 @@ cleanall: clean
 
 depend:
 	$(qecho) Creating dependencies...
-	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES)  ./*.cpp src/*.cpp src/oldimplementation/*.cpp
+	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES)  ./*.cpp results/*.cpp src/*.cpp src/oldimplementation/*.cpp
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 $O/src/DevelopmentHelper.o: src/DevelopmentHelper.cpp
