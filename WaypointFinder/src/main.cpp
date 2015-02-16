@@ -20,8 +20,10 @@ using namespace std;
 #define DEF_TRACE_DIR "./tracefiles"        //Директория по умолчанию для трасс
 #define DEF_WP_DIR "./waypointfiles"        //Директория по умолчанию для путевых точек
 #define DEF_BND_FILE_NAME "bounds.bnd"      //Имя файла по умолчанию с границами
+#define DEF_ALL_TRACES_FILE_NAME "allTraces.movements"//Имя файла по умолчанию со статистикой
 #define DEF_STAT_FILE_NAME "statistics.stat"//Имя файла по умолчанию со статистикой
 
+#define MFMAKE "-mfmake" //команда для формирования файла с со всеми трассами (movement file make)
 #define WPFIND "-wpfind" //команда для нахождения путевых точек
 #define WPGEN "-wpgen" //команда для нахождения путевых точек
 #define STAT "-stat" //команда для сбора статистики
@@ -42,13 +44,13 @@ int mainForWPFinder(int argc, char** argv)
         wayPointFilesDir = DEF_WP_DIR;
         break;
     case 3 :
-        traceFilesDir = argv[1];
+        traceFilesDir = argv[2];
         wayPointFilesDir = DEF_WP_DIR;
         break;
     case 4 :
     default:
-        traceFilesDir=argv[1];
-        wayPointFilesDir=argv[2];
+        traceFilesDir = argv[2];
+        wayPointFilesDir = argv[3];
     }
 
     WIN32_FIND_DATA f;
@@ -210,9 +212,72 @@ int mainForGenerator(int argc, char** argv) {
 
 
 
+int mainForMovementsFile(int argc, char** argv)
+{
+    cout << "Making movements file start!" << endl << endl;
+
+
+    char* traceFilesDir;    //full path name of directory
+    switch(argc)
+    {
+    case 2 :
+        traceFilesDir = DEF_TRACE_DIR;
+        break;
+    case 3 :
+    default:
+        traceFilesDir = argv[2];
+    }
+
+    WIN32_FIND_DATA f;
+    if (FindFirstFile(traceFilesDir, &f) == INVALID_HANDLE_VALUE)
+    {
+        fprintf(stderr, "File directory for making movements file not found.\n");
+        exit(-776);
+    }
+
+    char* traceFileNamePattern = buildFullName(traceFilesDir, "*.txt");
+    cout << "   traceFileNamePattern: " << traceFileNamePattern << endl << endl;
+
+    HANDLE h = FindFirstFile(traceFileNamePattern, &f);
+    if(h != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            char* inputFileName = buildFullName(traceFilesDir, f.cFileName);
+            cout << "       inputFileName: " << inputFileName << endl;
+
+
+            //Открыть файд и слить всё в общий файл
+            ifstream traceFile(inputFileName);
+            if (traceFile == NULL) {
+                cout << "\t" << "Trace file "<< fileName <<" is not found." << endl;
+                exit(-765);
+            }
+
+
+
+            delete inputFileName;
+        }
+        while(FindNextFile(h, &f));
+    }
+    else
+    {
+        fprintf(stderr, "Directory or files not found\n");
+    }
+
+    char* commonTraceFileName = buildFullName(traceFilesDir, DEF_ALL_TRACES_FILE_NAME);
+
+    //сохранение файла
+
+    cout << endl << "Making movements file end." << endl << endl;
+    return 0;
+}
+
+
+
 int main(int argc, char** argv)
 {
-    argc = 2; argv = new char*[3] {"program", WPGEN, WPT} ; //REMOVE HARDCORE!
+    argc = 2; argv = new char*[3] {"program", MFMAKE, WPT} ; //REMOVE HARDCORE!
 
     cout << "Program start!" << endl << endl;
 
@@ -235,8 +300,11 @@ int main(int argc, char** argv)
         } else if (strcmp(command, WPGEN) == 0) {
             result = mainForGenerator(argc, argv);
 
+        } else if (strcmp(command, MFMAKE) == 0) {
+            result = mainForMovementsFile(argc, argv);
+
         } else {
-            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s \n\t %s\n", command, WPFIND, WPGEN, STAT);
+            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s \n\t %s \n\t %s\n", command, WPFIND, WPGEN, STAT, MFMAKE);
             exit(result = -555);
         }
     };
