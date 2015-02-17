@@ -12,6 +12,7 @@
 #include "WaypointFinder.h"
 #include "PointsAnalyzer.h"
 #include "WaypointGenerator.h"
+#include "TraceMerger.h"
 #include "../libs/pugixml-1.5/src/pugixml.hpp"
 
 using namespace std;
@@ -216,7 +217,6 @@ int mainForMovementsFile(int argc, char** argv)
 {
     cout << "Making movements file start!" << endl << endl;
 
-
     char* traceFilesDir;    //full path name of directory
     switch(argc)
     {
@@ -238,23 +238,19 @@ int mainForMovementsFile(int argc, char** argv)
     char* traceFileNamePattern = buildFullName(traceFilesDir, "*.txt");
     cout << "   traceFileNamePattern: " << traceFileNamePattern << endl << endl;
 
+    TraceMerger* traceMerger;
+
     HANDLE h = FindFirstFile(traceFileNamePattern, &f);
     if(h != INVALID_HANDLE_VALUE)
     {
+        traceMerger = new TraceMerger(buildFullName(traceFilesDir, DEF_ALL_TRACES_FILE_NAME));
+
         do
         {
             char* inputFileName = buildFullName(traceFilesDir, f.cFileName);
             cout << "       inputFileName: " << inputFileName << endl;
 
-
-            //Открыть файд и слить всё в общий файл
-            ifstream traceFile(inputFileName);
-            if (traceFile == NULL) {
-                cout << "\t" << "Trace file "<< fileName <<" is not found." << endl;
-                exit(-765);
-            }
-
-
+            traceMerger->addFile(inputFileName);
 
             delete inputFileName;
         }
@@ -265,9 +261,7 @@ int mainForMovementsFile(int argc, char** argv)
         fprintf(stderr, "Directory or files not found\n");
     }
 
-    char* commonTraceFileName = buildFullName(traceFilesDir, DEF_ALL_TRACES_FILE_NAME);
-
-    //сохранение файла
+    if (traceMerger) delete traceMerger;
 
     cout << endl << "Making movements file end." << endl << endl;
     return 0;

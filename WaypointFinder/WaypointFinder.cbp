@@ -47,6 +47,7 @@
 		<Unit filename="src/PointsAnalyzer.h" />
 		<Unit filename="src/Reader.h" />
 		<Unit filename="src/Statistics.h" />
+		<Unit filename="src/TraceMerger.h" />
 		<Unit filename="src/WaypointFinder.h" />
 		<Unit filename="src/WaypointGenerator.h" />
 		<Unit filename="src/main.cpp" />

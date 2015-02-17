@@ -42,6 +42,10 @@ public:
     {
         cout << "x= " << this->x << "  y= " << this->y << endl;
     }
+
+    virtual void write(ostream* out) {(*out) << this->x << " " << this->y;}
+
+    virtual void writeLn(ostream* out) {write(out); (*out) << endl;}
 };
 
 
@@ -65,6 +69,8 @@ public:
     {
         return follower->t - this->t;
     }
+
+    virtual void write(ostream* out) {(*out) << this->t << " " << this->x << " " << this->y;}
 };
 
 
