@@ -13,6 +13,7 @@
 #include "PointsAnalyzer.h"
 #include "WaypointGenerator.h"
 #include "TraceMerger.h"
+#include "HotSpot.h"
 #include "../libs/pugixml-1.5/src/pugixml.hpp"
 
 using namespace std;
@@ -20,6 +21,7 @@ using namespace std;
 
 #define DEF_TRACE_DIR "./tracefiles"        //Директория по умолчанию для трасс
 #define DEF_WP_DIR "./waypointfiles"        //Директория по умолчанию для путевых точек
+#define DEF_HS_DIR "./hotspotfiles"         //Директория по умолчанию для "горячих точек"
 #define DEF_BND_FILE_NAME "bounds.bnd"      //Имя файла по умолчанию с границами
 #define DEF_ALL_TRACES_FILE_NAME "allTraces.movements"//Имя файла по умолчанию со статистикой
 #define DEF_STAT_FILE_NAME "statistics.stat"//Имя файла по умолчанию со статистикой
@@ -271,38 +273,42 @@ int mainForMovementsFile(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-    argc = 2; argv = new char*[3] {"program", MFMAKE, WPT} ; //REMOVE HARDCORE!
+//    argc = 2; argv = new char*[3] {"program", MFMAKE, WPT} ; //REMOVE HARDCORE!
+//
+//    cout << "Program start!" << endl << endl;
+//
+//    int result = -1;
+//    switch(argc)
+//    {
+//    case 1 :
+//        fprintf(stderr, "You must specify command:\n\t %s \n\t %s\n", WPFIND, STAT);
+//        exit(-444);
+//
+//    case 2 :
+//    default:
+//        char* command = argv[1];
+//        if (strcmp(command, WPFIND) == 0) {
+//            result = mainForWPFinder(argc, argv);
+//
+//        } else if (strcmp(command, STAT) == 0) {
+//            result = mainForAnalyzer(argc, argv);
+//
+//        } else if (strcmp(command, WPGEN) == 0) {
+//            result = mainForGenerator(argc, argv);
+//
+//        } else if (strcmp(command, MFMAKE) == 0) {
+//            result = mainForMovementsFile(argc, argv);
+//
+//        } else {
+//            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s \n\t %s \n\t %s\n", command, WPFIND, WPGEN, STAT, MFMAKE);
+//            exit(result = -555);
+//        }
+//    };
+//
+//    cout << endl << "Program complete." << endl << endl;
+//    return result;
+    HotSpotReader hsReader;
+    vector<HotSpot>* hotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
 
-    cout << "Program start!" << endl << endl;
 
-    int result = -1;
-    switch(argc)
-    {
-    case 1 :
-        fprintf(stderr, "You must specify command:\n\t %s \n\t %s\n", WPFIND, STAT);
-        exit(-444);
-
-    case 2 :
-    default:
-        char* command = argv[1];
-        if (strcmp(command, WPFIND) == 0) {
-            result = mainForWPFinder(argc, argv);
-
-        } else if (strcmp(command, STAT) == 0) {
-            result = mainForAnalyzer(argc, argv);
-
-        } else if (strcmp(command, WPGEN) == 0) {
-            result = mainForGenerator(argc, argv);
-
-        } else if (strcmp(command, MFMAKE) == 0) {
-            result = mainForMovementsFile(argc, argv);
-
-        } else {
-            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s \n\t %s \n\t %s\n", command, WPFIND, WPGEN, STAT, MFMAKE);
-            exit(result = -555);
-        }
-    };
-
-    cout << endl << "Program complete." << endl << endl;
-    return result;
 }

@@ -44,6 +44,7 @@
 		<Unit filename="src/Bounds.h" />
 		<Unit filename="src/DevelopmentHelper.h" />
 		<Unit filename="src/Histogram.cpp" />
+		<Unit filename="src/HotSpot.h" />
 		<Unit filename="src/PointsAnalyzer.h" />
 		<Unit filename="src/Reader.h" />
 		<Unit filename="src/Statistics.h" />

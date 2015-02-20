@@ -316,7 +316,7 @@
 	"Reader.h"
 	"Bounds.h"
 
-1424158174 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\main.cpp
+1424447840 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\main.cpp
 	<iostream>
 	<fstream>
 	<sstream>
@@ -332,9 +332,10 @@
 	"PointsAnalyzer.h"
 	"WaypointGenerator.h"
 	"TraceMerger.h"
+	"HotSpot.h"
 	"../libs/pugixml-1.5/src/pugixml.hpp"
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\waypointfinder.h
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\waypointfinder.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -348,7 +349,7 @@
 	<windows.h>
 	"Bounds.h"
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\bounds.h
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\bounds.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -375,7 +376,7 @@
 	"Reader.h"
 	"Bounds.h"
 
-1424159247 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\reader.h
+1424422123 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\reader.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -387,7 +388,7 @@
 	<math.h>
 	<queue>
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\waypointgenerator.h
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\waypointgenerator.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -402,7 +403,7 @@
 	"Bounds.h"
 	"Area.h"
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\pointsanalyzer.h
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\pointsanalyzer.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -431,17 +432,17 @@
 1422471620 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\traffichistogram.cpp
 	"math.h"
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\histogram.cpp
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\histogram.cpp
 	"math.h"
 	<queue>
 
-1424072040 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\histogram.cpp
+1423997721 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\histogram.cpp
 	"math.h"
 	<queue>
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\area.h
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\area.h
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\statistics.h
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\statistics.h
 	"../libs/pugixml-1.5/src/pugixml.hpp"
 	"../libs/Tokenizer.h"
 	<iostream>
@@ -474,7 +475,7 @@
 
 1416845842 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\lib\pugixml-1.5\src\pugiconfig.hpp
 
-1424072040 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\libs\pugixml-1.5\src\pugixml.cpp
+1423997721 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\libs\pugixml-1.5\src\pugixml.cpp
 	"pugixml.hpp"
 	<stdlib.h>
 	<stdio.h>
@@ -490,7 +491,7 @@
 	<new>
 	<stdint.h>
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\libs\pugixml-1.5\src\pugixml.hpp
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\libs\pugixml-1.5\src\pugixml.hpp
 	"pugiconfig.hpp"
 	<stddef.h>
 	<exception>
@@ -498,13 +499,13 @@
 	<iosfwd>
 	<string>
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\libs\pugixml-1.5\src\pugiconfig.hpp
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\libs\pugixml-1.5\src\pugiconfig.hpp
 
 1423082613 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\tokenizer.h
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\libs\tokenizer.h
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\libs\tokenizer.h
 
-1424072040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\developmenthelper.h
+1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\developmenthelper.h
 
 1422945039 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\histogram.cpp
 	"math.h"
@@ -641,6 +642,9 @@
 	"Bounds.h"
 	"Area.h"
 
-1424159712 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\tracemerger.h
+1424422123 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\tracemerger.h
 	"Reader.h"
+
+1424448040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\hotspot.h
+	<vector>
 
