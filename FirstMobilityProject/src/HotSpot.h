@@ -24,7 +24,7 @@ struct HotSpot {
 
      bool isPointBelong(double x, double y)
      {
-         return Xmax >= x && x >= Xmin && Ymax >= y && y >= Ymin;
+         return (Xmin <= x && x <= Xmax) && (Ymin <= y && y <= Ymax);
      }
 };
 

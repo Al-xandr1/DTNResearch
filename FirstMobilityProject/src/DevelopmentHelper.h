@@ -7,29 +7,16 @@
 #ifndef DEVELOPMENTHELPER_H_INCLUDED
 #define DEVELOPMENTHELPER_H_INCLUDED
 
+#include <string>
+#include <vector>
+#include <math.h>
 #include <list>
+#include <sstream>
+#include <string>
+#include <omnetpp.h>
+using namespace std;
 
-#define FILE_TYPE ".xml"
-
-char* buildWayPointFileName(char* name) {
-    char* buffer = new char[256];
-    strcpy(buffer, name);
-    return strcat(buffer, ".wpt");
-}
-
-
-char* buildBoundsFileName(char* name) {
-    char* buffer = new char[256];
-    strcpy(buffer, name);
-    return strcat(name, ".bnd");
-}
-
-
-char* buildStatisticFileName(char* name) {
-    char* buffer = new char[256];
-    strcpy(buffer, name);
-    return strcat(name, ".stat");
-}
+#define FILE_TYPE ".txt"
 
 
 char* buildFullName(char* dir, char* fileName) {
@@ -37,15 +24,6 @@ char* buildFullName(char* dir, char* fileName) {
     strcpy(buffer, dir);
     strcat(buffer, "/");
     return strcat(buffer, fileName);
-}
-
-
-vector<double>* parseDoubleVector(string str)
-{
-    Tokenizer tokenizer(str, "  ");
-    vector<double>* dxPerLevel = new vector<double>();
-    while (tokenizer.NextToken()) dxPerLevel->push_back(atof(tokenizer.GetToken().c_str()));
-    return dxPerLevel;
 }
 
 
@@ -80,8 +58,7 @@ char* createFileName(char* buffer, int numberOfExperiment,
 int countMaxValue(list<int> queueSizePoints) {
     int maxQueueSize = 0;
     list<int>::iterator iterSize;
-    for (iterSize = queueSizePoints.begin(); iterSize != queueSizePoints.end();
-            ++iterSize) {
+    for (iterSize = queueSizePoints.begin(); iterSize != queueSizePoints.end(); ++iterSize) {
         if (maxQueueSize < (*iterSize))
             maxQueueSize = (*iterSize);
     }

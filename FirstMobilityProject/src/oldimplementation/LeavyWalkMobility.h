@@ -12,10 +12,12 @@
 #include "FWMath.h"
 
 #include <omnetpp.h>
+#include <ostream>
 #include <fstream>
 #include <string>
 #include <list>
-#include "DevelopmentHelper.cpp"
+
+using namespace std;
 
 class LeavyWalkMobility : public LineSegmentsMobilityBase {
 

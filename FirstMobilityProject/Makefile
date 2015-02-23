@@ -2,7 +2,7 @@
 # OMNeT++/OMNEST Makefile for FirstMobilityProject
 #
 # This file was generated with the command:
-#  opp_makemake -f --deep -O out -IC:/omnetpp-4.6/samples/inet/src/linklayer/ieee80211/radio -IC:/omnetpp-4.6/samples/inet/src/networklayer/routing/aodv -IC:/omnetpp-4.6/samples/inet/src/networklayer/common -IC:/omnetpp-4.6/samples/inet/src -IC:/omnetpp-4.6/samples/inet/src/networklayer/icmpv6 -IC:/omnetpp-4.6/samples/inet/src/world/obstacles -IC:/omnetpp-4.6/samples/inet/src/networklayer/contract -IC:/omnetpp-4.6/samples/inet/src/networklayer/xmipv6 -IC:/omnetpp-4.6/samples/inet/src/networklayer/autorouting/ipv4 -IC:/omnetpp-4.6/samples/inet/src/util -IC:/omnetpp-4.6/samples/inet/src/transport/contract -IC:/omnetpp-4.6/samples/inet/src/linklayer/common -IC:/omnetpp-4.6/samples/inet/src/status -IC:/omnetpp-4.6/samples/inet/src/linklayer/radio/propagation -IC:/omnetpp-4.6/samples/inet/src/linklayer/ieee80211/radio/errormodel -IC:/omnetpp-4.6/samples/inet/src/linklayer/radio -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers/tcp -IC:/omnetpp-4.6/samples/inet/src/networklayer/ipv4 -IC:/omnetpp-4.6/samples/inet/src/mobility/contract -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers/ipv4 -IC:/omnetpp-4.6/samples/inet/src/base -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers -IC:/omnetpp-4.6/samples/inet/src/world/radio -IC:/omnetpp-4.6/samples/inet/src/linklayer/ieee80211/mac -IC:/omnetpp-4.6/samples/inet/src/networklayer/ipv6 -IC:/omnetpp-4.6/samples/inet/src/transport/sctp -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers/udp -IC:/omnetpp-4.6/samples/inet/src/networklayer/ipv6tunneling -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers/ipv6 -IC:/omnetpp-4.6/samples/inet/src/battery/models -IC:/omnetpp-4.6/samples/inet/src/applications/pingapp -IC:/omnetpp-4.6/samples/inet/src/linklayer/contract -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers/sctp -IC:/omnetpp-4.6/samples/inet/src/networklayer/arp -IC:/omnetpp-4.6/samples/inet/src/transport/tcp_common -IC:/omnetpp-4.6/samples/inet/src/transport/udp -IC:/omnetpp-4.6/samples/inet/src/mobility/common -LC:/omnetpp-4.6/samples/inet/out/$$\(CONFIGNAME\)/src -linet -DINET_IMPORT -KINET_PROJ=C:/omnetpp-4.6/samples/inet
+#  opp_makemake -f --deep -O out -Xsrc/oldimplementation -IC:/omnetpp-4.6/samples/inet/src/linklayer/ieee80211/radio -IC:/omnetpp-4.6/samples/inet/src/networklayer/routing/aodv -IC:/omnetpp-4.6/samples/inet/src/networklayer/common -IC:/omnetpp-4.6/samples/inet/src -IC:/omnetpp-4.6/samples/inet/src/networklayer/icmpv6 -IC:/omnetpp-4.6/samples/inet/src/world/obstacles -IC:/omnetpp-4.6/samples/inet/src/networklayer/contract -IC:/omnetpp-4.6/samples/inet/src/networklayer/xmipv6 -IC:/omnetpp-4.6/samples/inet/src/networklayer/autorouting/ipv4 -IC:/omnetpp-4.6/samples/inet/src/util -IC:/omnetpp-4.6/samples/inet/src/transport/contract -IC:/omnetpp-4.6/samples/inet/src/linklayer/common -IC:/omnetpp-4.6/samples/inet/src/status -IC:/omnetpp-4.6/samples/inet/src/linklayer/radio/propagation -IC:/omnetpp-4.6/samples/inet/src/linklayer/ieee80211/radio/errormodel -IC:/omnetpp-4.6/samples/inet/src/linklayer/radio -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers/tcp -IC:/omnetpp-4.6/samples/inet/src/networklayer/ipv4 -IC:/omnetpp-4.6/samples/inet/src/mobility/contract -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers/ipv4 -IC:/omnetpp-4.6/samples/inet/src/base -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers -IC:/omnetpp-4.6/samples/inet/src/world/radio -IC:/omnetpp-4.6/samples/inet/src/linklayer/ieee80211/mac -IC:/omnetpp-4.6/samples/inet/src/networklayer/ipv6 -IC:/omnetpp-4.6/samples/inet/src/transport/sctp -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers/udp -IC:/omnetpp-4.6/samples/inet/src/networklayer/ipv6tunneling -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers/ipv6 -IC:/omnetpp-4.6/samples/inet/src/battery/models -IC:/omnetpp-4.6/samples/inet/src/applications/pingapp -IC:/omnetpp-4.6/samples/inet/src/linklayer/contract -IC:/omnetpp-4.6/samples/inet/src/util/headerserializers/sctp -IC:/omnetpp-4.6/samples/inet/src/networklayer/arp -IC:/omnetpp-4.6/samples/inet/src/transport/tcp_common -IC:/omnetpp-4.6/samples/inet/src/transport/udp -IC:/omnetpp-4.6/samples/inet/src/mobility/common -LC:/omnetpp-4.6/samples/inet/out/$$\(CONFIGNAME\)/src -linet -DINET_IMPORT -KINET_PROJ=C:/omnetpp-4.6/samples/inet
 #
 
 # Name of target to be created (-o option)
@@ -53,9 +53,9 @@ INCLUDE_PATH = \
     -I$(INET_PROJ)/src/transport/udp \
     -I$(INET_PROJ)/src/mobility/common \
     -I. \
+    -Ihotspotfiles \
     -Iresults \
-    -Isrc \
-    -Isrc/oldimplementation
+    -Isrc
 
 # Additional object and library files to link with
 EXTRA_OBJS =
@@ -70,7 +70,7 @@ PROJECTRELATIVE_PATH =
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cpp and .msg files
-OBJS = $O/src/DevelopmentHelper.o $O/src/LeviStatic.o $O/src/LevyMobility.o $O/src/oldimplementation/LeavyWalkMobility.o
+OBJS = $O/src/LeviStatic.o $O/src/LevyMobility.o
 
 # Message files
 MSGFILES =
@@ -150,37 +150,25 @@ clean:
 	$(Q)-rm -rf $O
 	$(Q)-rm -f FirstMobilityProject FirstMobilityProject.exe libFirstMobilityProject.so libFirstMobilityProject.a libFirstMobilityProject.dll libFirstMobilityProject.dylib
 	$(Q)-rm -f ./*_m.cpp ./*_m.h
+	$(Q)-rm -f hotspotfiles/*_m.cpp hotspotfiles/*_m.h
 	$(Q)-rm -f results/*_m.cpp results/*_m.h
 	$(Q)-rm -f src/*_m.cpp src/*_m.h
-	$(Q)-rm -f src/oldimplementation/*_m.cpp src/oldimplementation/*_m.h
 
 cleanall: clean
 	$(Q)-rm -rf $(PROJECT_OUTPUT_DIR)
 
 depend:
 	$(qecho) Creating dependencies...
-	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES)  ./*.cpp results/*.cpp src/*.cpp src/oldimplementation/*.cpp
+	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES)  ./*.cpp hotspotfiles/*.cpp results/*.cpp src/*.cpp
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
-$O/src/DevelopmentHelper.o: src/DevelopmentHelper.cpp
 $O/src/LeviStatic.o: src/LeviStatic.cpp \
 	src/LeviStatic.h
 $O/src/LevyMobility.o: src/LevyMobility.cpp \
-	src/DevelopmentHelper.cpp \
+	src/DevelopmentHelper.h \
+	src/HotSpot.h \
 	src/LeviStatic.h \
 	src/LevyMobility.h \
-	$(INET_PROJ)/src/base/Compat.h \
-	$(INET_PROJ)/src/base/Coord.h \
-	$(INET_PROJ)/src/base/INETDefs.h \
-	$(INET_PROJ)/src/base/ModuleAccess.h \
-	$(INET_PROJ)/src/mobility/common/LineSegmentsMobilityBase.h \
-	$(INET_PROJ)/src/mobility/common/MobilityBase.h \
-	$(INET_PROJ)/src/mobility/common/MovingMobilityBase.h \
-	$(INET_PROJ)/src/mobility/contract/IMobility.h \
-	$(INET_PROJ)/src/util/FWMath.h
-$O/src/oldimplementation/LeavyWalkMobility.o: src/oldimplementation/LeavyWalkMobility.cpp \
-	src/DevelopmentHelper.cpp \
-	src/oldimplementation/LeavyWalkMobility.h \
 	$(INET_PROJ)/src/base/Compat.h \
 	$(INET_PROJ)/src/base/Coord.h \
 	$(INET_PROJ)/src/base/INETDefs.h \

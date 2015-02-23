@@ -18,9 +18,9 @@ module MobileHost
         
         int indexOfNode = default(0);
     submodules:
-        mobility: <mobilityType> like IMobility;
-//        mobility: LevyMobility {
-//            parameters: 
-//            	fileSuffix = indexOfNode;
-//        }
+//        mobility: <mobilityType> like IMobility;
+        mobility: LevyMobility {
+            parameters: 
+            	fileSuffix = indexOfNode;
+        }
 }

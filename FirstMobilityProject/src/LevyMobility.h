@@ -8,7 +8,8 @@
 #include "LeviStatic.h"
 #include <fstream>
 #include <string>
-#include "DevelopmentHelper.cpp"
+#include "DevelopmentHelper.h"
+#include "HotSpot.h"
 
 class LevyMobility : public LineSegmentsMobilityBase
 {
@@ -19,6 +20,11 @@ class LevyMobility : public LineSegmentsMobilityBase
     LeviPause *pause;
     double kForSpeed;
     double roForSpeed;
+
+    //for hot spots
+    bool useHotSpots; // включает/выключает использование гор€чих точек
+    vector<HotSpot>* hotSpots;
+    HotSpot* currentHotSpot;
 
     //statistics collection
     std::vector<simtime_t> times;
@@ -31,8 +37,20 @@ class LevyMobility : public LineSegmentsMobilityBase
     /** @brief Initializes mobility model parameters.*/
     virtual void initialize(int stage);
 
+    void initializeHotSpots();
+
     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setTargetPosition();
+
+    virtual void setInitialPosition();
+
+    void generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+
+    HotSpot* getRandomHotSpot(HotSpot* excludedHotSpot);
+
+    Coord getRandomPositionInsideHS(HotSpot* hotSpot);
+
+    void checkHotSpotsBound();
 
     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void move();
