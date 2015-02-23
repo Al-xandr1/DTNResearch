@@ -273,42 +273,38 @@ int mainForMovementsFile(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-//    argc = 2; argv = new char*[3] {"program", MFMAKE, WPT} ; //REMOVE HARDCORE!
-//
-//    cout << "Program start!" << endl << endl;
-//
-//    int result = -1;
-//    switch(argc)
-//    {
-//    case 1 :
-//        fprintf(stderr, "You must specify command:\n\t %s \n\t %s\n", WPFIND, STAT);
-//        exit(-444);
-//
-//    case 2 :
-//    default:
-//        char* command = argv[1];
-//        if (strcmp(command, WPFIND) == 0) {
-//            result = mainForWPFinder(argc, argv);
-//
-//        } else if (strcmp(command, STAT) == 0) {
-//            result = mainForAnalyzer(argc, argv);
-//
-//        } else if (strcmp(command, WPGEN) == 0) {
-//            result = mainForGenerator(argc, argv);
-//
-//        } else if (strcmp(command, MFMAKE) == 0) {
-//            result = mainForMovementsFile(argc, argv);
-//
-//        } else {
-//            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s \n\t %s \n\t %s\n", command, WPFIND, WPGEN, STAT, MFMAKE);
-//            exit(result = -555);
-//        }
-//    };
-//
-//    cout << endl << "Program complete." << endl << endl;
-//    return result;
-    HotSpotReader hsReader;
-    vector<HotSpot>* hotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
+    argc = 2; argv = new char*[3] {"program", WPFIND, WPT} ; //REMOVE HARDCORE!
 
+    cout << "Program start!" << endl << endl;
 
+    int result = -1;
+    switch(argc)
+    {
+    case 1 :
+        fprintf(stderr, "You must specify command:\n\t %s \n\t %s\n", WPFIND, STAT);
+        exit(-444);
+
+    case 2 :
+    default:
+        char* command = argv[1];
+        if (strcmp(command, WPFIND) == 0) {
+            result = mainForWPFinder(argc, argv);
+
+        } else if (strcmp(command, STAT) == 0) {
+            result = mainForAnalyzer(argc, argv);
+
+        } else if (strcmp(command, WPGEN) == 0) {
+            result = mainForGenerator(argc, argv);
+
+        } else if (strcmp(command, MFMAKE) == 0) {
+            result = mainForMovementsFile(argc, argv);
+
+        } else {
+            fprintf(stderr, "Unknown command %s. Permitted commands:\n\t %s \n\t %s \n\t %s \n\t %s\n", command, WPFIND, WPGEN, STAT, MFMAKE);
+            exit(result = -555);
+        }
+    };
+
+    cout << endl << "Program complete." << endl << endl;
+    return result;
 }

@@ -59,6 +59,7 @@ void LevyMobility::setInitialPosition() {
     }
 }
 
+// получаем случайную горячую точку из списка hotSpots, отличную от указанной excludedHotSpot
 HotSpot* LevyMobility::getRandomHotSpot(HotSpot* excludedHotSpot) {
     int index = -1;
     HotSpot* hotSpot = excludedHotSpot;
@@ -71,6 +72,7 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* excludedHotSpot) {
     return hotSpot;
 }
 
+// получаем случайное положение внутри заданной горячей точки
 Coord LevyMobility::getRandomPositionInsideHS(HotSpot* hotSpot) {
     return Coord(uniform(currentHotSpot->Xmin, currentHotSpot->Xmax),
                  uniform(currentHotSpot->Ymin, currentHotSpot->Ymax),
@@ -124,12 +126,8 @@ void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
             if (length < maxLength) {// можно покрутить точку и попасть в прямоугольник
                 double deltaAngle = DELTA_ROTATE / distance; //определяем нужное смещение по углу из формулы длины дуги
 
-//                int iter = 0;
                 double shiftedAngle = angle;
                 while (!currentHotSpot->isPointBelong(targetPosition.x, targetPosition.y)) {
-//                    if (iter % 1000 == 0) cout << "Iter of rotatint is: " << iter << endl;
-//                    iter++;
-
                     shiftedAngle += deltaAngle;
                     Coord rotateDelta(distance * cos(shiftedAngle), distance * sin(shiftedAngle), 0);
                     targetPosition = lastPosition + rotateDelta;
