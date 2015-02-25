@@ -9,8 +9,8 @@ Define_Module(LevyMobility);
 LevyMobility::LevyMobility() {
     nextMoveIsWait = false;
 
-    double ciJ = 10;        // 10
-    double aliJ = 1.0;      // 0.5, 1.0, 1.5
+    double ciJ = 100;        // 10
+    double aliJ = 1.5;      // 0.5, 1.0, 1.5
     double aciJ = 0.001;
 
     double ciP = 1;         // 1
