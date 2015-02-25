@@ -9,12 +9,12 @@ Define_Module(LevyMobility);
 LevyMobility::LevyMobility() {
     nextMoveIsWait = false;
 
-    double ciJ = 100;
-    double aliJ = 1;
+    double ciJ = 10;        // 10
+    double aliJ = 1.0;      // 0.5, 1.0, 1.5
     double aciJ = 0.001;
 
-    double ciP = 1;
-    double aliP = 1;
+    double ciP = 1;         // 1
+    double aliP = 0.5;      // 0.5
     double aciP = 0.001;
 
     jump = new LeviJump(ciJ, aliJ, aciJ);
