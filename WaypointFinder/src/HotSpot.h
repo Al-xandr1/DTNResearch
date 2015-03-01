@@ -13,9 +13,20 @@ struct Waypoint{
 
 
 struct HotSpot {
-     double Xmin, Xmax, Ymin, Ymax;
+     double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;
      double sumTime;
      vector<Waypoint> waypoint;
+
+     HotSpot(double Xmin, double Xmax, double Ymin, double Ymax)
+     {
+         this->Xmin = Xmin;
+         this->Xmax = Xmax;
+         this->Ymin = Ymin;
+         this->Ymax = Ymax;
+         this->Xcenter = (Xmax + Xmin) / 2;
+         this->Ycenter = (Ymax + Ymin) / 2;
+         this->sumTime = 0;
+     }
 
      void print()
      {
@@ -80,13 +91,13 @@ private:
             cout << " No hotSpotFile file: " << fileName << endl;
             exit(102);
         }
-        HotSpot hotSpot;
-        (*hotSpotFile) >> hotSpot.Xmin >> hotSpot.Xmax >> hotSpot.Ymin >> hotSpot.Ymax;
-        hotSpot.sumTime = 0;
+
+        double Xmin, Xmax, Ymin, Ymax;
+        (*hotSpotFile) >> Xmin >> Xmax >> Ymin >> Ymax;
         hotSpotFile->close();
         delete hotSpotFile;
 
-        return hotSpot;
+        return HotSpot(Xmin, Xmax, Ymin, Ymax);
     }
 };
 

@@ -316,7 +316,7 @@
 	"Reader.h"
 	"Bounds.h"
 
-1424447840 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\main.cpp
+1424705565 source:c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\main.cpp
 	<iostream>
 	<fstream>
 	<sstream>
@@ -505,7 +505,8 @@
 
 1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\libs\tokenizer.h
 
-1423997721 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\developmenthelper.h
+1424702540 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\developmenthelper.h
+	<list>
 
 1422945039 source:c:\omnetpp-4.3.1\github\dtnresearch\waypointfinder\src\histogram.cpp
 	"math.h"
@@ -645,6 +646,6 @@
 1424422123 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\tracemerger.h
 	"Reader.h"
 
-1424448040 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\hotspot.h
+1425138115 c:\omnetpp-4.6\github\dtnresearch\waypointfinder\src\hotspot.h
 	<vector>
 

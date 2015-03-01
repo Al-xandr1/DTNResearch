@@ -8,20 +8,10 @@ Define_Module(LevyMobility);
 
 LevyMobility::LevyMobility() {
     nextMoveIsWait = false;
-
-    double ciJ = 100;        // 10
-    double aliJ = 1.5;      // 0.5, 1.0, 1.5
-    double aciJ = 0.001;
-
-    double ciP = 1;         // 1
-    double aliP = 0.5;      // 0.5
-    double aciP = 0.001;
-
-    jump = new LeviJump(ciJ, aliJ, aciJ);
-    pause = new LeviPause(ciP, aliP, aciP);
+    jump = NULL;
+    pause = NULL;
     kForSpeed = 1;
     roForSpeed = 0;
-
     useHotSpots = false;
     hotSpots = NULL;
     currentHotSpot = NULL;
@@ -33,6 +23,26 @@ void LevyMobility::initialize(int stage) {
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L'
                 || par("speed").getType() == 'D') && (double) par("speed") == 0;
+    }
+
+    if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ")
+        && hasPar("ciP") && hasPar("aliP") && hasPar("aciP")) {
+
+        double ciJ  = par("ciJ").doubleValue();
+        double aliJ = par("aliJ").doubleValue();
+        double aciJ = par("aciJ").doubleValue();
+
+        double ciP  = par("ciP").doubleValue();
+        double aliP = par("aliP").doubleValue();
+        double aciP = par("aciP").doubleValue();
+
+        if (jump == NULL || pause == NULL) {
+            jump = new LeviJump(ciJ, aliJ, aciJ);
+            pause = new LeviPause(ciP, aliP, aciP);
+        }
+    } else {
+        cout << "It is necessary to specify ALL parameters for length and pause Levy distribution";
+        exit(-112);
     }
 
     initializeHotSpots();
@@ -95,8 +105,6 @@ void LevyMobility::setTargetPosition() {
     nextMoveIsWait = !nextMoveIsWait;
 }
 
-#define DELTA_ROTATE 0.1 //длина участка, на которую будем поворачивать точку (в метрах)
-
 // Генерирует следующую позицию в зависимости от того, включено использование горячих точек или нет
 void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
     // генерируем как обычно
@@ -109,50 +117,43 @@ void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     targetPosition = lastPosition + delta;
     nextChange = simTime() + travelTime;
 
+    bool isNewHS = false;//todo remove
+    bool isEqual = false;//todo remove
+
     if (useHotSpots) {
-        // принадлежит ли новая точка текущей горячей точке
-        if (!currentHotSpot->isPointBelong(targetPosition.x, targetPosition.y)) {
-            // получаем максимальное расстояние от текущей точки до всех вершин прямоугольника
-            double l1 = getLength(lastPosition.x, lastPosition.y, currentHotSpot->Xmin, currentHotSpot->Ymin);
-            double l2 = getLength(lastPosition.x, lastPosition.y, currentHotSpot->Xmin, currentHotSpot->Ymax);
-            double l3 = getLength(lastPosition.x, lastPosition.y, currentHotSpot->Xmax, currentHotSpot->Ymax);
-            double l4 = getLength(lastPosition.x, lastPosition.y, currentHotSpot->Xmax, currentHotSpot->Ymin);
+        Coord newTargetPosition = targetPosition;
+        if (!currentHotSpot->isPointBelong(lastPosition)){exit(-341);}
 
-            double maxLength = max(l1, max(l2, max(l3, l4)));
-
+        if (!currentHotSpot->isPointBelong(targetPosition)) {
+            // если новая точка не принадлежит текущей горячей точке
+            Coord farthestVertix = currentHotSpot->getFarthestVertix(lastPosition);
             // получаем длину текущего прыжка
-            double length = getLength(lastPosition.x, lastPosition.y, targetPosition.x, targetPosition.y);
+            double length = lastPosition.distance(targetPosition);
+            // получаем расстояние от текущей точки до самой дальней вершины прямоугольника
+            double maxLength = lastPosition.distance(farthestVertix);
 
-            if (length < maxLength) {// можно покрутить точку и попасть в прямоугольник
-                double deltaAngle = DELTA_ROTATE / distance; //определяем нужное смещение по углу из формулы длины дуги
+            if (length < maxLength) {
+                // можно поставить точку внутрь прямоуголька
+                Coord distanceVector = farthestVertix - lastPosition;
+                Coord directionVector = distanceVector / distanceVector.length();
+                newTargetPosition = directionVector * length;
 
-                double shiftedAngle = angle;
-                while (!currentHotSpot->isPointBelong(targetPosition.x, targetPosition.y)) {
-                    shiftedAngle += deltaAngle;
-                    Coord rotateDelta(distance * cos(shiftedAngle), distance * sin(shiftedAngle), 0);
-                    targetPosition = lastPosition + rotateDelta;
-                }
+            } else if (length == maxLength) {
+                // новая точка совпадает с вершиной
+                newTargetPosition = farthestVertix;
+                isEqual = true;
 
-            } else if (length == maxLength) {// выставляем точку на ту вершину, от которой проведен данный отрезок максимальной длины (то же самое вращение)
-                if (l1 == maxLength) {
-                    Coord p(currentHotSpot->Xmin, currentHotSpot->Ymin, 0);
-                    targetPosition = p;
-                } else if (l2 == maxLength) {
-                    Coord p(currentHotSpot->Xmin, currentHotSpot->Ymax, 0);
-                    targetPosition = p;
-                } else if (l3 == maxLength) {
-                    Coord p(currentHotSpot->Xmax, currentHotSpot->Ymax, 0);
-                    targetPosition = p;
-                } else if (l4 == maxLength) {
-                    Coord p(currentHotSpot->Xmax, currentHotSpot->Ymin, 0);
-                    targetPosition = p;
-                }
-
-            } else {// TODO в этом случае или сразу ищем новый кластер или до определённой длины (порога) ещё остаёмся в этом, заново генерируя шаг
+            } else {
+                // TODO в этом случае или сразу ищем новый кластер или до определённой длины (порога) ещё остаёмся в этом, заново генерируя шаг
                 //пусть пока выбираем случайный кластер
                 currentHotSpot = getRandomHotSpot(currentHotSpot);
-                targetPosition = getRandomPositionInsideHS(currentHotSpot);
+                newTargetPosition = getRandomPositionInsideHS(currentHotSpot);
+                isNewHS = true;
             }
+        }
+
+        if (!currentHotSpot->isPointBelong(newTargetPosition)){
+            exit(-346);
         }
     }
 }
