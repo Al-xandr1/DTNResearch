@@ -79,9 +79,6 @@ void LevyMobility::setInitialPosition() {
     if (useHotSpots) {
         currentHotSpot = getRandomHotSpot(NULL);
         lastPosition = getRandomPositionInsideHS(currentHotSpot);
-        if (!currentHotSpot->isPointBelong(lastPosition)){
-            exit(-343);
-        }
     }
 }
 
@@ -100,9 +97,13 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* excludedHotSpot) {
 
 // получаем случайное положение внутри заданной горячей точки
 Coord LevyMobility::getRandomPositionInsideHS(HotSpot* hotSpot) {
-    return Coord(uniform(currentHotSpot->Xmin, currentHotSpot->Xmax),
-                 uniform(currentHotSpot->Ymin, currentHotSpot->Ymax),
-                 0);
+    Coord newPoint(uniform(hotSpot->Xmin, hotSpot->Xmax),
+                   uniform(hotSpot->Ymin, hotSpot->Ymax),
+                   0);
+    if (!hotSpot->isPointBelong(newPoint)){
+        exit(-343);
+    }
+    return newPoint;
 }
 
 void LevyMobility::finish() {
@@ -133,48 +134,40 @@ void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     targetPosition = lastPosition + delta;
     nextChange = simTime() + travelTime;
 
-    bool isNewHS = false;//todo remove
-    bool isEqual = false;//todo remove
-
     if (useHotSpots) {
-        Coord newTargetPosition = targetPosition;
         if (!currentHotSpot->isPointBelong(lastPosition)){
             exit(-341);
         }
 
-        if (!currentHotSpot->isPointBelong(newTargetPosition)) {
+        if (!currentHotSpot->isPointBelong(targetPosition)) {
             // если новая точка не принадлежит текущей горячей точке
             Coord farthestVertix = currentHotSpot->getFarthestVertix(lastPosition);
             // получаем длину текущего прыжка
-            double length = lastPosition.distance(newTargetPosition);
+            double length = lastPosition.distance(targetPosition);
             // получаем расстояние от текущей точки до самой дальней вершины прямоугольника
             double maxLength = lastPosition.distance(farthestVertix);
 
             if (length < maxLength) {
                 // можно поставить точку внутрь прямоуголька
                 Coord distanceVector = farthestVertix - lastPosition;
-                double locLength = distanceVector.length();
-                Coord directionVector = distanceVector / locLength;
-                newTargetPosition = directionVector * length;
+                Coord directionVector = distanceVector / distanceVector.length();
+                targetPosition = lastPosition + (directionVector * length);
 
             } else if (length == maxLength) {
                 // новая точка совпадает с вершиной
-                newTargetPosition = farthestVertix;
-                isEqual = true;
+                targetPosition = farthestVertix;
 
             } else {
                 // TODO в этом случае или сразу ищем новый кластер или до определённой длины (порога) ещё остаёмся в этом, заново генерируя шаг
                 //пусть пока выбираем случайный кластер
                 currentHotSpot = getRandomHotSpot(currentHotSpot);
-                newTargetPosition = getRandomPositionInsideHS(currentHotSpot);
-                isNewHS = true;
+                targetPosition = getRandomPositionInsideHS(currentHotSpot);
             }
         }
 
-        if (!currentHotSpot->isPointBelong(newTargetPosition)){
+        if (!currentHotSpot->isPointBelong(targetPosition)){
             exit(-346);
         }
-        targetPosition = newTargetPosition;
     }
 }
 

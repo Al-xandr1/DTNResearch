@@ -66,7 +66,7 @@ private:
 
              } else {//на границе между 1ым и 4ым
                  quadrants.push_back(1);
-//                 quadrants.push_back(4);
+                 quadrants.push_back(4);
              }
          }
          else if (point.x < Xcenter) {
@@ -80,7 +80,7 @@ private:
              } else {
                  //на границе между 2ым и 3ым
                  quadrants.push_back(2);
-//                 quadrants.push_back(3);
+                 quadrants.push_back(3);
              }
 
          } else {
@@ -88,17 +88,17 @@ private:
              if (point.y > Ycenter) {
                  //на границе между 1ым и 2ым
                  quadrants.push_back(1);
-//                 quadrants.push_back(2);
+                 quadrants.push_back(2);
              } else if (point.y < Ycenter) {
                  //на границе между 3ым и 4ым
                  quadrants.push_back(3);
-//                 quadrants.push_back(4);
+                 quadrants.push_back(4);
              } else {
                  //на границе между 1ым, 2ым, 3им и 4ым
                  quadrants.push_back(1);
-//                 quadrants.push_back(2);
-//                 quadrants.push_back(3);
-//                 quadrants.push_back(4);
+                 quadrants.push_back(2);
+                 quadrants.push_back(3);
+                 quadrants.push_back(4);
              }
          }
 
@@ -119,7 +119,6 @@ public:
              //выбирать случайным образом, из нескольких противоположных вершин
              int index = rint(uniform(0, quadrants.size() - 1));
              quadrant = quadrants[index];
-             exit(-666);
          }
          if (quadrant < 1 || quadrant > 4) {exit(-195);}
 
