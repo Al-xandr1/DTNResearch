@@ -244,56 +244,98 @@ endfunction
 //------------------ Функции для рисования Статистики -------------------------
 
 //Рисование всех гистрограмм из одного файла статистики
-function drawAllHistograms(filename)
-    drawHistograms(filename, "FLIGHT-LENGTH-HISTOGRAM", "Flight length, meters");
-    drawHistograms(filename, "VELOCITY-HISTOGRAM", "Velocity magnitude, meters/sec");
-    drawHistograms(filename, "PAUSE-HISTOGRAM", "Pause time, sec");
+function drawAllHistograms(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("drawAllHistograms: Ожидалось один или более параметров (имён файлов)"));
+    end
+    
+    fileNames = [];
+    for i = 1 : rhs
+        fileNames = [fileNames ; varargin(i)];
+    end
+    drawHistograms(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "Flight length, meters");
+    drawHistograms(fileNames, "VELOCITY-HISTOGRAM", "Velocity magnitude, meters/sec");
+    drawHistograms(fileNames, "PAUSE-HISTOGRAM", "Pause time, sec");
 endfunction
 
 //Рисование гистрограммы из одного файла статистики
-function drawHistograms(filename, tag, xlable)
-    doc = xmlRead(PATH + filename);
+function drawHistograms(filenames, tag, xlable)
+    fileCount = size(filenames, 1);
     
-    cells = getDoubleFromXml(doc, "//" + tag + "/CELLS/text()");
-    cellWidth = getDoubleFromXml(doc, "//" + tag + "/CELL-WIDTH/text()");
-    leftBound = getDoubleFromXml(doc, "//" + tag + "/LEFT-BOUND/text()");
-    rightBound = getDoubleFromXml(doc, "//" + tag + "/RIGHT-BOUND/text()");
-    pdf = getVector(doc, "//" + tag + "/PDF-VALS/text()", cells);
-    cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells);
-    ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells);
-
+    cells = -1; cellWidth = -1; leftBound = -1; rightBound = -1;
+    for i=1:fileCount
+        doc = xmlRead(PATH + filenames(i));
+        cellsLoc = getDoubleFromXml(doc, "//" + tag + "/CELLS/text()");
+        cellWidthLoc = getDoubleFromXml(doc, "//" + tag + "/CELL-WIDTH/text()");
+        leftBoundLoc = getDoubleFromXml(doc, "//" + tag + "/LEFT-BOUND/text()");
+        rightBoundLoc = getDoubleFromXml(doc, "//" + tag + "/RIGHT-BOUND/text()");
+        
+        if (cells<>-1 | cellWidth<>-1 | leftBound<>-1 | rightBound<>-1) then
+            if (cells<>cellsLoc | cellWidth<>cellWidthLoc | leftBound<>leftBoundLoc | rightBound<>rightBoundLoc)
+                error(msprintf("drawAllHistograms: CELLS or CELL-WIDTH or LEFT-BOUND or RIGHT-BOUND are different in this files"));
+            end
+        end
+        cells = cellsLoc; cellWidth = cellWidthLoc; 
+        leftBound = leftBoundLoc; rightBound = rightBoundLoc;
+        xmlDelete(doc);
+    end
+    
+    
     scf();
     //рисуем полигон частот
     len = (leftBound+cellWidth/2):cellWidth:rightBound;
-    plot2d(len, pdf, GRAPH_COLOR);
-    if (SHOW_LEGEND == 1) then
-        hl=legend([ 'PDF' ]);
+    legenda = [];  colorLoc = GRAPH_COLOR;
+    for i=1:fileCount
+        doc = xmlRead(PATH + filenames(i));
+        pdf = getVector(doc, "//" + tag + "/PDF-VALS/text()", cells);
+        plot2d(len, pdf, colorLoc);
+        colorLoc = colorLoc + COLOR_OFFSET;
+        legenda = [ legenda ; ('PDF from  ' + filenames(i)) ];
+        xmlDelete(doc);
     end
-    prepareGraphic("PDF for "+ tag + " from: " + filename, xlable, "PDF");
+    if (SHOW_LEGEND == 1) then hl=legend(legenda); end
+    prepareGraphic("PDF for "+ tag, xlable, "PDF");
+
 
     scf();
-    for i=1:cells 
-        if (cdf(i) < 1) then cdf1(i) = cdf(i); else break; end;
+    legenda = [];  colorLoc = GRAPH_COLOR;
+    for i=1:fileCount
+        doc = xmlRead(PATH + filenames(i));
+        cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells);
+        cdf1 = [];
+        for k=1:cells 
+            if (cdf(k) < 1) then cdf1(k) = cdf(k); else break; end;
+        end
+        meters = [];
+        for k=1:size(cdf1, 1) meters(k) = len(k); end
+        plot2d(meters, cdf1, colorLoc);
+        colorLoc = colorLoc + COLOR_OFFSET;
+        legenda = [ legenda ; ('CDF from  ' + filenames(i)) ];
+        xmlDelete(doc);
     end
-    for i=1:size(cdf1, 1) meters(i) = len(i); end
-    plot2d(meters, cdf1, GRAPH_COLOR);
-    if (SHOW_LEGEND == 1) then
-        hl=legend([ 'CDF' ]);
-    end
-    prepareGraphic("CDF for "+ tag + " from: " + filename, xlable, "CDF : P(X < x))");
+    if (SHOW_LEGEND == 1) then h1=legend(legenda); end
+    prepareGraphic("CDF for "+ tag, xlable, "CDF : P(X < x))");
+
 
     scf();    
-    for i=1:cells 
-        if (ccdf(i) > 0) then ccdf1(i) = ccdf(i); else break; end;
+    legenda = [];  colorLoc = GRAPH_COLOR;
+    for i=1:fileCount
+        doc = xmlRead(PATH + filenames(i));
+        ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells);
+        ccdf1 = [];
+        for k=1:cells 
+            if (ccdf(k) > 0) then ccdf1(k) = ccdf(k); else break; end;
+        end
+        secs = [];
+        for k=1:size(ccdf1, 1) secs(k) = len(k); end
+        plot2d(log2(secs), log2(ccdf1), colorLoc);
+        colorLoc = colorLoc + COLOR_OFFSET;
+        legenda = [ legenda ; ('CCDF from  ' + filenames(i)) ];
+        xmlDelete(doc);
     end
-    for i=1:size(ccdf1, 1) secs(i) = len(i); end
-    plot2d(log2(secs), log2(ccdf1), GRAPH_COLOR);
-    if (SHOW_LEGEND == 1) then
-        hl=legend([ 'CCDF' ]);
-    end
-    prepareGraphic("CCDF for "+ tag + " from: " + filename, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
-
-    xmlDelete(doc);
+    if (SHOW_LEGEND == 1) then hl=legend(legenda); end
+    prepareGraphic("CCDF for "+ tag, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
 endfunction
 
 
