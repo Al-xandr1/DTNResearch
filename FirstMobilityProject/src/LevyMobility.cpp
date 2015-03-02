@@ -51,12 +51,25 @@ void LevyMobility::initialize(int stage) {
 // »нициализирует гор€чие точки если их использование включено
 void LevyMobility::initializeHotSpots() {
     useHotSpots = par("useHotSpots").boolValue();
-    if (useHotSpots)
+    if (useHotSpots && hotSpots == NULL)
     {
-        if (hotSpots) {delete hotSpots; hotSpots = NULL;}
         HotSpotReader hsReader;
         hotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
         checkHotSpotsBound();
+    }
+}
+
+// ѕровер€ет: что все гор€чие точки не выход€т за общую границу
+void LevyMobility::checkHotSpotsBound() {
+    if (hotSpots) {
+        for (int i = 0; i < hotSpots->size(); i++) {
+            HotSpot hotSpot = (*hotSpots)[i];
+            if (hotSpot.Xmin < constraintAreaMin.x || hotSpot.Xmax > constraintAreaMax.x
+                    || hotSpot.Ymin < constraintAreaMin.y || hotSpot.Ymax > constraintAreaMax.y) {
+                cout << "HotSpots has wrong bounds!"; EV << "HotSpots has wrong bounds!";
+                exit(123);
+            }
+        }
     }
 }
 
@@ -66,6 +79,9 @@ void LevyMobility::setInitialPosition() {
     if (useHotSpots) {
         currentHotSpot = getRandomHotSpot(NULL);
         lastPosition = getRandomPositionInsideHS(currentHotSpot);
+        if (!currentHotSpot->isPointBelong(lastPosition)){
+            exit(-343);
+        }
     }
 }
 
@@ -122,20 +138,23 @@ void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
 
     if (useHotSpots) {
         Coord newTargetPosition = targetPosition;
-        if (!currentHotSpot->isPointBelong(lastPosition)){exit(-341);}
+        if (!currentHotSpot->isPointBelong(lastPosition)){
+            exit(-341);
+        }
 
-        if (!currentHotSpot->isPointBelong(targetPosition)) {
+        if (!currentHotSpot->isPointBelong(newTargetPosition)) {
             // если нова€ точка не принадлежит текущей гор€чей точке
             Coord farthestVertix = currentHotSpot->getFarthestVertix(lastPosition);
             // получаем длину текущего прыжка
-            double length = lastPosition.distance(targetPosition);
+            double length = lastPosition.distance(newTargetPosition);
             // получаем рассто€ние от текущей точки до самой дальней вершины пр€моугольника
             double maxLength = lastPosition.distance(farthestVertix);
 
             if (length < maxLength) {
                 // можно поставить точку внутрь пр€моуголька
                 Coord distanceVector = farthestVertix - lastPosition;
-                Coord directionVector = distanceVector / distanceVector.length();
+                double locLength = distanceVector.length();
+                Coord directionVector = distanceVector / locLength;
                 newTargetPosition = directionVector * length;
 
             } else if (length == maxLength) {
@@ -155,28 +174,15 @@ void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
         if (!currentHotSpot->isPointBelong(newTargetPosition)){
             exit(-346);
         }
-    }
-}
-
-// ѕровер€ет: что все гор€чие точки не выход€т за общую границу
-void LevyMobility::checkHotSpotsBound() {
-    if (hotSpots) {
-        for (int i = 0; i < hotSpots->size(); i++) {
-            HotSpot hotSpot = (*hotSpots)[i];
-            if (hotSpot.Xmin < constraintAreaMin.x || hotSpot.Xmax > constraintAreaMax.x
-                    || hotSpot.Ymin < constraintAreaMin.y || hotSpot.Ymax > constraintAreaMax.y) {
-                cout << "HotSpots has wrong bounds!"; EV << "HotSpots has wrong bounds!";
-                exit(123);
-            }
-        }
+        targetPosition = newTargetPosition;
     }
 }
 
 void LevyMobility::move() {
     LineSegmentsMobilityBase::move();
-    Coord position, speed;
-    double angle;
-    reflectIfOutside(position, speed, angle);
+//    Coord position, speed;
+//    double angle;
+//    reflectIfOutside(position, speed, angle);
 }
 
 //-------------------------- Statistic collection ---------------------------------
