@@ -263,7 +263,7 @@ endfunction
 function drawHistograms(filenames, tag, xlable)
     fileCount = size(filenames, 1);
     
-    cells = -1; cellWidth = -1; leftBound = -1; rightBound = -1;
+    cells = []; cellWidth = []; leftBound = []; rightBound = [];
     for i=1:fileCount
         doc = xmlRead(PATH + filenames(i));
         cellsLoc = getDoubleFromXml(doc, "//" + tag + "/CELLS/text()");
@@ -271,24 +271,22 @@ function drawHistograms(filenames, tag, xlable)
         leftBoundLoc = getDoubleFromXml(doc, "//" + tag + "/LEFT-BOUND/text()");
         rightBoundLoc = getDoubleFromXml(doc, "//" + tag + "/RIGHT-BOUND/text()");
         
-        if (cells<>-1 | cellWidth<>-1 | leftBound<>-1 | rightBound<>-1) then
-            if (cells<>cellsLoc | cellWidth<>cellWidthLoc | leftBound<>leftBoundLoc | rightBound<>rightBoundLoc)
-                error(msprintf("drawAllHistograms: CELLS or CELL-WIDTH or LEFT-BOUND or RIGHT-BOUND are different in this files"));
-            end
-        end
-        cells = cellsLoc; cellWidth = cellWidthLoc; 
-        leftBound = leftBoundLoc; rightBound = rightBoundLoc;
+        
+        cells      = [cells ; cellsLoc]; 
+        cellWidth  = [cellWidth ; cellWidthLoc];
+        leftBound  = [leftBound ; leftBoundLoc];
+        rightBound = [rightBound ; rightBoundLoc];
         xmlDelete(doc);
     end
     
     
     scf();
     //рисуем полигон частот
-    len = (leftBound+cellWidth/2):cellWidth:rightBound;
     legenda = [];  colorLoc = GRAPH_COLOR;
     for i=1:fileCount
         doc = xmlRead(PATH + filenames(i));
-        pdf = getVector(doc, "//" + tag + "/PDF-VALS/text()", cells);
+        len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
+        pdf = getVector(doc, "//" + tag + "/PDF-VALS/text()", cells(i));
         plot2d(len, pdf, colorLoc);
         colorLoc = colorLoc + COLOR_OFFSET;
         legenda = [ legenda ; ('PDF from  ' + filenames(i)) ];
@@ -302,9 +300,10 @@ function drawHistograms(filenames, tag, xlable)
     legenda = [];  colorLoc = GRAPH_COLOR;
     for i=1:fileCount
         doc = xmlRead(PATH + filenames(i));
-        cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells);
+        len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
+        cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells(i));
         cdf1 = [];
-        for k=1:cells 
+        for k=1:cells(i)
             if (cdf(k) < 1) then cdf1(k) = cdf(k); else break; end;
         end
         meters = [];
@@ -322,9 +321,10 @@ function drawHistograms(filenames, tag, xlable)
     legenda = [];  colorLoc = GRAPH_COLOR;
     for i=1:fileCount
         doc = xmlRead(PATH + filenames(i));
-        ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells);
+        len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
+        ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells(i));
         ccdf1 = [];
-        for k=1:cells 
+        for k=1:cells(i)
             if (ccdf(k) > 0) then ccdf1(k) = ccdf(k); else break; end;
         end
         secs = [];
