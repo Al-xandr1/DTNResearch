@@ -270,11 +270,8 @@ int mainForMovementsFile(int argc, char** argv)
 }
 
 
-
-int main(int argc, char** argv)
+int mainMain(int argc, char** argv)
 {
-    argc = 2; argv = new char*[3] {"program", WPFIND, WPT} ; //REMOVE HARDCORE!
-
     cout << "Program start!" << endl << endl;
 
     int result = -1;
@@ -307,4 +304,13 @@ int main(int argc, char** argv)
 
     cout << endl << "Program complete." << endl << endl;
     return result;
+}
+
+// ------------------------------------------  Program script  --------------------------------------------
+int main(int argc, char** argv)
+{
+    argc = 2; argv = new char*[2] {"program", WPFIND};
+    mainMain(argc, argv);
+    argc = 3; argv = new char*[3] {"program", STAT, WPT};
+    mainMain(argc, argv);
 }
