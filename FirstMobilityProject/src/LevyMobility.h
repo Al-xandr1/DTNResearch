@@ -22,9 +22,12 @@ class LevyMobility : public LineSegmentsMobilityBase
     double roForSpeed;
 
     //for hot spots
-    bool useHotSpots; // включает/выключает использование гор€чих точек
-    vector<HotSpot>* hotSpots;
-    HotSpot* currentHotSpot;
+    bool useHotSpots;                   // включает/выключает использование гор€чих точек
+    vector<HotSpot>* allHotSpots;       // все кластеры
+    vector<HotSpot>* visitedHotSpots;   // посещЄнные кластеры
+    double** distMatrix;                // матрица дистанций
+    HotSpot* currentHotSpot;            // текущий кластер
+
 
     //statistics collection
     std::vector<simtime_t> times;

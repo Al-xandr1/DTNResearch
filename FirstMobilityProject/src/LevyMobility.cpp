@@ -13,7 +13,7 @@ LevyMobility::LevyMobility() {
     kForSpeed = 1;
     roForSpeed = 0;
     useHotSpots = false;
-    hotSpots = NULL;
+    allHotSpots = NULL;
     currentHotSpot = NULL;
 }
 
@@ -51,19 +51,33 @@ void LevyMobility::initialize(int stage) {
 // »нициализирует гор€чие точки если их использование включено
 void LevyMobility::initializeHotSpots() {
     useHotSpots = par("useHotSpots").boolValue();
-    if (useHotSpots && hotSpots == NULL)
+    if (useHotSpots && allHotSpots == NULL)
     {
         HotSpotReader hsReader;
-        hotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
+        allHotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
         checkHotSpotsBound();
+
+        distMatrix = new double*[allHotSpots->size()];
+        for (int i = 0; i < allHotSpots->size(); i++) {
+            distMatrix[i] = new double[allHotSpots->size()];
+            for (int j = 0; j < allHotSpots->size(); j++) {
+                if (i == j) {
+                    distMatrix[i][i] = -1;
+                } else {
+                    distMatrix[i][j] =
+                            sqrt(((*allHotSpots)[i].Xcenter - (*allHotSpots)[j].Xcenter) * ((*allHotSpots)[i].Xcenter - (*allHotSpots)[j].Xcenter)
+                               + ((*allHotSpots)[i].Ycenter - (*allHotSpots)[j].Ycenter) * ((*allHotSpots)[i].Ycenter - (*allHotSpots)[j].Ycenter));
+                }
+            }
+        }
     }
 }
 
 // ѕровер€ет: что все гор€чие точки не выход€т за общую границу
 void LevyMobility::checkHotSpotsBound() {
-    if (hotSpots) {
-        for (int i = 0; i < hotSpots->size(); i++) {
-            HotSpot hotSpot = (*hotSpots)[i];
+    if (allHotSpots) {
+        for (int i = 0; i < allHotSpots->size(); i++) {
+            HotSpot hotSpot = (*allHotSpots)[i];
             if (hotSpot.Xmin < constraintAreaMin.x || hotSpot.Xmax > constraintAreaMax.x
                     || hotSpot.Ymin < constraintAreaMin.y || hotSpot.Ymax > constraintAreaMax.y) {
                 cout << "HotSpots has wrong bounds!"; EV << "HotSpots has wrong bounds!";
@@ -87,11 +101,11 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* excludedHotSpot) {
     int index = -1;
     HotSpot* hotSpot = excludedHotSpot;
     do {
-        index = rint(uniform(0, hotSpots->size() - 1));
-        hotSpot = &((*hotSpots)[index]);
+        index = rint(uniform(0, allHotSpots->size() - 1));
+        hotSpot = &((*allHotSpots)[index]);
     } while (hotSpot == excludedHotSpot);
 
-    cout << "getRandomHotSpot: index = " << index << ", size = " << hotSpots->size() << endl;
+    cout << "getRandomHotSpot: index = " << index << ", size = " << allHotSpots->size() << endl;
     return hotSpot;
 }
 
