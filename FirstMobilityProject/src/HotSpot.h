@@ -39,9 +39,9 @@ struct HotSpot {
      }
 
 public:
-     double getDistance(HotSpot& hotSpot) {
-         return sqrt((this->Xcenter - hotSpot.Xcenter) * (this->Xcenter - hotSpot.Xcenter)
-                   + (this->Ycenter - hotSpot.Ycenter) * (this->Ycenter - hotSpot.Ycenter));
+     double getDistance(HotSpot* hotSpot) {
+         return sqrt((this->Xcenter - hotSpot->Xcenter) * (this->Xcenter - hotSpot->Xcenter)
+                   + (this->Ycenter - hotSpot->Ycenter) * (this->Ycenter - hotSpot->Ycenter));
      }
 };
 
@@ -49,9 +49,9 @@ public:
 class HotSpotReader
 {
 public:
-    vector<HotSpot>* readAllHotSpots(char* hotSpotDir)
+    vector<HotSpot*>* readAllHotSpots(char* hotSpotDir)
     {
-        vector<HotSpot>* hotSpots = new vector<HotSpot>();
+        vector<HotSpot*>* hotSpots = new vector<HotSpot*>();
 
         WIN32_FIND_DATA f;
         if (FindFirstFile(hotSpotDir, &f) == INVALID_HANDLE_VALUE)
@@ -71,8 +71,8 @@ public:
                 char* hsInputFileName = buildFullName(hotSpotDir, f.cFileName);
                 cout << "       hsInputFileName: " << hsInputFileName << endl;
 
-                HotSpot hotSpot = readHotSpot(hsInputFileName);
-                hotSpot.print();
+                HotSpot* hotSpot = readHotSpot(hsInputFileName);
+                hotSpot->print();
                 hotSpots->push_back(hotSpot);
 
                 delete hsInputFileName;
@@ -89,7 +89,7 @@ public:
     }
 
 private:
-    HotSpot readHotSpot(char* fileName)
+    HotSpot* readHotSpot(char* fileName)
     {
         ifstream* hotSpotFile = new ifstream(fileName);
         if (!hotSpotFile)
@@ -103,7 +103,7 @@ private:
         hotSpotFile->close();
         delete hotSpotFile;
 
-        return HotSpot(Xmin, Xmax, Ymin, Ymax);
+        return new HotSpot(Xmin, Xmax, Ymin, Ymax);
     }
 };
 

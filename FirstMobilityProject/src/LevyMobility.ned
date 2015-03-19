@@ -18,6 +18,8 @@ simple LevyMobility extends MovingMobilityBase
     	double aciP = default(0.001);	// accurancy for Levy PAUSE distribution 
     	
         bool useHotSpots = default(false);
+        bool useLATPalgorithm = default(true);  // use Least action trip planning algorithm 
+        double powA = default(1);				// is a fixed floating number constant within 0 to infinity - power for distance
         
         //statistic collection
     	string traceFileName = default("traceOfNode");

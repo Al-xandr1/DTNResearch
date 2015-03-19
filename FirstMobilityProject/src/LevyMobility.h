@@ -23,11 +23,12 @@ class LevyMobility : public LineSegmentsMobilityBase
 
     //for hot spots
     bool useHotSpots;                   // включает/выключает использование горячих точек
-    vector<HotSpot>* allHotSpots;       // все кластеры
-    vector<HotSpot>* visitedHotSpots;   // посещённые кластеры
+    bool useLATPalgorithm;              // true - если нужно успользовать LATP алгоритм, false - иначе
+    vector<HotSpot*>* allHotSpots;      // все кластеры
+    vector<HotSpot*>* visitedHotSpots;   // посещённые кластеры
     double** distMatrix;                // матрица дистанций
     HotSpot* currentHotSpot;            // текущий кластер
-    int currentIndexHS;                 // индекс текущего кластера в структуре allHotSpots
+    uint currentIndexHS;                // индекс текущего кластера в структуре allHotSpots
     double powA;                        // показатель степени в диапазоне от 0 до бесконечности
 
 
