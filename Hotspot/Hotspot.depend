@@ -1,0 +1,29 @@
+# depslib dependency file v1.0
+1420980557 source:f:\old_d\work\programming projects\hotspot\main.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	<vector>
+	<windows.h>
+
+1425895075 source:c:\users\alexander\dropbox\postgraduate\dissertation\programming projects\hotspot_new\main.cpp
+	<iostream>
+	<fstream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<string>
+	<cstdlib>
+	<math.h>
+	<queue>
+	<vector>
+	<windows.h>
+
