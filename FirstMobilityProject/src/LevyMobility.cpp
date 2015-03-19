@@ -64,9 +64,7 @@ void LevyMobility::initializeHotSpots() {
                 if (i == j) {
                     distMatrix[i][i] = -1;
                 } else {
-                    distMatrix[i][j] =
-                            sqrt(((*allHotSpots)[i].Xcenter - (*allHotSpots)[j].Xcenter) * ((*allHotSpots)[i].Xcenter - (*allHotSpots)[j].Xcenter)
-                               + ((*allHotSpots)[i].Ycenter - (*allHotSpots)[j].Ycenter) * ((*allHotSpots)[i].Ycenter - (*allHotSpots)[j].Ycenter));
+                    distMatrix[i][j] = (*allHotSpots)[i].getDistance((*allHotSpots)[j]);
                 }
             }
         }
@@ -97,13 +95,13 @@ void LevyMobility::setInitialPosition() {
 }
 
 // получаем случайную горячую точку из списка hotSpots, отличную от указанной excludedHotSpot
-HotSpot* LevyMobility::getRandomHotSpot(HotSpot* excludedHotSpot) {
+HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
     int index = -1;
-    HotSpot* hotSpot = excludedHotSpot;
+    HotSpot* hotSpot = currentHotSpot;
     do {
         index = rint(uniform(0, allHotSpots->size() - 1));
         hotSpot = &((*allHotSpots)[index]);
-    } while (hotSpot == excludedHotSpot);
+    } while (hotSpot == currentHotSpot);                //todo правильное ли сравнение структур??
 
     cout << "getRandomHotSpot: index = " << index << ", size = " << allHotSpots->size() << endl;
     return hotSpot;
@@ -148,48 +146,37 @@ void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     targetPosition = lastPosition + delta;
     nextChange = simTime() + travelTime;
 
-    if (useHotSpots) {
-        if (!currentHotSpot->isPointBelong(lastPosition)){
-            exit(-341);
-        }
+     // принадлежит ли новая точка текущей горячей точке
+     if ( useHotSpots && !currentHotSpot->isPointBelong(targetPosition) ) {
+         // для ускорения пределяем вспомогательные переменные
+         double x, y, Xdir, Ydir, dir;
+         bool flag = ( (y=lastPosition.y) < currentHotSpot->Ycenter);
 
-        if (!currentHotSpot->isPointBelong(targetPosition)) {
-            // если новая точка не принадлежит текущей горячей точке
-            Coord farthestVertix = currentHotSpot->getFarthestVertix(lastPosition);
-            // получаем длину текущего прыжка
-            double length = lastPosition.distance(targetPosition);
-            // получаем расстояние от текущей точки до самой дальней вершины прямоугольника
-            double maxLength = lastPosition.distance(farthestVertix);
+         // выбираем самую дальнюю вершину прямоугольника
+         if ( (x=lastPosition.x) < currentHotSpot->Xcenter ) {
+             if (flag) { Xdir=currentHotSpot->Xmax-x; Ydir=currentHotSpot->Ymax-y; }
+             else      { Xdir=currentHotSpot->Xmax-x; Ydir=currentHotSpot->Ymin-y; }
+         } else {
+             if (flag) { Xdir=currentHotSpot->Xmin-x; Ydir=currentHotSpot->Ymax-y; }
+             else      { Xdir=currentHotSpot->Xmin-x; Ydir=currentHotSpot->Ymin-y; }
+         }
 
-            if (length < maxLength) {
-                // можно поставить точку внутрь прямоуголька
-                Coord distanceVector = farthestVertix - lastPosition;
-                Coord directionVector = distanceVector / distanceVector.length();
-                targetPosition = lastPosition + (directionVector * length);
-
-            } else if (length == maxLength) {
-                // новая точка совпадает с вершиной
-                targetPosition = farthestVertix;
-
-            } else {
-                // TODO в этом случае или сразу ищем новый кластер или до определённой длины (порога) ещё остаёмся в этом, заново генерируя шаг
-                //пусть пока выбираем случайный кластер
-                currentHotSpot = getRandomHotSpot(currentHotSpot);
-                targetPosition = getRandomPositionInsideHS(currentHotSpot);
-            }
-        }
-
-        if (!currentHotSpot->isPointBelong(targetPosition)){
-            exit(-346);
-        }
-    }
+         // проверяем, можем ли остаться в прямоугольнике
+         if ( distance > (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
+             // TODO в этом случае или сразу ищем новый кластер или до определённой длины (порога) ещё остаёмся в этом, заново генерируя шаг
+             //пусть пока выбираем случайный кластер
+             currentHotSpot = getRandomHotSpot(currentHotSpot);
+             targetPosition = getRandomPositionInsideHS(currentHotSpot);
+         } else {
+             delta.x = Xdir * distance/dir;
+             delta.y = Ydir * distance/dir;
+             targetPosition = lastPosition + delta;
+         }
+     }
 }
 
 void LevyMobility::move() {
     LineSegmentsMobilityBase::move();
-//    Coord position, speed;
-//    double angle;
-//    reflectIfOutside(position, speed, angle);
 }
 
 //-------------------------- Statistic collection ---------------------------------

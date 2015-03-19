@@ -27,6 +27,8 @@ class LevyMobility : public LineSegmentsMobilityBase
     vector<HotSpot>* visitedHotSpots;   // посещённые кластеры
     double** distMatrix;                // матрица дистанций
     HotSpot* currentHotSpot;            // текущий кластер
+    int currentIndexHS;                 // индекс текущего кластера в структуре allHotSpots
+    double powA;                        // показатель степени в диапазоне от 0 до бесконечности
 
 
     //statistics collection
