@@ -28,6 +28,7 @@ struct Location {
     double Xmin, Xmax, Ymin, Ymax;
     double sumTime;
     unsigned long int wPoints;
+    char name[256];
 };
 
 char* buildFullName(char* buffer, char* dir, char* fileName)
@@ -205,11 +206,6 @@ void HotSpotFinder::makeAllSpots(char* hotSpotFilesDir)
         NumOfHotSpots++; cout<<"Cluster number "<<NumOfHotSpots<<endl;
         printHotSpot(HotSpot);
 
-        Location lc;
-        lc.Xmin=HotSpot.Xmin; lc.Xmax=HotSpot.Xmax; lc.Ymin=HotSpot.Ymin; lc.Ymax=HotSpot.Ymax;
-        lc.sumTime=HotSpot.sumTime; lc.wPoints=(HotSpot.waypoint).size();
-        Locs.push_back(lc);
-
         char num[5];
         char name[128];
         char buffer[256];
@@ -217,11 +213,18 @@ void HotSpotFinder::makeAllSpots(char* hotSpotFilesDir)
         strcpy(name, "hotSpot"); strcat(name, num); strcat(name, ".hts");
         buildFullName(buffer, hotSpotFilesDir, name);
         writeHotSpot(HotSpot, buffer);
+
+        Location lc;
+        lc.Xmin=HotSpot.Xmin; lc.Xmax=HotSpot.Xmax; lc.Ymin=HotSpot.Ymin; lc.Ymax=HotSpot.Ymax;
+        lc.sumTime=HotSpot.sumTime; lc.wPoints=(HotSpot.waypoint).size();
+        strcpy(lc.name, name);
+        Locs.push_back(lc);
+
     }
 
     ofstream lcfile("locations.loc");
     for(unsigned int i=0; i<Locs.size(); i++) {
-        lcfile<<i+1<<"\t"<<(Locs[i]).sumTime<<"\t"<<"\t"<<(Locs[i]).wPoints<<"\t"<<"\t";
+        lcfile<<(Locs[i]).name<<"\t"<<(Locs[i]).sumTime<<"\t"<<"\t"<<(Locs[i]).wPoints<<"\t"<<"\t";
         lcfile<<(Locs[i]).Xmin<<"\t"<<(Locs[i]).Xmax<<"\t";
         lcfile<<(Locs[i]).Ymin<<"\t"<<(Locs[i]).Ymax<<endl;
     }
