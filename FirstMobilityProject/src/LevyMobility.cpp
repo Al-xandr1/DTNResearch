@@ -14,7 +14,8 @@ LevyMobility::LevyMobility() {
     roForSpeed = 0;
 
     useHotSpots = false;
-    useLATPalgorithm = false;
+    useLATP = false;
+    useBetweenCentersLogic = false;
     allHotSpots = NULL;
     visitedHotSpots = NULL;
     distMatrix = NULL;
@@ -58,27 +59,48 @@ void LevyMobility::initializeHotSpots() {
     useHotSpots = par("useHotSpots").boolValue();
     if (useHotSpots && allHotSpots == NULL)
     {
-        useLATPalgorithm = par("useLATPalgorithm").boolValue();
-        // если не используем кластеры, то этот показатель не имеет смысла
+        useLATP = par("useLATP").boolValue();
         powA = par("powA").doubleValue();
+        useBetweenCentersLogic = par("useBetweenCentersLogic").boolValue();
 
         HotSpotReader hsReader;
         allHotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
-        checkHotSpotsBound();
         visitedHotSpots = new vector<HotSpot*>();
+        checkHotSpotsBound();
 
-        // заполн€ем матрицу рассто€ний
-        distMatrix = new double*[allHotSpots->size()];
-        for (uint i = 0; i < allHotSpots->size(); i++) {
-            distMatrix[i] = new double[allHotSpots->size()];
-            for (uint j = 0; j < allHotSpots->size(); j++) {
-                if (i == j) {
-                    distMatrix[i][i] = -1;
-                } else {
-                    distMatrix[i][j] = (*allHotSpots)[i]->getDistance((*allHotSpots)[j]);
+        if (useBetweenCentersLogic) {
+            // заполн€ем матрицу рассто€ний между цетрами локаций
+            distMatrix = new double*[allHotSpots->size()];
+            for (uint i = 0; i < allHotSpots->size(); i++) {
+                distMatrix[i] = new double[allHotSpots->size()];
+                for (uint j = 0; j < allHotSpots->size(); j++) {
+                    if (i == j) {
+                        distMatrix[i][i] = -1;
+                    } else {
+                        distMatrix[i][j] = (*allHotSpots)[i]->getDistance((*allHotSpots)[j]);
+                    }
                 }
             }
         }
+    }
+}
+
+// ѕолучение дистанции между локаци€ми по их индексу в основном массиве allHotSpots.
+// ¬ зависимости от настройки todo <Ќј—“–ќ… ј> считает рассто€ние либо между центрами локаций,
+// либо или между текущим положением и центром другого кластера
+double LevyMobility::getDistance(int fromHotSpot, int toHotSpot) {
+    if (fromHotSpot == toHotSpot) {
+        exit(-765);
+    }
+
+    if (useBetweenCentersLogic) {
+        return distMatrix[fromHotSpot][toHotSpot];
+
+    } else {
+        HotSpot* targetHotSpot = (*allHotSpots)[toHotSpot];
+        double deltaX = (targetHotSpot->Xcenter - lastPosition.x),
+               deltaY = (targetHotSpot->Ycenter - lastPosition.y);
+        return sqrt(deltaX * deltaX + deltaY * deltaY);
     }
 }
 
@@ -110,7 +132,7 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
     uint index = -1;
     HotSpot* newHotSpot = NULL;
 
-    if (useLATPalgorithm && currentHotSpot != NULL) {
+    if (useLATP && currentHotSpot != NULL) {
         // выбор по алгоритму "Least action trip planning"
         // и в случае, когда уже установлен текущий кластер, потому что тогда установлен currentIndexHS
 
@@ -125,16 +147,15 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
 
                     HotSpot* currentHS = (*allHotSpots)[k];
                     for (uint j=0; j < visitedHotSpots->size(); j++) {
-                        if (currentHS == NULL || (*visitedHotSpots)[j] == NULL) exit(-6666); //todo remove
                         if ( isVisited = (currentHS == (*visitedHotSpots)[j]) ) break;
                     }
 
                     if (!isVisited) {
-                        denominator += 1 / pow(distMatrix[currentIndexHS][k], powA);
+                        denominator += 1 / pow(getDistance(currentIndexHS, k), powA);
                     }
                 }
 
-                hotSpotProbability[i] = 1 / pow(distMatrix[currentIndexHS][i], powA) / denominator;
+                hotSpotProbability[i] = 1 / pow(getDistance(currentIndexHS, i), powA) / denominator;
             } else {
                 // текущий кластер имеет нулевую веро€тность посещени€
                 hotSpotProbability[i] = 0;
@@ -163,7 +184,7 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
 
     // запоминаем текущий индекс
     currentIndexHS = index;
-    if (useLATPalgorithm) {
+    if (useLATP) {
         // обновл€ем множество посещЄнных кластеров
         visitedHotSpots->push_back(newHotSpot);
         // если кол-во посещЄнных кластеров больше некоторого порога, то удал€ем саму старую,

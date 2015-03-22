@@ -22,10 +22,12 @@ class LevyMobility : public LineSegmentsMobilityBase
     double roForSpeed;
 
     //for hot spots
-    bool useHotSpots;                   // включает/выключает использование горячих точек
-    bool useLATPalgorithm;              // true - если нужно успользовать LATP алгоритм, false - иначе
+    bool useHotSpots;                   // включает/выключает использование кластеров
+    bool useLATP;                       // true - если нужно успользовать LATP алгоритм, false - иначе
+    bool useBetweenCentersLogic;        // true - если нужно считать дистанцию между центрами кластеров,
+                                        // false - считается дистанция от текущего положения до целевого кластера
     vector<HotSpot*>* allHotSpots;      // все кластеры
-    vector<HotSpot*>* visitedHotSpots;   // посещённые кластеры
+    vector<HotSpot*>* visitedHotSpots;  // посещённые кластеры
     double** distMatrix;                // матрица дистанций
     HotSpot* currentHotSpot;            // текущий кластер
     uint currentIndexHS;                // индекс текущего кластера в структуре allHotSpots
@@ -44,6 +46,8 @@ class LevyMobility : public LineSegmentsMobilityBase
     virtual void initialize(int stage);
 
     void initializeHotSpots();
+
+    double getDistance(int hotSpot1, int hotSpot2);
 
     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setTargetPosition();
