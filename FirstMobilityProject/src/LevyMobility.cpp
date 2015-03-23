@@ -129,7 +129,7 @@ void LevyMobility::setInitialPosition() {
 
 // получаем случайную горячую точку из списка hotSpots, отличную от указанной excludedHotSpot
 HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
-    uint index = -1;
+    int index = -1;
     HotSpot* newHotSpot = NULL;
 
     if (useLATP && currentHotSpot != NULL) {
@@ -162,15 +162,18 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
             }
         }
 
-        // вычисляем кластер по заданному распределению
-        double rnd = ((double) rand()) / RAND_MAX,
-               probSumm = 0;
-        for (uint i = 0; i < allHotSpots->size(); i++) {
-            if ( (probSumm += hotSpotProbability[i]) >= rnd ) {
-                index = i;                                           //todo или i-1 ???
-                break;
+        do {
+            // вычисляем кластер по заданному распределению
+            double rnd = ((double) rand()) / RAND_MAX,
+                   probSumm = 0;
+            for (uint i = 0; i < allHotSpots->size(); i++) {
+                if ( (probSumm += hotSpotProbability[i]) >= rnd ) {
+                    index = i - 1;                                           //todo i VS i-1 ???
+                    break;
+                }
             }
-        }
+            if (index < 0) index = 0;
+        } while (index == currentIndexHS);
         newHotSpot = (*allHotSpots)[index];
 
     } else {
