@@ -69,7 +69,7 @@ void LevyMobility::initializeHotSpots() {
         checkHotSpotsBound();
 
         if (useBetweenCentersLogic) {
-            // заполняем матрицу расстояний между цетрами локаций
+            // заполняем матрицу расстояний между центрами локаций
             distMatrix = new double*[allHotSpots->size()];
             for (uint i = 0; i < allHotSpots->size(); i++) {
                 distMatrix[i] = new double[allHotSpots->size()];
@@ -90,6 +90,7 @@ void LevyMobility::initializeHotSpots() {
 // либо или между текущим положением и центром другого кластера
 double LevyMobility::getDistance(int fromHotSpot, int toHotSpot) {
     if (fromHotSpot == toHotSpot) {
+        cout << "fromHotSpot = " << fromHotSpot << endl;
         exit(-765);
     }
 
@@ -136,6 +137,8 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
         // выбор по алгоритму "Least action trip planning"
         // и в случае, когда уже установлен текущий кластер, потому что тогда установлен currentIndexHS
 
+        double checkSum = 0; //todo remove
+
         // вероятности посещения в порядке соответствующем массиву со всеми кластерами
         double* hotSpotProbability = new double[allHotSpots->size()];
         for (uint i = 0; i < allHotSpots->size(); i++) {
@@ -150,7 +153,7 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
                         if ( isVisited = (currentHS == (*visitedHotSpots)[j]) ) break;
                     }
 
-                    if (!isVisited) {
+                    if (!isVisited && k != currentIndexHS) { //todo remove && k != currentIndexHS
                         denominator += 1 / pow(getDistance(currentIndexHS, k), powA);
                     }
                 }
@@ -158,22 +161,35 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
                 hotSpotProbability[i] = 1 / pow(getDistance(currentIndexHS, i), powA) / denominator;
             } else {
                 // текущий кластер имеет нулевую вероятность посещения
-                hotSpotProbability[i] = 0;
+                hotSpotProbability[currentIndexHS] = 0;
             }
+
+            checkSum += hotSpotProbability[i];
         }
 
+        cout << "\t\t checkSum = " << checkSum << endl;
+
         do {
-            // вычисляем кластер по заданному распределению
+            // вычисляем кластер по заданному распределению  todo ПРавильно считаем распределение???
             double rnd = ((double) rand()) / RAND_MAX,
                    probSumm = 0;
+            int nonZero = -1; //индекс последнего ненулевого элемента. Изначально не установлен
             for (uint i = 0; i < allHotSpots->size(); i++) {
-                if ( (probSumm += hotSpotProbability[i]) >= rnd ) {
-                    index = i - 1;                                           //todo i VS i-1 ???
+                if ( (probSumm += hotSpotProbability[i]) > rnd ) {
+                    index = nonZero;                                           //todo i VS i-1 ???
                     break;
                 }
+                if (hotSpotProbability[i] != 0) nonZero = i;
             }
-            if (index < 0) index = 0;
-        } while (index == currentIndexHS);
+
+            if (index == currentIndexHS) {
+                cout << "\t\t Collision: CurrentIndex = " << currentIndexHS << ", F(X<x) = " << rnd << ",\tProb = { ";
+                for (uint i = 0; i < allHotSpots->size(); i++) {
+                    cout << hotSpotProbability[i] << " ";
+                }
+                cout << "}" << endl;
+            }
+        } while (index == currentIndexHS); // todo хак системы
         newHotSpot = (*allHotSpots)[index];
 
     } else {
@@ -187,15 +203,15 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
 
     // запоминаем текущий индекс
     currentIndexHS = index;
-    if (useLATP) {
-        // обновляем множество посещённых кластеров
-        visitedHotSpots->push_back(newHotSpot);
-        // если кол-во посещённых кластеров больше некоторого порога, то удаляем саму старую,
-        // тем самым повышая вероятность вернуться туда опять
-        if (visitedHotSpots->size() >=  rint(allHotSpots->size() * 0.8)) {
-            visitedHotSpots->erase(visitedHotSpots->begin());
-        }
-    }
+//    if (useLATP) {
+//        // обновляем множество посещённых кластеров
+//        visitedHotSpots->push_back(newHotSpot);
+//        // если кол-во посещённых кластеров больше некоторого порога, то удаляем саму старую,
+//        // тем самым повышая вероятность вернуться туда опять
+//        if (visitedHotSpots->size() >=  rint(allHotSpots->size() * 0.8)) {
+//            visitedHotSpots->erase(visitedHotSpots->begin());
+//        }
+//    }
 
     cout << "getRandomHotSpot: index = " << currentIndexHS << ", size = " << allHotSpots->size() << endl;
     return newHotSpot;
