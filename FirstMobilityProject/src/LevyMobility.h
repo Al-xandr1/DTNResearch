@@ -58,6 +58,10 @@ class LevyMobility : public LineSegmentsMobilityBase
 
     HotSpot* getRandomHotSpot(HotSpot* excludedHotSpot);
 
+    bool isVisited(int i);
+
+    void setVisited(HotSpot* hotSpot);
+
     Coord getRandomPositionInsideHS(HotSpot* hotSpot);
 
     void checkHotSpotsBound();

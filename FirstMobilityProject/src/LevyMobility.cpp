@@ -1,6 +1,7 @@
 #include "LevyMobility.h"
 #include "HotSpot.h"
 #include "HotSpot.h"
+#include "math.h"
 
 #define DEF_HS_DIR "./hotspotfiles"         //Директория по умолчанию для "горячих точек"
 
@@ -86,7 +87,7 @@ void LevyMobility::initializeHotSpots() {
 }
 
 // Получение дистанции между локациями по их индексу в основном массиве allHotSpots.
-// В зависимости от настройки todo <НАСТРОЙКА> считает расстояние либо между центрами локаций,
+// В зависимости от настройки useBetweenCentersLogic считает расстояние либо между центрами локаций,
 // либо или между текущим положением и центром другого кластера
 double LevyMobility::getDistance(int fromHotSpot, int toHotSpot) {
     if (fromHotSpot == toHotSpot) {
@@ -136,39 +137,22 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
         // выбор по алгоритму "Least action trip planning"
         // и в случае, когда уже установлен текущий кластер, потому что тогда установлен currentIndexHS
 
-        double checkSum = 0; //todo remove
-
+        double checkSum = 0;
         // вероятности посещения в порядке соответствующем массиву со всеми кластерами
         double* hotSpotProbability = new double[allHotSpots->size()];
         for (uint i = 0; i < allHotSpots->size(); i++) {
-            if (i != currentIndexHS) {
-                // если кластер не текущий, то считаем вероятность его посещения
+            if (i != currentIndexHS && !isVisited(i)) {
+                // если кластер не текущий и не посещённый, то считаем вероятность его посещения
                 double denominator = 0;
-                for (uint k = 0; k < allHotSpots->size(); k++) {
-                    bool isVisited = false;
-
-                    HotSpot* currentHS = (*allHotSpots)[k];
-                    for (uint j=0; j < visitedHotSpots->size(); j++) {
-                        if ( isVisited = (currentHS == (*visitedHotSpots)[j]) ) break;
-                    }
-
-                    if (!isVisited) {
-                        denominator += 1 / pow(getDistance(currentIndexHS, k), powA);
-                    }
-                }
-
+                for (uint k = 0; k < allHotSpots->size(); k++)
+                    if (k != currentIndexHS && !isVisited(k)) denominator += 1 / pow(getDistance(currentIndexHS, k), powA);
                 if (denominator == 0) exit(-111);
 
-                hotSpotProbability[i] = 1 / pow(getDistance(currentIndexHS, i), powA) / denominator;
-                if (hotSpotProbability[i] > 1) {//todo remove
-                    cout << "BINGO" << endl;
-                }
+                checkSum += (hotSpotProbability[i] = 1 / pow(getDistance(currentIndexHS, i), powA) / denominator);
             } else {
-                // текущий кластер имеет нулевую вероятность посещения
-                hotSpotProbability[currentIndexHS] = 0;
+                // кластер имеет нулевую вероятность посещения
+                checkSum += (hotSpotProbability[i] = 0);
             }
-
-            checkSum += hotSpotProbability[i];
         }
         if (checkSum != 1) cout << "\t\t checkSum = " << checkSum << endl;
 
@@ -190,18 +174,29 @@ HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
     // запоминаем текущий индекс
     if (index == currentIndexHS) exit(-432);
     currentIndexHS = index;
-    if (useLATP) {
-        // обновляем множество посещённых кластеров
-        visitedHotSpots->push_back(newHotSpot);
-        // если кол-во посещённых кластеров больше некоторого порога, то удаляем самую старую,
-        // тем самым повышая вероятность вернуться туда опять
-        if (visitedHotSpots->size() >=  rint(allHotSpots->size() * 0.8)) {
-            visitedHotSpots->erase(visitedHotSpots->begin());
-        }
-    }
+    if (useLATP) setVisited(newHotSpot);
 
     cout << "getRandomHotSpot: index = " << currentIndexHS << ", size = " << allHotSpots->size() << endl;
     return newHotSpot;
+}
+
+// проверяет посещённый кластер или нет
+bool LevyMobility::isVisited(int i) {
+    HotSpot* currentHS = (*allHotSpots)[i];
+    for (uint j=0; j < visitedHotSpots->size(); j++) {
+        if ( (*visitedHotSpots)[j] == currentHS ) return true;
+    }
+    return false;
+}
+
+// обновляет множество посещённых кластеров
+void LevyMobility::setVisited(HotSpot* hotSpot) {
+    visitedHotSpots->push_back(hotSpot);
+    // если кол-во посещённых кластеров больше некоторого порога, то удаляем самую старую,
+    // тем самым повышая вероятность вернуться туда опять
+    if (visitedHotSpots->size() >=  rint(allHotSpots->size() * 0.8)) {
+        visitedHotSpots->erase(visitedHotSpots->begin());
+    }
 }
 
 // получаем случайное положение внутри заданной горячей точки
