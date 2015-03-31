@@ -7,17 +7,17 @@
 
 #include <HotSpotsAlgorithm.h>
 
-HotSpotsAlgorithm::HotSpotsAlgorithm(LevyMobilityDEF* mobility) {
-    levyMobility = mobility;
-    useLATP = true;
-    useBetweenCentersLogic = false;
+HotSpotsAlgorithm::HotSpotsAlgorithm(LevyMobilityDEF* levyMobility, double powA) {
+    this->levyMobility = levyMobility;
+    this->useLATP = true;
+    this->useBetweenCentersLogic = false;
 
-    allHotSpots = NULL;
-    visitedHotSpots = NULL;
-    distMatrix = NULL;
-    currentHotSpot = NULL;
-    currentIndexHS = -1;
-    powA = -1;
+    this->allHotSpots = NULL;
+    this->visitedHotSpots = NULL;
+    this->distMatrix = NULL;
+    this->currentHotSpot = NULL;
+    this->currentIndexHS = -1;
+    this->powA = powA;
 
     initialize();
 }

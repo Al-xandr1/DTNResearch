@@ -47,7 +47,7 @@ private:
     double powA;                        // показатель степени в диапазоне от 0 до бесконечности
 
 public:
-    HotSpotsAlgorithm(LevyMobilityDEF* mobility);
+    HotSpotsAlgorithm(LevyMobilityDEF* levyMobility, double powA);
     virtual ~HotSpotsAlgorithm();
     Coord getInitialPosition();
     Coord fixTargetPosition(Coord targetPosition, Coord delta, double distance);

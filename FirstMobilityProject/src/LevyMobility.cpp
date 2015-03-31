@@ -55,7 +55,7 @@ void LevyMobility::initializeSpecification() {
         } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_CENTER_LOGIC) == 0) {
             exit(-117);//todo impl
         } else if (strcmp(specification, LEVY_HOTSPOTS_LATP) == 0) {
-            hsAlgorithm = new HotSpotsAlgorithm(this);
+            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue());
         } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_PATH_COUNTS) == 0) {
             exit(-115);//todo impl
         } else {
