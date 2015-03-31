@@ -53,7 +53,7 @@ class LevyMobility : public LineSegmentsMobilityBase
 
     Coord getLastPosition()      {return this->lastPosition;};
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};
-    Coord getConstraintAreaMax() {return this->constraintAreaMin;};
+    Coord getConstraintAreaMax() {return this->constraintAreaMax;};
 };
 
 #endif

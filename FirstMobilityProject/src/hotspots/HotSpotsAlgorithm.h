@@ -50,7 +50,7 @@ public:
     HotSpotsAlgorithm(LevyMobilityDEF* mobility);
     virtual ~HotSpotsAlgorithm();
     Coord getInitialPosition();
-    Coord fixTargetPosition(Coord targetPosition, Coord delta);
+    Coord fixTargetPosition(Coord targetPosition, Coord delta, double distance);
 
 private:
     void initialize();

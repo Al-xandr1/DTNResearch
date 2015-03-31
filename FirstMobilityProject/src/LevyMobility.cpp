@@ -48,15 +48,15 @@ void LevyMobility::initializeSpecification() {
         if (hasPar("specification")) specification = par("specification").stringValue();
         else exit(-113);
 
-        if (strcmp(specification, SIMPLE_LEVY)) {
+        if (strcmp(specification, SIMPLE_LEVY) == 0) {
             hsAlgorithm = NULL;
-        } else if (strcmp(specification, LEVY_HOTSPOTS_RANDOM)) {
+        } else if (strcmp(specification, LEVY_HOTSPOTS_RANDOM) == 0) {
             exit(-118);//todo impl
-        } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_CENTER_LOGIC)) {
+        } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_CENTER_LOGIC) == 0) {
             exit(-117);//todo impl
-        } else if (strcmp(specification, LEVY_HOTSPOTS_LATP)) {
+        } else if (strcmp(specification, LEVY_HOTSPOTS_LATP) == 0) {
             hsAlgorithm = new HotSpotsAlgorithm(this);
-        } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_PATH_COUNTS)) {
+        } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_PATH_COUNTS) == 0) {
             exit(-115);//todo impl
         } else {
             cout << "Unknown type of specification";
@@ -99,7 +99,7 @@ void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     targetPosition = lastPosition + delta;
     nextChange = simTime() + travelTime;
 
-    if (hsAlgorithm) targetPosition = hsAlgorithm->fixTargetPosition(targetPosition, delta);
+    if (hsAlgorithm) targetPosition = hsAlgorithm->fixTargetPosition(targetPosition, delta, distance);
 }
 
 void LevyMobility::move() {

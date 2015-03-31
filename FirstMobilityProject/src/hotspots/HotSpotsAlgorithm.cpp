@@ -129,7 +129,7 @@ Coord HotSpotsAlgorithm::getInitialPosition() {
     return getRandomPositionInsideHS(currentHotSpot);
 }
 
-Coord HotSpotsAlgorithm::fixTargetPosition(Coord targetPosition, Coord delta) {
+Coord HotSpotsAlgorithm::fixTargetPosition(Coord targetPosition, Coord delta, double distance) {
     // принадлежит ли новая точка текущей горячей точке
     if ( !currentHotSpot->isPointBelong(targetPosition) ) {
         // для ускорения пределяем вспомогательные переменные
