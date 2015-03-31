@@ -17,10 +17,9 @@ simple LevyMobility extends MovingMobilityBase
     	double aliP = default(1);       // power magnitude (alpha) in Levy PAUSE distribution - 0.5 in external research paper
     	double aciP = default(0.001);	// accurancy for Levy PAUSE distribution 
     	
-        bool useHotSpots = default(true);
-        bool useLATP = default(true);  				 // use Least action trip planning algorithm
-        bool useBetweenCentersLogic = default(true); // use distance between centers of locations
-        double powA = default(1);					 // is a fixed floating number constant within 0 to infinity - power for distance
+    	string specification = default("SimpleLevy"); // concrete specification for Levy mobility 
+    												  // available values = SimpleLevy | LevyHotSpotsRandom | LevyHotSpotsLATPCenterLogic | LevyHotSpotsLATP | LevyHotSpotsLATPPathCounts 
+        double powA = default(1);		// is a fixed floating number constant within 0 to infinity - power for distance
         
         //statistic collection
     	string traceFileName = default("traceOfNode");

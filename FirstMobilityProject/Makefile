@@ -55,7 +55,8 @@ INCLUDE_PATH = \
     -I. \
     -Ihotspotfiles \
     -Iresults \
-    -Isrc
+    -Isrc \
+    -Isrc/hotspots
 
 # Additional object and library files to link with
 EXTRA_OBJS =
@@ -70,7 +71,7 @@ PROJECTRELATIVE_PATH =
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cpp and .msg files
-OBJS = $O/src/LeviStatic.o $O/src/LevyMobility.o
+OBJS = $O/src/DevelopmentHelper.o $O/src/LeviStatic.o $O/src/LevyMobility.o $O/src/hotspots/HotSpotsAlgorithm.o
 
 # Message files
 MSGFILES =
@@ -153,22 +154,41 @@ clean:
 	$(Q)-rm -f hotspotfiles/*_m.cpp hotspotfiles/*_m.h
 	$(Q)-rm -f results/*_m.cpp results/*_m.h
 	$(Q)-rm -f src/*_m.cpp src/*_m.h
+	$(Q)-rm -f src/hotspots/*_m.cpp src/hotspots/*_m.h
 
 cleanall: clean
 	$(Q)-rm -rf $(PROJECT_OUTPUT_DIR)
 
 depend:
 	$(qecho) Creating dependencies...
-	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES)  ./*.cpp hotspotfiles/*.cpp results/*.cpp src/*.cpp
+	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES)  ./*.cpp hotspotfiles/*.cpp results/*.cpp src/*.cpp src/hotspots/*.cpp
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
+$O/src/DevelopmentHelper.o: src/DevelopmentHelper.cpp \
+	src/DevelopmentHelper.h
 $O/src/LeviStatic.o: src/LeviStatic.cpp \
 	src/LeviStatic.h
 $O/src/LevyMobility.o: src/LevyMobility.cpp \
 	src/DevelopmentHelper.h \
-	src/HotSpot.h \
 	src/LeviStatic.h \
 	src/LevyMobility.h \
+	src/hotspots/HotSpot.h \
+	src/hotspots/HotSpotsAlgorithm.h \
+	$(INET_PROJ)/src/base/Compat.h \
+	$(INET_PROJ)/src/base/Coord.h \
+	$(INET_PROJ)/src/base/INETDefs.h \
+	$(INET_PROJ)/src/base/ModuleAccess.h \
+	$(INET_PROJ)/src/mobility/common/LineSegmentsMobilityBase.h \
+	$(INET_PROJ)/src/mobility/common/MobilityBase.h \
+	$(INET_PROJ)/src/mobility/common/MovingMobilityBase.h \
+	$(INET_PROJ)/src/mobility/contract/IMobility.h \
+	$(INET_PROJ)/src/util/FWMath.h
+$O/src/hotspots/HotSpotsAlgorithm.o: src/hotspots/HotSpotsAlgorithm.cpp \
+	src/DevelopmentHelper.h \
+	src/LeviStatic.h \
+	src/LevyMobility.h \
+	src/hotspots/HotSpot.h \
+	src/hotspots/HotSpotsAlgorithm.h \
 	$(INET_PROJ)/src/base/Compat.h \
 	$(INET_PROJ)/src/base/Coord.h \
 	$(INET_PROJ)/src/base/INETDefs.h \

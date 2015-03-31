@@ -1,9 +1,4 @@
 #include "LevyMobility.h"
-#include "HotSpot.h"
-#include "HotSpot.h"
-#include "math.h"
-
-#define DEF_HS_DIR "./hotspotfiles"         //Директория по умолчанию для "горячих точек"
 
 Define_Module(LevyMobility);
 
@@ -14,15 +9,8 @@ LevyMobility::LevyMobility() {
     kForSpeed = 1;
     roForSpeed = 0;
 
-    useHotSpots = false;
-    useLATP = false;
-    useBetweenCentersLogic = false;
-    allHotSpots = NULL;
-    visitedHotSpots = NULL;
-    distMatrix = NULL;
-    currentHotSpot = NULL;
-    currentIndexHS = -1;
-    powA = -1;
+    specification = NULL;
+    hsAlgorithm = NULL;
 }
 
 void LevyMobility::initialize(int stage) {
@@ -52,69 +40,27 @@ void LevyMobility::initialize(int stage) {
         exit(-112);
     }
 
-    initializeHotSpots();
+    initializeSpecification();
 }
 
-// Инициализирует горячие точки если их использование включено
-void LevyMobility::initializeHotSpots() {
-    useHotSpots = par("useHotSpots").boolValue();
-    if (useHotSpots && allHotSpots == NULL)
-    {
-        useLATP = par("useLATP").boolValue();
-        powA = par("powA").doubleValue();
-        useBetweenCentersLogic = par("useBetweenCentersLogic").boolValue();
+void LevyMobility::initializeSpecification() {
+    if (!specification) {
+        if (hasPar("specification")) specification = par("specification").stringValue();
+        else exit(-113);
 
-        HotSpotReader hsReader;
-        allHotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
-        visitedHotSpots = new vector<HotSpot*>();
-        checkHotSpotsBound();
-
-        if (useBetweenCentersLogic) {
-            // заполняем матрицу расстояний между центрами локаций
-            distMatrix = new double*[allHotSpots->size()];
-            for (uint i = 0; i < allHotSpots->size(); i++) {
-                distMatrix[i] = new double[allHotSpots->size()];
-                for (uint j = 0; j < allHotSpots->size(); j++) {
-                    if (i == j) {
-                        distMatrix[i][i] = -1;
-                    } else {
-                        distMatrix[i][j] = (*allHotSpots)[i]->getDistance((*allHotSpots)[j]);
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Получение дистанции между локациями по их индексу в основном массиве allHotSpots.
-// В зависимости от настройки useBetweenCentersLogic считает расстояние либо между центрами локаций,
-// либо или между текущим положением и центром другого кластера
-double LevyMobility::getDistance(int fromHotSpot, int toHotSpot) {
-    if (fromHotSpot == toHotSpot) {
-        exit(-765);
-    }
-
-    if (useBetweenCentersLogic) {
-        return distMatrix[fromHotSpot][toHotSpot];
-
-    } else {
-        HotSpot* targetHotSpot = (*allHotSpots)[toHotSpot];
-        double deltaX = (targetHotSpot->Xcenter - lastPosition.x),
-               deltaY = (targetHotSpot->Ycenter - lastPosition.y);
-        return sqrt(deltaX * deltaX + deltaY * deltaY);
-    }
-}
-
-// Проверяет: что все горячие точки не выходят за общую границу
-void LevyMobility::checkHotSpotsBound() {
-    if (allHotSpots) {
-        for (uint i = 0; i < allHotSpots->size(); i++) {
-            HotSpot* hotSpot = (*allHotSpots)[i];
-            if (hotSpot->Xmin < constraintAreaMin.x || hotSpot->Xmax > constraintAreaMax.x ||
-                hotSpot->Ymin < constraintAreaMin.y || hotSpot->Ymax > constraintAreaMax.y) {
-                cout << "HotSpots has wrong bounds!"; EV << "HotSpots has wrong bounds!";
-                exit(123);
-            }
+        if (strcmp(specification, SIMPLE_LEVY)) {
+            hsAlgorithm = NULL;
+        } else if (strcmp(specification, LEVY_HOTSPOTS_RANDOM)) {
+            exit(-118);//todo impl
+        } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_CENTER_LOGIC)) {
+            exit(-117);//todo impl
+        } else if (strcmp(specification, LEVY_HOTSPOTS_LATP)) {
+            hsAlgorithm = new HotSpotsAlgorithm(this);
+        } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_PATH_COUNTS)) {
+            exit(-115);//todo impl
+        } else {
+            cout << "Unknown type of specification";
+            exit(-114);
         }
     }
 }
@@ -122,92 +68,7 @@ void LevyMobility::checkHotSpotsBound() {
 void LevyMobility::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
-    if (useHotSpots) {
-        currentHotSpot = getRandomHotSpot(NULL);
-        lastPosition = getRandomPositionInsideHS(currentHotSpot);
-    }
-}
-
-// получаем случайную горячую точку из списка hotSpots, отличную от указанной excludedHotSpot
-HotSpot* LevyMobility::getRandomHotSpot(HotSpot* currentHotSpot) {
-    uint index = 0;
-    HotSpot* newHotSpot = NULL;
-
-    if (useLATP && currentHotSpot != NULL) {
-        // выбор по алгоритму "Least action trip planning"
-        // и в случае, когда уже установлен текущий кластер, потому что тогда установлен currentIndexHS
-
-        double checkSum = 0;
-        // вероятности посещения в порядке соответствующем массиву со всеми кластерами
-        double* hotSpotProbability = new double[allHotSpots->size()];
-        for (uint i = 0; i < allHotSpots->size(); i++) {
-            if (i != currentIndexHS && !isVisited(i)) {
-                // если кластер не текущий и не посещённый, то считаем вероятность его посещения
-                double denominator = 0;
-                for (uint k = 0; k < allHotSpots->size(); k++)
-                    if (k != currentIndexHS && !isVisited(k)) denominator += 1 / pow(getDistance(currentIndexHS, k), powA);
-                if (denominator == 0) exit(-111);
-
-                checkSum += (hotSpotProbability[i] = 1 / pow(getDistance(currentIndexHS, i), powA) / denominator);
-            } else {
-                // кластер имеет нулевую вероятность посещения
-                checkSum += (hotSpotProbability[i] = 0);
-            }
-        }
-        if (checkSum != 1) cout << "\t\t checkSum = " << checkSum << endl;
-
-        double rnd = ((double) rand()) / RAND_MAX,
-               probSumm = 0;
-        for (uint i = 0; i < allHotSpots->size(); i++)
-            if ( (probSumm += hotSpotProbability[i]) >= rnd ) {index = i; break;}
-        newHotSpot = (*allHotSpots)[index];
-
-    } else {
-        // обычный случайный выбор кластера: если без LATP либо при первом выставлении текущего кластера
-        newHotSpot = currentHotSpot;
-        do {
-            index = rint(uniform(0, allHotSpots->size() - 1));
-            newHotSpot = (*allHotSpots)[index];
-        } while (newHotSpot == currentHotSpot);
-    }
-
-    // запоминаем текущий индекс
-    if (index == currentIndexHS) exit(-432);
-    currentIndexHS = index;
-    if (useLATP) setVisited(newHotSpot);
-
-    cout << "getRandomHotSpot: index = " << currentIndexHS << ", size = " << allHotSpots->size() << endl;
-    return newHotSpot;
-}
-
-// проверяет посещённый кластер или нет
-bool LevyMobility::isVisited(int i) {
-    HotSpot* currentHS = (*allHotSpots)[i];
-    for (uint j=0; j < visitedHotSpots->size(); j++) {
-        if ( (*visitedHotSpots)[j] == currentHS ) return true;
-    }
-    return false;
-}
-
-// обновляет множество посещённых кластеров
-void LevyMobility::setVisited(HotSpot* hotSpot) {
-    visitedHotSpots->push_back(hotSpot);
-    // если кол-во посещённых кластеров больше некоторого порога, то удаляем самую старую,
-    // тем самым повышая вероятность вернуться туда опять
-    if (visitedHotSpots->size() >=  rint(allHotSpots->size() * 0.8)) {
-        visitedHotSpots->erase(visitedHotSpots->begin());
-    }
-}
-
-// получаем случайное положение внутри заданной горячей точки
-Coord LevyMobility::getRandomPositionInsideHS(HotSpot* hotSpot) {
-    Coord newPoint(uniform(hotSpot->Xmin, hotSpot->Xmax),
-                   uniform(hotSpot->Ymin, hotSpot->Ymax),
-                   0);
-    if (!hotSpot->isPointBelong(newPoint)){
-        exit(-343);
-    }
-    return newPoint;
+    if (hsAlgorithm) lastPosition = hsAlgorithm->getInitialPosition();
 }
 
 void LevyMobility::finish() {
@@ -228,7 +89,7 @@ void LevyMobility::setTargetPosition() {
 
 // Генерирует следующую позицию в зависимости от того, включено использование горячих точек или нет
 void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
-    // генерируем как обычно
+    // генерируем прыжок Леви как обычно
     const double angle = uniform(0, 2 * PI);
     const double distance = jump->get_Levi_rv();
     const double speed = kForSpeed * pow(distance, 1 - roForSpeed);
@@ -238,33 +99,7 @@ void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     targetPosition = lastPosition + delta;
     nextChange = simTime() + travelTime;
 
-     // принадлежит ли новая точка текущей горячей точке
-     if ( useHotSpots && !currentHotSpot->isPointBelong(targetPosition) ) {
-         // для ускорения пределяем вспомогательные переменные
-         double x, y, Xdir, Ydir, dir;
-         bool flag = ( (y=lastPosition.y) < currentHotSpot->Ycenter);
-
-         // выбираем самую дальнюю вершину прямоугольника
-         if ( (x=lastPosition.x) < currentHotSpot->Xcenter ) {
-             if (flag) { Xdir=currentHotSpot->Xmax-x; Ydir=currentHotSpot->Ymax-y; }
-             else      { Xdir=currentHotSpot->Xmax-x; Ydir=currentHotSpot->Ymin-y; }
-         } else {
-             if (flag) { Xdir=currentHotSpot->Xmin-x; Ydir=currentHotSpot->Ymax-y; }
-             else      { Xdir=currentHotSpot->Xmin-x; Ydir=currentHotSpot->Ymin-y; }
-         }
-
-         // проверяем, можем ли остаться в прямоугольнике
-         if ( distance > (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
-             // TODO в этом случае или сразу ищем новый кластер или до определённой длины (порога) ещё остаёмся в этом, заново генерируя шаг
-             //пусть пока выбираем случайный кластер
-             currentHotSpot = getRandomHotSpot(currentHotSpot);
-             targetPosition = getRandomPositionInsideHS(currentHotSpot);
-         } else {
-             delta.x = Xdir * distance/dir;
-             delta.y = Ydir * distance/dir;
-             targetPosition = lastPosition + delta;
-         }
-     }
+    if (hsAlgorithm) targetPosition = hsAlgorithm->fixTargetPosition(targetPosition, delta);
 }
 
 void LevyMobility::move() {

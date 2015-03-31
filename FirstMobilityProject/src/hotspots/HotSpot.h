@@ -2,6 +2,8 @@
 #define HOTSPOT_H_INCLUDED
 
 #include <vector>
+#include <fstream>
+#include "DevelopmentHelper.h"
 
 using namespace std;
 
