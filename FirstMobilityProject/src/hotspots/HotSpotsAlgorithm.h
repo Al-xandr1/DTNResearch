@@ -39,10 +39,11 @@ private:
     bool useLATP;                       // true - если нужно успользовать LATP алгоритм, false - иначе
     bool useBetweenCentersLogic;        // true - если нужно считать дистанцию между центрами кластеров,
                                         // false - считается дистанция от текущего положения до целевого кластера
+
     vector<HotSpot*>* allHotSpots;      // все кластеры
-    vector<HotSpot*>* visitedHotSpots;  // посещённые кластеры
+    vector<uint>* availabilityPerHS;   // массив счётчиков доступных посещений для кластеров
+
     double** distMatrix;                // матрица дистанций
-    HotSpot* currentHotSpot;            // текущий кластер
     uint currentIndexHS;                // индекс текущего кластера в структуре allHotSpots
     double powA;                        // показатель степени в диапазоне от 0 до бесконечности
 
@@ -55,11 +56,11 @@ public:
 private:
     void initialize();
     void checkHotSpotsBound();
-    HotSpot* getRandomHotSpot(HotSpot* currentHotSpot);
+    int getNextHotSpotIndex(int hotSpotIndex);
     Coord getRandomPositionInsideHS(HotSpot* hotSpot);
     double getDistance(int fromHotSpot, int toHotSpot);
-    bool isVisited(int i);
-    void setVisited(HotSpot* hotSpot);
+    bool isVisited(uint hotSpotIndex);
+    void setVisited(uint hotSpotIndex);
 };
 
 #endif /* HOTSPOTSALGORITHM_H_ */

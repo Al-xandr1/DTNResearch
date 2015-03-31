@@ -9,13 +9,12 @@
 
 HotSpotsAlgorithm::HotSpotsAlgorithm(LevyMobilityDEF* levyMobility, double powA) {
     this->levyMobility = levyMobility;
+
     this->useLATP = true;
     this->useBetweenCentersLogic = false;
 
     this->allHotSpots = NULL;
-    this->visitedHotSpots = NULL;
     this->distMatrix = NULL;
-    this->currentHotSpot = NULL;
     this->currentIndexHS = -1;
     this->powA = powA;
 
@@ -28,8 +27,10 @@ HotSpotsAlgorithm::~HotSpotsAlgorithm() {
 void HotSpotsAlgorithm::initialize() {
     HotSpotReader hsReader;
     allHotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
-    visitedHotSpots = new vector<HotSpot*>();
     checkHotSpotsBound();
+
+    availabilityPerHS = new vector<double>();
+    for (uint i = 0; i < allHotSpots->size(); i++) availabilityPerHS->push_back(1);
 
     if (useBetweenCentersLogic) {
         // заполняем матрицу расстояний между центрами локаций
@@ -61,12 +62,11 @@ void HotSpotsAlgorithm::checkHotSpotsBound() {
     }
 }
 
-// получаем случайную горячую точку из списка hotSpots, отличную от указанной excludedHotSpot
-HotSpot* HotSpotsAlgorithm::getRandomHotSpot(HotSpot* currentHotSpot) {
-    uint index = 0;
-    HotSpot* newHotSpot = NULL;
+// получаем случайную горячую точку из списка hotSpots, отличную от указанного индекса
+int HotSpotsAlgorithm::getNextHotSpotIndex(int hotSpotIndex) {
+    uint resultIndex = -1;
 
-    if (useLATP && currentHotSpot != NULL) {
+    if (useLATP && hotSpotIndex != currentIndexHS) {
         // выбор по алгоритму "Least action trip planning"
         // и в случае, когда уже установлен текущий кластер, потому что тогда установлен currentIndexHS
 
@@ -92,25 +92,23 @@ HotSpot* HotSpotsAlgorithm::getRandomHotSpot(HotSpot* currentHotSpot) {
         double rnd = ((double) rand()) / RAND_MAX,
                probSumm = 0;
         for (uint i = 0; i < allHotSpots->size(); i++)
-            if ( (probSumm += hotSpotProbability[i]) >= rnd ) {index = i; break;}
-        newHotSpot = (*allHotSpots)[index];
+            if ( (probSumm += hotSpotProbability[i]) >= rnd ) {resultIndex = i; break;}
 
     } else {
         // обычный случайный выбор кластера: если без LATP либо при первом выставлении текущего кластера
-        newHotSpot = currentHotSpot;
+        resultIndex = currentIndexHS;
         do {
-            index = rint(uniform(0, allHotSpots->size() - 1));
-            newHotSpot = (*allHotSpots)[index];
-        } while (newHotSpot == currentHotSpot);
+            resultIndex = rint(uniform(0, allHotSpots->size() - 1));
+        } while (resultIndex == currentIndexHS);
     }
 
     // запоминаем текущий индекс
-    if (index == currentIndexHS) exit(-432);
-    currentIndexHS = index;
-    if (useLATP) setVisited(newHotSpot);
+    if (resultIndex == currentIndexHS) exit(-432);
+    currentIndexHS = resultIndex;
+    if (useLATP) setVisited(currentIndexHS);
 
-    cout << "getRandomHotSpot: index = " << currentIndexHS << ", size = " << allHotSpots->size() << endl;
-    return newHotSpot;
+    cout << "getNextHotSpotIndex: index = " << currentIndexHS << ", size = " << allHotSpots->size() << endl;
+    return currentIndexHS;
 }
 
 // получаем случайное положение внутри заданной горячей точки
@@ -145,7 +143,6 @@ Coord HotSpotsAlgorithm::fixTargetPosition(Coord targetPosition, Coord delta, do
             else      { Xdir=currentHotSpot->Xmin-x; Ydir=currentHotSpot->Ymin-y; }
         }
 
-        double distance = levyMobility->getLastPosition().distance(targetPosition);
         // проверяем, можем ли остаться в прямоугольнике
         if ( distance > (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
             // TODO в этом случае или сразу ищем новый кластер или до определённой длины (порога) ещё остаёмся в этом, заново генерируя шаг
@@ -191,8 +188,9 @@ bool HotSpotsAlgorithm::isVisited(int i) {
 }
 
 // обновляет множество посещённых кластеров
-void HotSpotsAlgorithm::setVisited(HotSpot* hotSpot) {
-    visitedHotSpots->push_back(hotSpot);
+void HotSpotsAlgorithm::setVisited(uint hotSpotIndex) {
+    (*availabilityPerHS)[hotSpotIndex]--;
+
     // если кол-во посещённых кластеров больше некоторого порога, то удаляем самую старую,
     // тем самым повышая вероятность вернуться туда опять
     if (visitedHotSpots->size() >=  rint(allHotSpots->size() * 0.8)) {
