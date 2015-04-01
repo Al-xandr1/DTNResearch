@@ -28,10 +28,7 @@ void HotSpotsAlgorithm::initialize() {
     HotSpotReader hsReader;
     allHotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
     checkHotSpotsBound();
-
-    //todo вынести отдельно
-    availabilityPerHS = new vector<int>();
-    for (uint i = 0; i < allHotSpots->size(); i++) availabilityPerHS->push_back(1);
+    initializeHotSpotAvailabilities();
 
     if (useBetweenCentersLogic) {
         // заполняем матрицу расстояний между центрами локаций
@@ -49,7 +46,35 @@ void HotSpotsAlgorithm::initialize() {
     }
 }
 
-// Проверяет: что все горячие точки не выходят за общую границу
+// Инициализирует доступность всех кластеров на основании файла spotcount.cnt
+void HotSpotsAlgorithm::initializeHotSpotAvailabilities() {
+    HotSpotReader hsReader;
+    vector<HotSpotAvailability*>* hsAvailabilities = hsReader.readHotSpotsAvailabilities(DEF_HS_DIR);
+    availabilityPerHS = new vector<int>();
+    // сопоставление двух структур по имени кластера
+    for(uint i = 0; i < allHotSpots->size(); i++) {
+        char* hotSpotName = (*allHotSpots)[i]->hotSpotName;
+        bool found = false;
+        for (uint j = 0; j < hsAvailabilities->size(); j++) {
+            cout << "\t\thotSpotName =" << hotSpotName << ", (*hsAvailabilities)[" << j << "]->hotSpotName =" << (*hsAvailabilities)[j]->hotSpotName << "." << endl;
+            if (found = (strcmp(hotSpotName, (*hsAvailabilities)[j]->hotSpotName) == 0) ) {
+                availabilityPerHS->push_back((*hsAvailabilities)[j]->count);
+                break;
+            }
+        }
+        if (!found) exit(-127);
+    }
+    // проверка соответствия и удаление временного вектора
+    for(uint i = 0; i < allHotSpots->size(); i++) {
+        cout << "hotSpotName = " << (*allHotSpots)[i]->hotSpotName << ", count = " << (*availabilityPerHS)[i] << endl;
+        HotSpotAvailability* hs = hsAvailabilities->front();
+        hsAvailabilities->erase(hsAvailabilities->begin());
+        delete hs;
+    }
+    delete hsAvailabilities;
+}
+
+// Проверяет, что все горячие точки не выходят за общую границу
 void HotSpotsAlgorithm::checkHotSpotsBound() {
     if (allHotSpots) {
         for (uint i = 0; i < allHotSpots->size(); i++) {
@@ -102,10 +127,13 @@ void HotSpotsAlgorithm::setNextCurrentHotSpotIndex() {
     }
 
     // запоминаем текущий индекс
-    if (resultIndex == currentIndexHS || resultIndex == -1) exit(-432);
+    if (resultIndex == currentIndexHS) exit(-432);
+    if (resultIndex == -1) exit(-433); //todo падает когда больше некуда ходить
+
     currentIndexHS = resultIndex;
     if (useLATP) setVisited(currentIndexHS);
     cout << "setNextCurrentHotSpotIndex: index = " << currentIndexHS << ", size = " << allHotSpots->size() << endl;
+    cout << "\t\tTEST: hotSpotName = '" << (*allHotSpots)[currentIndexHS]->hotSpotName << "'" << endl;
 }
 
 // получаем случайное положение внутри заданной горячей точки

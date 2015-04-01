@@ -68,6 +68,7 @@ public:
 
 private:
     void initialize();
+    void initializeHotSpotAvailabilities();
     void checkHotSpotsBound();
     void setNextCurrentHotSpotIndex();
     Coord getRandomPositionInsideHS(uint hotSpotIndex);

@@ -14,6 +14,23 @@ struct Waypoint{
 };
 
 
+struct HotSpotAvailability {
+    char* hotSpotName;
+    int count;
+
+    HotSpotAvailability(char* hotSpotName, int count)
+    {
+        strcpy(this->hotSpotName = new char[256], hotSpotName);
+        this->count = count;
+    }
+
+    ~HotSpotAvailability()
+    {
+        if (this->hotSpotName) delete this->hotSpotName;
+    }
+};
+
+
 struct HotSpot {
      double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;
      double sumTime;
@@ -22,8 +39,7 @@ struct HotSpot {
 
      HotSpot(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax)
      {
-         this->hotSpotName = new char[256];
-         strcpy(this->hotSpotName, hotSpotName);
+         strcpy(this->hotSpotName = new char[256], hotSpotName);
          this->Xmin = Xmin;
          this->Xmax = Xmax;
          this->Ymin = Ymin;
@@ -51,6 +67,7 @@ public:
 };
 
 
+
 class HotSpotReader
 {
 public:
@@ -76,7 +93,7 @@ public:
                 char* hsInputFileName = buildFullName(hotSpotDir, f.cFileName);
                 cout << "       hsInputFileName: " << hsInputFileName << endl;
 
-                HotSpot* hotSpot = readHotSpot(hsInputFileName);
+                HotSpot* hotSpot = readHotSpot(hsInputFileName, f.cFileName);
                 hotSpot->print();
                 hotSpots->push_back(hotSpot);
 
@@ -93,13 +110,40 @@ public:
         return hotSpots;
     }
 
-private:
-    HotSpot* readHotSpot(char* fileName)
+    vector<HotSpotAvailability*>* readHotSpotsAvailabilities(char* hotSpotDir)
     {
-        ifstream* hotSpotFile = new ifstream(fileName);
+        vector<HotSpotAvailability*>* hotSpotsAvailabilities = new vector<HotSpotAvailability*>();
+
+        char* spotCountFileName = buildFullName(hotSpotDir, "spotcount.cnt");
+        ifstream* spotCountFile = new ifstream(spotCountFileName);
+        if (!spotCountFile)
+        {
+            cout << " No spotCountFile file: " << spotCountFileName << endl;
+            exit(104);
+        }
+
+        while(!spotCountFile->eof()) {
+            char hotSpotName[256];
+            int count = -1;
+            (*spotCountFile) >> hotSpotName >> count;
+            if (count != -1) {
+                hotSpotsAvailabilities->push_back(new HotSpotAvailability(hotSpotName, count));
+            }
+        }
+
+        spotCountFile->close();
+        delete spotCountFile;
+
+        return hotSpotsAvailabilities;
+    }
+
+private:
+    HotSpot* readHotSpot(char* fullFileName, char* simpleFileName)
+    {
+        ifstream* hotSpotFile = new ifstream(fullFileName);
         if (!hotSpotFile)
         {
-            cout << " No hotSpotFile file: " << fileName << endl;
+            cout << " No hotSpotFile file: " << fullFileName << endl;
             exit(102);
         }
 
@@ -108,7 +152,7 @@ private:
         hotSpotFile->close();
         delete hotSpotFile;
 
-        return new HotSpot(fileName, Xmin, Xmax, Ymin, Ymax);
+        return new HotSpot(simpleFileName, Xmin, Xmax, Ymin, Ymax);
     }
 };
 
