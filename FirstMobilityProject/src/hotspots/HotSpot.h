@@ -18,9 +18,12 @@ struct HotSpot {
      double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;
      double sumTime;
      vector<Waypoint> waypoint;
+     char* hotSpotName;
 
-     HotSpot(double Xmin, double Xmax, double Ymin, double Ymax)
+     HotSpot(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax)
      {
+         this->hotSpotName = new char[256];
+         strcpy(this->hotSpotName, hotSpotName);
          this->Xmin = Xmin;
          this->Xmax = Xmax;
          this->Ymin = Ymin;
@@ -105,7 +108,7 @@ private:
         hotSpotFile->close();
         delete hotSpotFile;
 
-        return new HotSpot(Xmin, Xmax, Ymin, Ymax);
+        return new HotSpot(fileName, Xmin, Xmax, Ymin, Ymax);
     }
 };
 
