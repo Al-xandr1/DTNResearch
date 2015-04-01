@@ -29,7 +29,8 @@ void HotSpotsAlgorithm::initialize() {
     allHotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
     checkHotSpotsBound();
 
-    availabilityPerHS = new vector<double>();
+    //todo вынести отдельно
+    availabilityPerHS = new vector<int>();
     for (uint i = 0; i < allHotSpots->size(); i++) availabilityPerHS->push_back(1);
 
     if (useBetweenCentersLogic) {
@@ -62,26 +63,24 @@ void HotSpotsAlgorithm::checkHotSpotsBound() {
     }
 }
 
-// получаем случайную горячую точку из списка hotSpots, отличную от указанного индекса
-int HotSpotsAlgorithm::getNextHotSpotIndex(int hotSpotIndex) {
-    uint resultIndex = -1;
+// получаем индекс новой горячой точки из списка allHotSpots, отличный от текущего
+void HotSpotsAlgorithm::setNextCurrentHotSpotIndex() {
+    int resultIndex = -1;
 
-    if (useLATP && hotSpotIndex != currentIndexHS) {
-        // выбор по алгоритму "Least action trip planning"
-        // и в случае, когда уже установлен текущий кластер, потому что тогда установлен currentIndexHS
-
+    if (useLATP && currentIndexHS != -1) {
+        // выбор по алгоритму "Least action trip planning" И в случае, когда уже установлен текущий кластер
         double checkSum = 0;
         // вероятности посещения в порядке соответствующем массиву со всеми кластерами
         double* hotSpotProbability = new double[allHotSpots->size()];
         for (uint i = 0; i < allHotSpots->size(); i++) {
-            if (i != currentIndexHS && !isVisited(i)) {
-                // если кластер не текущий и не посещённый, то считаем вероятность его посещения
+            if (isAvailable(i)) {
+                // если кластер доступен, то считаем вероятность его посещения
                 double denominator = 0;
                 for (uint k = 0; k < allHotSpots->size(); k++)
-                    if (k != currentIndexHS && !isVisited(k)) denominator += 1 / pow(getDistance(currentIndexHS, k), powA);
+                    if (isAvailable(k)) denominator += 1 / pow(getDistanceFromCurrentHS(k), powA);
                 if (denominator == 0) exit(-111);
 
-                checkSum += (hotSpotProbability[i] = 1 / pow(getDistance(currentIndexHS, i), powA) / denominator);
+                checkSum += (hotSpotProbability[i] = 1 / pow(getDistanceFromCurrentHS(i), powA) / denominator);
             } else {
                 // кластер имеет нулевую вероятность посещения
                 checkSum += (hotSpotProbability[i] = 0);
@@ -103,16 +102,15 @@ int HotSpotsAlgorithm::getNextHotSpotIndex(int hotSpotIndex) {
     }
 
     // запоминаем текущий индекс
-    if (resultIndex == currentIndexHS) exit(-432);
+    if (resultIndex == currentIndexHS || resultIndex == -1) exit(-432);
     currentIndexHS = resultIndex;
     if (useLATP) setVisited(currentIndexHS);
-
-    cout << "getNextHotSpotIndex: index = " << currentIndexHS << ", size = " << allHotSpots->size() << endl;
-    return currentIndexHS;
+    cout << "setNextCurrentHotSpotIndex: index = " << currentIndexHS << ", size = " << allHotSpots->size() << endl;
 }
 
 // получаем случайное положение внутри заданной горячей точки
-Coord HotSpotsAlgorithm::getRandomPositionInsideHS(HotSpot* hotSpot) {
+Coord HotSpotsAlgorithm::getRandomPositionInsideHS(uint hotSpotIndex) {
+    HotSpot* hotSpot = (*allHotSpots)[hotSpotIndex];
     Coord newPoint(uniform(hotSpot->Xmin, hotSpot->Xmax),
                    uniform(hotSpot->Ymin, hotSpot->Ymax),
                    0);
@@ -123,11 +121,12 @@ Coord HotSpotsAlgorithm::getRandomPositionInsideHS(HotSpot* hotSpot) {
 }
 
 Coord HotSpotsAlgorithm::getInitialPosition() {
-    currentHotSpot = getRandomHotSpot(NULL);
-    return getRandomPositionInsideHS(currentHotSpot);
+    setNextCurrentHotSpotIndex();
+    return getRandomPositionInsideHS(currentIndexHS);
 }
 
 Coord HotSpotsAlgorithm::fixTargetPosition(Coord targetPosition, Coord delta, double distance) {
+    HotSpot* currentHotSpot = (*allHotSpots)[currentIndexHS];
     // принадлежит ли новая точка текущей горячей точке
     if ( !currentHotSpot->isPointBelong(targetPosition) ) {
         // для ускорения пределяем вспомогательные переменные
@@ -147,8 +146,8 @@ Coord HotSpotsAlgorithm::fixTargetPosition(Coord targetPosition, Coord delta, do
         if ( distance > (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
             // TODO в этом случае или сразу ищем новый кластер или до определённой длины (порога) ещё остаёмся в этом, заново генерируя шаг
             //пусть пока выбираем случайный кластер
-            currentHotSpot = getRandomHotSpot(currentHotSpot);
-            return getRandomPositionInsideHS(currentHotSpot);
+            setNextCurrentHotSpotIndex();
+            return getRandomPositionInsideHS(currentIndexHS);
         } else {
             delta.x = Xdir * distance/dir;
             delta.y = Ydir * distance/dir;
@@ -159,41 +158,34 @@ Coord HotSpotsAlgorithm::fixTargetPosition(Coord targetPosition, Coord delta, do
     return targetPosition;
 }
 
-// Получение дистанции между локациями по их индексу в основном массиве allHotSpots.
+// Получение дистанции между текущей локацией и указанной по их индексу в основном массиве allHotSpots.
 // В зависимости от настройки useBetweenCentersLogic считает расстояние либо между центрами локаций,
 // либо или между текущим положением и центром другого кластера
-double HotSpotsAlgorithm::getDistance(int fromHotSpot, int toHotSpot) {
-    if (fromHotSpot == toHotSpot) {
+double HotSpotsAlgorithm::getDistanceFromCurrentHS(uint targetHotSpotIndex) {
+    if (currentIndexHS == targetHotSpotIndex) {
         exit(-765);
     }
 
     if (useBetweenCentersLogic) {
-        return distMatrix[fromHotSpot][toHotSpot];
+        return distMatrix[currentIndexHS][targetHotSpotIndex];
 
     } else {
-        HotSpot* targetHotSpot = (*allHotSpots)[toHotSpot];
+        HotSpot* targetHotSpot = (*allHotSpots)[targetHotSpotIndex];
         double deltaX = (targetHotSpot->Xcenter - levyMobility->getLastPosition().x),
                deltaY = (targetHotSpot->Ycenter - levyMobility->getLastPosition().y);
         return sqrt(deltaX * deltaX + deltaY * deltaY);
     }
 }
 
-// проверяет посещённый кластер или нет
-bool HotSpotsAlgorithm::isVisited(int i) {
-    HotSpot* currentHS = (*allHotSpots)[i];
-    for (uint j=0; j < visitedHotSpots->size(); j++) {
-        if ( (*visitedHotSpots)[j] == currentHS ) return true;
-    }
-    return false;
+// проверяет доступен ли кластер для посещения или нет
+bool HotSpotsAlgorithm::isAvailable(uint hotSpotIndex) {
+    return (*availabilityPerHS)[hotSpotIndex] > 0;
 }
 
-// обновляет множество посещённых кластеров
+// обновляет доступность кластера
 void HotSpotsAlgorithm::setVisited(uint hotSpotIndex) {
-    (*availabilityPerHS)[hotSpotIndex]--;
-
-    // если кол-во посещённых кластеров больше некоторого порога, то удаляем самую старую,
-    // тем самым повышая вероятность вернуться туда опять
-    if (visitedHotSpots->size() >=  rint(allHotSpots->size() * 0.8)) {
-        visitedHotSpots->erase(visitedHotSpots->begin());
-    }
+    if (isAvailable(hotSpotIndex))
+        (*availabilityPerHS)[hotSpotIndex]--;
+    else
+        exit(-766);
 }
