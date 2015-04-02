@@ -77,7 +77,7 @@ void LevyMobility::finish() {
 }
 
 void LevyMobility::setTargetPosition() {
-    if (!movementsFinished) {
+    if (!movementsFinished) {               //todo остановку делать подругому
         if (nextMoveIsWait) {
             simtime_t waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
