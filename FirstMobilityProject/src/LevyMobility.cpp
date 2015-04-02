@@ -77,7 +77,7 @@ void LevyMobility::finish() {
 }
 
 void LevyMobility::setTargetPosition() {
-    if (!movementsFinished) {               //todo остановку делать подругому
+    if (!movementsFinished) {
         if (nextMoveIsWait) {
             simtime_t waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
@@ -87,6 +87,9 @@ void LevyMobility::setTargetPosition() {
             generateNextPosition(targetPosition, nextChange);
         }
         nextMoveIsWait = !nextMoveIsWait;
+    } else {
+        // планирование в бесконечность - костыльная остановка перемещений
+        nextChange = simTime() + 100000;
     }
 }
 
