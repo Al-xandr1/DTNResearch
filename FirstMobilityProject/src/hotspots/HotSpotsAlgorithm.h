@@ -52,6 +52,9 @@ private:
     bool useLATP;                  // true - если нужно успользовать LATP алгоритм, false - иначе
     bool useBetweenCentersLogic;   // true - если нужно считать дистанцию между центрами кластеров,
                                    // false - считается дистанция от текущего положения до целевого кластера
+    bool useHotSpotAvailabilities; // true - если нужно использовать логику по ограничению
+                                   // количества возможных посещений кластера на основе файла spotcount.cnt
+                                   // false - если нет, т.е. каждый кластер можно посетить только один раз
 
     vector<HotSpot*>* allHotSpots; // все кластеры
     vector<int>* availabilityPerHS;// массив счётчиков доступных посещений для кластеров
@@ -61,16 +64,18 @@ private:
     double powA;                   // показатель степени в диапазоне от 0 до бесконечности
 
 public:
-    HotSpotsAlgorithm(LevyMobilityDEF* levyMobility, double powA, bool useLATP, bool useBetweenCentersLogic);
+    HotSpotsAlgorithm(LevyMobilityDEF* levyMobility, double powA,
+            bool useLATP, bool useBetweenCentersLogic, bool useHotSpotAvailabilities);
     virtual ~HotSpotsAlgorithm();
     Coord getInitialPosition();
-    Coord fixTargetPosition(Coord targetPosition, Coord delta, double distance);
+    bool fixTargetPosition(Coord& targetPosition, Coord delta, double distance);
 
 private:
     void initialize();
     void initializeHotSpotAvailabilities();
+    void initializeDistanceMatrix();
     void checkHotSpotsBound();
-    void setNextCurrentHotSpotIndex();
+    bool setNextCurrentHotSpotIndex();
     Coord getRandomPositionInsideHS(uint hotSpotIndex);
     double getDistanceFromCurrentHS(uint targetHotSpotIndex);
     bool isAvailable(uint hotSpotIndex);

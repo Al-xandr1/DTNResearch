@@ -23,6 +23,7 @@ class LevyMobility : public LineSegmentsMobilityBase
     LeviPause *pause;
     double kForSpeed;
     double roForSpeed;
+    bool movementsFinished;    // показывает окончил ли пользователь движение или нет
 
     const char* specification; // определяет конкретную спецификацию мобильности
                                // одна из: SimpleLevy | LevyHotSpotsRandom | LevyHotSpotsLATPCenterLogic | LevyHotSpotsLATP | LevyHotSpotsLATPPathCounts

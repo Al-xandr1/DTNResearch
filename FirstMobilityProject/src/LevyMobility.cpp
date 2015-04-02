@@ -8,6 +8,7 @@ LevyMobility::LevyMobility() {
     pause = NULL;
     kForSpeed = 1;
     roForSpeed = 0;
+    movementsFinished = false;
 
     specification = NULL;
     hsAlgorithm = NULL;
@@ -51,13 +52,13 @@ void LevyMobility::initializeSpecification() {
         if (strcmp(specification, SIMPLE_LEVY) == 0) {
             hsAlgorithm = NULL;
         } else if (strcmp(specification, LEVY_HOTSPOTS_RANDOM) == 0) {
-            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), false, false);
+            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), false, false, false);
         } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_CENTER_LOGIC) == 0) {
-            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, true);
+            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, true, false);
         } else if (strcmp(specification, LEVY_HOTSPOTS_LATP) == 0) {
-            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false);
+            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false, false);
         } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_PATH_COUNTS) == 0) {
-            exit(-115);//todo impl
+            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false, true);
         } else {
             cout << "Unknown type of specification";
             exit(-114);
@@ -76,15 +77,17 @@ void LevyMobility::finish() {
 }
 
 void LevyMobility::setTargetPosition() {
-    if (nextMoveIsWait) {
-        simtime_t waitTime = (simtime_t) pause->get_Levi_rv();
-        nextChange = simTime() + waitTime;
-    } else {
-        collectStatistics(simTime(), lastPosition.x, lastPosition.y);
+    if (!movementsFinished) {
+        if (nextMoveIsWait) {
+            simtime_t waitTime = (simtime_t) pause->get_Levi_rv();
+            nextChange = simTime() + waitTime;
+        } else {
+            collectStatistics(simTime(), lastPosition.x, lastPosition.y);
 
-        generateNextPosition(targetPosition, nextChange);
+            generateNextPosition(targetPosition, nextChange);
+        }
+        nextMoveIsWait = !nextMoveIsWait;
     }
-    nextMoveIsWait = !nextMoveIsWait;
 }
 
 // Генерирует следующую позицию в зависимости от того, включено использование горячих точек или нет
@@ -99,7 +102,9 @@ void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     targetPosition = lastPosition + delta;
     nextChange = simTime() + travelTime;
 
-    if (hsAlgorithm) targetPosition = hsAlgorithm->fixTargetPosition(targetPosition, delta, distance);
+    if (hsAlgorithm)
+        // Если правка координаты прошла неудачно, то нужно заканчивать перемещения
+        movementsFinished = !hsAlgorithm->fixTargetPosition(targetPosition, delta, distance);
 }
 
 void LevyMobility::move() {
