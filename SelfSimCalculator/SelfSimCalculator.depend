@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1423139525 source:f:\old_d\work\programming projects\selfsimcalculator\main.cpp
+	<iostream>
+	<fstream>
+	<stdlib.h>
+	<string.h>
+	<windows.h>
+	<math.h>
+

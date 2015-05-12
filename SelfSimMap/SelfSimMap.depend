@@ -1,0 +1,7 @@
+# depslib dependency file v1.0
+1423162535 source:f:\old_d\work\programming projects\selfsimmap\main.cpp
+	<iostream>
+	<fstream>
+	<math.h>
+	<stdlib.h>
+
