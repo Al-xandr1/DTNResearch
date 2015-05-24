@@ -138,13 +138,24 @@ bool HotSpotsAlgorithm::setNextCurrentHotSpotIndex() {
         resultIndex = currentIndexHS;
         do {
             resultIndex = rint(uniform(0, allHotSpots->size() - 1));
+            // если кластер недоступен (уже посещался), то пытаемся взять соседние индексы
+            if (!isAvailable(resultIndex)) {
+                bool found = false;
+                // идём влево для поиска доступного
+                while ((resultIndex > 0) && !(found = isAvailable(--resultIndex)));
+                // идём вправо для поиска доступного
+                if (!found) while ((resultIndex < allHotSpots->size() - 1) && !(found = isAvailable(++resultIndex)));
+
+                // если не нашли вообще - то останавливаем моделирование
+                if (!found) return false;
+            }
         } while (resultIndex == currentIndexHS);
     }
 
     if (resultIndex == currentIndexHS) exit(-432);
     if (resultIndex == -1) return false; // не смогли выбрать новый кластер
 
-    if (useLATP) setVisited(resultIndex);
+    setVisited(resultIndex);
     currentIndexHS = resultIndex;
     cout << "setNextCurrentHotSpotIndex: index = " << currentIndexHS << ", size = " << allHotSpots->size() << endl;
     return true;
