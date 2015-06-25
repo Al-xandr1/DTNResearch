@@ -2,6 +2,10 @@
 #include <fstream>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
+#include <windows.h>
+#include <math.h>
+#include <vector>
 
 using namespace std;
 
@@ -9,7 +13,7 @@ using namespace std;
 
 bool GVrand(double R, double& q1, double& q2, double& q3, double& q4)
 {
-    if( R<0 ) { cout<<"Wrong argument"<<endl; return false; }
+    if( R<0 ) { cout<<"Wrong argument: R = " << R<<endl; return false; }
 
     if( R>3 ) R=3;
 
@@ -173,13 +177,188 @@ void SelfSimMapGenerator::PutSetOnMap(char* mapfile)
 
 }
 
+//------------------------------------ √енераци€ дл€ случа€ одной карты ----------------------------------------
 
-int main()
+int putSetOnSingleMap(int totalPoints = 6000)
 {
+    cout << "Hello world!" << endl;
+
     SelfSimMapGenerator h("bounds.bnd");
-    h.MakeSelfSimSet("variances.txt", 6000);
+    h.MakeSelfSimSet("variances.txt", totalPoints);
     h.PutSetOnMap("artifical.wpt");
 
-    cout << "Hello world!" << endl;
+    cout << endl << "Complete!" << endl;
     return 0;
+}
+
+//------------------------------------ √енераци€ дл€ случа€ набора кластеров ------------------------------------
+
+char* buildFullName(char* buffer, char* dir, char* fileName)
+{
+    strcpy(buffer, dir);
+    strcat(buffer, "/");
+    return strcat(buffer, fileName);
+}
+
+
+class HotSpotInfo {
+public:
+    char* hotSpotName;
+    char* fullHotSpotName;
+    double square;
+    double points;
+
+public:
+    HotSpotInfo(char* fullName, char* name) {
+        fullHotSpotName = new char[256];
+        strcpy(fullHotSpotName, fullName);
+
+        hotSpotName = new char[256];
+        strcpy(hotSpotName, name);
+
+        double Xmin, Xmax, Ymin, Ymax;
+        ifstream* hotSpot = new ifstream(fullName);
+        if(hotSpot == NULL) { cout<<"No hotSpot file\n"; exit(2); }
+        (*hotSpot)>>Xmin>>Xmax>>Ymin>>Ymax;
+        cout<<"\tHotSpot bounds:"<<Xmin<<"\t"<<Xmax<<"\t"<<Ymin<<"\t"<<Ymax<<endl;
+
+        square = (Xmax - Xmin)*(Ymax - Ymin);
+        cout<<"\tHotSpot square:"<<square<<endl;
+        points = -1;
+
+        hotSpot->close();
+        delete hotSpot;
+    }
+
+    char* buildWayPointFileName(char* dir)
+    {
+        char* wayPointFileName = new char[256];
+        wayPointFileName = buildFullName(wayPointFileName, dir, hotSpotName);
+        wayPointFileName = strcat(wayPointFileName, ".wpt");
+
+        cout << "wayPointFileName: " << wayPointFileName << endl;
+        return wayPointFileName;
+    }
+
+    //¬ысчитывает доли точек на каждый кластер
+    static void distributePoints(vector<HotSpotInfo*>* infos, int totalPoints)
+    {
+        double sum = 0;
+        for (int i=0; i<infos->size(); i++) sum += (*infos)[i]->square;
+
+        int remainPoints = totalPoints;
+        for (int i=0; i<infos->size()-1; i++)
+        {
+            (*infos)[i]->points = floor(((*infos)[i]->square / sum) * totalPoints);
+            //если ноль тогда сколько точек ???
+            //if((*infos)[i]->points == 0){
+            //    (*infos)[i]->points = 1;
+            //}
+            remainPoints -= (*infos)[i]->points;
+        }
+        (*infos)[infos->size()-1]->points = remainPoints;
+
+        //for debug
+        int checkPoints = 0;
+        for (int i=0; i<infos->size(); i++) checkPoints += (*infos)[i]->points;
+        if (checkPoints != totalPoints) {cout << "checkPoints=" << checkPoints << endl; exit(-3);}
+    }
+
+    static vector<HotSpotInfo*>* loadAllHotSpotInfo(char* hotSpotDir)
+    {
+        vector<HotSpotInfo*>* infos = new vector<HotSpotInfo*>();
+
+        WIN32_FIND_DATA f;
+
+        char hotspotFileNamePattern[256];
+        buildFullName(hotspotFileNamePattern, hotSpotDir, "*.hts");
+
+        HANDLE h = FindFirstFile(hotspotFileNamePattern, &f);
+        if(h != INVALID_HANDLE_VALUE)
+        {
+            do
+            {
+                char inputFileName[256];
+                buildFullName(inputFileName, hotSpotDir, f.cFileName);
+                cout << "inputFileName: " << inputFileName << endl;
+
+                HotSpotInfo* info = new HotSpotInfo(inputFileName, f.cFileName);
+                infos->push_back(info);
+            }
+            while(FindNextFile(h, &f));
+        }
+        else
+        {
+            fprintf(stderr, "Directory or files not found\n");
+        }
+
+        return infos;
+    }
+};
+
+
+int putSetOnHotspots(int argc, char** argv, int totalPoints = 6000)
+{
+    cout << "Hello world!" << endl;
+
+    char* hotspotsDir;
+    char* varfile;
+    int points = totalPoints;
+    switch(argc)
+    {
+    case 1 :
+        hotspotsDir = "./hotspotfiles";
+        varfile = "variances.txt";
+        break;
+
+    case 2 :
+        hotspotsDir = argv[1];
+        varfile = "variances.txt";
+        break;
+
+    case 3 :
+        hotspotsDir = argv[1];
+        varfile = argv[2];
+        break;
+
+    case 4:
+    default:
+        hotspotsDir = argv[1];
+        varfile = argv[2];
+        points = atoi(argv[3]);
+        break;
+    }
+
+    WIN32_FIND_DATA f;
+    if (FindFirstFile("./waypointfiles", &f) == INVALID_HANDLE_VALUE)
+    {
+        if (CreateDirectory("./waypointfiles", NULL)) cout << "create output directory " << endl;
+        else cout << "error create output directory" << endl;
+    }
+
+    vector<HotSpotInfo*>* infos = HotSpotInfo::loadAllHotSpotInfo(hotspotsDir);
+    HotSpotInfo::distributePoints(infos, points);
+    cout << endl;
+
+    for (int i=0; i<infos->size(); i++)
+    {
+        cout << "(*infos)[i]->hotSpotName = " << (*infos)[i]->hotSpotName << endl;
+        cout << "(*infos)[i]->fullHotSpotName = " << (*infos)[i]->fullHotSpotName << endl;
+        cout << "(*infos)[i]->square = " << (*infos)[i]->square << endl;
+        cout << "(*infos)[i]->points = " << (*infos)[i]->points << endl << endl;
+        SelfSimMapGenerator* h = new SelfSimMapGenerator((*infos)[i]->fullHotSpotName);
+        h->MakeSelfSimSet("variances.txt", (*infos)[i]->points);
+        h->PutSetOnMap((*infos)[i]->buildWayPointFileName("./waypointfiles"));
+        delete h;
+    }
+
+    cout << endl << "Complete!" << endl;
+    return 0;
+}
+
+
+int main(int argc, char** argv)
+{
+    //putSetOnSingleMap();
+    putSetOnHotspots(argc, argv, 20000);
 }
