@@ -51,14 +51,22 @@ void LevyMobility::initializeSpecification() {
 
         if (strcmp(specification, SIMPLE_LEVY) == 0) {
             hsAlgorithm = NULL;
+
         } else if (strcmp(specification, LEVY_HOTSPOTS_RANDOM) == 0) {
-            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), false, false, false);
+            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), false, false, false, false);
+
         } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_CENTER_LOGIC) == 0) {
-            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, true, false);
+            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, true, false, false);
+
         } else if (strcmp(specification, LEVY_HOTSPOTS_LATP) == 0) {
-            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false, false);
+            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false, false, false);
+
         } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_PATH_COUNTS) == 0) {
-            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false, true);
+            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false, true, false);
+
+        } else if (strcmp(specification, LEVY_HOTSPOTS_WAYPOINTS_LATP_PATH_COUNTS) == 0) {
+            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false, true, true);
+
         } else {
             cout << "Unknown type of specification";
             exit(-114);

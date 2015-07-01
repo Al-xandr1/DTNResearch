@@ -8,13 +8,15 @@
 #include <HotSpotsAlgorithm.h>
 
 HotSpotsAlgorithm::HotSpotsAlgorithm(LevyMobilityDEF* levyMobility, double powA,
-        bool useLATP, bool useBetweenCentersLogic, bool useHotSpotAvailabilities) {
+        bool useLATP, bool useBetweenCentersLogic, bool useHotSpotAvailabilities,
+        bool useWayPoints) {
 
     this->levyMobility = levyMobility;
 
     this->useLATP = useLATP;
     this->useBetweenCentersLogic = useBetweenCentersLogic;
     this->useHotSpotAvailabilities = useHotSpotAvailabilities;
+    this->useWayPoints = useWayPoints;
 
     this->allHotSpots = NULL;
     this->distMatrix = NULL;
@@ -27,12 +29,16 @@ HotSpotsAlgorithm::HotSpotsAlgorithm(LevyMobilityDEF* levyMobility, double powA,
 HotSpotsAlgorithm::~HotSpotsAlgorithm() {
 }
 
+
+//----------------------------------------------------------------Initialization------------------------------------------------------------------
+
+
 void HotSpotsAlgorithm::initialize() {
-    HotSpotReader hsReader;
-    allHotSpots = hsReader.readAllHotSpots(DEF_HS_DIR);
+    allHotSpots = HotSpotReader::readAllHotSpots(DEF_HS_DIR);
     checkHotSpotsBound();
 
     initializeHotSpotAvailabilities();
+    initializeWayPoints();
     initializeDistanceMatrix();
 }
 
@@ -41,8 +47,7 @@ void HotSpotsAlgorithm::initializeHotSpotAvailabilities() {
     availabilityPerHS = new vector<int>();
 
     if (useHotSpotAvailabilities) {
-        HotSpotReader hsReader;
-        vector<HotSpotAvailability*>* hsAvailabilities = hsReader.readHotSpotsAvailabilities(DEF_HS_DIR);
+        vector<HotSpotAvailability*>* hsAvailabilities = HotSpotReader::readHotSpotsAvailabilities(DEF_HS_DIR);
         // сопоставление двух структур по имени кластера
         for(uint i = 0; i < allHotSpots->size(); i++) {
             char* hotSpotName = (*allHotSpots)[i]->hotSpotName;
@@ -66,6 +71,13 @@ void HotSpotsAlgorithm::initializeHotSpotAvailabilities() {
         delete hsAvailabilities;
     } else {
         for (uint i = 0; i < allHotSpots->size(); i++) availabilityPerHS->push_back(1);
+    }
+}
+
+void HotSpotsAlgorithm::initializeWayPoints() {
+    if (useWayPoints) {
+        HotSpotReader::fillHotSpotsWithWayPoints(allHotSpots, DEF_WP_DIR);
+        checkWayPointsBound();
     }
 }
 
@@ -100,6 +112,14 @@ void HotSpotsAlgorithm::checkHotSpotsBound() {
         }
     }
 }
+
+void HotSpotsAlgorithm::checkWayPointsBound() {
+
+}
+
+
+//----------------------------------------------------------------Logic----------------------------------------------------------------------
+
 
 // получаем индекс новой горячой точки из списка allHotSpots, отличный от текущего
 // возвращаяет TRUE - можно выбрать новый кластер, FALSE - в противном случае
