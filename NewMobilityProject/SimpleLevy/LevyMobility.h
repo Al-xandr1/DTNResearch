@@ -1,0 +1,75 @@
+#ifndef LEVY_MOBILITY_H
+#define LEVY_MOBILITY_H
+
+#include <fstream>
+#include <string>
+#include <math.h>
+
+#include "INETDefs.h"
+#include "LineSegmentsMobilityBase.h"
+
+#include "DevelopmentHelper.h"
+#include "LeviStatic.h"
+#include "HotSpot.h"
+
+// определяет конкретную спецификацию мобильности
+enum LeviMobilitySubtype { SimpleLevy = 0,              // простой Леви, без использования кластеров.
+                       LevyHotSpotsRandom,              // Леви с использованием кластеров, которые выбираются случайным образом.
+                       LevyHotSpotsLATP,                // Леви с использованием кластеров, которые выбираются по алгоритму LATP,
+                                                        // и расстояние для алгоритма рассчитывается между текущим положением и центром целевого кластера.
+                       LevyHotSpotsLATPCenterLogic,     // Леви с использованием кластеров, которые выбираются по алгоритму LATP,
+                                                        // и расстояние для алгоритма рассчитывается между центрами кластеров.
+                       LevyHotSpotsLATPPathCounts,      // Леви с использованием кластеров, которые выбираются по алгоритму LATP,
+                                                        // и расстояние для алгоритма рассчитывается между текущим положением и центром целевого кластера
+                                                        // а также учитывается количество возможных посещений для каждого кластера.
+		       LevyHotSpotsWayPointsLATPPathCounts  // Леви с использованием кластеров, которые выбираются по алгоритму LATP,
+                                                        // и расстояние для алгоритма рассчитывается между текущим положением и центром целевого кластера
+                                                        // а также учитывается количество возможных посещений для каждого кластера.
+                                                        // В кластере объект двигается по путевым точкам, загруженным заранее.
+                     };
+
+class LevyMobility : public LineSegmentsMobilityBase
+{
+  protected:
+    bool nextMoveIsWait;
+
+    LeviJump  *jump;
+    LeviPause *pause;
+    double kForSpeed;
+    double roForSpeed;
+
+    // текущая локация
+    Coord currentHSMin, currentHSMax, currentHSCenter;
+
+    bool movementsFinished;    // показывает окончил ли пользователь движение или нет
+
+    //statistics collection
+    std::vector<simtime_t> times;
+    std::vector<double> xCoordinates;
+    std::vector<double> yCoordinates;
+
+  protected:
+    virtual int numInitStages() const { return 3; }
+    virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
+
+    virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
+    virtual void setInitialPosition();
+
+    void generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+    virtual bool findNextHotSpot() { return true; }  // ищем новую локацию и устанавливаем её новые границы и центр
+
+    virtual void move();                  /** @brief Overridden from LineSegmentsMobilityBase.*/
+    virtual void finish();
+
+    void collectStatistics(simtime_t appearenceTime, double x, double y);
+    void saveStatistics();
+
+  public:
+    LevyMobility();
+
+    Coord getLastPosition()      {return this->lastPosition;};
+    Coord getConstraintAreaMin() {return this->constraintAreaMin;};
+    Coord getConstraintAreaMax() {return this->constraintAreaMax;};
+};
+
+#endif
