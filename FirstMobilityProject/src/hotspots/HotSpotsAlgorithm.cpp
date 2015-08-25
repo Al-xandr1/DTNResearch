@@ -38,7 +38,7 @@ void HotSpotsAlgorithm::initialize() {
     checkHotSpotsBound();
 
     initializeHotSpotAvailabilities();
-    initializeWayPoints();
+//    initializeWayPoints();
     initializeDistanceMatrix();
 }
 
@@ -74,12 +74,12 @@ void HotSpotsAlgorithm::initializeHotSpotAvailabilities() {
     }
 }
 
-void HotSpotsAlgorithm::initializeWayPoints() {
-    if (useWayPoints) {
-        HotSpotReader::fillHotSpotsWithWayPoints(allHotSpots, DEF_WP_DIR);
-        checkWayPointsBound();
-    }
-}
+//void HotSpotsAlgorithm::initializeWayPoints() {
+//    if (useWayPoints) {
+//        HotSpotReader::fillHotSpotsWithWayPoints(allHotSpots, DEF_WP_DIR);
+//        checkWayPointsBound();
+//    }
+//}
 
 // Инициализирует матрицу расстояний между центрами кластеров
 void HotSpotsAlgorithm::initializeDistanceMatrix() {
@@ -113,9 +113,9 @@ void HotSpotsAlgorithm::checkHotSpotsBound() {
     }
 }
 
-void HotSpotsAlgorithm::checkWayPointsBound() {
-
-}
+//void HotSpotsAlgorithm::checkWayPointsBound() {
+//
+//}
 
 
 //----------------------------------------------------------------Logic----------------------------------------------------------------------

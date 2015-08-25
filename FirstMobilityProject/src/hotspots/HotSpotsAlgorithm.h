@@ -48,7 +48,7 @@ typedef HotSpotsAlgorithm HotSpotsAlgorithmDEF;
 // и расстояние для алгоритма рассчитывается между текущим положением и центром целевого кластера
 // а также учитывается количество возможных посещений для каждого кластера.
 // В кластере объект двигается по путевым точкам, загруженным заранее.
-#define LEVY_HOTSPOTS_WAYPOINTS_LATP_PATH_COUNTS "LevyHotSpotsWayPointsLATPPathCounts"
+//#define LEVY_HOTSPOTS_WAYPOINTS_LATP_PATH_COUNTS "LevyHotSpotsWayPointsLATPPathCounts"
 
 class HotSpotsAlgorithm {
 private:
@@ -83,10 +83,10 @@ public:
 private:
     void initialize();
     void initializeHotSpotAvailabilities();
-    void initializeWayPoints();
+//    void initializeWayPoints();
     void initializeDistanceMatrix();
     void checkHotSpotsBound();
-    void checkWayPointsBound();
+//    void checkWayPointsBound();
 
     bool setNextCurrentHotSpotIndex();
     Coord getRandomPositionInsideHS(uint hotSpotIndex);

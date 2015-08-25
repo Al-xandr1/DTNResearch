@@ -64,8 +64,8 @@ void LevyMobility::initializeSpecification() {
         } else if (strcmp(specification, LEVY_HOTSPOTS_LATP_PATH_COUNTS) == 0) {
             hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false, true, false);
 
-        } else if (strcmp(specification, LEVY_HOTSPOTS_WAYPOINTS_LATP_PATH_COUNTS) == 0) {
-            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false, true, true);
+//        } else if (strcmp(specification, LEVY_HOTSPOTS_WAYPOINTS_LATP_PATH_COUNTS) == 0) {
+//            hsAlgorithm = new HotSpotsAlgorithm(this, par("powA").doubleValue(), true, false, true, true);
 
         } else {
             cout << "Unknown type of specification";

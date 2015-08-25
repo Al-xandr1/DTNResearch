@@ -137,8 +137,8 @@ public:
         return hotSpotsAvailabilities;
     }
 
-    static void fillHotSpotsWithWayPoints(vector<HotSpot*>* hotSpots, char* wayPointsDir) {
-        if (hotSpots == NULL) {fprintf(stderr, "hotSpots is NULL.\n");exit(-764);}
+//    static void fillHotSpotsWithWayPoints(vector<HotSpot*>* hotSpots, char* wayPointsDir) {
+//        if (hotSpots == NULL) {fprintf(stderr, "hotSpots is NULL.\n");exit(-764);}
 
 
 //        WIN32_FIND_DATA f;
@@ -174,7 +174,7 @@ public:
 //        delete hotSpotFileNamePattern;
 //
 //        return hotSpots;
-    }
+//    }
 
 private:
     static HotSpot* readHotSpot(char* fullFileName, char* simpleFileName)
