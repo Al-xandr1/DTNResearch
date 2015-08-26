@@ -57,7 +57,7 @@ void RepeatFinder::CheckRoots(char* RootDir)
     char RootNamePattern[256];
     buildFullName(RootNamePattern, RootDir, "*.rot");
 
-    char spot[256]; int time, points;
+    char spot[256]; double time = 0; int points = 0;
     int rp[spotNames.size()];
 
     WIN32_FIND_DATA f;
