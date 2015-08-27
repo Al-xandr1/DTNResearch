@@ -159,7 +159,7 @@ bool LevyHotSpotsLATP::findNextHotSpot()
     currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 
-    cout << "changing location to" << currentHSindex << endl;
+//    cout << "changing location to" << currentHSindex << endl;
     return true;
 }
 
