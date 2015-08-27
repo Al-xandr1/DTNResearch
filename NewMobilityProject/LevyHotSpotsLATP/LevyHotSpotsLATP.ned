@@ -29,6 +29,8 @@ simple LevyHotSpotsLATP extends MovingMobilityBase
         double powA = default(1);		// is a fixed floating number constant within 0 to infinity - power for distance
         
         //statistic collection
+        bool wayPointFormat = default(false); // fasle - points record as a trace: t x y
+        									  // true  - points record as a waypoints: x y t t
     	string traceFileName = default("traceOfNode");
     	int fileSuffix = default(0);
 }

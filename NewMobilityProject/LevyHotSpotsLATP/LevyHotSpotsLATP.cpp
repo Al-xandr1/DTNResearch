@@ -185,7 +185,11 @@ void LevyHotSpotsLATP::saveStatistics() {
         simtime_t time = times[i];
         double x = xCoordinates[i];
         double y = yCoordinates[i];
-        (*file) << time << "\t" << x << "\t" << y << endl;
+        if (par("wayPointFormat").boolValue()) {
+            (*file) << x << "\t" << y << "\t" << time << "\t" << time << endl;
+        } else {
+            (*file) << time << "\t" << x << "\t" << y << endl;
+        }
     }
 
     file->close();
