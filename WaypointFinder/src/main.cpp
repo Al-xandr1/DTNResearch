@@ -154,6 +154,36 @@ int mainForAnalyzer(int argc, char** argv) {
     char* fileNamePattern = buildFullName(fileDir, fileType);
     cout << "   fileNamePattern: " << fileNamePattern << endl << endl;
 
+
+
+    ifstream boundsFile(buildFullName(fileDir, DEF_BND_FILE_NAME));
+    if (boundsFile == NULL) {
+        // create file with bounds
+        Bounds* totalBounds = new Bounds();
+        HANDLE h = FindFirstFile(fileNamePattern, &f);
+        if(h != INVALID_HANDLE_VALUE)
+        {
+            do
+            {
+                char* pointsFileName = buildFullName(fileDir, f.cFileName);
+                cout << "       pointsFileName: " << pointsFileName << endl;
+                WayPointReader* reader = new WayPointReader(pointsFileName);
+                while (reader->hasNext()) {
+                    WayPoint *point = reader->next();
+                    totalBounds->changeBounds(point->x, point->y);
+                    delete point;
+                }
+                delete pointsFileName;
+                delete reader;
+            }
+            while(FindNextFile(h, &f));
+        }
+        else fprintf(stderr, "Directory or files not found\n");
+        totalBounds->write(buildFullName(fileDir, DEF_BND_FILE_NAME));
+    }
+
+
+
     PointsAnalyzer analyzer(buildFullName(fileDir, DEF_BND_FILE_NAME));
 
     HANDLE h = FindFirstFile(fileNamePattern, &f);
@@ -309,8 +339,8 @@ int mainMain(int argc, char** argv)
 // ------------------------------------------  Program script  --------------------------------------------
 int main(int argc, char** argv)
 {
-    argc = 2; argv = new char*[2] {"program", WPFIND};
-    mainMain(argc, argv);
+//    argc = 2; argv = new char*[2] {"program", WPFIND};
+//    mainMain(argc, argv);
     argc = 3; argv = new char*[3] {"program", STAT, WPT};
     mainMain(argc, argv);
 }

@@ -76,12 +76,15 @@ public:
         bool success = areaTree->putInArea(point);
 
         double pause = point->pauseDuration();
-        if (pause <= 0)
+        if (pause < 0)
         {
             cout << endl << "\t" << "Statistics addPoint(): unexpected magnitude of value: " << endl;
             cout << "\t\tpause= " << pause << endl;
             cout << "\t\tpoint:  ";  point->print();
             exit(334);
+        //} else if (pause == 0) {
+        //    cout << endl << "\t" << "Statistics addPoint(): WARNING: pause time is zero" << endl;
+        //    cout << "\t\tpoint:  ";  point->print(); cout << endl;
         }
         pauseHist->put(pause);
 
