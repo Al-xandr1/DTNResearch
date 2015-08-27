@@ -4,6 +4,9 @@
 
 #include "LevyHotSpotsLATP.h"
 
+#define TRACE_TYPE ".txt"
+#define WAYPOINTS_TYPE ".wpt"
+
 Define_Module(LevyHotSpotsLATP);
 
 LevyHotSpotsLATP::LevyHotSpotsLATP() {
@@ -177,14 +180,22 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t appearenceTime, double x, dou
 
 void LevyHotSpotsLATP::saveStatistics() {
     char outFileName[256];
-    char *fileName = createFileName(outFileName, 0,
-            par("traceFileName").stringValue(), (int) ((par("fileSuffix"))));
+
+    char *fileName = NULL;
+    if (par("wayPointFormat").boolValue()) {
+        fileName = createFileName(outFileName, 0,
+                    par("traceFileName").stringValue(), (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
+    } else {
+        fileName = createFileName(outFileName, 0,
+                    par("traceFileName").stringValue(), (int) ((par("fileSuffix"))), TRACE_TYPE);
+    }
 
     ofstream* file = new ofstream(fileName);
     for (unsigned int i = 0; i < times.size(); i++) {
         simtime_t time = times[i];
         double x = xCoordinates[i];
         double y = yCoordinates[i];
+
         if (par("wayPointFormat").boolValue()) {
             (*file) << x << "\t" << y << "\t" << time << "\t" << time << endl;
         } else {
