@@ -20,6 +20,7 @@ struct Waypoint{
 
 struct HotSpotVisit {
     double Tb, Te;
+    double Xmin, Xmax, Ymin, Ymax;
     char* HotSpot;
 };
 
@@ -109,6 +110,10 @@ bool VisitMinHeap::GetMin(HotSpotVisit& Value)
 
     Value.Tb=(visit[0]).Tb;
     Value.Te=(visit[0]).Te;
+    Value.Xmin=(visit[0]).Xmin;
+    Value.Xmax=(visit[0]).Xmax;
+    Value.Ymin=(visit[0]).Ymin;
+    Value.Ymax=(visit[0]).Ymax;
     strcpy(Value.HotSpot, (visit[0]).HotSpot);
     return true;
 }
@@ -133,6 +138,10 @@ void VisitMinHeap::DeleteMin()
 class RootFinder {
 protected:
     vector<char*> UserNames;
+    vector<double> xmin;
+    vector<double> xmax;
+    vector<double> ymin;
+    vector<double> ymax;
     VisitMinHeap* visitPoint;
 
 public:
@@ -183,7 +192,7 @@ void RootFinder::loadHotSpotFiles(char* hotSpotFilesDir)
     // по двоичным кучам соответствующих пользователей c указанием локации каждой путевой точки
 
     HotSpotVisit hsv;
-    double Xmin, Xmax, Ymin, Ymax, Tsum, X, Y;
+    double Tsum, X, Y;
     int numWp;
 
 
@@ -207,7 +216,7 @@ void RootFinder::loadHotSpotFiles(char* hotSpotFilesDir)
             char buffer[256];
 
             ifstream file(HotSpotFile);
-            file>>Xmin>>Xmax>>Ymin>>Ymax>>Tsum>>numWp;
+            file>>hsv.Xmin>>hsv.Xmax>>hsv.Ymin>>hsv.Ymax>>Tsum>>numWp;
             while(!file.eof()) {
                 for(int i=0; i<256; i++) buffer[i]='\0';
                 file>>X>>Y>>hsv.Tb>>hsv.Te>>buffer;
@@ -263,7 +272,7 @@ void RootFinder::writeAllRoots(char* rootFilesDir)
                     (visitPoint[i]).DeleteMin();
                     Tsum+=nexthsv.Te-nexthsv.Tb; counter++;
             }
-            file<<hsv.HotSpot<<"\t"<<Tsum<<"\t"<<counter<<endl;
+            file<<hsv.HotSpot<<"\t"<<hsv.Xmin<<"\t"<<hsv.Xmax<<"\t"<<hsv.Ymin<<"\t"<<hsv.Ymax<<"\t"<<Tsum<<"\t"<<counter<<endl;
             rootLength[i]++; rootTime+=Tsum; rootPoints+=counter;
         }
         file.close();
