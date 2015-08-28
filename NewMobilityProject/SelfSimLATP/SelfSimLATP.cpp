@@ -34,8 +34,15 @@ SelfSimLATP::SelfSimLATP() {
 void SelfSimLATP::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
+
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 1" <<endl;
+
+
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
+
+
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 2" <<endl;
 
 
     if (hasPar("powA") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") ) {
@@ -50,13 +57,30 @@ void SelfSimLATP::initialize(int stage) {
 
     } else { cout << "It is necessary to specify ALL parameters"; exit(-112);}
 
+
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 3" <<endl;
+
+
     constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
     constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
     constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
     constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
 
+
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 4" <<endl;
+
+
     if (hsc==NULL) hsc = new HotSpotsCollection();
+
+
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 5" <<endl;
+
+
     if (hsd==NULL) hsd = new HSDistanceMatrix();
+
+
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 6" <<endl;
+
 
     // загрузка данных о докациях
     char* TracesDir = DEF_TR_DIR ;
@@ -65,14 +89,30 @@ void SelfSimLATP::initialize(int stage) {
     constraintAreaMin.x=minX; constraintAreaMin.y=minY;
     constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
 
+
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 7" <<endl;
+
+
     hsd->makeDistanceMatrix();
     hsd->makeProbabilityMatrix(powA);
 
+
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 8" <<endl;
+
+
     if (rc==NULL) rc = new RootCollection();
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 8.1" <<endl;
     char* RootDir = DEF_RT_DIR ;
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 8.2" <<endl;
     rc->readRootInfo(RootDir);
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 8.3" <<endl;
     makeRoot();
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 8.4" <<endl;
     buildDstMatrix();
+
+
+    cout << "Node:" << par("fileSuffix").doubleValue() << ", step 9" <<endl;
+
 
     // выбор случайной локации из маршрута
     currentHSindex = rand() % currentRoot.size();
