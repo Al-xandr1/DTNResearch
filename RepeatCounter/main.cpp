@@ -58,6 +58,7 @@ void RepeatFinder::CheckRoots(char* RootDir)
     buildFullName(RootNamePattern, RootDir, "*.rot");
 
     char spot[256]; double time = 0; int points = 0;
+    double Xmin, Xmax, Ymin, Ymax;
     int rp[spotNames.size()];
 
     WIN32_FIND_DATA f;
@@ -69,7 +70,7 @@ void RepeatFinder::CheckRoots(char* RootDir)
             ifstream* rfile= new ifstream(name);
             for(unsigned int i=0; i<spotNames.size(); i++) rp[i]=0;
             while(!rfile->eof()) {
-                (*rfile)>>spot>>time>>points;
+                (*rfile)>>spot>>Xmin>>Xmax>>Ymin>>Ymax>>time>>points;
                 for(unsigned int i=0; i<spotNames.size(); i++)
                     if( strcmp(spotNames[i], spot) == 0 ) { rp[i]++; break; }
             }
