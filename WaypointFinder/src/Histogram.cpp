@@ -149,9 +149,9 @@ class Histogram {
 				puttedValues++;
 				return index;
 			} else if(res < 0){//go left
-				return recursivePut(val, index--);//index-1
+				return recursivePut(val, --index);//index-1
 			} else{//go right
-				return recursivePut(val, index++);//index+1
+				return recursivePut(val, ++index);//index+1
 			}
 		};
 
