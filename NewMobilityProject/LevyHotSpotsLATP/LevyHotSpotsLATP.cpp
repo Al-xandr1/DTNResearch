@@ -23,6 +23,7 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
 
     powA=2.0;
 
+    waitTime = 0;
 }
 
 void LevyHotSpotsLATP::initialize(int stage) {
@@ -90,10 +91,10 @@ void LevyHotSpotsLATP::finish() {
 void LevyHotSpotsLATP::setTargetPosition() {
     if (!movementsFinished) {
         if (nextMoveIsWait) {
-            simtime_t waitTime = (simtime_t) pause->get_Levi_rv();
+            waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
         } else {
-            collectStatistics(simTime(), lastPosition.x, lastPosition.y);
+            collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
             generateNextPosition(targetPosition, nextChange);
         }
         nextMoveIsWait = !nextMoveIsWait;
@@ -162,7 +163,7 @@ bool LevyHotSpotsLATP::findNextHotSpot()
     currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 
-//    cout << "changing location to" << currentHSindex << endl;
+    //    cout << "changing location to" << currentHSindex << endl;
     return true;
 }
 
@@ -172,8 +173,9 @@ void LevyHotSpotsLATP::move() {
 }
 
 //-------------------------- Statistic collection ---------------------------------
-void LevyHotSpotsLATP::collectStatistics(simtime_t appearenceTime, double x, double y) {
-    times.push_back(appearenceTime);
+void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
+    inTimes.push_back(inTime);
+    outTimes.push_back(outTime);
     xCoordinates.push_back(x);
     yCoordinates.push_back(y);
 }
@@ -191,15 +193,16 @@ void LevyHotSpotsLATP::saveStatistics() {
     }
 
     ofstream* file = new ofstream(fileName);
-    for (unsigned int i = 0; i < times.size(); i++) {
-        simtime_t time = times[i];
+    for (unsigned int i = 0; i < outTimes.size(); i++) {
+        simtime_t outTime = outTimes[i];
         double x = xCoordinates[i];
         double y = yCoordinates[i];
 
         if (par("wayPointFormat").boolValue()) {
-            (*file) << x << "\t" << y << "\t" << time << "\t" << time << endl;
+            simtime_t inTime = inTimes[i];
+            (*file) << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
         } else {
-            (*file) << time << "\t" << x << "\t" << y << endl;
+            (*file) << outTime << "\t" << x << "\t" << y << endl;
         }
     }
 

@@ -36,7 +36,9 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     HSDistanceMatrix* hsd;
 
     //statistics collection
-    std::vector<simtime_t> times;
+    simtime_t waitTime;
+    std::vector<simtime_t> inTimes;
+    std::vector<simtime_t> outTimes;
     std::vector<double> xCoordinates;
     std::vector<double> yCoordinates;
 
@@ -53,7 +55,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     virtual void move();                  /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void finish();
 
-    void collectStatistics(simtime_t appearenceTime, double x, double y);
+    void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
     void saveStatistics();
 
   public:
