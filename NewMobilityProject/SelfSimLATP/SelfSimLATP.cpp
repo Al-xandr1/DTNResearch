@@ -306,14 +306,29 @@ bool SelfSimLATP::findNextWpt()
            rn=(double)rand()/RAND_MAX;
            for(unsigned int i=0; i<waypts.size(); i++)
                if( (h=getWptDist(currentWpt, i))>0 ) sum+=pow(1/h, powA);
+
+           bool found = false;
+           int additions = 0;
            for(unsigned int i=0; i<waypts.size(); i++) {
-               if( (h=getWptDist(currentWpt, i))>0 ) pr+=pow(1/h, powA);
+               if( (h=getWptDist(currentWpt, i))>0 ) {
+                   pr+=pow(1/h, powA);
+                   additions++;
+               }
                if(rn <= pr/sum) {
                    waypts.erase(waypts.begin()+currentWpt);
                    correctWptMatrix(currentWpt);
                    (i < currentWpt)? currentWpt=i : currentWpt=i-1;
+                   found = true;
                    break;
                }
+           }
+           if (!found) {
+               printf("rn = %0.30f, pr = %0.30f, sum = %0.30f, pr/sum = %0.30f,  additions = %d, waypts.size() = %d, currentWpt = %d",
+                       rn, pr, sum, pr/sum, additions, waypts.size(), currentWpt); cout << endl;
+               for(unsigned int i=0; i<waypts.size(); i++) {
+                   printf("index = %d, h = %0.30f, coord = (%0.30f, %0.30f)", i, getWptDist(currentWpt, i), waypts[i].x, waypts[i].y); cout << endl;
+               }
+               exit(-1);
            }
     return true;
     } else { waypts.clear(); return false; }
