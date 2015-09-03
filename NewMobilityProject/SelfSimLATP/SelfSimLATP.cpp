@@ -161,8 +161,8 @@ bool SelfSimLATP::findNextHotSpot()
        for(i=0; i<currentRoot.size(); i++)
            if( (h=getDistance(currentHSindex, i))>0 ) sum+=pow(1/h, powA);
        for(i=0; i<currentRoot.size(); i++) {
-           if( (h=getDistance(currentHSindex, i))>0 ) pr+=pow(1/h, powA)/sum;
-           if(rn <= pr) {
+           if( (h=getDistance(currentHSindex, i))>0 ) pr+=pow(1/h, powA);
+           if(rn <= pr/sum) {
                //               cout << "rn=" <<rn <<"  pr="<<pr<<endl;
                currentRoot.erase(currentRoot.begin()+currentHSindex);
                correctDstMatrix(currentHSindex);
@@ -307,8 +307,8 @@ bool SelfSimLATP::findNextWpt()
            for(unsigned int i=0; i<waypts.size(); i++)
                if( (h=getWptDist(currentWpt, i))>0 ) sum+=pow(1/h, powA);
            for(unsigned int i=0; i<waypts.size(); i++) {
-               if( (h=getWptDist(currentWpt, i))>0 ) pr+=pow(1/h, powA)/sum;
-               if(rn <= pr) {
+               if( (h=getWptDist(currentWpt, i))>0 ) pr+=pow(1/h, powA);
+               if(rn <= pr/sum) {
                    waypts.erase(waypts.begin()+currentWpt);
                    correctWptMatrix(currentWpt);
                    (i < currentWpt)? currentWpt=i : currentWpt=i-1;
