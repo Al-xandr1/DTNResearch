@@ -127,12 +127,20 @@ void SelfSimLATP::generateNextPosition(Coord& targPos, simtime_t& nextChange)
     if( findNextWpt() ) {
         targPos = waypts[currentWpt];
         double distance = sqrt((targPos.x-lastPosition.x)*(targPos.x-lastPosition.x) +
-                          (targPos.y-lastPosition.y)*(targPos.y-lastPosition.y));
-        double speed = kForSpeed * pow(distance, 1 - roForSpeed);
-        simtime_t travelTime = distance / speed;
+                               (targPos.y-lastPosition.y)*(targPos.y-lastPosition.y));
+
+        simtime_t travelTime;
+        if (distance != 0) {
+            double speed = kForSpeed * pow(distance, 1 - roForSpeed);
+            travelTime = distance / speed;
+        } else {
+            //pause is generated again
+            travelTime = (simtime_t) pause->get_Levi_rv();
+        }
+
         nextChange = simTime() + travelTime;
     } else if ( findNextHotSpot() ) {
-        //        cout << "changing location to:" << currentHSindex << " HotSpot left:" << currentRoot.size() <<endl;
+//        cout << "changing location to:" << currentHSindex << " HotSpot left:" << currentRoot.size() <<endl;
         isWptLoaded=false;
         loadHSWaypts();
         isWptMatrixReady=false;
@@ -163,7 +171,7 @@ bool SelfSimLATP::findNextHotSpot()
        for(i=0; i<currentRoot.size(); i++) {
            if( (h=getDistance(currentHSindex, i))>0 ) pr+=pow(1/h, powA);
            if(rn <= pr/sum) {
-               //               cout << "rn=" <<rn <<"  pr="<<pr<<endl;
+//               cout << "rn=" <<rn <<"  pr="<<pr<<endl;
                currentRoot.erase(currentRoot.begin()+currentHSindex);
                correctDstMatrix(currentHSindex);
                (i < currentHSindex)? currentHSindex=i : currentHSindex=i-1;
@@ -258,10 +266,32 @@ void SelfSimLATP::loadHSWaypts()
            h.y = (gen->mapy)[i];
            waypts.push_back(h);
        }
-    (gen->mapx).clear();
-    (gen->mapy).clear();
-    delete gen;
-    isWptLoaded=true;
+       (gen->mapx).clear();
+       (gen->mapy).clear();
+       delete gen;
+       isWptLoaded=true;
+
+       //checking of duplicated waypoints
+//       for (unsigned int i = 0; i < waypts.size() - 1; i++) {
+//           Coord one = waypts[i];
+//           for (unsigned int j = i + 1;  j < waypts.size(); j++) {
+//               Coord another = waypts[j];
+//               if (one.x == another.x && one.y == another.y) {
+//                   cout << endl;
+//                   printf("currentHSIndex = %d", currentHSindex);
+//                   cout << endl;
+//                   currentRoot[currentHSindex].printHotSpotRootInfo();
+//                   printf("currentHSMin = (%0.30f, %0.30f), currentHSMax = (%0.30f, %0.30f)",
+//                           currentHSMin.x, currentHSMin.y, currentHSMax.x, currentHSMax.y);
+//                   cout << endl;
+//                   printf("one = (%0.30f, %0.30f) i = %d, another = (%0.30f, %0.30f) j = %d, waypts.size() = %d",
+//                           one.x, one.y, i, another.x, another.y, j, waypts.size());
+//                   cout << endl;
+//
+//                   exit(-2);
+//               }
+//           }
+//       }
     }
 }
 
@@ -307,30 +337,38 @@ bool SelfSimLATP::findNextWpt()
            for(unsigned int i=0; i<waypts.size(); i++)
                if( (h=getWptDist(currentWpt, i))>0 ) sum+=pow(1/h, powA);
 
-           bool found = false;
-           int additions = 0;
-           for(unsigned int i=0; i<waypts.size(); i++) {
-               if( (h=getWptDist(currentWpt, i))>0 ) {
-                   pr+=pow(1/h, powA);
-                   additions++;
-               }
-               if(rn <= pr/sum) {
-                   waypts.erase(waypts.begin()+currentWpt);
-                   correctWptMatrix(currentWpt);
-                   (i < currentWpt)? currentWpt=i : currentWpt=i-1;
-                   found = true;
-                   break;
-               }
-           }
-           if (!found) {
-               printf("rn = %0.30f, pr = %0.30f, sum = %0.30f, pr/sum = %0.30f,  additions = %d, waypts.size() = %d, currentWpt = %d",
-                       rn, pr, sum, pr/sum, additions, waypts.size(), currentWpt); cout << endl;
+           if (sum == 0) {// remains only duplicates of waypoints
+               waypts.erase(waypts.begin()+currentWpt);
+               correctWptMatrix(currentWpt);
+               if (currentWpt > 0) currentWpt--;
+
+           } else {
+//               bool found = false;
+//               int additions = 0;
                for(unsigned int i=0; i<waypts.size(); i++) {
-                   printf("index = %d, h = %0.30f, coord = (%0.30f, %0.30f)", i, getWptDist(currentWpt, i), waypts[i].x, waypts[i].y); cout << endl;
+                   if( (h=getWptDist(currentWpt, i))>0 ) {
+                       pr+=pow(1/h, powA);
+//                       additions++;
+                   }
+                   if(rn <= pr/sum) {
+                       waypts.erase(waypts.begin()+currentWpt);
+                       correctWptMatrix(currentWpt);
+                       (i < currentWpt)? currentWpt=i : currentWpt=i-1;
+//                       found = true;
+                       break;
+                   }
                }
-               exit(-1);
+//               if (!found) {
+//                   printf("rn = %0.30f, pr = %0.30f, sum = %0.30f, pr/sum = %0.30f,  additions = %d, waypts.size() = %d, currentWpt = %d",
+//                           rn, pr, sum, pr/sum, additions, waypts.size(), currentWpt); cout << endl;
+//                   for(unsigned int i=0; i<waypts.size(); i++) {
+//                       printf("index = %d, h = %0.30f, coord = (%0.30f, %0.30f)", i, getWptDist(currentWpt, i), waypts[i].x, waypts[i].y); cout << endl;
+//                   }
+//                   exit(-1);
+//               }
            }
-    return true;
+
+           return true;
     } else { waypts.clear(); return false; }
 }
 
