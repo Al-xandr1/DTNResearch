@@ -173,7 +173,7 @@ bool SelfSimLATP::findNextHotSpot()
            if(rn <= pr/sum) {
 //               cout << "rn=" <<rn <<"  pr="<<pr<<endl;
                currentRoot.erase(currentRoot.begin()+currentHSindex);
-               correctDstMatrix(currentHSindex);
+               correctMatrix(dstMatrix, currentHSindex);
                (i < currentHSindex)? currentHSindex=i : currentHSindex=i-1;
                flag=true;
                break; }
@@ -241,14 +241,6 @@ double SelfSimLATP::getDistance(unsigned int i, unsigned int j)
 {
     if(i<=j) return (dstMatrix[i])->at(j-i);
         else return (dstMatrix[j])->at(i-j);
-}
-
-
-void SelfSimLATP::correctDstMatrix(unsigned int delete_Index)
-{
-    for(unsigned int i=0; i<delete_Index; i++) (dstMatrix[i])->erase( (dstMatrix[i])->begin()+delete_Index-i);
-    dstMatrix[delete_Index]->clear();
-    dstMatrix.erase(dstMatrix.begin()+delete_Index);
 }
 
 // ------------------------------------------------------------------------
@@ -322,24 +314,26 @@ double SelfSimLATP::getWptDist(unsigned int i, unsigned int j)
     else return (wptMatrix[j])->at(i-j);
 }
 
-void SelfSimLATP::correctWptMatrix(unsigned int delete_Index)
+void SelfSimLATP::correctMatrix(vector<vector<double>*> &matrix, unsigned int delete_Index)
 {
-    for(unsigned int i=0; i<delete_Index; i++) (wptMatrix[i])->erase( (wptMatrix[i])->begin()+delete_Index-i);
-    wptMatrix[delete_Index]->clear();
-    wptMatrix.erase(wptMatrix.begin()+delete_Index);
+    for(unsigned int i=0; i<delete_Index; i++) (matrix[i])->erase( (matrix[i])->begin()+delete_Index-i);
+    vector<double>* removed = matrix[delete_Index];
+    removed->clear();
+    matrix.erase(matrix.begin()+delete_Index);
+    delete removed;
 }
 
 bool SelfSimLATP::findNextWpt()
 {
     if(waypts.size()>1) {
            double rn, pr=0, sum=0, h;
-           rn=(double)rand()/RAND_MAX;
+           do {rn=(double)rand()/RAND_MAX;} while(rn == 0);
            for(unsigned int i=0; i<waypts.size(); i++)
                if( (h=getWptDist(currentWpt, i))>0 ) sum+=pow(1/h, powA);
 
            if (sum == 0) {// remains only duplicates of waypoints
                waypts.erase(waypts.begin()+currentWpt);
-               correctWptMatrix(currentWpt);
+               correctMatrix(wptMatrix, currentWpt);
                if (currentWpt > 0) currentWpt--;
 
            } else {
@@ -352,7 +346,7 @@ bool SelfSimLATP::findNextWpt()
                    }
                    if(rn <= pr/sum) {
                        waypts.erase(waypts.begin()+currentWpt);
-                       correctWptMatrix(currentWpt);
+                       correctMatrix(wptMatrix, currentWpt);
                        (i < currentWpt)? currentWpt=i : currentWpt=i-1;
 //                       found = true;
                        break;

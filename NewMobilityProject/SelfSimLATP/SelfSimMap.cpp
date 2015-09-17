@@ -99,6 +99,7 @@ void SelfSimMapGenerator::MakeSelfSimSet(char* varfile, int waypoints)
        }
        if(ii<levels) { levels=ii; cout<<"Warning: variance file is too small: "<<levels<<" levels"<<endl; }
        vfile->close();
+//       delete vfile;
        isVarfileLoaded=true;
     }
 

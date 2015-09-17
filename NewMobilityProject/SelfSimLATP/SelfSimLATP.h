@@ -84,12 +84,12 @@ class SelfSimLATP : public LineSegmentsMobilityBase
     void makeRoot();
     void buildDstMatrix();
     double getDistance(unsigned int i, unsigned int j);
-    void correctDstMatrix(unsigned int delete_Index);
     void loadHSWaypts();
     void buildWptMatrix();
     bool findNextWpt();
     double getWptDist(unsigned int i, unsigned int j);
-    void correctWptMatrix(unsigned int delete_Index);
+
+    void correctMatrix(vector<vector<double>*> &matrix, unsigned int delete_Index);
 };
 
 #endif
