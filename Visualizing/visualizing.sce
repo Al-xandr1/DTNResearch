@@ -6,6 +6,7 @@ SEPARATOR = '\';
 
 GRAPH_COLOR = 2;    // Цвет первого графика
 COLOR_OFFSET = 1;   // дробление цветового диапазона (для большого числа трасс ставить меньше значение)
+CHANGE_COLOR = 1;
 
 SHOW_LEGEND = 1;    // 1 - показывать легенду, 0 - НЕ показывать легенду
 //---------------------------- Параметры ---------------------------------------
@@ -138,7 +139,9 @@ function drawAllWPFiles(fileNamesVector)
         drawWPFile(fileNamesVector(i));
         legenda = [ legenda ; ('WayPoints  ' + fileNamesVector(i)) ];
         
-        GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+        if (CHANGE_COLOR == 1) then
+            GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+        end
     end
 
     if (SHOW_LEGEND == 1) then
@@ -177,6 +180,57 @@ function drawWPFilesFolder(folder)
     xtitle("WayPoints from " + folder);
     
     PATH = SAVE_PATH;
+endfunction
+
+
+
+
+
+function drawAllWPFolders(folders)
+    folderCount = size(folders, 1);
+    if (folderCount < 1) then
+        error(msprintf("drawWPFolders: Нет папок для обработки"));
+    end
+    
+    SAVE_COLOR = GRAPH_COLOR;
+    SAVE_SHOW_LEGEND = SHOW_LEGEND;
+    SAVE_CHANGE_COLOR = CHANGE_COLOR;
+ 
+    SHOW_LEGEND = 0;  
+    CHANGE_COLOR = 0; 
+    //Рисование графиков и формирование легенды
+    legenda = [];
+    for i = 1 : folderCount
+        drawWPFilesFolder(folders(i));
+        legenda = [ legenda ; ('WayPoints  ' + folders(i)) ];
+        
+        GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+    end
+    
+    GRAPH_COLOR = SAVE_COLOR;
+    SHOW_LEGEND = SAVE_SHOW_LEGEND;
+    CHANGE_COLOR = SAVE_CHANGE_COLOR;
+
+
+    if (SHOW_LEGEND == 1) then
+        hl=legend(legenda);
+    end
+    
+    xtitle("WayPoints");
+endfunction
+
+function drawWPFolders(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("drawWPFolders: Ожидалось один или более параметров (имён папок)"));
+    end
+    
+    wpFolders = [];
+    for i = 1 : rhs
+        wpFolders = [wpFolders ; varargin(i)];
+    end
+    
+    drawAllWPFolders(wpFolders);
 endfunction
 
 
