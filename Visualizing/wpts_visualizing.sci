@@ -1,8 +1,8 @@
 //---------------------------- Параметры ---------------------------------------
 // Директория, в которой лежат нужные файлы или папки
 //PATH = '/Volumes/Macintosh/Users/Alexander/soft/omnetpp-4.5/GitHub/WaypointGenerator/';
-PATH = '/Users/Alexander/soft/omnetpp-4.5/GitHub/DTNResearch/WaypointFinder/waypointfiles/';
-SEPARATOR = '/';
+PATH = 'C:\omnetpp-4.6\GitHub\DTNResearch\WaypointFinder\waypointfiles\';
+SEPARATOR = '\';
 
 GRAPH_COLOR = 2;    // Цвет первого графика
 COLOR_OFFSET = 1;   // дробление цветового диапазона (для большого числа трасс ставить меньше значение)
@@ -20,6 +20,8 @@ function drawWPTs(x, y, GRAPH_COLOR)
     poly1= a.children(1).children(1);
     poly1.line_mode = 'off';
     poly1.mark_style = 9;
+    poly1.mark_size_unit = 'point'
+    poly1.mark_size = 4
     poly1.mark_foreground = GRAPH_COLOR;
     poly1.mark_background = GRAPH_COLOR;
 endfunction
@@ -39,8 +41,6 @@ function [x, y] = gatherWPTs(fileNamesVector)
         y = [y, l(1:n, 2)']; 
         
         mclose(fd);
-        disp(x);
-        disp(y);
     end
 endfunction
 
@@ -55,14 +55,15 @@ endfunction
 
 
 //Рисование файлов WayPoint'ов, взятых из папки folder
-function drawWPTsFolder(folder)
+function [fileCount] = drawWPTsFolder(folder)
     SAVE_PATH = PATH;
     
     PATH = PATH + folder + SEPARATOR;
     wpFiles = getFiles(PATH, "*.wpt");
-
+    fileCount = size(wpFiles, 1);
+    
     drawWPTsFromFiles(wpFiles);
-    xtitle("WayPoints from " + folder);
+    xtitle("WayPoints from " + folder + ': ' + string(fileCount) + ' files');
     xgrid();
     
     PATH = SAVE_PATH;
@@ -81,8 +82,8 @@ function drawAllWPTFolders(folders)
     //Рисование графиков и формирование легенды
     legenda = [];
     for i = 1 : folderCount
-        drawWPTsFolder(folders(i));
-        legenda = [ legenda ; (' _ ' + folders(i)) ];
+        fileCount = drawWPTsFolder(folders(i));
+        legenda = [ legenda ; (' _ ' + folders(i)) + ': ' + string(fileCount) + ' files'];
         
         GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
     end
