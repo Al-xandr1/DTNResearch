@@ -16,6 +16,8 @@
 
 using namespace std;
 
+#define INPUT_WPT_FORMAT FALSE
+
 
 class WaypointFinder {
 protected:
@@ -76,11 +78,12 @@ WaypointFinder::~WaypointFinder()
 
 bool WaypointFinder::addPoint()
 {
-    double t,x,y;
+    double t,x,y, fake;
     if( traceFile->eof() ) return false;
     else {
-        t=x=y=-10e10;
-        (*traceFile)>>t>>x>>y;
+        fake=t=x=y=-10e10;
+        if (INPUT_WPT_FORMAT) (*traceFile)>>x>>y>>t>>fake;
+        else (*traceFile)>>t>>x>>y;
         //т.к. последн€€ строка (ѕ”—“јя) считываетс€ криво
         if (t != -10e10) {
             xcoord.push(x);  sumX+=x;

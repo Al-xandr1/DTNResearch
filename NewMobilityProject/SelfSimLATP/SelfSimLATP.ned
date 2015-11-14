@@ -22,9 +22,12 @@ simple SelfSimLATP extends MovingMobilityBase
     	double aciP = default(0.001);	// accurancy for Levy PAUSE distribution 
  
  
-        double powA = default(1);		// is a fixed floating number constant within 0 to infinity - power for distance
+        double powAforHS = default(2);		// is a fixed floating number constant within 0 to infinity - power for distance between HS
+        double powAforWP = default(2);		// is a fixed floating number constant within 0 to infinity - power for distance between WP
         
         //statistic collection
+        bool wayPointFormat = default(false); // fasle - points record as a trace: t x y
+        									  // true  - points record as a waypoints: x y t t
     	string traceFileName = default("traceOfNode");
     	int fileSuffix = default(0);
 }

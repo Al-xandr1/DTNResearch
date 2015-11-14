@@ -24,7 +24,8 @@ class SelfSimLATP : public LineSegmentsMobilityBase
 
     LeviPause *pause;
 
-    double powA;
+    double powAforHS;
+    double powAforWP;
 
     bool movementsFinished;    // показывает окончил ли пользователь движение или нет
 
@@ -53,7 +54,9 @@ class SelfSimLATP : public LineSegmentsMobilityBase
     bool isWptMatrixReady;
 
     //statistics collection
-    std::vector<simtime_t> times;
+    simtime_t waitTime;
+    std::vector<simtime_t> inTimes;
+    std::vector<simtime_t> outTimes;
     std::vector<double> xCoordinates;
     std::vector<double> yCoordinates;
 
@@ -71,7 +74,7 @@ class SelfSimLATP : public LineSegmentsMobilityBase
     virtual void move();                  /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void finish();
 
-    void collectStatistics(simtime_t appearenceTime, double x, double y);
+    void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
     void saveStatistics();
 
   public:

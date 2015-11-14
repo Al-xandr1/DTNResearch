@@ -5,6 +5,9 @@
 #include "SelfSimLATP.h"
 #include "SelfSimMap.h"
 
+#define TRACE_TYPE ".txt"
+#define WAYPOINTS_TYPE ".wpt"
+
 Define_Module(SelfSimLATP);
 
 SelfSimLATP::SelfSimLATP() {
@@ -19,7 +22,8 @@ SelfSimLATP::SelfSimLATP() {
 
     pause = NULL;
 
-    powA=2.0;
+    powAforHS=2.0;
+    powAforWP=2.0;
 
     rc=NULL;
     RootNumber=0;
@@ -29,6 +33,8 @@ SelfSimLATP::SelfSimLATP() {
     isWptLoaded=false;
     gen=NULL;
     isWptMatrixReady=false;
+
+    waitTime = 0;
 }
 
 void SelfSimLATP::initialize(int stage) {
@@ -37,7 +43,7 @@ void SelfSimLATP::initialize(int stage) {
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
 
-    if (hasPar("powA") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") ) {
+    if (hasPar("powAforHS") && hasPar("powAforWP") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") ) {
 
         double ciP  = par("ciP").doubleValue();
         double aliP = par("aliP").doubleValue();
@@ -45,7 +51,8 @@ void SelfSimLATP::initialize(int stage) {
 
         if ( pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
 
-        powA = par("powA").doubleValue();
+        powAforHS = par("powAforHS").doubleValue();
+        powAforWP = par("powAforWP").doubleValue();
 
     } else { cout << "It is necessary to specify ALL parameters"; exit(-112);}
 
@@ -65,7 +72,7 @@ void SelfSimLATP::initialize(int stage) {
     constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
 
     hsd->makeDistanceMatrix();
-    hsd->makeProbabilityMatrix(powA);
+    hsd->makeProbabilityMatrix(powAforHS);
 
     if (rc==NULL) rc = new RootCollection();
     char* RootDir = DEF_RT_DIR ;
@@ -107,10 +114,10 @@ void SelfSimLATP::finish() {
 void SelfSimLATP::setTargetPosition() {
     if (!movementsFinished) {
         if (nextMoveIsWait) {
-            simtime_t waitTime = (simtime_t) pause->get_Levi_rv();
+            waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
         } else {
-            collectStatistics(simTime(), lastPosition.x, lastPosition.y);
+            collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
             generateNextPosition(targetPosition, nextChange);
         }
         nextMoveIsWait = !nextMoveIsWait;
@@ -167,9 +174,9 @@ bool SelfSimLATP::findNextHotSpot()
        bool flag=false;
        rn=(double)rand()/RAND_MAX;
        for(i=0; i<currentRoot.size(); i++)
-           if( (h=getDistance(currentHSindex, i))>0 ) sum+=pow(1/h, powA);
+           if( (h=getDistance(currentHSindex, i))>0 ) sum+=pow(1/h, powAforHS);
        for(i=0; i<currentRoot.size(); i++) {
-           if( (h=getDistance(currentHSindex, i))>0 ) pr+=pow(1/h, powA);
+           if( (h=getDistance(currentHSindex, i))>0 ) pr+=pow(1/h, powAforHS);
            if(rn <= pr/sum) {
 //               cout << "rn=" <<rn <<"  pr="<<pr<<endl;
                currentRoot.erase(currentRoot.begin()+currentHSindex);
@@ -329,7 +336,7 @@ bool SelfSimLATP::findNextWpt()
            double rn, pr=0, sum=0, h;
            do {rn=(double)rand()/RAND_MAX;} while(rn == 0);
            for(unsigned int i=0; i<waypts.size(); i++)
-               if( (h=getWptDist(currentWpt, i))>0 ) sum+=pow(1/h, powA);
+               if( (h=getWptDist(currentWpt, i))>0 ) sum+=pow(1/h, powAforWP);
 
            if (sum == 0) {// remains only duplicates of waypoints
                waypts.erase(waypts.begin()+currentWpt);
@@ -341,7 +348,7 @@ bool SelfSimLATP::findNextWpt()
 //               int additions = 0;
                for(unsigned int i=0; i<waypts.size(); i++) {
                    if( (h=getWptDist(currentWpt, i))>0 ) {
-                       pr+=pow(1/h, powA);
+                       pr+=pow(1/h, powAforWP);
 //                       additions++;
                    }
                    if(rn <= pr/sum) {
@@ -368,23 +375,37 @@ bool SelfSimLATP::findNextWpt()
 
 
 //-------------------------- Statistic collection ---------------------------------
-void SelfSimLATP::collectStatistics(simtime_t appearenceTime, double x, double y) {
-    times.push_back(appearenceTime);
+void SelfSimLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
+    inTimes.push_back(inTime);
+    outTimes.push_back(outTime);
     xCoordinates.push_back(x);
     yCoordinates.push_back(y);
 }
 
 void SelfSimLATP::saveStatistics() {
     char outFileName[256];
-    char *fileName = createFileName(outFileName, 0,
-            par("traceFileName").stringValue(), (int) ((par("fileSuffix"))));
+
+    char *fileName = NULL;
+    if (par("wayPointFormat").boolValue()) {
+        fileName = createFileName(outFileName, 0,
+                    par("traceFileName").stringValue(), (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
+    } else {
+        fileName = createFileName(outFileName, 0,
+                    par("traceFileName").stringValue(), (int) ((par("fileSuffix"))), TRACE_TYPE);
+    }
 
     ofstream* file = new ofstream(fileName);
-    for (unsigned int i = 0; i < times.size(); i++) {
-        simtime_t time = times[i];
+    for (unsigned int i = 0; i < outTimes.size(); i++) {
+        simtime_t inTime = inTimes[i];
         double x = xCoordinates[i];
         double y = yCoordinates[i];
-        (*file) << time << "\t" << x << "\t" << y << endl;
+
+        if (par("wayPointFormat").boolValue()) {
+            simtime_t outTime = outTimes[i];
+            (*file) << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
+        } else {
+            (*file) << inTime << "\t" << x << "\t" << y << endl;
+        }
     }
 
     file->close();

@@ -194,15 +194,15 @@ void LevyHotSpotsLATP::saveStatistics() {
 
     ofstream* file = new ofstream(fileName);
     for (unsigned int i = 0; i < outTimes.size(); i++) {
-        simtime_t outTime = outTimes[i];
+        simtime_t inTime = inTimes[i];
         double x = xCoordinates[i];
         double y = yCoordinates[i];
 
         if (par("wayPointFormat").boolValue()) {
-            simtime_t inTime = inTimes[i];
+            simtime_t outTime = outTimes[i];
             (*file) << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
         } else {
-            (*file) << outTime << "\t" << x << "\t" << y << endl;
+            (*file) << inTime << "\t" << x << "\t" << y << endl;
         }
     }
 
