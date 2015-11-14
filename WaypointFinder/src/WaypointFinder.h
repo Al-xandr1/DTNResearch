@@ -82,8 +82,14 @@ bool WaypointFinder::addPoint()
     if( traceFile->eof() ) return false;
     else {
         fake=t=x=y=-10e10;
-        if (INPUT_WPT_FORMAT) (*traceFile)>>x>>y>>t>>fake;
-        else (*traceFile)>>t>>x>>y;
+        if (INPUT_WPT_FORMAT) {
+            (*traceFile)>>x>>y>>t>>fake;
+            //cout<< x << "\t" << y << "\t" << t << "\t" << fake <<endl;
+        }
+        else {
+            (*traceFile)>>t>>x>>y;
+            //cout<< t << "\t" << x << "\t" << y <<endl;
+        }
         //т.к. последн€€ строка (ѕ”—“јя) считываетс€ криво
         if (t != -10e10) {
             xcoord.push(x);  sumX+=x;
