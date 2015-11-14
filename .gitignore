@@ -130,3 +130,15 @@ packages/
 *.vec
 .last-copts
 FirstMobilityProject
+
+hotspotfiles/
+tracefiles/
+waypointfiles/
+rootfiles/
+bounds.bnd
+locations.loc
+length.hst
+spotcount.cnt
+herst.txt
+variances.txt
+
