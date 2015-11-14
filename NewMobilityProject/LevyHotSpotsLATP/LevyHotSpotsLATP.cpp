@@ -117,7 +117,7 @@ void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
     nextChange = simTime() + travelTime;
 
     // если вышли за пределы локации
-    /*if (currentHSMin.x > targetPosition.x || targetPosition.x > currentHSMax.x || currentHSMin.y > targetPosition.y || targetPosition.y > currentHSMax.y) {
+    if (currentHSMin.x > targetPosition.x || targetPosition.x > currentHSMax.x || currentHSMin.y > targetPosition.y || targetPosition.y > currentHSMax.y) {
 	// для ускорения вычислений определяем вспомогательные переменные
         double x, y, Xdir, Ydir, dir;
         bool flag = ( (y=getLastPosition().y) < currentHSCenter.y);
@@ -144,7 +144,7 @@ void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
                targetPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
             } else movementsFinished = true;  // не нашли - останавливаемся
         }
-    }*/
+    }
 }
 
 
