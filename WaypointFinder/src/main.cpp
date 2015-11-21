@@ -339,8 +339,8 @@ int mainMain(int argc, char** argv)
 // ------------------------------------------  Program script  --------------------------------------------
 int main(int argc, char** argv)
 {
-//    argc = 2; argv = new char*[2] {"program", WPFIND};
-//    mainMain(argc, argv);
+    argc = 2; argv = new char*[2] {"program", WPFIND};
+    mainMain(argc, argv);
     argc = 3; argv = new char*[3] {"program", STAT, WPT};
     mainMain(argc, argv);
 }
