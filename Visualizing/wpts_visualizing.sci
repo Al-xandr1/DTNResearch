@@ -112,7 +112,46 @@ function drawWPTFolders(varargin)
 endfunction
 
 
+//------------------ Функции для рисования HotSpot -------------------
 
+function drawHS(folder)
+    SAVE_PATH = PATH;
+    
+    PATH = PATH + folder + SEPARATOR;
+    hsFiles = getFiles(PATH, "*.hts");
+    fileCount = size(hsFiles, 1);
+    
+    for i = 1 : fileCount
+        drawHotSpot(hsFiles(i), GRAPH_COLOR)
+    end
+    
+    xtitle("HotSpots from " + folder + ': ' + string(fileCount) + ' files');
+    xgrid();
+    
+    PATH = SAVE_PATH;
+    cd(PATH);
+endfunction
+
+
+//Рисование вектора WayPoint'ов
+function drawHotSpot(filename, GRAPH_COLOR)
+    HS = read(filename, 2, 2);  
+    X_min=HS(1,1);    X_max=HS(1,2);
+    Y_min=HS(2,1);    Y_max=HS(2,2);
+    
+    x = [X_min, X_min, X_max, X_max, X_min];
+    y = [Y_min, Y_max, Y_max, Y_min, Y_min];
+    
+    plot2d(x, y, [GRAPH_COLOR]);
+    a=gca(); 
+    poly1= a.children(1).children(1);
+    poly1.line_mode = 'on';
+    poly1.mark_style = 9;
+    poly1.mark_size_unit = 'point'
+    poly1.mark_size = 4
+    poly1.mark_foreground = GRAPH_COLOR;
+    poly1.mark_background = GRAPH_COLOR;
+endfunction
 
 
 
