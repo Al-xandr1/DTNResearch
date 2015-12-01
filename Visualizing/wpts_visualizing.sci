@@ -122,7 +122,7 @@ function drawHS(folder)
     fileCount = size(hsFiles, 1);
     
     for i = 1 : fileCount
-        drawHotSpot(hsFiles(i), GRAPH_COLOR)
+        drawHotSpot(hsFiles(i), 5)
     end
     
     xtitle("HotSpots from " + folder + ': ' + string(fileCount) + ' files');
@@ -146,9 +146,11 @@ function drawHotSpot(filename, GRAPH_COLOR)
     a=gca(); 
     poly1= a.children(1).children(1);
     poly1.line_mode = 'on';
+    poly1.fill_mode = 'off';
     poly1.mark_style = 9;
-    poly1.mark_size_unit = 'point'
-    poly1.mark_size = 4
+    poly1.thickness = 1;
+    poly1.mark_size_unit = 'point';
+    poly1.mark_size = 4;
     poly1.mark_foreground = GRAPH_COLOR;
     poly1.mark_background = GRAPH_COLOR;
 endfunction
