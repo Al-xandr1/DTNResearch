@@ -17,6 +17,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 {
   protected:
     bool nextMoveIsWait;
+    long count;
 
     LeviJump  *jump;
     LeviPause *pause;
@@ -56,6 +57,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     virtual void finish();
 
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
+    bool isCorrectCoordinates(double x, double y);
     void saveStatistics();
 
   public:
