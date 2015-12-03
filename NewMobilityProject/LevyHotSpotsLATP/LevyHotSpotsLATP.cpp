@@ -11,7 +11,7 @@ Define_Module(LevyHotSpotsLATP);
 
 LevyHotSpotsLATP::LevyHotSpotsLATP() {
     nextMoveIsWait = false;
-    count = 0;
+    steps = 0;
     jump = NULL;
     pause = NULL;
     kForSpeed = 1;
@@ -92,7 +92,7 @@ void LevyHotSpotsLATP::finish() {
 
 void LevyHotSpotsLATP::setTargetPosition() {
     if (!movementsFinished) {
-        count++;
+        steps++;
         if (nextMoveIsWait) {
             waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
@@ -192,7 +192,7 @@ bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
     cout << "currentHSMin.x = " << currentHSMin.x << ", currentHSMax.x = " << currentHSMax.x << endl;
     cout << "currentHSMin.y = " << currentHSMin.y << ", currentHSMax.y = " << currentHSMax.y << endl;
     cout << " x = " << x << ", y = " << y << endl;
-    cout << " count = " << count << endl;
+    cout << " steps = " << steps << endl;
 
     return false;
 }

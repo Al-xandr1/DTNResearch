@@ -17,7 +17,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 {
   protected:
     bool nextMoveIsWait;
-    long count;
+    long steps;
 
     LeviJump  *jump;
     LeviPause *pause;
