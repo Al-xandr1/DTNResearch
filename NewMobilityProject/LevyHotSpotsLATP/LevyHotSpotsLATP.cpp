@@ -11,6 +11,7 @@ Define_Module(LevyHotSpotsLATP);
 
 LevyHotSpotsLATP::LevyHotSpotsLATP() {
     nextMoveIsWait = false;
+    count = 0;
     jump = NULL;
     pause = NULL;
     kForSpeed = 1;
@@ -82,6 +83,7 @@ void LevyHotSpotsLATP::setInitialPosition() {
     
     lastPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
     lastPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
+    if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
 }
 
 void LevyHotSpotsLATP::finish() {
@@ -90,6 +92,7 @@ void LevyHotSpotsLATP::finish() {
 
 void LevyHotSpotsLATP::setTargetPosition() {
     if (!movementsFinished) {
+        count++;
         if (nextMoveIsWait) {
             waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
@@ -183,7 +186,15 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
 }
 
 bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
-    return currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y;
+    if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) {
+        return true;
+    }
+    cout << "currentHSMin.x = " << currentHSMin.x << ", currentHSMax.x = " << currentHSMax.x << endl;
+    cout << "currentHSMin.y = " << currentHSMin.y << ", currentHSMax.y = " << currentHSMax.y << endl;
+    cout << " x = " << x << ", y = " << y << endl;
+    cout << " count = " << count << endl;
+
+    return false;
 }
 
 void LevyHotSpotsLATP::saveStatistics() {
