@@ -83,7 +83,24 @@ void LevyHotSpotsLATP::setInitialPosition() {
     
     lastPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
     lastPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
-    if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
+    if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-555);
+}
+
+
+bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
+    if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) {
+        return true;
+    }
+    cout << "currentHSMin.x = " << currentHSMin.x << ", currentHSMax.x = " << currentHSMax.x << endl;
+    cout << "currentHSMin.y = " << currentHSMin.y << ", currentHSMax.y = " << currentHSMax.y << endl;
+    cout << " x = " << x << ", y = " << y << endl;
+    cout << " steps = " << steps << endl;
+
+    return false;
+}
+
+bool LevyHotSpotsLATP::isHotSpotEmpty() {
+    return currentHSMin.x == currentHSMax.x || currentHSMin.y == currentHSMax.y;
 }
 
 void LevyHotSpotsLATP::finish() {
@@ -96,6 +113,7 @@ void LevyHotSpotsLATP::setTargetPosition() {
         if (nextMoveIsWait) {
             waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
+            if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
         } else {
             if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-777);
             collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
@@ -104,8 +122,8 @@ void LevyHotSpotsLATP::setTargetPosition() {
         }
         nextMoveIsWait = !nextMoveIsWait;
     } else {
-        // планирование в бесконечность - костыльная остановка перемещений
-        nextChange = simTime() + 100000;
+        // остановка перемещений по документации
+        nextChange = -1;
     }
 }
 
@@ -122,8 +140,17 @@ void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
     nextChange = simTime() + travelTime;
 
     // если вышли за пределы локации
-    if (currentHSMin.x > targetPosition.x || targetPosition.x > currentHSMax.x || currentHSMin.y > targetPosition.y || targetPosition.y > currentHSMax.y) {
-	// для ускорения вычислений определяем вспомогательные переменные
+    if (currentHSMin.x >= targetPosition.x || targetPosition.x >= currentHSMax.x || currentHSMin.y >= targetPosition.y || targetPosition.y >= currentHSMax.y) {
+        if (isHotSpotEmpty()) {
+            cout << "HotSpot is empty! select next" << endl;
+            if ( findNextHotSpot() ) {   // нашли следующую локацию - идём в её случайную точку
+                targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
+                targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+            } else movementsFinished = true;  // не нашли - останавливаемся
+            return;
+        }
+
+        // для ускорения вычислений определяем вспомогательные переменные
         double x, y, Xdir, Ydir, dir;
         bool flag = ( (y=getLastPosition().y) < currentHSCenter.y);
 
@@ -140,7 +167,7 @@ void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
         // проверяем, можем ли остаться в прямоугольнике текущей локации, если прыгать к дальнему углу прямоугольника
         if ( distance <= (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
             // можем - прыгаем
-	    delta.x = Xdir * distance/dir;
+            delta.x = Xdir * distance/dir;
             delta.y = Ydir * distance/dir;
             targetPosition = getLastPosition() + delta;
         } else { // не можем - надо переходить в другую локацию
@@ -151,7 +178,6 @@ void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
         }
     }
 }
-
 
 bool LevyHotSpotsLATP::findNextHotSpot()
 {
@@ -183,18 +209,6 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
     outTimes.push_back(outTime);
     xCoordinates.push_back(x);
     yCoordinates.push_back(y);
-}
-
-bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
-    if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) {
-        return true;
-    }
-    cout << "currentHSMin.x = " << currentHSMin.x << ", currentHSMax.x = " << currentHSMax.x << endl;
-    cout << "currentHSMin.y = " << currentHSMin.y << ", currentHSMax.y = " << currentHSMax.y << endl;
-    cout << " x = " << x << ", y = " << y << endl;
-    cout << " steps = " << steps << endl;
-
-    return false;
 }
 
 void LevyHotSpotsLATP::saveStatistics() {

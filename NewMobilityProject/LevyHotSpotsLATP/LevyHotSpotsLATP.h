@@ -50,6 +50,8 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setInitialPosition();
 
+    bool isCorrectCoordinates(double x, double y);
+    bool isHotSpotEmpty();
     void generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
 
@@ -57,7 +59,6 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     virtual void finish();
 
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
-    bool isCorrectCoordinates(double x, double y);
     void saveStatistics();
 
   public:
