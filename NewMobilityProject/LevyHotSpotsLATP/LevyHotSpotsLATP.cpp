@@ -19,9 +19,9 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
 
     movementsFinished = false;
 
-    angle = 0;
-    distance = 0;
-    speed = 0;
+    angle = -1;
+    distance = -1;
+    speed = -1;
     travelTime = 0;
 
     hsc=NULL;
@@ -81,6 +81,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
     currentHSMax.x=((hsc->HSData)[currentHSindex]).Xmax;
     currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
+    cout << "initialize: changing location to" << currentHSindex << endl;
 }
 
 void LevyHotSpotsLATP::setInitialPosition() {
@@ -106,6 +107,7 @@ void LevyHotSpotsLATP::setTargetPosition() {
         if (isPause) {
             waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
+            targetPosition = lastPosition;
             log();
             if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
         } else {
@@ -191,7 +193,7 @@ bool LevyHotSpotsLATP::findNextHotSpot()
     currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 
-    //    cout << "changing location to" << currentHSindex << endl;
+    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
     return true;
 }
 
@@ -240,6 +242,7 @@ void LevyHotSpotsLATP::saveStatistics() {
 
 bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
     if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) return true;
+    cout << "------------- ERROR! -------------" << endl;
     log();
     return false;
 }
