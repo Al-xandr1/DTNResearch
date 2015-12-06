@@ -38,7 +38,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     Coord currentHSMin, currentHSMax, currentHSCenter;
 
     HotSpotsCollection* hsc;
-    unsigned int currentHSindex;
+    int currentHSindex;
 
     HSDistanceMatrix* hsd;
 

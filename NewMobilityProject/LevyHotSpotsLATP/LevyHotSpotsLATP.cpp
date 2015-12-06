@@ -17,6 +17,8 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     kForSpeed = 1;
     roForSpeed = 0;
 
+    currentHSindex = -1;
+
     movementsFinished = false;
 
     angle = -1;
@@ -75,13 +77,15 @@ void LevyHotSpotsLATP::initialize(int stage) {
     hsd->makeProbabilityMatrix(powA);
 
     // выбор случайной локации
-    currentHSindex=rand() % (hsc->HSData).size();
-    currentHSMin.x=((hsc->HSData)[currentHSindex]).Xmin;
-    currentHSMin.y=((hsc->HSData)[currentHSindex]).Ymin;
-    currentHSMax.x=((hsc->HSData)[currentHSindex]).Xmax;
-    currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
-    currentHSCenter=(currentHSMin+currentHSMax)*0.5;
-    cout << "initialize: changing location to" << currentHSindex << endl;
+    if (currentHSindex == -1) {
+        currentHSindex=rand() % (hsc->HSData).size();
+        currentHSMin.x=((hsc->HSData)[currentHSindex]).Xmin;
+        currentHSMin.y=((hsc->HSData)[currentHSindex]).Ymin;
+        currentHSMax.x=((hsc->HSData)[currentHSindex]).Xmax;
+        currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
+        currentHSCenter=(currentHSMin+currentHSMax)*0.5;
+        cout << "initialize: changing location to" << currentHSindex << endl;
+    }
 }
 
 void LevyHotSpotsLATP::setInitialPosition() {
@@ -107,14 +111,13 @@ void LevyHotSpotsLATP::setTargetPosition() {
         if (isPause) {
             waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
-            targetPosition = lastPosition;
-            log();
+//            log();
             if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
         } else {
             if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-777);
             collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
             generateNextPosition(targetPosition, nextChange);
-            log();
+//            log();
             if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) exit(-888);
         }
         isPause = !isPause;
