@@ -41,7 +41,10 @@ struct HotSpotShortInfo {
 
      void print()
      {
-         cout << " Xmin=" << Xmin << " Xmax=" << Xmax << "\n" << " Ymin=" << Ymin << " Ymax=" << Ymax << endl << endl;
+         cout << "\t Xmin = " << Xmin << ", Xmax = " << Xmax << endl;
+         cout << "\t Ymin = " << Ymin << ", Ymax = " << Ymax << endl;
+         cout << "\t Xcenter = " << Xcenter << ", Ycenter = " << Ycenter << endl;
+         cout << "\t hotSpotName = " << hotSpotName << endl;
      }
 };
 

@@ -16,13 +16,19 @@
 class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 {
   protected:
-    bool nextMoveIsWait;
-    long steps;
+    bool isPause;
+    long step;
 
     LeviJump  *jump;
     LeviPause *pause;
     double kForSpeed;
     double roForSpeed;
+
+    double angle;
+    double distance;
+    double speed;
+    Coord deltaVector;
+    simtime_t travelTime;
 
     double powA;
 
@@ -50,7 +56,6 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setInitialPosition();
 
-    bool isCorrectCoordinates(double x, double y);
     bool isHotSpotEmpty();
     void generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
@@ -60,6 +65,9 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
     void saveStatistics();
+
+    bool isCorrectCoordinates(double x, double y);
+    void log();
 
   public:
     LevyHotSpotsLATP();

@@ -10,14 +10,19 @@
 Define_Module(LevyHotSpotsLATP);
 
 LevyHotSpotsLATP::LevyHotSpotsLATP() {
-    nextMoveIsWait = false;
-    steps = 0;
+    isPause = false;
+    step = 0;
     jump = NULL;
     pause = NULL;
     kForSpeed = 1;
     roForSpeed = 0;
 
     movementsFinished = false;
+
+    angle = 0;
+    distance = 0;
+    speed = 0;
+    travelTime = 0;
 
     hsc=NULL;
     hsd=NULL;
@@ -83,20 +88,8 @@ void LevyHotSpotsLATP::setInitialPosition() {
     
     lastPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
     lastPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
+    log();
     if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-555);
-}
-
-
-bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
-    if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) {
-        return true;
-    }
-    cout << "currentHSMin.x = " << currentHSMin.x << ", currentHSMax.x = " << currentHSMax.x << endl;
-    cout << "currentHSMin.y = " << currentHSMin.y << ", currentHSMax.y = " << currentHSMax.y << endl;
-    cout << " x = " << x << ", y = " << y << endl;
-    cout << " steps = " << steps << endl;
-
-    return false;
 }
 
 bool LevyHotSpotsLATP::isHotSpotEmpty() {
@@ -109,32 +102,36 @@ void LevyHotSpotsLATP::finish() {
 
 void LevyHotSpotsLATP::setTargetPosition() {
     if (!movementsFinished) {
-        steps++;
-        if (nextMoveIsWait) {
+        step++;
+        if (isPause) {
             waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
+            log();
             if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
         } else {
             if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-777);
             collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
             generateNextPosition(targetPosition, nextChange);
+            log();
             if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) exit(-888);
         }
-        nextMoveIsWait = !nextMoveIsWait;
+        isPause = !isPause;
     } else {
         // остановка перемещений по документации
         nextChange = -1;
+        log();
     }
 }
 
 void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
     
     // генерируем прыжок Леви как обычно
-    const double angle = uniform(0, 2 * PI);
-    const double distance = jump->get_Levi_rv();
-    const double speed = kForSpeed * pow(distance, 1 - roForSpeed);
+    angle = uniform(0, 2 * PI);
+    distance = jump->get_Levi_rv();
+    speed = kForSpeed * pow(distance, 1 - roForSpeed);
     Coord delta(distance * cos(angle), distance * sin(angle), 0);
-    simtime_t travelTime = distance / speed;
+    deltaVector = delta;
+    travelTime = distance / speed;
 
     targetPosition = lastPosition + delta;
     nextChange = simTime() + travelTime;
@@ -239,4 +236,36 @@ void LevyHotSpotsLATP::saveStatistics() {
 
     file->close();
     delete file;
+}
+
+bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
+    if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) return true;
+    log();
+    return false;
+}
+
+void LevyHotSpotsLATP::log() {
+    cout << "-------------------------------------------------------------" << endl;
+    cout << "step = " << step << ", isPause = " << isPause << endl;
+    cout << "simTime() = " << simTime() << endl;
+    cout << "lastPosition = " << lastPosition << endl;
+
+    cout << "currentHSindex = " << currentHSindex << endl;
+    cout << "\t currentHSMin.x = " << currentHSMin.x << ", currentHSMax.x = " << currentHSMax.x << endl;
+    cout << "\t currentHSMin.y = " << currentHSMin.y << ", currentHSMax.y = " << currentHSMax.y << endl;
+    cout << "\t currentHSCenter.x = " << currentHSCenter.x << ", currentHSCenter.y = " << currentHSCenter.y << endl;
+    ((hsc->HSData)[currentHSindex]).print();
+
+    if (isPause) {
+        cout << "waitTime = " << waitTime << endl;
+    } else {
+        cout << "distance = " << distance << ", angle = " << angle << ", speed = " << speed << endl;
+        cout << "deltaVector = " << deltaVector << ", travelTime = " << travelTime << endl;
+    }
+
+    cout << "targetPosition = " << targetPosition << endl;
+    cout << "nextChange = " << nextChange << endl;
+
+    cout << "movementsFinished = " << movementsFinished << endl;
+    cout << "-------------------------------------------------------------" << endl << endl;
 }
