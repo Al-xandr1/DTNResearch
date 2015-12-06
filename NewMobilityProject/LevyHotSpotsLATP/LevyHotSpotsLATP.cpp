@@ -63,18 +63,20 @@ void LevyHotSpotsLATP::initialize(int stage) {
     constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
 
 
-    if (hsc==NULL) hsc = new HotSpotsCollection();
-    if (hsd==NULL) hsd = new HSDistanceMatrix();
-
-    // загрузка данных о докациях
-    char* TracesDir = DEF_TR_DIR ;
-    double minX, maxX, minY, maxY;
-    hsc->readHotSpotsInfo(TracesDir, minX, maxX, minY, maxY);
-    constraintAreaMin.x=minX; constraintAreaMin.y=minY;
-    constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
-
-    hsd->makeDistanceMatrix();
-    hsd->makeProbabilityMatrix(powA);
+    if (hsc==NULL) {
+        hsc = new HotSpotsCollection();
+        // загрузка данных о докациях
+        char* TracesDir = DEF_TR_DIR ;
+        double minX, maxX, minY, maxY;
+        hsc->readHotSpotsInfo(TracesDir, minX, maxX, minY, maxY);
+        constraintAreaMin.x=minX; constraintAreaMin.y=minY;
+        constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
+    }
+    if (hsd==NULL) {
+        hsd = new HSDistanceMatrix();
+        hsd->makeDistanceMatrix();
+        hsd->makeProbabilityMatrix(powA);
+    }
 
     // выбор случайной локации
     if (currentHSindex == -1) {
@@ -84,7 +86,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
         currentHSMax.x=((hsc->HSData)[currentHSindex]).Xmax;
         currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
         currentHSCenter=(currentHSMin+currentHSMax)*0.5;
-        cout << "initialize: changing location to" << currentHSindex << endl;
+//        cout << "initialize: changing location to" << currentHSindex << endl;
     }
 }
 
@@ -144,7 +146,7 @@ void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
     // если вышли за пределы локации
     if (currentHSMin.x >= targetPosition.x || targetPosition.x >= currentHSMax.x || currentHSMin.y >= targetPosition.y || targetPosition.y >= currentHSMax.y) {
         if (isHotSpotEmpty()) {
-            cout << "HotSpot is empty! select next" << endl;
+//            cout << "HotSpot is empty! select next" << endl;
             if ( findNextHotSpot() ) {   // нашли следующую локацию - идём в её случайную точку
                 targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
                 targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
@@ -196,7 +198,7 @@ bool LevyHotSpotsLATP::findNextHotSpot()
     currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 
-    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
+//    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
     return true;
 }
 
