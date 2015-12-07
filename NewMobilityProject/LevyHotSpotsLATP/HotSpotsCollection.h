@@ -19,14 +19,29 @@ using namespace std;
 #define DEF_HS_DIR "./Traces/hotspotfiles"     //Директория по умолчанию для "локаций"
 #define DEF_WP_DIR "./Traces/waypointfiles"    //Директория по умолчанию для "путевых точек"
 
+struct Waypoint{
+    double X, Y, Tb, Te;
+    char* traceName;
+
+    Waypoint(double x, double y, double Tb, double Te, char* traceName) {
+        this->X = x;
+        this->Y = y;
+        this->Tb = Tb;
+        this->Te = Te;
+        this->traceName = traceName;
+    }
+};
+
 struct HotSpotShortInfo {
      double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;
      double sumTime;
      unsigned int waypointNum;
      unsigned int counter;
      char* hotSpotName;
+
      double generatedSumTime;
      unsigned int generatedWaypointNum;
+     vector<Waypoint> waypoints;
 
      HotSpotShortInfo(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, unsigned int waypointNum, unsigned int counter=0 )
      {

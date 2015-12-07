@@ -89,6 +89,13 @@ void LevyHotSpotsLATP::initialize(int stage) {
         currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 //        cout << "initialize: changing location to" << currentHSindex << endl;
     }
+
+    char outWpFileName[256];
+    char outTrFileName[256];
+    wpFileName = createFileName(outWpFileName, 0, par("traceFileName").stringValue(),
+            (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
+    trFileName = createFileName(outTrFileName, 0, par("traceFileName").stringValue(),
+            (int) ((par("fileSuffix"))), TRACE_TYPE);
 }
 
 void LevyHotSpotsLATP::setInitialPosition() {
@@ -216,64 +223,77 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
     yCoordinates.push_back(y);
     ((hsc->HSData)[currentHSindex]).generatedSumTime += (outTime - inTime).dbl();
     ((hsc->HSData)[currentHSindex]).generatedWaypointNum++;
+
+    Waypoint h(x, y, inTime.dbl(), outTime.dbl(), wpFileName);
+    ((hsc->HSData)[currentHSindex]).waypoints.push_back(h);
 }
 
 void LevyHotSpotsLATP::saveStatistics() {
     const int nodeIndex = (int) ((par("fileSuffix")));
     char *outDir = "outTrace";
-    const bool isWaypointFormat = par("wayPointFormat").boolValue();
-    char *pointsDir = isWaypointFormat
-                                ? buildFullName(outDir, "waypointfiles")
-                                : buildFullName(outDir, "tracefiles");
-    const char *pointsFileName = par("traceFileName").stringValue();
+    char *wpsDir = buildFullName(outDir, "waypointfiles");
+    char *trsDir = buildFullName(outDir, "tracefiles");
     char *hotSpotFilesDir = buildFullName(outDir, "hotspotfiles");
+    char *locations = buildFullName(outDir, "locations.loc");
 
 
-    //--- Create output directories and write HotSpots ---
     if (nodeIndex == 0 ) {//чтобы записывал только один узел
+        //--- Create output directories ---
         if (CreateDirectory(outDir, NULL)) cout << "create output directory: " << outDir << endl;
         else cout << "error create output directory: " << outDir << endl;
 
-        if (CreateDirectory(pointsDir, NULL)) cout << "create output directory: " << pointsDir << endl;
-        else cout << "error create output directory: " << pointsDir << endl;
+        if (CreateDirectory(wpsDir, NULL)) cout << "create output directory: " << wpsDir << endl;
+        else cout << "error create output directory: " << wpsDir << endl;
+
+        if (CreateDirectory(trsDir, NULL)) cout << "create output directory: " << trsDir << endl;
+        else cout << "error create output directory: " << trsDir << endl;
 
         if (CreateDirectory(hotSpotFilesDir, NULL)) cout << "create output directory: " << hotSpotFilesDir << endl;
         else cout << "error create output directory: " << hotSpotFilesDir << endl;
 
-        for (int i = 0; i<(hsc->HSData).size(); i++) {
+        // --- Write HotSpots ---
+        for (unsigned int i = 0; i < (hsc->HSData).size(); i++) {
             char* fullNameHS = buildFullName(hotSpotFilesDir, (hsc->HSData)[i].hotSpotName);
             ofstream* hsFile = new ofstream(fullNameHS);
             (*hsFile) << ((hsc->HSData)[i]).Xmin << "\t" << ((hsc->HSData)[i]).Xmax << endl;
             (*hsFile) << ((hsc->HSData)[i]).Ymin << "\t" << ((hsc->HSData)[i]).Ymax << endl;
             (*hsFile) << ((hsc->HSData)[i]).generatedSumTime << "\t"<< ((hsc->HSData)[i]).generatedWaypointNum << endl;
 
+            for(unsigned int j = 0; j < ((hsc->HSData)[i]).waypoints.size(); j++)
+                (*hsFile) << (((hsc->HSData)[i]).waypoints[j]).X  << "\t" << (((hsc->HSData)[i]).waypoints[j]).Y  << "\t"
+                          << (((hsc->HSData)[i]).waypoints[j]).Tb << "\t" << (((hsc->HSData)[i]).waypoints[j]).Te << "\t"
+                          << (((hsc->HSData)[i]).waypoints[j]).traceName << endl;
+
             hsFile->close();
             delete hsFile;
         }
+
+        // --- Write Locations ---
+        ofstream lcfile(locations);
+        for(unsigned int i = 0; i < (hsc->HSData).size(); i++) {
+            lcfile << ((hsc->HSData)[i]).hotSpotName << "\t"<< ((hsc->HSData)[i]).generatedSumTime << "\t" << "\t";
+            lcfile << ((hsc->HSData)[i]).generatedWaypointNum << "\t" << "\t";
+            lcfile << ((hsc->HSData)[i]).Xmin << "\t"<< ((hsc->HSData)[i]).Xmax << "\t";
+            lcfile << ((hsc->HSData)[i]).Ymin << "\t"<< ((hsc->HSData)[i]).Ymax << endl;
+        }
+        lcfile.close();
     }
 
     //--- Write points ---
-    char outFileName[256];
-    char *fileName = NULL;
-    if (isWaypointFormat) fileName = createFileName(outFileName, 0, pointsFileName, nodeIndex, WAYPOINTS_TYPE);
-    else fileName = createFileName(outFileName, 0, pointsFileName, nodeIndex, TRACE_TYPE);
-
-    ofstream* file = new ofstream(buildFullName(pointsDir, fileName));
+    ofstream wpFile(buildFullName(wpsDir, wpFileName));
+    ofstream trFile(buildFullName(trsDir, trFileName));
     for (unsigned int i = 0; i < outTimes.size(); i++) {
         simtime_t inTime = inTimes[i];
+        simtime_t outTime = outTimes[i];
         double x = xCoordinates[i];
         double y = yCoordinates[i];
 
-        if (isWaypointFormat) {
-            simtime_t outTime = outTimes[i];
-            (*file) << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
-        } else {
-            (*file) << inTime << "\t" << x << "\t" << y << endl;
-        }
+        wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
+        trFile << inTime << "\t" << x << "\t" << y << endl;
     }
 
-    file->close();
-    delete file;
+    wpFile.close();
+    trFile.close();
 }
 
 bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
