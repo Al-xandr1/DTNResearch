@@ -54,6 +54,8 @@ class SelfSimLATP : public LineSegmentsMobilityBase
     bool isWptMatrixReady;
 
     //statistics collection
+    char *wpFileName;
+    char *trFileName;
     simtime_t waitTime;
     std::vector<simtime_t> inTimes;
     std::vector<simtime_t> outTimes;

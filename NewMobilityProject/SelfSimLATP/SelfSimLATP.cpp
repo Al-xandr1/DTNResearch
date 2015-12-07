@@ -35,6 +35,9 @@ SelfSimLATP::SelfSimLATP() {
     isWptMatrixReady=false;
 
     waitTime = 0;
+
+    wpFileName = NULL;
+    trFileName = NULL;
 }
 
 void SelfSimLATP::initialize(int stage) {
@@ -93,8 +96,15 @@ void SelfSimLATP::initialize(int stage) {
 
     // генерация путевых точек в выбранной локации
     if( gen == NULL ) loadHSWaypts();
-    buildWptMatrix();
+        buildWptMatrix();
     }
+
+    wpFileName = new char[256];
+    trFileName = new char[256];
+    wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
+            (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
+    trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
+            (int) ((par("fileSuffix"))), TRACE_TYPE);
 }
 
 
@@ -383,31 +393,45 @@ void SelfSimLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double 
 }
 
 void SelfSimLATP::saveStatistics() {
-    char outFileName[256];
+    const int nodeIndex = (int) ((par("fileSuffix")));
+    char *outDir = "outTrace";
+    char *wpsDir = buildFullName(outDir, "waypointfiles");
+    char *trsDir = buildFullName(outDir, "tracefiles");
 
-    char *fileName = NULL;
-    if (par("wayPointFormat").boolValue()) {
-        fileName = createFileName(outFileName, 0,
-                    par("traceFileName").stringValue(), (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
-    } else {
-        fileName = createFileName(outFileName, 0,
-                    par("traceFileName").stringValue(), (int) ((par("fileSuffix"))), TRACE_TYPE);
+    if (nodeIndex == 0 ) {//чтобы записывал только один узел
+        //--- Create output directories ---
+        if (CreateDirectory(outDir, NULL)) cout << "create output directory: " << outDir << endl;
+        else cout << "error create output directory: " << outDir << endl;
+
+        if (CreateDirectory(wpsDir, NULL)) cout << "create output directory: " << wpsDir << endl;
+        else cout << "error create output directory: " << wpsDir << endl;
+
+        if (CreateDirectory(trsDir, NULL)) cout << "create output directory: " << trsDir << endl;
+        else cout << "error create output directory: " << trsDir << endl;
     }
 
-    ofstream* file = new ofstream(fileName);
+    //--- Write points ---
+    cout << "wpFileName = " << wpFileName << endl;
+    cout << "trFileName = " << trFileName << endl;
+
+    char *wp = buildFullName(wpsDir, wpFileName);
+    char *tr = buildFullName(trsDir, trFileName);
+
+    cout << "wp = " << wp << endl;
+    cout << "tr = " << tr << endl;
+
+    ofstream wpFile(wp);
+    ofstream trFile(tr);
     for (unsigned int i = 0; i < outTimes.size(); i++) {
         simtime_t inTime = inTimes[i];
+        simtime_t outTime = outTimes[i];
         double x = xCoordinates[i];
         double y = yCoordinates[i];
 
-        if (par("wayPointFormat").boolValue()) {
-            simtime_t outTime = outTimes[i];
-            (*file) << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
-        } else {
-            (*file) << inTime << "\t" << x << "\t" << y << endl;
-        }
+        wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
+        trFile << inTime << "\t" << x << "\t" << y << endl;
     }
 
-    file->close();
-    delete file;
+    wpFile.close();
+    trFile.close();
 }

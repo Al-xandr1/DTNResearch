@@ -33,6 +33,9 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     powA=2.0;
 
     waitTime = 0;
+
+    wpFileName = NULL;
+    trFileName = NULL;
 }
 
 void LevyHotSpotsLATP::initialize(int stage) {
@@ -90,12 +93,14 @@ void LevyHotSpotsLATP::initialize(int stage) {
 //        cout << "initialize: changing location to" << currentHSindex << endl;
     }
 
-    char outWpFileName[256];
-    char outTrFileName[256];
-    wpFileName = createFileName(outWpFileName, 0, par("traceFileName").stringValue(),
-            (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
-    trFileName = createFileName(outTrFileName, 0, par("traceFileName").stringValue(),
-            (int) ((par("fileSuffix"))), TRACE_TYPE);
+    if (wpFileName == NULL && trFileName == NULL) {
+        wpFileName = new char[256];
+        trFileName = new char[256];
+        wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
+                (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
+        trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
+                (int) ((par("fileSuffix"))), TRACE_TYPE);
+    }
 }
 
 void LevyHotSpotsLATP::setInitialPosition() {
