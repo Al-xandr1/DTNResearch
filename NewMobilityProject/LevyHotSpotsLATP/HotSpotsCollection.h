@@ -24,6 +24,7 @@ struct HotSpotShortInfo {
      double sumTime;
      unsigned int waypointNum;
      unsigned int counter;
+     unsigned int generatedWaypointNum;
      char* hotSpotName;
 
      HotSpotShortInfo(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, unsigned int waypointNum, unsigned int counter=0 )
@@ -37,6 +38,7 @@ struct HotSpotShortInfo {
          this->Ycenter = (Ymin + Ymax) / 2;
          this->sumTime = sumTime;
          this->waypointNum = waypointNum;
+         this->generatedWaypointNum = 0;
      }
 
      void print()
@@ -44,6 +46,7 @@ struct HotSpotShortInfo {
          cout << "\t Xmin = " << Xmin << ", Xmax = " << Xmax << endl;
          cout << "\t Ymin = " << Ymin << ", Ymax = " << Ymax << endl;
          cout << "\t Xcenter = " << Xcenter << ", Ycenter = " << Ycenter << endl;
+         cout << "\t waypointNum = " << waypointNum << ", generatedWaypointNum = " << generatedWaypointNum << endl;
          cout << "\t hotSpotName = " << hotSpotName << endl;
      }
 };

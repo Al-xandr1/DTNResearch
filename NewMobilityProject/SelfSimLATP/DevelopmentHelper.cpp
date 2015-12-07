@@ -32,8 +32,10 @@ char* createFileName(char* buffer, int numberOfExperiment,
     if (index >= 0) {
         postfix << index;
 
-        result = strcat(strcat(strcat(result, "_"), ((postfix.str()).c_str())), fileType);
-    } else {
+        result = strcat(strcat(result, "_"), ((postfix.str()).c_str()));
+    }
+
+    if (fileType != NULL) {
         result = strcat(result, fileType);
     }
 

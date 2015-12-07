@@ -1,6 +1,7 @@
 #include <iostream>
 #include <math.h>
 #include <stdlib.h>
+#include <windows.h>
 
 #include "LevyHotSpotsLATP.h"
 
@@ -213,18 +214,22 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
     outTimes.push_back(outTime);
     xCoordinates.push_back(x);
     yCoordinates.push_back(y);
+    ((hsc->HSData)[currentHSindex]).generatedWaypointNum++;
 }
 
 void LevyHotSpotsLATP::saveStatistics() {
+    const int nodeIndex = (int) ((par("fileSuffix")));
+
+    //--- write points ---
     char outFileName[256];
 
     char *fileName = NULL;
     if (par("wayPointFormat").boolValue()) {
         fileName = createFileName(outFileName, 0,
-                    par("traceFileName").stringValue(), (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
+                    par("traceFileName").stringValue(), nodeIndex, WAYPOINTS_TYPE);
     } else {
         fileName = createFileName(outFileName, 0,
-                    par("traceFileName").stringValue(), (int) ((par("fileSuffix"))), TRACE_TYPE);
+                    par("traceFileName").stringValue(), nodeIndex, TRACE_TYPE);
     }
 
     ofstream* file = new ofstream(fileName);
@@ -243,6 +248,26 @@ void LevyHotSpotsLATP::saveStatistics() {
 
     file->close();
     delete file;
+
+    //--- write modified hotSpots ---
+    if (nodeIndex == 0) {//чтобы записывал только один узел
+        char outHotSpotFilesDir[256];
+        char *hotSpotFilesDir = createFileName(outHotSpotFilesDir, 0, "hotspotfiles", nodeIndex, NULL);
+
+        if (CreateDirectory(hotSpotFilesDir, NULL)) cout << "create output directory " << endl;
+        else cout << "error create output directory" << endl;
+
+        for (int i = 0; i<(hsc->HSData).size(); i++) {
+            char* fullNameHS = buildFullName(hotSpotFilesDir, (hsc->HSData)[i].hotSpotName);
+            ofstream* hsFile = new ofstream(fullNameHS);
+            (*hsFile) << ((hsc->HSData)[i]).Xmin << "\t" << ((hsc->HSData)[i]).Xmax << endl;
+            (*hsFile) << ((hsc->HSData)[i]).Ymin << "\t" << ((hsc->HSData)[i]).Ymax << endl;
+            (*hsFile) << ((hsc->HSData)[i]).sumTime << "\t"<< ((hsc->HSData)[i]).generatedWaypointNum << endl;
+
+            hsFile->close();
+            delete hsFile;
+        }
+    }
 }
 
 bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
