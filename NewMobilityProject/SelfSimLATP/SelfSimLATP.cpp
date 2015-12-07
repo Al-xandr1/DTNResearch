@@ -122,9 +122,9 @@ void SelfSimLATP::setTargetPosition() {
         }
         nextMoveIsWait = !nextMoveIsWait;
     } else {
-        // планирование в бесконечность - костыльная остановка перемещений
+        // остановка перемещений по документации
         cout << "End of root!" << endl;
-        nextChange = simTime() + 100000;
+        nextChange = -1;
     }
 }
 
