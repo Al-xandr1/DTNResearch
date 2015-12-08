@@ -419,18 +419,25 @@ void SelfSimLATP::saveStatistics() {
     }
 
     //--- Write points ---
-    ofstream wpFile(buildFullName(wpsDir, wpFileName));
-    ofstream trFile(buildFullName(trsDir, trFileName));
-    for (unsigned int i = 0; i < outTimes.size(); i++) {
-        simtime_t inTime = inTimes[i];
-        simtime_t outTime = outTimes[i];
-        double x = xCoordinates[i];
-        double y = yCoordinates[i];
+    if (outTimes.size() > 0) {
+        char *wpName = buildFullName(wpsDir, wpFileName);
+        char *trName = buildFullName(trsDir, trFileName);
+        cout << "wpName = " << wpName << endl;
+        cout << "trName = " << trName << endl << endl;
 
-        wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
-        trFile << inTime << "\t" << x << "\t" << y << endl;
+        ofstream wpFile(wpName);
+        ofstream trFile(trName);
+        for (unsigned int i = 0; i < outTimes.size(); i++) {
+            simtime_t inTime = inTimes[i];
+            simtime_t outTime = outTimes[i];
+            double x = xCoordinates[i];
+            double y = yCoordinates[i];
+
+            wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
+            trFile << inTime << "\t" << x << "\t" << y << endl;
+        }
+
+        wpFile.close();
+        trFile.close();
     }
-
-    wpFile.close();
-    trFile.close();
 }
