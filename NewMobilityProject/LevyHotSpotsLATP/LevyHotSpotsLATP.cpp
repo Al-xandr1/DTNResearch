@@ -127,13 +127,13 @@ void LevyHotSpotsLATP::setTargetPosition() {
             waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
 //            log();
-            if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
+//            if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
         } else {
-            if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-777);
+//            if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-777);
             collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
             generateNextPosition(targetPosition, nextChange);
 //            log();
-            if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) exit(-888);
+//            if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) exit(-888);
         }
         isPause = !isPause;
     } else {

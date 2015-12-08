@@ -110,7 +110,7 @@ void SelfSimLATP::initialize(int stage) {
 
 void SelfSimLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
-    
+
     currentWpt = rand() % waypts.size();
     lastPosition.x = waypts[currentWpt].x;
     lastPosition.y = waypts[currentWpt].y;
@@ -166,9 +166,17 @@ void SelfSimLATP::generateNextPosition(Coord& targPos, simtime_t& nextChange)
         targPos.x = waypts[currentWpt].x;
         targPos.y = waypts[currentWpt].y;
         double distance = sqrt((targPos.x-lastPosition.x)*(targPos.x-lastPosition.x) +
-                          (targPos.y-lastPosition.y)*(targPos.y-lastPosition.y));
-        double speed = kForSpeed * pow(distance, 1 - roForSpeed);
-        simtime_t travelTime = distance / speed;
+                               (targPos.y-lastPosition.y)*(targPos.y-lastPosition.y));
+
+        simtime_t travelTime;
+        if (distance != 0) {
+            double speed = kForSpeed * pow(distance, 1 - roForSpeed);
+            travelTime = distance / speed;
+        } else {
+            //pause is generated again
+            travelTime = (simtime_t) pause->get_Levi_rv();
+        }
+
         nextChange = simTime() + travelTime;
     } else movementsFinished = true;
 }
@@ -411,18 +419,25 @@ void SelfSimLATP::saveStatistics() {
     }
 
     //--- Write points ---
-    ofstream wpFile(buildFullName(wpsDir, wpFileName));
-    ofstream trFile(buildFullName(trsDir, trFileName));
-    for (unsigned int i = 0; i < outTimes.size(); i++) {
-        simtime_t inTime = inTimes[i];
-        simtime_t outTime = outTimes[i];
-        double x = xCoordinates[i];
-        double y = yCoordinates[i];
+    if (outTimes.size() > 0) {
+        char *wpName = buildFullName(wpsDir, wpFileName);
+        char *trName = buildFullName(trsDir, trFileName);
+        cout << "wpName = " << wpName << endl;
+        cout << "trName = " << trName << endl << endl;
 
-        wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
-        trFile << inTime << "\t" << x << "\t" << y << endl;
+        ofstream wpFile(wpName);
+        ofstream trFile(trName);
+        for (unsigned int i = 0; i < outTimes.size(); i++) {
+            simtime_t inTime = inTimes[i];
+            simtime_t outTime = outTimes[i];
+            double x = xCoordinates[i];
+            double y = yCoordinates[i];
+
+            wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
+            trFile << inTime << "\t" << x << "\t" << y << endl;
+        }
+
+        wpFile.close();
+        trFile.close();
     }
-
-    wpFile.close();
-    trFile.close();
 }

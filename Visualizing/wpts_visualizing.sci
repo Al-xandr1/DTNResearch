@@ -21,7 +21,7 @@ function drawWPTs(x, y, GRAPH_COLOR)
     poly1.line_mode = 'off';
     poly1.mark_style = 9;
     poly1.mark_size_unit = 'point'
-    poly1.mark_size = 4
+    poly1.mark_size = 1
     poly1.mark_foreground = GRAPH_COLOR;
     poly1.mark_background = GRAPH_COLOR;
 endfunction
