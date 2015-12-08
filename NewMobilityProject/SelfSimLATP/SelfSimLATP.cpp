@@ -166,9 +166,17 @@ void SelfSimLATP::generateNextPosition(Coord& targPos, simtime_t& nextChange)
         targPos.x = waypts[currentWpt].x;
         targPos.y = waypts[currentWpt].y;
         double distance = sqrt((targPos.x-lastPosition.x)*(targPos.x-lastPosition.x) +
-                          (targPos.y-lastPosition.y)*(targPos.y-lastPosition.y));
-        double speed = kForSpeed * pow(distance, 1 - roForSpeed);
-        simtime_t travelTime = distance / speed;
+                               (targPos.y-lastPosition.y)*(targPos.y-lastPosition.y));
+
+        simtime_t travelTime;
+        if (distance != 0) {
+            double speed = kForSpeed * pow(distance, 1 - roForSpeed);
+            travelTime = distance / speed;
+        } else {
+            //pause is generated again
+            travelTime = (simtime_t) pause->get_Levi_rv();
+        }
+
         nextChange = simTime() + travelTime;
     } else movementsFinished = true;
 }
@@ -411,17 +419,8 @@ void SelfSimLATP::saveStatistics() {
     }
 
     //--- Write points ---
-    cout << "wpFileName = " << wpFileName << endl;
-    cout << "trFileName = " << trFileName << endl;
-
-    char *wp = buildFullName(wpsDir, wpFileName);
-    char *tr = buildFullName(trsDir, trFileName);
-
-    cout << "wp = " << wp << endl;
-    cout << "tr = " << tr << endl;
-
-    ofstream wpFile(wp);
-    ofstream trFile(tr);
+    ofstream wpFile(buildFullName(wpsDir, wpFileName));
+    ofstream trFile(buildFullName(trsDir, trFileName));
     for (unsigned int i = 0; i < outTimes.size(); i++) {
         simtime_t inTime = inTimes[i];
         simtime_t outTime = outTimes[i];
