@@ -31,6 +31,9 @@ protected:
     queue<double> time;
     double sumX, sumY, tMin, tMxB, tMax;
 
+    char* wpFileName;
+    bool removeWPifEmpty;
+
 public:
     WaypointFinder(char* trFileName, char* wpFileName, double range, double stopTime );
     ~WaypointFinder();
@@ -54,6 +57,7 @@ WaypointFinder::WaypointFinder(char* trFileName, char* wpFileName, double range=
 {
     R2=range*range;  T=stopTime;
     sumX=sumY=tMin=tMxB=tMax=0;
+    removeWPifEmpty = false;
 
     traceFile = new ifstream(trFileName);
     if(traceFile == NULL){
@@ -61,7 +65,9 @@ WaypointFinder::WaypointFinder(char* trFileName, char* wpFileName, double range=
         exit(1);
     }
 
-    waypointFile = new ofstream(wpFileName);
+    this->wpFileName = new char[256];
+    this->wpFileName = strcpy(this->wpFileName, wpFileName);
+    waypointFile = new ofstream(this->wpFileName);
     if(waypointFile == NULL){
         cout<<"WaypointFinder constructor: Output file "<<wpFileName<<" opening failed."<<endl;
         exit(2);
@@ -74,6 +80,10 @@ WaypointFinder::~WaypointFinder()
     waypointFile->close();
     delete traceFile;
     delete waypointFile;
+
+    if (removeWPifEmpty) {// delete this file if it is empty
+        std::remove(wpFileName);
+    }
 }
 
 bool WaypointFinder::addPoint()
@@ -166,6 +176,9 @@ void WaypointFinder::findWaypoints()
         }
         else while( (removePoint()) && isOutofRange() );
     }
+
+    //remove WP file if it is empty
+    removeWPifEmpty = firstRow;
 }
 
 #endif // WAYPOINTFINDER_INCLUDED
