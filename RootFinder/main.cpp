@@ -239,6 +239,9 @@ void RootFinder::writeAllRoots(char* rootFilesDir)
     // Читает двоичную кучу путевых точек каждого пользователя и записывает в файл в директории маршрутов
     // порядок следования локаций в пути этого пользователя (со временеим и кол-вом путевых точек в каждой).
     // Также строит гистограмму количества локаций в путях пользователей и записывает в файл length.hst
+    // Все пути записывает в файл allroots.roo по одному пути в строке в формате кол-во кластеров в пути,
+    // потом список имён кластеров.
+
     WIN32_FIND_DATA f;
     if (FindFirstFile(rootFilesDir, &f) == INVALID_HANDLE_VALUE)
     {
@@ -254,6 +257,9 @@ void RootFinder::writeAllRoots(char* rootFilesDir)
     double Tsum=0; int counter=0;
     char buffer[256];
 
+    ofstream allroot("allroots.roo");
+    char rootstring[256];
+
     int rootLength[UserNames.size()];
     long int rootT[UserNames.size()], rootP[UserNames.size()];
     for(unsigned int i=0; i<UserNames.size(); i++) { rootLength[i]=0; rootT[i]=rootP[i]=0; }
@@ -265,6 +271,7 @@ void RootFinder::writeAllRoots(char* rootFilesDir)
         strcat(buffer, ".rot");
         ofstream file(buffer);
         rootTime=0; rootPoints=0;
+        strcpy(rootstring, "");
         while ((visitPoint[i]).GetMin(hsv)) {
             (visitPoint[i]).DeleteMin();
             Tsum=hsv.Te-hsv.Tb; counter=1;
@@ -274,13 +281,16 @@ void RootFinder::writeAllRoots(char* rootFilesDir)
             }
             file<<hsv.HotSpot<<"\t"<<hsv.Xmin<<"\t"<<hsv.Xmax<<"\t"<<hsv.Ymin<<"\t"<<hsv.Ymax<<"\t"<<Tsum<<"\t"<<counter<<endl;
             rootLength[i]++; rootTime+=Tsum; rootPoints+=counter;
+            strcat(rootstring, hsv.HotSpot); strcat(rootstring, "\t");
         }
         file.close();
         if(rootLength[i]>maxLength) maxLength=rootLength[i];
         rootT[i]=rootTime; rootP[i]=rootPoints;
+        allroot<<buffer<<"\t"<<rootLength[i]<<"\t"<<rootstring<<endl;
     }
     delete[] hsv.HotSpot;
     delete[] nexthsv.HotSpot;
+    allroot.close();
 
     int lengthHistogram[maxLength+1];
     long int rT[maxLength+1], rP[maxLength+1];
