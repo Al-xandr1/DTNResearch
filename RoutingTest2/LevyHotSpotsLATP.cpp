@@ -254,7 +254,6 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
 }
 
 void LevyHotSpotsLATP::saveStatistics() {
-    const int nodeIndex = (int) ((par("fileSuffix")));
     char *outDir = "outTrace";
     char *wpsDir = buildFullName(outDir, "waypointfiles");
     char *trsDir = buildFullName(outDir, "tracefiles");
@@ -262,7 +261,7 @@ void LevyHotSpotsLATP::saveStatistics() {
     char *locations = buildFullName(outDir, "locations.loc");
 
 
-    if (nodeIndex == 0 ) {//чтобы записывал только один узел
+    if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---
         if (CreateDirectory(outDir, NULL)) cout << "create output directory: " << outDir << endl;
         else cout << "error create output directory: " << outDir << endl;
