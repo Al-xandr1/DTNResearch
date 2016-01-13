@@ -5,7 +5,7 @@ network LevyHotSpotsLATPNetwork
 {
     parameters:
         int numHosts;
-        double interconnectionRadius = default(100000); // radius of transmitters of each node in meters
+        double interconnectionRadius = default(300); // radius of transmitters of each node in meters
         
         @display("bgb=600,400");
         
