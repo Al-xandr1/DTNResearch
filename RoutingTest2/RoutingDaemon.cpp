@@ -46,6 +46,8 @@ public:
 class RoutingDaemon : public cModule {
 public:
     RD_Listener *listener;
+
+    static RoutingDaemon instance;
     static int numHosts;
     static double interconnectionRadius;
 
@@ -54,6 +56,7 @@ public:
     virtual void initialize();
 };
 
+RoutingDaemon RoutingDaemon::instance;
 int RoutingDaemon::numHosts;
 double RoutingDaemon::interconnectionRadius;
 
@@ -148,6 +151,13 @@ RoutingDaemon::RoutingDaemon() {
 
 void RoutingDaemon::initialize()
 {
+    if (instance == NULL) {
+        instance = this;
+    } else {
+        std::cout << "Duplicate instance creation RoutingDaemon" << endl;
+        exit(-789);
+    }
+
     interconnectionRadius = par("interconnectionRadius");
     numHosts = par("numHosts");
     listener = new RD_Listener();

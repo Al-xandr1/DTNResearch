@@ -10,11 +10,11 @@ module MobileHost
     parameters:
         string mobilityType = default("LevyHotSpotsLATP");
 
+		@class(MobileHost);
         @node();
         @display("i=device/pocketpc_s");
         int indexOfNode = default(0);
     submodules:
-        // mobility: <mobilityType> like IMobility;
         mobility: LevyHotSpotsLATP {
             parameters:
                 @display("is=s;p=72,44");
