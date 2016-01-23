@@ -13,7 +13,14 @@ module MobileHost
 		@class(MobileHost);
         @node();
         @display("i=device/pocketpc_s");
+        
         int indexOfNode = default(0);
+        double timeslot = default(50);
+    	double lambda = default(1);
+    
+    gates:
+        input in @directIn;
+            
     submodules:
         mobility: LevyHotSpotsLATP {
             parameters:

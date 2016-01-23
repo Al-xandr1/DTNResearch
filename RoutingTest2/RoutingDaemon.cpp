@@ -1,64 +1,5 @@
-#include <iostream>
-#include <stdlib.h>
-#include <string>
-#include <math.h>
+#include "RoutingDaemon.h"
 
-#include "INETDefs.h"
-
-#include <IMobility.h>
-#include <clistener.h>
-
-#include <LevyHotSpotsLATP.h>
-
-//---------------------------------------------RD_Listener-------------------------------------------------------------
-
-static simsignal_t mobilityStateChangedSignal = cComponent::registerSignal("mobilityStateChanged");
-
-class RD_Listener : public cIListener {
-protected:
-    int NodeId;
-    Coord position;
-
-    vector<Coord> nodePositions;
-    int** connections;
-
-public:
-    RD_Listener();
-
-    virtual void  receiveSignal (cComponent *source, simsignal_t signalID, bool b);
-    virtual void  receiveSignal (cComponent *source, simsignal_t signalID, long l);
-    virtual void  receiveSignal (cComponent *source, simsignal_t signalID, unsigned long l);
-    virtual void  receiveSignal (cComponent *source, simsignal_t signalID, double d);
-    virtual void  receiveSignal (cComponent *source, simsignal_t signalID, const SimTime &t);
-    virtual void  receiveSignal (cComponent *source, simsignal_t signalID, const char *s);
-
-    virtual void  receiveSignal (cComponent *source, simsignal_t signalID, cObject *obj);
-
-    void checkReceivedData();
-    void processReceivedData();
-    bool isConnected(int node1, int node2);
-
-    void log();
-};
-
-//--------------------------------------------RoutingDaemon------------------------------------------------------------
-
-class RoutingDaemon : public cModule {
-public:
-    RD_Listener *listener;
-
-    static RoutingDaemon instance;
-    static int numHosts;
-    static double interconnectionRadius;
-
-public:
-    RoutingDaemon();
-    virtual void initialize();
-};
-
-RoutingDaemon RoutingDaemon::instance;
-int RoutingDaemon::numHosts;
-double RoutingDaemon::interconnectionRadius;
 
 //---------------------------------------------RD_Listener-------------------------------------------------------------
 RD_Listener::RD_Listener()
@@ -93,17 +34,10 @@ void RD_Listener::receiveSignal (cComponent *source, simsignal_t signalID, cObje
      }
 }
 
-void RD_Listener::receiveSignal (cComponent *source, simsignal_t signalID, bool b)          { std::cout << "not supported"; }
-void RD_Listener::receiveSignal (cComponent *source, simsignal_t signalID, long l)          { std::cout << "not supported"; }
-void RD_Listener::receiveSignal (cComponent *source, simsignal_t signalID, unsigned long l) { std::cout << "not supported"; }
-void RD_Listener::receiveSignal (cComponent *source, simsignal_t signalID, double d)        { std::cout << "not supported"; }
-void RD_Listener::receiveSignal (cComponent *source, simsignal_t signalID, const SimTime &t){ std::cout << "not supported"; }
-void RD_Listener::receiveSignal (cComponent *source, simsignal_t signalID, const char *s)   { std::cout << "not supported"; }
-
 void RD_Listener::checkReceivedData()
 {
     if (NodeId < 0 || NodeId >= RoutingDaemon::numHosts) {
-        std::cout << "NodeId=" << NodeId << ", numHosts=" << RoutingDaemon::numHosts;
+        cout << "NodeId=" << NodeId << ", numHosts=" << RoutingDaemon::numHosts;
         exit(-987);
     }
 }
@@ -114,6 +48,26 @@ void RD_Listener::processReceivedData()
 
     for (int j=0; j<NodeId; j++) connections[NodeId][j] = isConnected(NodeId, j);
     for (int i=NodeId+1; i<RoutingDaemon::numHosts; i++) connections[i][NodeId] = isConnected(i, NodeId);
+
+
+    // бежим по все узлам с целью...
+    for (int i=0; i<RoutingDaemon::numHosts; i++) {
+        MobileHost* host = check_and_cast<MobileHost*>(RoutingDaemon::instance->getSubmodule("host", i));
+
+        // ...чтобы определить какому узлу с каким требуется соединение
+        // и собрать информацию о наличи фактического соединения
+        vector<int>* connectedTargetIds = new vector<int>();
+
+        vector<Packet*>* packets = host->getPacketsForSending();
+        for (int i=0; i<packets->size(); i++) {
+            int targetId = (*packets)[i]->getNodeIdTrg();
+            if (isConnected(host->getNodeId(), targetId)) connectedTargetIds->push_back(targetId);
+        }
+
+        ConnectionMessage* msg = new ConnectionMessage(host->getNodeId(), connectedTargetIds);
+        msg->setKind(1);
+        host->send(msg, host->gate("in"));
+    }
 }
 
 bool RD_Listener::isConnected(int node1, int node2)
@@ -127,34 +81,44 @@ bool RD_Listener::isConnected(int node1, int node2)
 
 void RD_Listener::log()
 {
-    std::cout << "All positions: " << endl;
+    cout << "All positions: " << endl;
     for (int i=0; i<RoutingDaemon::numHosts; i++) {
-        std::cout << "NodeId=" << i << "  x="<< nodePositions[i].x <<" y="<< nodePositions[i].y <<endl;
+        cout << "NodeId=" << i << "  x="<< nodePositions[i].x <<" y="<< nodePositions[i].y <<endl;
     }
 
     for (int i=0; i<RoutingDaemon::numHosts; i++) {
         for (int j=0; j<=i; j++) {
-            std::cout << connections[i][j] << "  ";
+            cout << connections[i][j] << "  ";
         }
-        std::cout << endl;
+        cout << endl;
     }
+    cout << endl;
 
-    std::cout << endl;
+    cout << "NodeIds:" << endl;
+    for (int i=0; i<RoutingDaemon::numHosts; i++) {
+        MobileHost* host = check_and_cast<MobileHost*>(RoutingDaemon::instance->getSubmodule("host", i));
+        int nodeId = host->getNodeId();
+        cout << "nodeId = " << nodeId << "  ";
+    }
+    cout << endl << endl;
 }
+
 
 
 //--------------------------------------------RoutingDaemon------------------------------------------------------------
-Define_Module(RoutingDaemon);
 
-RoutingDaemon::RoutingDaemon() {
-}
+RoutingDaemon* RoutingDaemon::instance = NULL;
+int RoutingDaemon::numHosts = 0;
+double RoutingDaemon::interconnectionRadius = 0;
+
+Define_Module(RoutingDaemon);
 
 void RoutingDaemon::initialize()
 {
     if (instance == NULL) {
         instance = this;
     } else {
-        std::cout << "Duplicate instance creation RoutingDaemon" << endl;
+        cout << "Duplicate instance creation RoutingDaemon" << endl;
         exit(-789);
     }
 
