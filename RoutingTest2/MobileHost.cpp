@@ -36,13 +36,11 @@ void MobileHost::handleMessage(cMessage *msg)
         ConnectionMessage* connectionMessage = check_and_cast<ConnectionMessage*>(msg);
 
         vector<int>* connectedIds = connectionMessage->getConnectedTargetIds();
-//        //TODO отправить все накопившиеся пакеты пришедшим узлам в сообщении
-//        for (int i = 0; i < connectedIds->size(); i_++) {
-//
-//        }
+        //TODO отправить все накопившиеся пакеты пришедшим узлам в сообщении
+        //for (int i = 0; i < connectedIds->size(); i++) {
+        //}
 
-        delete msg;
-
+        delete connectionMessage;
 
     } else if (msg->getKind() == 2) {//пакет от другого узла
         Packet* packet = check_and_cast<Packet*>(msg);
@@ -60,6 +58,8 @@ void MobileHost::handleMessage(cMessage *msg)
     } else {
         EV << "unknown type of message" << endl;
         cout << "unknown type of message" << endl;
+
+        delete msg;
     }
 }
 
