@@ -9,12 +9,17 @@ network LevyHotSpotsLATPNetwork
         
         @display("bgb=600,400");
         
-        @class(RoutingDaemon);
-        
     submodules:
+        routing: RoutingDaemon;
+        
+        listener: RDListener;
+         
         host[numHosts]: MobileHost {
             parameters:
                 @display("p=300,300;r=,,#707070");
                 indexOfNode = index;
         }
+        
+    connections: 
+        listener.out --> routing.in;
 }

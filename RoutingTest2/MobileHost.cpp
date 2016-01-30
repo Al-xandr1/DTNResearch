@@ -20,7 +20,7 @@ void MobileHost::handleMessage(cMessage *msg)
     // msg->isSelfMessage() нельзя использовать, так как в методе RD_Listener::processReceivedData
     // посылка сообщения делается так host->sendDirect(msg, host);
     if (msg->getKind() == 0) {// сообщение о создании нового пакета
-        RoutingDaemon* routing = check_and_cast<RoutingDaemon*>(getParentModule());
+        RoutingDaemon* routing = check_and_cast<RoutingDaemon*>(getParentModule()->getSubmodule("routing"));
 
         int nodeIdTrg = (int) round(uniform(0, (double) routing->getNumHosts()));
         Packet* packet = new Packet(nodeId, nodeIdTrg);
