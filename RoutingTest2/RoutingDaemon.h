@@ -14,7 +14,7 @@ using namespace std;
 
 static simsignal_t mobilityStateChangedSignal = cComponent::registerSignal("mobilityStateChanged");
 
-class RoutingDaemon: public cSimpleModule {
+class RoutingDaemon : public cSimpleModule {
 public:
     cGate* in;
 

@@ -1,5 +1,5 @@
-#ifndef CONNECTIONMESSAGE_H
-#define CONNECTIONMESSAGE_H
+#ifndef MESSAGES_H
+#define MESSAGES_H
 
 #include <stdlib.h>
 
@@ -7,6 +7,32 @@
 
 using namespace std;
 
+
+// Пакет для передачи
+class Packet : public cPacket
+{
+private:
+    int nodeIdSrc;
+    int nodeIdTrg;
+
+public:
+    Packet(int nodeIdSrc, int nodeIdTrg){
+        this->nodeIdSrc = nodeIdSrc;
+        this->nodeIdTrg = nodeIdTrg;
+    }
+
+    int getNodeIdSrc() {return nodeIdSrc;}
+    int getNodeIdTrg() {return nodeIdTrg;}
+};
+
+
+
+// Заявка на передачу пакета
+typedef Packet Request;
+
+
+
+// Сообщение о наличии соединение узла nodeIdSrc со несколькими узлами
 class ConnectionMessage : public cMessage
 {
 private:

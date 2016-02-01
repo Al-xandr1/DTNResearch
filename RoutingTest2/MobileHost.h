@@ -7,14 +7,17 @@
 #include "INETDefs.h"
 
 #include <RoutingDaemon.h>
-#include <Packet.h>
-#include <ConnectionMessage.h>
+#include <Messages.h>
 
 using namespace std;
+
+class RoutingDaemon;
 
 class MobileHost : public cSimpleModule
 {
 private:
+    RoutingDaemon* rd;
+
     int nodeId;
 
     double lambda;

@@ -2,8 +2,16 @@
 
 Define_Module(MobileHost);
 
+#define FOR_NEW_PACKET 0        // сообщение о создании нового пакета
+#define ESTABLISED_CONNECTION 1 // сообщение о соединении
+#define PACKET 2                // обозначение простого пакета
+#define REQUEST_FOR_ROUTING 3   // заявка на маршрутизацию
+
+
 void MobileHost::initialize()
 {
+    rd = check_and_cast<RoutingDaemon*>(getParentModule()->getSubmodule("routing"));
+
     nodeId = par("indexOfNode");
     timeslot = par("timeslot");
     lambda   = par("lambda");
@@ -11,28 +19,27 @@ void MobileHost::initialize()
     packetsForSending = new vector<Packet*>();
 
     cMessage* msg = new cMessage();
-    msg->setKind(0);
+    msg->setKind(FOR_NEW_PACKET);
     scheduleAt(simTime(), msg);
 };
 
 void MobileHost::handleMessage(cMessage *msg)
 {
-    // msg->isSelfMessage() нельзя использовать, так как в методе RD_Listener::processReceivedData
-    // посылка сообщения делается так host->sendDirect(msg, host);
-    if (msg->getKind() == 0) {// сообщение о создании нового пакета
-        RoutingDaemon* routing = check_and_cast<RoutingDaemon*>(getParentModule()->getSubmodule("routing"));
+    if (msg->getKind() == FOR_NEW_PACKET) {// сообщение о создании нового пакета
 
-        int nodeIdTrg = (int) round(uniform(0, (double) routing->getNumHosts()));
+        int nodeIdTrg = (int) round(uniform(0, (double) rd->getNumHosts()));
+
         Packet* packet = new Packet(nodeId, nodeIdTrg);
-        packet->setKind(2);
-
-        //TODO попытаться отправить и не сохранять если успешно
+        packet->setKind(PACKET);
         packetsForSending->push_back(packet);
+
+//        Request* request = new Request(nodeId, nodeIdTrg);
+//        packet->setKind(3);
 
         scheduleAt(simTime() + timeslot * exponential(1/lambda), msg);
 
 
-    } else if (msg->getKind() == 1) {//сообщение о соединении
+    } else if (msg->getKind() == ESTABLISED_CONNECTION) {//сообщение о соединении
         ConnectionMessage* connectionMessage = check_and_cast<ConnectionMessage*>(msg);
 
         vector<int>* connectedIds = connectionMessage->getConnectedTargetIds();
@@ -42,7 +49,7 @@ void MobileHost::handleMessage(cMessage *msg)
 
         delete connectionMessage;
 
-    } else if (msg->getKind() == 2) {//пакет от другого узла
+    } else if (msg->getKind() == PACKET) {//пакет от другого узла
         Packet* packet = check_and_cast<Packet*>(msg);
         if (packet->getNodeIdTrg() != nodeId) {
             EV << "Wrong packet sending: nodeId = " << nodeId
