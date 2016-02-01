@@ -1,7 +1,11 @@
 #ifndef CONNECTIONMESSAGE_H
 #define CONNECTIONMESSAGE_H
 
+#include <stdlib.h>
+
 #include "INETDefs.h"
+
+using namespace std;
 
 class ConnectionMessage : public cMessage
 {

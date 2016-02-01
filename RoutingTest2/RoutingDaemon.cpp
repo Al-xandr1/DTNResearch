@@ -7,18 +7,27 @@ double RoutingDaemon::interconnectionRadius;
 bool** RoutingDaemon::connections = NULL;
 simtime_t** RoutingDaemon::connectStart = NULL;
 simtime_t** RoutingDaemon::connectLost = NULL;
+RoutingDaemon* RoutingDaemon::instance = NULL;
 
 
 void RoutingDaemon::initialize()
 {
+    if (instance == NULL) {
+        instance = this;
+    } else {
+        cout << "Duplicate initialization exception!" << endl;
+        exit(-654);
+    }
     interconnectionRadius = getParentModule()->par("interconnectionRadius");
     numHosts = getParentModule()->par("numHosts");
     in = gate("in");
+    RD_Listener* listener = new RD_Listener();
+    getParentModule()->subscribe(mobilityStateChangedSignal, listener);
 }
 
 void RoutingDaemon::handleMessage(cMessage *msg)
 {
-    cout << "RoutingDeamon: processing of changed matrix of connection...";
+    cout << "RoutingDeamon: received msg";
     delete msg;
 
 //    // бежим по все узлам с целью...
@@ -39,4 +48,20 @@ void RoutingDaemon::handleMessage(cMessage *msg)
 ////        msg->setKind(1);
 ////        host->send(msg, host->gate("in"));
 //    }
+}
+
+void RoutingDaemon::connectionsChanged()
+{
+    log();
+}
+
+void RoutingDaemon::log()
+{
+    cout << "NodeIds:" << endl;
+    for (int i=0; i<RoutingDaemon::numHosts; i++) {
+        MobileHost* host = check_and_cast<MobileHost*>(getParentModule()->getSubmodule("host", i));
+        int nodeId = host->getNodeId();
+        cout << "nodeId = " << nodeId << "  ";
+    }
+    cout << endl << endl;
 }

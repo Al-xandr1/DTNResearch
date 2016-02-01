@@ -1,12 +1,8 @@
 #include "RDListener.h"
 
-Define_Module(RD_Listener);
-
-void RD_Listener::initialize()
+RD_Listener::RD_Listener()
 {
-    cout << "RD_Listener: initializing... " << endl;
-
-    rd = check_and_cast<RoutingDaemon*>(getParentModule()->getSubmodule("routing"));
+    cout << "RD_Listener constructor: start... " << endl;
 
     NodeId = -1;
     position = Coord::ZERO;
@@ -35,9 +31,7 @@ void RD_Listener::initialize()
         for (int j=0; j<i; j++) RoutingDaemon::connectLost[i][j] = 0;
     }
 
-    getParentModule()->subscribe(mobilityStateChangedSignal, this);
-
-    cout << "RD_Listener: initialized" << endl;
+    cout << "RD_Listener constructor: end! " << endl;
 }
 
 void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj)
@@ -48,9 +42,11 @@ void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
           position = src->getCurrentPosition();
 
           checkReceivedData(); // for debugging
-          processReceivedData();
+          if (processReceivedData()) {
+              RoutingDaemon::instance->connectionsChanged();
+          }
 
-          log(); // for debugging
+          //log(); // for debugging
      }
 }
 
@@ -62,7 +58,7 @@ void RD_Listener::checkReceivedData()
     }
 }
 
-void RD_Listener::processReceivedData()
+bool RD_Listener::processReceivedData()
 {
     nodePositions[NodeId] = position;
 
@@ -82,10 +78,7 @@ void RD_Listener::processReceivedData()
         RoutingDaemon::connections[i][NodeId] = conn;
     }
 
-    if (anyChanged) {
-        //todo ◊“Œ ƒ≈À¿“‹????
-        send(new cMessage(), gate("out"));
-    }
+    return anyChanged;
 }
 
 bool RD_Listener::isConnected(int node1, int node2)
@@ -113,14 +106,6 @@ void RD_Listener::log()
             cout << RoutingDaemon::connections[i][j] << "  ";
         }
         cout << endl;
-    }
-    cout << endl;
-
-    cout << "NodeIds:" << endl;
-    for (int i=0; i<RoutingDaemon::numHosts; i++) {
-        MobileHost* host = check_and_cast<MobileHost*>(getParentModule()->getSubmodule("host", i));
-        int nodeId = host->getNodeId();
-        cout << "nodeId = " << nodeId << "  ";
     }
     cout << endl << endl;
 }

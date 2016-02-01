@@ -15,10 +15,9 @@
 
 using namespace std;
 
+class RoutingDaemon;
 
-static simsignal_t mobilityStateChangedSignal = cComponent::registerSignal("mobilityStateChanged");
-
-class RD_Listener : public cSimpleModule, cIListener {
+class RD_Listener : public cIListener {
 protected:
     RoutingDaemon* rd;
 
@@ -28,7 +27,7 @@ protected:
     vector<Coord> nodePositions;
 
 public:
-    RD_Listener() {};
+    RD_Listener();
 
     virtual void  receiveSignal (cComponent *source, simsignal_t signalID, bool b)              { cout << "not supported"; };
     virtual void  receiveSignal (cComponent *source, simsignal_t signalID, long l)              { cout << "not supported"; };
@@ -39,10 +38,8 @@ public:
 
     virtual void  receiveSignal (cComponent *source, simsignal_t signalID, cObject *obj);
 
-    virtual void initialize();
-
     void checkReceivedData();
-    void processReceivedData();
+    bool processReceivedData();
     bool isConnected(int node1, int node2);
 
     void log();

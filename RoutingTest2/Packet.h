@@ -1,7 +1,12 @@
 #ifndef PACKET_H
 #define PACKET_H
 
+#include <stdlib.h>
+
 #include "INETDefs.h"
+
+using namespace std;
+
 
 class Packet : public cPacket
 {

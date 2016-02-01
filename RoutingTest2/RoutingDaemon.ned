@@ -5,5 +5,5 @@ simple RoutingDaemon
         @class(RoutingDaemon);
        
     gates:
-        input in;      
+        input in @directIn;      
 }
