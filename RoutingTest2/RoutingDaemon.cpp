@@ -27,6 +27,8 @@ void RoutingDaemon::initialize()
 
 void RoutingDaemon::handleMessage(cMessage *msg)
 {
+    //todo получает сообщения от подвижных узлов, в которых узлы
+    //сообщают ему, что у них появился пакет для передачи туда-то
     cout << "RoutingDeamon: received msg";
     delete msg;
 
@@ -52,7 +54,8 @@ void RoutingDaemon::handleMessage(cMessage *msg)
 
 void RoutingDaemon::connectionsChanged()
 {
-    log();
+    //todo  просматривает этот вектор с заявками и посылает сообщение на удовлетворение последних
+    log();//todo remove
 }
 
 void RoutingDaemon::log()
