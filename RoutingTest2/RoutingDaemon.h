@@ -9,6 +9,7 @@
 #include "INETDefs.h"
 #include "MobileHost.h"
 #include "RDListener.h"
+#include "Messages.h"
 
 using namespace std;
 
@@ -23,6 +24,7 @@ public:
     static bool** connections;
     static simtime_t** connectStart;
     static simtime_t** connectLost;
+    static vector<Request*>* requests;
     static RoutingDaemon* instance;
 
 public:
@@ -31,12 +33,11 @@ public:
     int getNumHosts() {return numHosts;}
 
     virtual void initialize();
-
     virtual void handleMessage(cMessage *msg);
 
-    void log();
-
+    bool processIfCan(Request* request);
     void connectionsChanged();
+    void log();
 };
 
 #endif

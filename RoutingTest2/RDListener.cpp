@@ -42,6 +42,7 @@ void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
           position = src->getCurrentPosition();
 
           checkReceivedData(); // for debugging
+
           if (processReceivedData()) {
               RoutingDaemon::instance->connectionsChanged();
           }

@@ -7,6 +7,11 @@
 
 using namespace std;
 
+#define FOR_NEW_PACKET 1        // сообщение о создании нового пакета
+#define ESTABLISED_CONNECTION 2 // сообщение о соединении
+#define PACKET 3                // обозначение простого пакета
+#define REQUEST_FOR_ROUTING 4   // заявка на маршрутизацию
+
 
 // Пакет для передачи
 class Packet : public cPacket

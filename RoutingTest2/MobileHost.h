@@ -30,7 +30,9 @@ public:
 
     int getNodeId() {return nodeId;};
     vector<Packet*>* getPacketsForSending() {return packetsForSending;};
-    void sendPacketTo(Packet* packet, int nodeId);
+
+    int generateTarget();
+    void registerPacket(Packet* packet);
 
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
