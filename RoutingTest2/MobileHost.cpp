@@ -6,6 +6,7 @@ Define_Module(MobileHost);
 void MobileHost::initialize()
 {
     rd = check_and_cast<RoutingDaemon*>(getParentModule()->getSubmodule("routing"));
+    collectorGate = getParentModule()->getSubmodule("collector")->gate("in");
 
     nodeId = par("indexOfNode");
     timeslot = par("timeslot");
@@ -24,6 +25,7 @@ void MobileHost::handleMessage(cMessage *msg)
 
         int nodeIdTrg = generateTarget();
         Packet* packet = new Packet(nodeId, nodeIdTrg);
+        packet->setCreationTime(simTime());
         packet->setKind(PACKET);
 
         registerPacket(packet);
@@ -56,6 +58,8 @@ void MobileHost::handleMessage(cMessage *msg)
     } else if (msg->getKind() == PACKET) {//пакет от другого узла
         Packet* packet = check_and_cast<Packet*>(msg);
         if (packet->getNodeIdTrg() != nodeId) {
+            exit(-654);// only for testing. Remove
+
             cout << "MobileHost: Transit packet: nodeId = " << nodeId
                     << ", packet->getNodeIdSrc() = " << packet->getNodeIdSrc()
                     << ", packet->getNodeIdTrg() = " << packet->getNodeIdTrg() << endl;
@@ -63,11 +67,12 @@ void MobileHost::handleMessage(cMessage *msg)
             registerPacket(packet);
 
         } else {
-            cout << "MobileHost: Received packet: nodeId = " << nodeId
-                    << ", packet->getNodeIdSrc() = " << packet->getNodeIdSrc()
-                    << ", packet->getNodeIdTrg() = " << packet->getNodeIdTrg() << endl;
+//            cout << "MobileHost: Received packet: nodeId = " << nodeId
+//                    << ", packet->getNodeIdSrc() = " << packet->getNodeIdSrc()
+//                    << ", packet->getNodeIdTrg() = " << packet->getNodeIdTrg() << endl;
 
-            delete msg;
+            packet->setReceivedTime(simTime());
+            sendDirect(packet, collectorGate);
         }
 
 

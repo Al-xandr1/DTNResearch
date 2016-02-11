@@ -17,6 +17,7 @@ class MobileHost : public cSimpleModule
 {
 private:
     RoutingDaemon* rd;
+    cGate* collectorGate;
 
     int nodeId;
 

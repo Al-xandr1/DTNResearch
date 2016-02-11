@@ -11,6 +11,7 @@ using namespace std;
 #define ESTABLISED_CONNECTION 2 // сообщение о соединении
 #define PACKET 3                // обозначение простого пакета
 #define REQUEST_FOR_ROUTING 4   // заявка на маршрутизацию
+#define ICT_INFO 5              // сообщение с информацией о ICT
 
 
 // Пакет для передачи
@@ -20,14 +21,27 @@ private:
     int nodeIdSrc;
     int nodeIdTrg;
 
+    simtime_t creationTime;
+    simtime_t receivedTime;
+
 public:
     Packet(int nodeIdSrc, int nodeIdTrg){
         this->nodeIdSrc = nodeIdSrc;
         this->nodeIdTrg = nodeIdTrg;
+        this->creationTime = 0;
+        this->receivedTime = 0;
     }
 
     int getNodeIdSrc() {return nodeIdSrc;}
     int getNodeIdTrg() {return nodeIdTrg;}
+
+    void setCreationTime(simtime_t time) {creationTime = time;}
+    void setReceivedTime(simtime_t time) {receivedTime = time;}
+
+    simtime_t getCreationTime() {return creationTime;}
+    simtime_t getReceivedTime() {return receivedTime;}
+
+    simtime_t getLiveTime() {return receivedTime - creationTime;}
 };
 
 
@@ -56,6 +70,27 @@ public:
 
     int getNodeIdSrc() {return nodeIdSrc;}
     vector<int>* getConnectedTargetIds() {return connectedTargetIds;}
+};
+
+
+
+class ICTMessage : public cMessage
+{
+private:
+    int i; // id одного узла
+    int j; // id другого узла
+    simtime_t ict;
+
+public:
+    ICTMessage(int i, int j, simtime_t ict) {
+        this->i = i;
+        this->j = j;
+        this->ict = ict;
+    }
+
+    int getI() {return i;}
+    int getJ() {return j;}
+    simtime_t getICT() {return ict;}
 };
 
 #endif

@@ -23,6 +23,8 @@ void RoutingDaemon::initialize()
     interconnectionRadius = getParentModule()->par("interconnectionRadius");
     numHosts = getParentModule()->par("numHosts");
     in = gate("in");
+    collectorGate = getParentModule()->getSubmodule("collector")->gate("in");
+
     RD_Listener* listener = new RD_Listener();
     getParentModule()->subscribe(mobilityStateChangedSignal, listener);
 }
@@ -31,7 +33,9 @@ void RoutingDaemon::handleMessage(cMessage *msg)
 {
     if (msg->getKind() == REQUEST_FOR_ROUTING) {
         Request* request = check_and_cast<Request*>(msg);
-        cout << "RoutingDeamon: received request from node: " << request->getNodeIdSrc() << " to node: " << request->getNodeIdTrg() << endl;
+//        cout << "RoutingDeamon: received request from node: " << request->getNodeIdSrc() << " to node: " << request->getNodeIdTrg() << endl;
+
+        //todo переслать request сборщику статистики с метокой удалить
 
         if (processIfCan(request)) delete request;
         else requests->push_back(request);
@@ -41,6 +45,18 @@ void RoutingDaemon::handleMessage(cMessage *msg)
         cout << "Sender: " << msg->getSenderModule()->getFullName() << endl;
         exit(-444);
     }
+}
+
+//todo если не учитывать первое появление соединения, то можно почти всё перенести в этот метод
+void RoutingDaemon::calculateICT(int i, int j, simtime_t oldStart, simtime_t oldLost, simtime_t newStart)
+{
+    //todo расчёт ICT
+    simtime_t ict = 0;
+
+    ICTMessage* ictMsg = new ICTMessage(i, j, ict);
+    ictMsg->setKind(ICT_INFO);
+    take(ictMsg);
+    sendDirect(ictMsg, collectorGate);
 }
 
 void RoutingDaemon::connectionsChanged()

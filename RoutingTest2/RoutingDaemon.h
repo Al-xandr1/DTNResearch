@@ -16,6 +16,9 @@ using namespace std;
 static simsignal_t mobilityStateChangedSignal = cComponent::registerSignal("mobilityStateChanged");
 
 class RoutingDaemon : public cSimpleModule {
+private:
+    cGate* collectorGate;
+
 public:
     cGate* in;
 
@@ -36,6 +39,7 @@ public:
     virtual void handleMessage(cMessage *msg);
 
     bool processIfCan(Request* request);
+    void calculateICT(int i, int j, simtime_t oldStart, simtime_t oldLost, simtime_t newStart);
     void connectionsChanged();
     void log();
 };

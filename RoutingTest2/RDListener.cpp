@@ -64,18 +64,34 @@ bool RD_Listener::processReceivedData()
     nodePositions[NodeId] = position;
 
     bool anyChanged = false;
+
     for (int j=0; j<NodeId; j++) {
         bool conn = isConnected(NodeId, j);
-        if(!RoutingDaemon::connections[NodeId][j] &&  conn ) RoutingDaemon::connectStart[NodeId][j]= simTime();
-        if( RoutingDaemon::connections[NodeId][j] && !conn ) RoutingDaemon::connectLost[NodeId][j] = simTime();
-        anyChanged |= RoutingDaemon::connections[NodeId][j] ^ conn;
+        if(!RoutingDaemon::connections[NodeId][j] &&  conn ) {
+            RoutingDaemon::instance->calculateICT(NodeId, j, RoutingDaemon::connectStart[NodeId][j], RoutingDaemon::connectLost[NodeId][j], simTime());
+
+            RoutingDaemon::connectStart[NodeId][j] = simTime();
+            anyChanged = true;
+
+        } else if( RoutingDaemon::connections[NodeId][j] && !conn ) {
+            RoutingDaemon::connectLost[NodeId][j] = simTime();
+            anyChanged = true;
+        }
         RoutingDaemon::connections[NodeId][j] = conn;
     }
+
     for (int i=NodeId+1; i<RoutingDaemon::numHosts; i++) {
         bool conn = isConnected(i, NodeId);
-        if(!RoutingDaemon::connections[i][NodeId] &&  conn ) RoutingDaemon::connectStart[i][NodeId]= simTime();
-        if( RoutingDaemon::connections[i][NodeId] && !conn ) RoutingDaemon::connectLost[i][NodeId] = simTime();
-        anyChanged |= RoutingDaemon::connections[i][NodeId] ^ conn;
+        if(!RoutingDaemon::connections[i][NodeId] &&  conn ) {
+            RoutingDaemon::instance->calculateICT(i, NodeId, RoutingDaemon::connectStart[i][NodeId], RoutingDaemon::connectLost[i][NodeId], simTime());
+
+            RoutingDaemon::connectStart[i][NodeId] = simTime();
+            anyChanged = true;
+
+        } else if( RoutingDaemon::connections[i][NodeId] && !conn ) {
+            RoutingDaemon::connectLost[i][NodeId] = simTime();
+            anyChanged = true;
+        }
         RoutingDaemon::connections[i][NodeId] = conn;
     }
 
