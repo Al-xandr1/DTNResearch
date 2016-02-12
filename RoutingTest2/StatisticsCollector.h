@@ -10,6 +10,8 @@
 class StatisticsCollector : public cSimpleModule
 {
 private:
+    cGate* rdGate;
+
     unsigned int createdPackes;
     unsigned int recievedPackets;
     simtime_t timeOfCollection;

@@ -68,7 +68,9 @@ bool RD_Listener::processReceivedData()
     for (int j=0; j<NodeId; j++) {
         bool conn = isConnected(NodeId, j);
         if(!RoutingDaemon::connections[NodeId][j] &&  conn ) {
-            RoutingDaemon::instance->calculateICT(NodeId, j, RoutingDaemon::connectStart[NodeId][j], RoutingDaemon::connectLost[NodeId][j], simTime());
+            RoutingDaemon::instance->calculateICT(NodeId, j,
+                    RoutingDaemon::connectStart[NodeId][j],
+                    RoutingDaemon::connectLost[NodeId][j], simTime());
 
             RoutingDaemon::connectStart[NodeId][j] = simTime();
             anyChanged = true;
@@ -83,7 +85,9 @@ bool RD_Listener::processReceivedData()
     for (int i=NodeId+1; i<RoutingDaemon::numHosts; i++) {
         bool conn = isConnected(i, NodeId);
         if(!RoutingDaemon::connections[i][NodeId] &&  conn ) {
-            RoutingDaemon::instance->calculateICT(i, NodeId, RoutingDaemon::connectStart[i][NodeId], RoutingDaemon::connectLost[i][NodeId], simTime());
+            RoutingDaemon::instance->calculateICT(i, NodeId,
+                    RoutingDaemon::connectStart[i][NodeId],
+                    RoutingDaemon::connectLost[i][NodeId], simTime());
 
             RoutingDaemon::connectStart[i][NodeId] = simTime();
             anyChanged = true;

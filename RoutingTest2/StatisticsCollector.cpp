@@ -8,6 +8,7 @@ void StatisticsCollector::initialize()
     createdPackes = 0;
     recievedPackets = 0;
     timeOfCollection = getParentModule()->par("timeOfCollection");
+    rdGate = getParentModule()->getSubmodule("routing")->gate("in");
 }
 
 void StatisticsCollector::handleMessage(cMessage *msg)
@@ -16,11 +17,9 @@ void StatisticsCollector::handleMessage(cMessage *msg)
         Packet* packet = check_and_cast<Packet*>(msg);
 
         recievedPackets++;
-
-        //todo сделать сбор статистики
-        cout << recievedPackets << endl;
         cout << "recievedPackets = " << recievedPackets << endl;
 
+        //todo сделать сбор статистики
         simtime_t liveTime = packet->getLiveTime();
         cout << "liveTime = " << liveTime << endl;
 
@@ -28,11 +27,10 @@ void StatisticsCollector::handleMessage(cMessage *msg)
 
 
     } else if (msg->getKind() == REQUEST_FOR_ROUTING) {//заявка на маршуризацию
-        Request* request = check_and_cast<Request*>(msg);
-
         createdPackes++;
         cout << "createdPackes = " << createdPackes << endl;
-        //уничтожаются RoutingDaemon'ом
+        sendDirect(msg, rdGate);
+
 
     } else if (msg->getKind() == ICT_INFO) {//сбор статистики по ICT
         ICTMessage* ictMsg = check_and_cast<ICTMessage*>(msg);

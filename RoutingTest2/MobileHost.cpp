@@ -95,7 +95,7 @@ void MobileHost::registerPacket(Packet* packet) {
 
     Request* request = new Request(nodeId, packet->getNodeIdTrg());
     request->setKind(REQUEST_FOR_ROUTING);
-    sendDirect(request, rd->gate("in"));
+    sendDirect(request, collectorGate);
 
     if (nodeId == request->getNodeIdTrg()) exit(-129); // for debugging
 }

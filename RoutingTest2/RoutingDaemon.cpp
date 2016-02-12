@@ -35,8 +35,6 @@ void RoutingDaemon::handleMessage(cMessage *msg)
         Request* request = check_and_cast<Request*>(msg);
 //        cout << "RoutingDeamon: received request from node: " << request->getNodeIdSrc() << " to node: " << request->getNodeIdTrg() << endl;
 
-        //todo переслать request сборщику статистики с метокой удалить
-
         if (processIfCan(request)) delete request;
         else requests->push_back(request);
 
@@ -50,8 +48,10 @@ void RoutingDaemon::handleMessage(cMessage *msg)
 //todo если не учитывать первое появление соединения, то можно почти всё перенести в этот метод
 void RoutingDaemon::calculateICT(int i, int j, simtime_t oldStart, simtime_t oldLost, simtime_t newStart)
 {
-    //todo расчёт ICT
-    simtime_t ict = 0;
+    if (i <= j) exit(987); //такой ситуации быть не должно
+    if (oldStart == 0 && oldLost == 0) return; //первое соединение игнорируем
+
+    simtime_t ict = newStart - oldLost;
 
     ICTMessage* ictMsg = new ICTMessage(i, j, ict);
     ictMsg->setKind(ICT_INFO);
