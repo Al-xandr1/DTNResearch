@@ -5,8 +5,8 @@ network LevyHotSpotsLATPNetwork
 {
     parameters:
         int numHosts;
-        double interconnectionRadius = default(500); // radius of transmitters of each node in meters
-        double timeOfCollection = default(86400); //time duration for collection of statistics (one day by default) 
+        double interconnectionRadius = default(700); // radius of transmitters of each node in meters
+        double timeOfCollection = default(86400); //time duration for collection of statistics (one day by default) NOT USED YET
         
         @display("bgb=600,400");
         

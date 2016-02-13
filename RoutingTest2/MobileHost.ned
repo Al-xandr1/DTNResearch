@@ -16,7 +16,7 @@ module MobileHost
         
         int indexOfNode = default(0);
         double timeslot = default(50);
-    	double lambda = default(1);
+    	double lambda = default(0.3);
     
     gates:
         input in @directIn;

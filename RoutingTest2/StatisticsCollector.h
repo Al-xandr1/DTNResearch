@@ -13,9 +13,11 @@ private:
     cGate* rdGate;
 
     unsigned int createdPackes;
-    unsigned int recievedPackets;
+    unsigned int receivedPackets;
     simtime_t timeOfCollection;
 
+    cDoubleHistogram* lifeTimePDF;
+    cDoubleHistogram* ictPDF;
 
 protected:
     virtual void initialize();
