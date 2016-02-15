@@ -11,7 +11,11 @@ void StatisticsCollector::initialize()
     rdGate = getParentModule()->getSubmodule("routing")->gate("in");
 
     lifeTimePDF = new cDoubleHistogram();
+    lifeTimePDF->setCellSize(100);
+    lifeTimePDF->setRangeAutoUpper(0, 100, 5);
     ictPDF = new cDoubleHistogram();
+    ictPDF->setCellSize(100);
+    ictPDF->setRangeAutoUpper(0, 100, 5);
 }
 
 void StatisticsCollector::handleMessage(cMessage *msg)
@@ -37,32 +41,61 @@ void StatisticsCollector::handleMessage(cMessage *msg)
 
     } else if (msg->getKind() == ICT_INFO) {//сбор статистики по ICT
         ICTMessage* ictMsg = check_and_cast<ICTMessage*>(msg);
+        if (ictMsg->getICT()< 0) {cout << "ictMsg->getICT() = " << ictMsg->getICT() << endl; exit(-234); }
         ictPDF->collect(ictMsg->getICT());
 
         delete ictMsg;
 
-    }
-    else {
+    } else {
         exit(-555);
     }
 }
 
 void StatisticsCollector::finish() {
+    if (!lifeTimePDF->isTransformed()) lifeTimePDF->transform();
+    if (!ictPDF->isTransformed()) ictPDF->transform();
+
+    ofstream out(buildFullName("outTrace", "ictstatistics.xml"));
+    out << "<?xml version=\'1.0' ?>" << endl << endl;
+    out << "<STATISTICS>" << endl;
+
     double deliveredPercentage = (1.0 * receivedPackets) / (1.0 * createdPackes) * 100;
+    out << "    <DELIVERED-PACKETS> " << deliveredPercentage << " </DELIVERED-PACKETS>" << endl;
 
-    cout << "DeliveredPercentage = " << deliveredPercentage << " %" << endl << endl;
+    out << "    <LIFE-TIME-PDF> " << endl;
+    out << "        <COLLECTED> " << lifeTimePDF->getCount() << " </COLLECTED>" << endl;
+    out << "        <MIN> " << lifeTimePDF->getMin() << " </MIN>" << endl;
+    out << "        <MEAN> " << lifeTimePDF->getMean() << " </MEAN>" << endl;
+    out << "        <MAX> " << lifeTimePDF->getMax() << " </MAX>" << endl;
+    out << "        <VARIANCE> " << lifeTimePDF->getVariance() << " </VARIANCE>" << endl;
+    out << "        <BASEPOINT> " << lifeTimePDF->getBasepoint(0) << " </BASEPOINT>"<< endl;
+    out << "        <CELL-SIZE> " << lifeTimePDF->getCellSize() << " </CELL-SIZE>"<< endl;
+    out << "        <NUM-CELLS> " << lifeTimePDF->getNumCells() << " </NUM-CELLS>"<< endl;
+    out << "        <VALUES> " << endl;
+    int max;
+    for(max = lifeTimePDF->getNumCells()-1; max >= 0; max--) if (lifeTimePDF->getCellPDF(max) != 0) break;
+    for(int i=0; i <= max; i++) out << lifeTimePDF->getCellPDF(i) << "  ";
+    out << endl << "        </VALUES> " << endl;
+    out << "        <OVERFLOW-CELL> " << lifeTimePDF->getOverflowCell() << " </OVERFLOW-CELL>" << endl;
+    out << "        <UNDERFLOW-CELL> " << lifeTimePDF->getUnderflowCell() << " </UNDERFLOW-CELL>" << endl;
+    out << "    </LIFE-TIME-PDF> " << endl;
 
-    cout << "Packet's life time PDF:" << endl;
-    for (int i=0; i < lifeTimePDF->getNumCells(); i++) {
-        cout << lifeTimePDF->getCellPDF(i) << "  ";
-        if (i % 30 == 0) cout << endl;
-    }
-    cout << endl;
 
-    cout << "ICT PDF:" << endl;
-    for (int i=0; i < ictPDF->getNumCells(); i++) {
-        cout << ictPDF->getCellPDF(i) << "  ";
-        if (i % 30 == 0) cout << endl;
-    }
-    cout << endl;
+    out << "    <ICT-PDF> " << endl;
+    out << "        <COLLECTED> " << ictPDF->getCount() << " </COLLECTED>" << endl;
+    out << "        <MIN> " << ictPDF->getMin() << " </MIN>" << endl;
+    out << "        <MEAN> " << ictPDF->getMean() << " </MEAN>" << endl;
+    out << "        <MAX> " << ictPDF->getMax() << " </MAX>" << endl;
+    out << "        <VARIANCE> " << ictPDF->getVariance() << " </VARIANCE>" << endl;
+    out << "        <BASEPOINT> " << ictPDF->getBasepoint(0) << " </BASEPOINT>"<< endl;
+    out << "        <CELL-SIZE> " << ictPDF->getCellSize() << " </CELL-SIZE>"<< endl;
+    out << "        <NUM-CELLS> " << ictPDF->getNumCells() << " </NUM-CELLS>"<< endl;
+    out << "        <VALUES> " << endl;
+    for(max = ictPDF->getNumCells()-1; max >= 0; max--) if (ictPDF->getCellPDF(max) != 0) break;
+    for(int i=0; i <= max; i++) out << ictPDF->getCellPDF(i) << "  ";
+    out << endl << "        </VALUES> " << endl;
+    out << "        <OVERFLOW-CELL> " << ictPDF->getOverflowCell() << " </OVERFLOW-CELL>" << endl;
+    out << "        <UNDERFLOW-CELL> " << ictPDF->getUnderflowCell() << " </UNDERFLOW-CELL>" << endl;
+    out << "    </ICT-PDF> " << endl;
+    out << "<STATISTICS>" << endl;
 }

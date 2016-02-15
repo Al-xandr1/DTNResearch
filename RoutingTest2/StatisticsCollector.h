@@ -2,10 +2,15 @@
 #ifndef __ROUTINGTEST2_STATISTICSCOLLECTOR_H_
 #define __ROUTINGTEST2_STATISTICSCOLLECTOR_H_
 
+#include <iostream>
+#include <fstream>
+
 #include <omnetpp.h>
 
 #include <Messages.h>
+#include "DevelopmentHelper.h"
 
+using namespace std;
 
 class StatisticsCollector : public cSimpleModule
 {
