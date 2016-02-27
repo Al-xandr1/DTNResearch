@@ -17,6 +17,7 @@ class MobileHost : public cSimpleModule
 {
 private:
     RoutingDaemon* rd;
+    cGate* rdGate;
     cGate* collectorGate;
 
     int nodeId;
@@ -32,8 +33,10 @@ public:
     int getNodeId() {return nodeId;};
     vector<Packet*>* getPacketsForSending() {return packetsForSending;};
 
+    Packet* createPacket();
     int generateTarget();
     void registerPacket(Packet* packet);
+    void destroyPacket(Packet* packet);
 
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);

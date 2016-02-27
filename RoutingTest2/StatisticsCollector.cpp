@@ -20,28 +20,27 @@ void StatisticsCollector::initialize()
 
 void StatisticsCollector::handleMessage(cMessage *msg)
 {
-    if (msg->getKind() == PACKET) {//пакет от мобильного узла
-        Packet* packet = check_and_cast<Packet*>(msg);
-
-        receivedPackets++;
-
-        if (receivedPackets % 100 == 0) cout << "Delivered Packets = " << receivedPackets << endl;
-
-        simtime_t liveTime = packet->getLiveTime();
-        lifeTimePDF->collect(liveTime);
-
-        delete packet;
-
-
-    } else if (msg->getKind() == REQUEST_FOR_ROUTING) {//заявка на маршуризацию
+    if (msg->getKind() == NEW_PACKET_CREATED) {//новый пакет создан
         createdPackes++;
         if (createdPackes % 100 == 0) cout << "Created Packes = " << createdPackes << endl;
-        sendDirect(msg, rdGate);
+        delete msg;
+
+
+    } else if (msg->getKind() == PACKET_RECEIVED) {//пакет получен узлом и удалён
+        PacketReceived* packetReceived = check_and_cast<PacketReceived*>(msg);
+
+        receivedPackets++;
+        if (receivedPackets % 100 == 0) cout << "Delivered Packets = " << receivedPackets << endl;
+
+        simtime_t liveTime = packetReceived->getLiveTime();
+        lifeTimePDF->collect(liveTime);
+
+        delete packetReceived;
 
 
     } else if (msg->getKind() == ICT_INFO) {//сбор статистики по ICT
         ICTMessage* ictMsg = check_and_cast<ICTMessage*>(msg);
-        if (ictMsg->getICT()< 0) {cout << "ictMsg->getICT() = " << ictMsg->getICT() << endl; exit(-234); }
+        if (ictMsg->getICT() < 0) {cout << "ictMsg->getICT() = " << ictMsg->getICT() << endl; exit(-234); }
         ictPDF->collect(ictMsg->getICT());
 
         delete ictMsg;

@@ -7,11 +7,13 @@
 
 using namespace std;
 
-#define FOR_NEW_PACKET 1        // сообщение о создании нового пакета
-#define ESTABLISED_CONNECTION 2 // сообщение о соединении
-#define PACKET 3                // обозначение простого пакета
-#define REQUEST_FOR_ROUTING 4   // заявка на маршрутизацию
-#define ICT_INFO 5              // сообщение с информацией о ICT
+#define FOR_NEW_PACKET 1        // сообщение для создании нового пакета
+#define NEW_PACKET_CREATED 2    // сообщение о созданном новом пакете
+#define ESTABLISED_CONNECTION 3 // сообщение о соединении
+#define PACKET 4                // обозначение простого пакета
+#define REQUEST_FOR_ROUTING 5   // заявка на маршрутизацию
+#define PACKET_RECEIVED 6       // сообщение о полученном пакете
+#define ICT_INFO 7              // сообщение с информацией о ICT
 
 
 // Пакет для передачи
@@ -48,6 +50,21 @@ public:
 
 // Заявка на передачу пакета
 typedef Packet Request;
+
+
+// Сообщение о получении пакет узлом
+class PacketReceived : public cMessage
+{
+private:
+    simtime_t liveTime;
+
+public:
+    PacketReceived(simtime_t liveTime){
+        this->liveTime = liveTime;
+    }
+
+    simtime_t getLiveTime() {return liveTime;}
+};
 
 
 
