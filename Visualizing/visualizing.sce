@@ -247,10 +247,25 @@ endfunction
 //------------------ Функции для рисования Статистики -------------------------
 
 //Рисование всех гистрограмм из одного файла статистики
-function drawAllHistograms(varargin)
+function drawNodeHistograms(varargin)
     [lhs, rhs] = argn();// rhs - количество входных параметров
     if (rhs < 1) then
-        error(msprintf("drawAllHistograms: Ожидалось один или более параметров (имён файлов)"));
+        error(msprintf("drawNodeHistograms: Ожидалось один или более параметров (имён файлов)"));
+    end
+    
+    fileNames = [];
+    for i = 1 : rhs
+        fileNames = [fileNames ; varargin(i)];
+    end
+    drawHistograms(fileNames, "LIFE-TIME-HISTOGRAM", "Life time, simsecs");
+    drawHistograms(fileNames, "ICT-PDF-HISTOGRAM", "ICT, simsecs");
+endfunction
+
+//Рисование всех гистрограмм из одного файла статистики
+function drawWPHistograms(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
     fileNames = [];

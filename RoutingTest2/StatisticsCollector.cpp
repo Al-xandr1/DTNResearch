@@ -126,7 +126,8 @@ void StatisticsCollector::finish() {
         out << val << "  ";
     }
     out << endl << "        </CCDF-VALS> " << endl;
+    out << "    </ICT-PDF-HISTOGRAM> " << endl;
 
 
-    out << "<STATISTICS>" << endl;
+    out << "</STATISTICS>" << endl;
 }
