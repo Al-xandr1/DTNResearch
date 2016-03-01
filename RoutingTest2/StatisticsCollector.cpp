@@ -59,93 +59,73 @@ void StatisticsCollector::finish() {
     out << "<STATISTICS>" << endl;
 
     double deliveredPercentage = (1.0 * receivedPackets) / (1.0 * createdPackes) * 100;
-    out << "    <DELIVERED-PACKETS> " << deliveredPercentage << " </DELIVERED-PACKETS>" << endl;
+    out << "    <DELIVERED-PACKETS> " << deliveredPercentage << " </DELIVERED-PACKETS>" << endl << endl;
 
 
-    out << "    <LIFE-TIME-PDF> " << endl;
+    out << "    <LIFE-TIME-HISTOGRAM> " << endl;
     out << "        <COLLECTED> " << lifeTimePDF->getCount() << " </COLLECTED>" << endl;
     out << "        <MIN> " << lifeTimePDF->getMin() << " </MIN>" << endl;
     out << "        <MEAN> " << lifeTimePDF->getMean() << " </MEAN>" << endl;
     out << "        <MAX> " << lifeTimePDF->getMax() << " </MAX>" << endl;
     out << "        <VARIANCE> " << lifeTimePDF->getVariance() << " </VARIANCE>" << endl;
-    out << "        <BASEPOINT> " << lifeTimePDF->getBasepoint(0) << " </BASEPOINT>"<< endl;
-    out << "        <CELL-SIZE> " << lifeTimePDF->getCellSize() << " </CELL-SIZE>"<< endl;
-    out << "        <NUM-CELLS> " << lifeTimePDF->getNumCells() << " </NUM-CELLS>"<< endl;
-    out << "        <VALUES> " << endl;
-    for(int i = 0; i < lifeTimePDF->getNumCells(); i++) out << lifeTimePDF->getCellPDF(i) << "  ";
-    out << endl << "        </VALUES> " << endl;
     out << "        <OVERFLOW-CELL> " << lifeTimePDF->getOverflowCell() << " </OVERFLOW-CELL>" << endl;
     out << "        <UNDERFLOW-CELL> " << lifeTimePDF->getUnderflowCell() << " </UNDERFLOW-CELL>" << endl;
-    out << "    </LIFE-TIME-PDF> " << endl << endl;
 
-
-    out << "    <LIFE-TIME-CDF> " << endl;
-    out << "        <CELL-SIZE> " << lifeTimePDF->getCellSize() << " </CELL-SIZE>"<< endl;
-    out << "        <NUM-CELLS> " << lifeTimePDF->getNumCells() << " </NUM-CELLS>"<< endl;
-    out << "        <VALUES> " << endl;
+    out << "        <CELLS> " << lifeTimePDF->getNumCells() << " </CELLS>"<< endl;
+    out << "        <CELL-WIDTH> " << lifeTimePDF->getCellSize() << " </CELL-WIDTH>"<< endl;
+    out << "        <LEFT-BOUND> " << lifeTimePDF->getCellInfo(0).lower << " </LEFT-BOUND>"<< endl;
+    out << "        <RIGHT-BOUND> " << lifeTimePDF->getCellInfo(lifeTimePDF->getNumCells()-1).upper<< " </RIGHT-BOUND>"<< endl;
+    out << "        <PDF-VALS> " << endl;
+    for(int i = 0; i < lifeTimePDF->getNumCells(); i++) out << lifeTimePDF->getCellPDF(i) << "  ";
+    out << endl << "        </PDF-VALS> " << endl;
+    out << "        <CDF-VALS> " << endl;
     for (int i = 0; i < lifeTimePDF->getNumCells(); i++) {
         double val = 0;
         for (int j = 0; j <= i; j++) val += lifeTimePDF->getCellPDF(j);
         out << val << "  ";
     }
-    out << endl << "        </VALUES> " << endl;
-    out << "    </LIFE-TIME-CDF> " << endl << endl;
-
-
-    out << "    <LIFE-TIME-CCDF> " << endl;
-    out << "        <CELL-SIZE> " << lifeTimePDF->getCellSize() << " </CELL-SIZE>"<< endl;
-    out << "        <NUM-CELLS> " << lifeTimePDF->getNumCells() << " </NUM-CELLS>"<< endl;
-    out << "        <VALUES> " << endl;
+    out << endl << "        </CDF-VALS> " << endl;
+    out << "        <CCDF-VALS> " << endl;
     for (int i = 0; i < lifeTimePDF->getNumCells(); i++) {
         double val = 0;
         for (int j = i+1; j < lifeTimePDF->getNumCells(); j++) val += lifeTimePDF->getCellPDF(j);
         out << val << "  ";
     }
-    out << endl << "        </VALUES> " << endl;
-    out << "    </LIFE-TIME-CCDF> " << endl << endl << endl;
+    out << endl << "        </CCDF-VALS> " << endl;
+    out << "    </LIFE-TIME-HISTOGRAM> " << endl << endl;
 
 
-    out << "    <ICT-PDF> " << endl;
+    out << "    <ICT-PDF-HISTOGRAM> " << endl;
     out << "        <COLLECTED> " << ictPDF->getCount() << " </COLLECTED>" << endl;
     out << "        <MIN> " << ictPDF->getMin() << " </MIN>" << endl;
     out << "        <MEAN> " << ictPDF->getMean() << " </MEAN>" << endl;
     out << "        <MAX> " << ictPDF->getMax() << " </MAX>" << endl;
     out << "        <VARIANCE> " << ictPDF->getVariance() << " </VARIANCE>" << endl;
-    out << "        <BASEPOINT> " << ictPDF->getBasepoint(0) << " </BASEPOINT>"<< endl;
-    out << "        <CELL-SIZE> " << ictPDF->getCellSize() << " </CELL-SIZE>"<< endl;
-    out << "        <NUM-CELLS> " << ictPDF->getNumCells() << " </NUM-CELLS>"<< endl;
-    out << "        <VALUES> " << endl;
-    for (int i = 0; i < ictPDF->getNumCells(); i++) out << ictPDF->getCellPDF(i) << "  ";
-    out << endl << "        </VALUES> " << endl;
     out << "        <OVERFLOW-CELL> " << ictPDF->getOverflowCell() << " </OVERFLOW-CELL>" << endl;
     out << "        <UNDERFLOW-CELL> " << ictPDF->getUnderflowCell() << " </UNDERFLOW-CELL>" << endl;
-    out << "    </ICT-PDF> " << endl << endl;
 
+    out << "        <CELLS> " << ictPDF->getNumCells() << " </CELLS>"<< endl;
+    out << "        <CELL-WIDTH> " << ictPDF->getCellSize() << " </CELL-WIDTH>"<< endl;
+    out << "        <LEFT-BOUND> " << ictPDF->getCellInfo(0).lower << " </LEFT-BOUND>" << endl;
+    out << "        <RIGHT-BOUND> " << ictPDF->getCellInfo(ictPDF->getNumCells()-1).upper << " </RIGHT-BOUND>"<< endl;
 
-    out << "    <ICT-CDF> " << endl;
-    out << "        <CELL-SIZE> " << ictPDF->getCellSize() << " </CELL-SIZE>"<< endl;
-    out << "        <NUM-CELLS> " << ictPDF->getNumCells() << " </NUM-CELLS>"<< endl;
-    out << "        <VALUES> " << endl;
+    out << "        <PDF-VALS> " << endl;
+    for (int i = 0; i < ictPDF->getNumCells(); i++) out << ictPDF->getCellPDF(i) << "  ";
+    out << endl << "        </PDF-VALS> " << endl;
+    out << "        <CDF-VALS> " << endl;
     for (int i = 0; i < ictPDF->getNumCells(); i++) {
         double val = 0;
         for (int j = 0; j <= i; j++) val += ictPDF->getCellPDF(j);
         out << val << "  ";
     }
-    out << endl << "        </VALUES> " << endl;
-    out << "    </ICT-CDF> " << endl << endl;
-
-
-    out << "    <ICT-CCDF> " << endl;
-    out << "        <CELL-SIZE> " << ictPDF->getCellSize() << " </CELL-SIZE>"<< endl;
-    out << "        <NUM-CELLS> " << ictPDF->getNumCells() << " </NUM-CELLS>"<< endl;
-    out << "        <VALUES> " << endl;
+    out << endl << "        </CDF-VALS> " << endl;
+    out << "        <CCDF-VALS> " << endl;
     for (int i = 0; i < ictPDF->getNumCells(); i++) {
         double val = 0;
         for (int j = i+1; j < ictPDF->getNumCells(); j++) val += ictPDF->getCellPDF(j);
         out << val << "  ";
     }
-    out << endl << "        </VALUES> " << endl;
-    out << "    </ICT-CCDF> " << endl;
+    out << endl << "        </CCDF-VALS> " << endl;
 
 
     out << "<STATISTICS>" << endl;
