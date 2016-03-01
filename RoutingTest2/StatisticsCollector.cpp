@@ -61,6 +61,7 @@ void StatisticsCollector::finish() {
     double deliveredPercentage = (1.0 * receivedPackets) / (1.0 * createdPackes) * 100;
     out << "    <DELIVERED-PACKETS> " << deliveredPercentage << " </DELIVERED-PACKETS>" << endl;
 
+
     out << "    <LIFE-TIME-PDF> " << endl;
     out << "        <COLLECTED> " << lifeTimePDF->getCount() << " </COLLECTED>" << endl;
     out << "        <MIN> " << lifeTimePDF->getMin() << " </MIN>" << endl;
@@ -71,13 +72,37 @@ void StatisticsCollector::finish() {
     out << "        <CELL-SIZE> " << lifeTimePDF->getCellSize() << " </CELL-SIZE>"<< endl;
     out << "        <NUM-CELLS> " << lifeTimePDF->getNumCells() << " </NUM-CELLS>"<< endl;
     out << "        <VALUES> " << endl;
-    int max;
-    for(max = lifeTimePDF->getNumCells()-1; max >= 0; max--) if (lifeTimePDF->getCellPDF(max) != 0) break;
-    for(int i=0; i <= max; i++) out << lifeTimePDF->getCellPDF(i) << "  ";
+    for(int i = 0; i < lifeTimePDF->getNumCells(); i++) out << lifeTimePDF->getCellPDF(i) << "  ";
     out << endl << "        </VALUES> " << endl;
     out << "        <OVERFLOW-CELL> " << lifeTimePDF->getOverflowCell() << " </OVERFLOW-CELL>" << endl;
     out << "        <UNDERFLOW-CELL> " << lifeTimePDF->getUnderflowCell() << " </UNDERFLOW-CELL>" << endl;
-    out << "    </LIFE-TIME-PDF> " << endl;
+    out << "    </LIFE-TIME-PDF> " << endl << endl;
+
+
+    out << "    <LIFE-TIME-CDF> " << endl;
+    out << "        <CELL-SIZE> " << lifeTimePDF->getCellSize() << " </CELL-SIZE>"<< endl;
+    out << "        <NUM-CELLS> " << lifeTimePDF->getNumCells() << " </NUM-CELLS>"<< endl;
+    out << "        <VALUES> " << endl;
+    for (int i = 0; i < lifeTimePDF->getNumCells(); i++) {
+        double val = 0;
+        for (int j = 0; j <= i; j++) val += lifeTimePDF->getCellPDF(j);
+        out << val << "  ";
+    }
+    out << endl << "        </VALUES> " << endl;
+    out << "    </LIFE-TIME-CDF> " << endl << endl;
+
+
+    out << "    <LIFE-TIME-CCDF> " << endl;
+    out << "        <CELL-SIZE> " << lifeTimePDF->getCellSize() << " </CELL-SIZE>"<< endl;
+    out << "        <NUM-CELLS> " << lifeTimePDF->getNumCells() << " </NUM-CELLS>"<< endl;
+    out << "        <VALUES> " << endl;
+    for (int i = 0; i < lifeTimePDF->getNumCells(); i++) {
+        double val = 0;
+        for (int j = i+1; j < lifeTimePDF->getNumCells(); j++) val += lifeTimePDF->getCellPDF(j);
+        out << val << "  ";
+    }
+    out << endl << "        </VALUES> " << endl;
+    out << "    </LIFE-TIME-CCDF> " << endl << endl << endl;
 
 
     out << "    <ICT-PDF> " << endl;
@@ -90,11 +115,38 @@ void StatisticsCollector::finish() {
     out << "        <CELL-SIZE> " << ictPDF->getCellSize() << " </CELL-SIZE>"<< endl;
     out << "        <NUM-CELLS> " << ictPDF->getNumCells() << " </NUM-CELLS>"<< endl;
     out << "        <VALUES> " << endl;
-    for(max = ictPDF->getNumCells()-1; max >= 0; max--) if (ictPDF->getCellPDF(max) != 0) break;
-    for(int i=0; i <= max; i++) out << ictPDF->getCellPDF(i) << "  ";
+    for (int i = 0; i < ictPDF->getNumCells(); i++) out << ictPDF->getCellPDF(i) << "  ";
     out << endl << "        </VALUES> " << endl;
     out << "        <OVERFLOW-CELL> " << ictPDF->getOverflowCell() << " </OVERFLOW-CELL>" << endl;
     out << "        <UNDERFLOW-CELL> " << ictPDF->getUnderflowCell() << " </UNDERFLOW-CELL>" << endl;
-    out << "    </ICT-PDF> " << endl;
+    out << "    </ICT-PDF> " << endl << endl;
+
+
+    out << "    <ICT-CDF> " << endl;
+    out << "        <CELL-SIZE> " << ictPDF->getCellSize() << " </CELL-SIZE>"<< endl;
+    out << "        <NUM-CELLS> " << ictPDF->getNumCells() << " </NUM-CELLS>"<< endl;
+    out << "        <VALUES> " << endl;
+    for (int i = 0; i < ictPDF->getNumCells(); i++) {
+        double val = 0;
+        for (int j = 0; j <= i; j++) val += ictPDF->getCellPDF(j);
+        out << val << "  ";
+    }
+    out << endl << "        </VALUES> " << endl;
+    out << "    </ICT-CDF> " << endl << endl;
+
+
+    out << "    <ICT-CCDF> " << endl;
+    out << "        <CELL-SIZE> " << ictPDF->getCellSize() << " </CELL-SIZE>"<< endl;
+    out << "        <NUM-CELLS> " << ictPDF->getNumCells() << " </NUM-CELLS>"<< endl;
+    out << "        <VALUES> " << endl;
+    for (int i = 0; i < ictPDF->getNumCells(); i++) {
+        double val = 0;
+        for (int j = i+1; j < ictPDF->getNumCells(); j++) val += ictPDF->getCellPDF(j);
+        out << val << "  ";
+    }
+    out << endl << "        </VALUES> " << endl;
+    out << "    </ICT-CCDF> " << endl;
+
+
     out << "<STATISTICS>" << endl;
 }
