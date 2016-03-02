@@ -38,9 +38,11 @@ public:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
 
+    bool isConnected(int nodeId1, int nodeId2);
     bool processIfCan(Request* request);
     void calculateICT(int i, int j, simtime_t oldStart, simtime_t oldLost, simtime_t newStart);
     void connectionsChanged();
+
     void log();
 };
 

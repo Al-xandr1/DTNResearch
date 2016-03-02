@@ -29,44 +29,39 @@ void MobileHost::handleMessage(cMessage *msg)
         scheduleAt(simTime() + timeslot * exponential(1/lambda), msg);
 
 
-    } else if (msg->getKind() == ESTABLISED_CONNECTION) {//сообщение о соединении
-        ConnectionMessage* connectionMessage = check_and_cast<ConnectionMessage*>(msg);
+    } else if (msg->getKind() == RESPONSE_FOR_REQUEST) {//ответ на запрос о маршрутизации пакета
+        Response* response = check_and_cast<Response*>(msg);
 
-        // отправить все накопившиес€ пакеты узлам, с которыми по€вилось соединение
-        vector<int>* connectedIds = connectionMessage->getConnectedTargetIds();
-        for (unsigned int i = 0; i < connectedIds->size(); i++) {
-            int id = (*connectedIds)[i];
-            for(vector<Packet*>::iterator it = packetsForSending->begin(); it != packetsForSending->end(); ) {
-                Packet* packet = (*it);
-                if (packet->getNodeIdTrg() == id) {
-                    it = packetsForSending->erase(it);
+        Packet* packetForRouting = response->getRequest()->getPacket();
+        // удал€ем пакет из локального буфера пакетов дл€ отправки
+        for(vector<Packet*>::iterator it = packetsForSending->begin(); it != packetsForSending->end(); ) {
+            Packet* packet = (*it);
+            if (packet == packetForRouting) {
+                it = packetsForSending->erase(it);
 
-                    cGate *dst = getParentModule()->getSubmodule("host", id)->gate("in");
-                    sendDirect(packet, dst);
-                } else {
-                    ++it;
-                }
+                cGate *dst = getParentModule()->getSubmodule("host", response->getNodeIdTrg())->gate("in");
+                sendDirect(packet, dst);
+                break;
+            } else {
+                ++it;
             }
         }
+        delete response->getRequest();
+        delete response;
 
-        delete connectionMessage;
 
     } else if (msg->getKind() == PACKET) {//пакет от другого узла
         Packet* packet = check_and_cast<Packet*>(msg);
         if (packet->getNodeIdTrg() != nodeId) {//пакет транзитный
-            exit(-654);// only for testing. Remove
-
-            cout << "MobileHost: Transit packet: nodeId = " << nodeId
-                    << ", packet->getNodeIdSrc() = " << packet->getNodeIdSrc()
-                    << ", packet->getNodeIdTrg() = " << packet->getNodeIdTrg() << endl;
-
+            //            cout << "MobileHost: Transit packet: nodeId = " << nodeId
+            //                    << ", packet->getNodeIdSrc() = " << packet->getNodeIdSrc()
+            //                    << ", packet->getNodeIdTrg() = " << packet->getNodeIdTrg() << endl;
             registerPacket(packet);
 
         } else {
-//            cout << "MobileHost: Received packet: nodeId = " << nodeId
-//                    << ", packet->getNodeIdSrc() = " << packet->getNodeIdSrc()
-//                    << ", packet->getNodeIdTrg() = " << packet->getNodeIdTrg() << endl;
-
+            //            cout << "MobileHost: Received packet: nodeId = " << nodeId
+            //                    << ", packet->getNodeIdSrc() = " << packet->getNodeIdSrc()
+            //                    << ", packet->getNodeIdTrg() = " << packet->getNodeIdTrg() << endl;
             destroyPacket(packet);
         }
 
@@ -80,7 +75,11 @@ Packet* MobileHost::createPacket() {
     int nodeIdTrg = generateTarget();
     Packet* packet = new Packet(nodeId, nodeIdTrg);
     packet->setCreationTime(simTime());
-    packet->setKind(PACKET);
+
+    NewPacketCreated* newPacketCreated = new NewPacketCreated();
+    sendDirect(newPacketCreated, collectorGate);
+
+    return packet;
 }
 
 int MobileHost::generateTarget() {
@@ -95,13 +94,8 @@ int MobileHost::generateTarget() {
 void MobileHost::registerPacket(Packet* packet) {
     packetsForSending->push_back(packet);
 
-    Request* request = new Request(nodeId, packet->getNodeIdTrg());
-    request->setKind(REQUEST_FOR_ROUTING);
+    Request* request = new Request(nodeId, packet->getNodeIdTrg(), packet);
     sendDirect(request, rdGate);
-
-    cMessage* newPacketCreated = new cMessage();
-    newPacketCreated->setKind(NEW_PACKET_CREATED);
-    sendDirect(newPacketCreated, collectorGate);
 
     if (nodeId == request->getNodeIdTrg()) exit(-129); // for debugging
 }
@@ -112,7 +106,6 @@ void MobileHost::destroyPacket(Packet* packet) {
     delete packet;
 
     PacketReceived* packetReceived = new PacketReceived(liveTime);
-    packetReceived->setKind(PACKET_RECEIVED);
     sendDirect(packetReceived, collectorGate);
 
     if (nodeId != packet->getNodeIdTrg()) exit(-130); // for debugging
