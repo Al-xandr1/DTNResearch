@@ -66,11 +66,8 @@ bool RoutingDaemon::processIfCan(Request* request) {
     // Логика маршрутизации в один прыжок
     bool canProcess = isConnected(request->getNodeIdSrc(), request->getNodeIdTrg());
     if (canProcess) {
-        Response* response = new Response(request->getNodeIdTrg(), request);
-        take(response);
-        sendDirect(response, getParentModule()->getSubmodule("host", request->getNodeIdSrc())->gate("in"));
-
-        return canProcess;
+        process(request->getNodeIdTrg(), request);
+        return true;
     }
 
 
@@ -80,15 +77,12 @@ bool RoutingDaemon::processIfCan(Request* request) {
 
             canProcess = isConnected(neighbor, request->getNodeIdTrg());
             if (canProcess) {
-                Response* response = new Response(neighbor, request);
-                take(response);
-                sendDirect(response, getParentModule()->getSubmodule("host", request->getNodeIdSrc())->gate("in"));
-                break;
+                process(neighbor, request);
+                return true;
             }
 
         }
     }
-    if (canProcess) return canProcess;
 
 
     // Логика мартшутизации "тому кто позже всех видел адресат" (запускается, если в два прыжка не получилось)
@@ -114,15 +108,23 @@ bool RoutingDaemon::processIfCan(Request* request) {
             }
         }
     }
-    // когда выбирается текущий узел как подходящий (тогда маршрутизация невозможна)
-    if (moreSuitableNode != -1 && moreSuitableNode != request->getNodeIdSrc()) {
-        canProcess = true;
-        Response* response = new Response(moreSuitableNode, request);
-        take(response);
-        sendDirect(response, getParentModule()->getSubmodule("host", request->getNodeIdSrc())->gate("in"));
+    // когда выбирается текущий узел как подходящий, тогда маршрутизация невозможна
+    canProcess = (moreSuitableNode != -1) && (moreSuitableNode != request->getNodeIdSrc());
+    if (canProcess) {
+        process(moreSuitableNode, request);
+        return true;
     }
 
-    return canProcess;
+
+    return false;
+}
+
+bool RoutingDaemon::process(int nodeForRoutePacket, Request* request) {
+    // Посылаем отклик на обработку запроса источнику запроса.
+    // nodeForRoutePacket - узел, которому бует передан пакет на узле источнике
+    Response* response = new Response(nodeForRoutePacket, request);
+    take(response);
+    sendDirect(response, getParentModule()->getSubmodule("host", request->getNodeIdSrc())->gate("in"));
 }
 
 simtime_t RoutingDaemon::getLostConnectionTime(int nodeId1, int nodeId2) {
