@@ -62,29 +62,77 @@ void RoutingDaemon::connectionsChanged() {
 }
 
 bool RoutingDaemon::processIfCan(Request* request) {
+
+    // Логика маршрутизации в один прыжок
     bool canProcess = isConnected(request->getNodeIdSrc(), request->getNodeIdTrg());
     if (canProcess) {
         Response* response = new Response(request->getNodeIdTrg(), request);
         take(response);
         sendDirect(response, getParentModule()->getSubmodule("host", request->getNodeIdSrc())->gate("in"));
 
-    } else {
-        for (int i=0; i<RoutingDaemon::numHosts; i++) {
-            if (isConnected(request->getNodeIdSrc(), i)) {//просматриваем всех соседей
+        return canProcess;
+    }
 
-                canProcess = isConnected(i, request->getNodeIdTrg());
-                if (canProcess) {
-                    Response* response = new Response(i, request);
-                    take(response);
-                    sendDirect(response, getParentModule()->getSubmodule("host", request->getNodeIdSrc())->gate("in"));
-                    break;
-                }
 
+    // Логика маршрутизации в два прыжка
+    for (int neighbor=0; neighbor<RoutingDaemon::numHosts; neighbor++) {
+        if (isConnected(request->getNodeIdSrc(), neighbor)) {//просматриваем всех соседей
+
+            canProcess = isConnected(neighbor, request->getNodeIdTrg());
+            if (canProcess) {
+                Response* response = new Response(neighbor, request);
+                take(response);
+                sendDirect(response, getParentModule()->getSubmodule("host", request->getNodeIdSrc())->gate("in"));
+                break;
+            }
+
+        }
+    }
+    if (canProcess) return canProcess;
+
+
+    // Логика мартшутизации "тому кто позже всех видел адресат" (запускается, если в два прыжка не получилось)
+    int moreSuitableNode = request->getNodeIdSrc();
+    simtime_t minTime = simTime() - getLostConnectionTime(request->getNodeIdSrc(), request->getNodeIdTrg());
+    for (int neighbor=0; neighbor<RoutingDaemon::numHosts; neighbor++) {
+        if (isConnected(request->getNodeIdSrc(), neighbor)) {//просматриваем всех соседей и себя в том числе
+            simtime_t lost = getLostConnectionTime(neighbor, request->getNodeIdTrg());
+            simtime_t spentTime = simTime() - lost;
+
+            // for debug
+            simtime_t start = getStartConnectionTime(neighbor, request->getNodeIdTrg());
+            if (spentTime < 0) {cout << "spentTime = " << spentTime; exit(-432);}
+            if ( !((lost > start) || (lost == start && lost == 0)) ) {
+                cout << "getLostConnectionTime(neighbor, request->getNodeIdTrg()) = " << getLostConnectionTime(neighbor, request->getNodeIdTrg()) << endl;
+                cout << "getStartConnectionTime(neighbor, request->getNodeIdTrg()) = " << getStartConnectionTime(neighbor, request->getNodeIdTrg());
+                exit(-433);
+            }// for debug
+
+            if (spentTime < minTime) {
+                minTime = spentTime;
+                moreSuitableNode = neighbor;
             }
         }
     }
+    // когда выбирается текущий узел как подходящий (тогда маршрутизация невозможна)
+    if (moreSuitableNode != -1 && moreSuitableNode != request->getNodeIdSrc()) {
+        canProcess = true;
+        Response* response = new Response(moreSuitableNode, request);
+        take(response);
+        sendDirect(response, getParentModule()->getSubmodule("host", request->getNodeIdSrc())->gate("in"));
+    }
 
     return canProcess;
+}
+
+simtime_t RoutingDaemon::getLostConnectionTime(int nodeId1, int nodeId2) {
+    if (nodeId1 > nodeId2) return RoutingDaemon::connectLost[nodeId1][nodeId2];
+    else return RoutingDaemon::connectLost[nodeId2][nodeId1];
+}
+
+simtime_t RoutingDaemon::getStartConnectionTime(int nodeId1, int nodeId2) {
+    if (nodeId1 > nodeId2) return RoutingDaemon::connectStart[nodeId1][nodeId2];
+    else return RoutingDaemon::connectStart[nodeId2][nodeId1];
 }
 
 bool RoutingDaemon::isConnected(int nodeId1, int nodeId2) {
