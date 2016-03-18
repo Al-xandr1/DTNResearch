@@ -74,7 +74,6 @@ bool RoutingDaemon::processIfCan(Request* request) {
     // Логика маршрутизации в два прыжка
     for (int neighbor=0; neighbor<RoutingDaemon::numHosts; neighbor++) {
         if (isConnected(request->getNodeIdSrc(), neighbor)) {//просматриваем всех соседей
-
             canProcess = isConnected(neighbor, request->getNodeIdTrg());
             if (canProcess) {
                 process(neighbor, request);

@@ -17,6 +17,8 @@
 #include "RootsCollection.h"
 #include "LevyHotSpotsLATP.h"
 
+using namespace std;
+
 class RegularRootLATP : public LevyHotSpotsLATP
 {
   protected:

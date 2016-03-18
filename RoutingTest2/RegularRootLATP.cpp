@@ -53,8 +53,9 @@ void RegularRootLATP::loadFirstRoot()
         if (h!=NULL) {
             firstRoot->push_back(h);
             firstRootSnumber->push_back(Snum);
-            firstRootCounter->push_back(1); }
+            firstRootCounter->push_back(1);
         }
+    }
 }
 
 
@@ -268,7 +269,7 @@ void RegularRootLATP::handleMessage(cMessage* msg)
 
     if (msg->isSelfMessage() && msg->getKind() == DAY_START) {
             scheduleAt(simTime()+(simtime_t)dayDuration, new cMessage("Start of the Day", DAY_START));
-            // std::cout<<"Day started\n";
+            cout<<"Day started for node: "<< NodeID << endl;
             makeNewRoot();
     }
 
