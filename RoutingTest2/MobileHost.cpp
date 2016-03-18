@@ -9,27 +9,27 @@ void MobileHost::initialize()
     rdGate = rd->gate("in");
     collectorGate = getParentModule()->getSubmodule("collector")->gate("in");
 
-    nodeId = par("indexOfNode");
+    nodeId = par("NodeID_");
     timeslot = par("timeslot");
     lambda   = par("lambda");
 
     packetsForSending = new vector<Packet*>();
 
-    cMessage* msg = new cMessage();
-    msg->setKind(FOR_NEW_PACKET);
-    scheduleAt(simTime(), msg);
+    scheduleAt(simTime(), new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET));
 };
 
 void MobileHost::handleMessage(cMessage *msg)
 {
-    if (msg->getKind() == FOR_NEW_PACKET) {// сообщение о создании нового пакета
+    if (msg->isSelfMessage() && msg->getKind() == FOR_NEW_PACKET) {
+        // Сообщение о создании нового пакета
         Packet* packet = createPacket();
         registerPacket(packet);
 
         scheduleAt(simTime() + timeslot * exponential(1/lambda), msg);
 
 
-    } else if (msg->getKind() == RESPONSE_FOR_REQUEST) {//ответ на запрос о маршрутизации пакета
+    } else if (msg->getKind() == RESPONSE_FOR_REQUEST) {
+        // Ответ на запрос о маршрутизации пакета. Посылаем заготовлденный пакет указанному в ответе узлу
         Response* response = check_and_cast<Response*>(msg);
 
         Packet* packetForRouting = response->getRequest()->getPacket();
@@ -50,7 +50,8 @@ void MobileHost::handleMessage(cMessage *msg)
         delete response;
 
 
-    } else if (msg->getKind() == PACKET) {//пакет от другого узла
+    } else if (msg->getKind() == PACKET) {
+        // Пакет от другого узла. Если это пунк назначения, то пакет уничтожается, иначе посылается заявка на дальнейшую маршрутизацию
         Packet* packet = check_and_cast<Packet*>(msg);
         if (packet->getNodeIdTrg() != nodeId) {//пакет транзитный
             //            cout << "MobileHost: Transit packet: nodeId = " << nodeId
@@ -65,6 +66,12 @@ void MobileHost::handleMessage(cMessage *msg)
             destroyPacket(packet);
         }
 
+
+    } else if (msg->getKind() == DAY_START) {
+        // Сообщение о начале нового "дня"
+        cout << "Day started for node: " << nodeId << endl;
+        check_and_cast<RegularRootLATP*>(getSubmodule("mobility"))->makeNewRoot();
+        delete msg;
 
     } else {
         exit(-333);

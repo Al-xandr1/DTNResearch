@@ -27,9 +27,6 @@ RegularRootLATP::RegularRootLATP()
 
     isLProbReady = false;
     LocalProbMatrix = NULL;
-
-    dayDuration = -1;
-    currentDay = 0;
 }
 
 
@@ -111,8 +108,6 @@ void RegularRootLATP::initialize(int stage) {
         constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
 
         NodeID = (int) par("NodeID");
-        dayDuration = getParentModule()->getParentModule()->par("dayDuration").doubleValue();
-
         if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") && hasPar("powA")) {
 
             ciJ  = par("ciJ").doubleValue();
@@ -186,12 +181,6 @@ void RegularRootLATP::initialize(int stage) {
         trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
                 (int) ((par("NodeID"))), TRACE_TYPE);
     }
-
-    if (stage == 0) {
-        currentDay = 1;
-        scheduleAt(simTime()+(simtime_t)dayDuration, new cMessage("Start of the Day", DAY_START));
-        cout << "Day " << currentDay << " started for node: " << NodeID << endl;
-    }
 }
 
 
@@ -264,21 +253,11 @@ void RegularRootLATP::move() {
 }
 
 
-void RegularRootLATP::handleMessage(cMessage* msg)
-{
-    LineSegmentsMobilityBase::handleMessage(msg);
-
-    if (msg->isSelfMessage() && msg->getKind() == DAY_START) {
-        currentDay++;
-        scheduleAt(simTime()+(simtime_t)dayDuration, msg);
-        cout << "Day " << currentDay << " started for node: " << NodeID << endl;
-        makeNewRoot();
-    }
-
-}
 
 void RegularRootLATP::makeNewRoot()
 {
+    cout << "Making new root for NodeID: " << NodeID << endl;
+
     if(currentRoot != NULL) {
         delete currentRoot;
         delete currentRootSnumber;

@@ -38,9 +38,6 @@ class RegularRootLATP : public LevyHotSpotsLATP
     bool isLProbReady;
     double**  LocalProbMatrix;
 
-    unsigned int currentDay;
-    double dayDuration;
-
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
 
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
@@ -51,10 +48,6 @@ class RegularRootLATP : public LevyHotSpotsLATP
     virtual void move();                  /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void finish();
 
-    virtual void handleMessage(cMessage* msg);
-
-    void makeNewRoot();
-
   public:
     RegularRootLATP();
     void loadFirstRoot();
@@ -62,6 +55,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
     void PrintCurrentRoot();
     void makeLocalProbMatrix(double powA);
 
+    void makeNewRoot();
 };
 
 #endif

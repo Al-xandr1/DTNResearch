@@ -19,6 +19,9 @@ class RoutingDaemon : public cSimpleModule {
 private:
     cGate* collectorGate;
 
+    unsigned int currentDay;
+    double dayDuration;
+
 public:
     cGate* in;
 
@@ -31,7 +34,12 @@ public:
     static RoutingDaemon* instance;
 
 public:
-    RoutingDaemon() {}
+    RoutingDaemon() {
+        collectorGate = NULL;
+        in = NULL;
+        dayDuration = -1;
+        currentDay = 0;
+    }
 
     int getNumHosts() {return numHosts;}
 
@@ -42,7 +50,7 @@ public:
     simtime_t getStartConnectionTime(int nodeId1, int nodeId2);
     bool isConnected(int nodeId1, int nodeId2);
     bool processIfCan(Request* request);
-    bool process(int nodeId, Request* request);
+    void process(int nodeId, Request* request);
     void calculateICT(int i, int j, simtime_t oldStart, simtime_t oldLost, simtime_t newStart);
     void connectionsChanged();
 

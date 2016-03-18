@@ -21,19 +21,36 @@ void RoutingDaemon::initialize() {
     requests = new vector<Request*>();
     interconnectionRadius = getParentModule()->par("interconnectionRadius");
     numHosts = getParentModule()->par("numHosts");
+
     in = gate("in");
     collectorGate = getParentModule()->getSubmodule("collector")->gate("in");
 
     RD_Listener* listener = new RD_Listener();
     getParentModule()->subscribe(mobilityStateChangedSignal, listener);
+
+    currentDay = 1;
+    dayDuration = getParentModule()->par("dayDuration").doubleValue();
+    scheduleAt(simTime() + (simtime_t) dayDuration, new cMessage("Start of the Day", DAY_START));
+    cout << "Day " << currentDay << " started: " << endl;
 }
 
 void RoutingDaemon::handleMessage(cMessage *msg) {
-    if (msg->getKind() == REQUEST_FOR_ROUTING) { // запрос на муршрутизацию
+    if (msg->getKind() == REQUEST_FOR_ROUTING) {
+        // «апрос на муршрутизацию. ќбрабатываем, если можем или ставим в очередь
         Request* request = check_and_cast<Request*>(msg);
         //cout << "RoutingDeamon: received request from node: " << request->getNodeIdSrc() << " to node: " << request->getNodeIdTrg() << endl;
 
         if (!processIfCan(request)) requests->push_back(request);
+
+    } else if (msg->isSelfMessage() && msg->getKind() == DAY_START) {
+        // —ообщение о начале нового дн€.  опи€ сообщени рассылаетс€ всем узлам сети
+        currentDay++;
+        cout << "Day " << currentDay << " started" << endl;
+
+        for (int i=0; i < RoutingDaemon::numHosts; i++)
+            sendDirect(new cMessage("Start of the Day", DAY_START), getParentModule()->getSubmodule("host", i)->gate("in"));
+
+        scheduleAt(simTime() + (simtime_t) dayDuration, msg);
 
     } else {
         cout << "RoutingDaemon::handleMessage: msg->getKind() = " << msg->getKind() << endl;
@@ -118,7 +135,7 @@ bool RoutingDaemon::processIfCan(Request* request) {
     return false;
 }
 
-bool RoutingDaemon::process(int nodeForRoutePacket, Request* request) {
+void RoutingDaemon::process(int nodeForRoutePacket, Request* request) {
     // ѕосылаем отклик на обработку запроса источнику запроса.
     // nodeForRoutePacket - узел, которому бует передан пакет на узле источнике
     Response* response = new Response(nodeForRoutePacket, request);

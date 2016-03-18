@@ -7,6 +7,7 @@
 #include "INETDefs.h"
 
 #include <RoutingDaemon.h>
+#include "RegularRootLATP.h"
 #include <Messages.h>
 
 using namespace std;
