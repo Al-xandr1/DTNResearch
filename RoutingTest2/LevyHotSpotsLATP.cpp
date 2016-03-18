@@ -49,7 +49,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
 
-        NodeID = (int) par("fileSuffix");
+        NodeID = (int) par("NodeID");
 
         if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") && hasPar("powA")) {
 
@@ -106,9 +106,9 @@ void LevyHotSpotsLATP::initialize(int stage) {
         wpFileName = new char[256];
         trFileName = new char[256];
         wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
+                (int) ((par("NodeID"))), WAYPOINTS_TYPE);
         trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("fileSuffix"))), TRACE_TYPE);
+                (int) ((par("NodeID"))), TRACE_TYPE);
     }
 }
 

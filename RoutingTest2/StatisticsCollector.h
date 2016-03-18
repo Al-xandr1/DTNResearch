@@ -19,7 +19,6 @@ private:
 
     unsigned int createdPackes;
     unsigned int receivedPackets;
-    simtime_t timeOfCollection;
 
     cDoubleHistogram* lifeTimePDF;
     cDoubleHistogram* ictPDF;

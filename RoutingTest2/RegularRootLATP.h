@@ -38,6 +38,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
     bool isLProbReady;
     double**  LocalProbMatrix;
 
+    unsigned int currentDay;
     double dayDuration;
 
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/

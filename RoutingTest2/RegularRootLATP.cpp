@@ -5,11 +5,11 @@
 #include <windows.h>
 
 #include "RegularRootLATP.h"
+#include "Messages.h"
 
 #define TRACE_TYPE ".txt"
 #define WAYPOINTS_TYPE ".wpt"
 
-#define DAY_START 1
 
 Define_Module(RegularRootLATP);
 
@@ -27,6 +27,9 @@ RegularRootLATP::RegularRootLATP()
 
     isLProbReady = false;
     LocalProbMatrix = NULL;
+
+    dayDuration = -1;
+    currentDay = 0;
 }
 
 
@@ -107,8 +110,8 @@ void RegularRootLATP::initialize(int stage) {
         constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
         constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
 
-        NodeID = (int) par("fileSuffix");
-        dayDuration = par("dayDuration").doubleValue();
+        NodeID = (int) par("NodeID");
+        dayDuration = getParentModule()->getParentModule()->par("dayDuration").doubleValue();
 
         if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") && hasPar("powA")) {
 
@@ -179,18 +182,16 @@ void RegularRootLATP::initialize(int stage) {
         wpFileName = new char[256];
         trFileName = new char[256];
         wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
+                (int) ((par("NodeID"))), WAYPOINTS_TYPE);
         trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("fileSuffix"))), TRACE_TYPE);
+                (int) ((par("NodeID"))), TRACE_TYPE);
     }
-
-    //std::cout<<NodeID << " initialization complete "<< stage << endl;
 
     if (stage == 0) {
+        currentDay = 1;
         scheduleAt(simTime()+(simtime_t)dayDuration, new cMessage("Start of the Day", DAY_START));
-        std::cout<<"Day 1 started\n";
+        cout << "Day " << currentDay << " started for node: " << NodeID << endl;
     }
-
 }
 
 
@@ -268,9 +269,10 @@ void RegularRootLATP::handleMessage(cMessage* msg)
     LineSegmentsMobilityBase::handleMessage(msg);
 
     if (msg->isSelfMessage() && msg->getKind() == DAY_START) {
-            scheduleAt(simTime()+(simtime_t)dayDuration, new cMessage("Start of the Day", DAY_START));
-            cout<<"Day started for node: "<< NodeID << endl;
-            makeNewRoot();
+        currentDay++;
+        scheduleAt(simTime()+(simtime_t)dayDuration, msg);
+        cout << "Day " << currentDay << " started for node: " << NodeID << endl;
+        makeNewRoot();
     }
 
 }

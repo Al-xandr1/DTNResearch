@@ -28,11 +28,7 @@ simple LevyHotSpotsLATP extends MovingMobilityBase
     												  // available values = SimpleLevy | LevyHotSpotsRandom | LevyHotSpotsLATPCenterLogic | LevyHotSpotsLATP | LevyHotSpotsLATPPathCounts 
         double powA = default(1);		// is a fixed floating number constant within 0 to infinity - power for distance
         
-        // parameters for daily root change
-        double dayDuration @unit(s) = default(43200s);  // by default 12 hours;
-        int newHS_inRoot = default(1);
-        
         //statistic collection
     	string traceFileName = default("traceOfNode");
-    	int fileSuffix = default(0);
+    	int NodeID = default(0);
 }

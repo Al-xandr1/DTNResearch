@@ -5,8 +5,14 @@ network LevyHotSpotsLATPNetwork
 {
     parameters:
         int numHosts;
-        double interconnectionRadius = default(700); // radius of transmitters of each node in meters
-        double timeOfCollection = default(86400); //time duration for collection of statistics (one day by default) NOT USED YET
+        double interconnectionRadius = default(700); 	// radius of transmitters of each node in meters
+        
+        // parameters for daily root change
+        double dayDuration @unit(s) = default(43200s);  // by default 12 hours;
+        int newHS_inRoot = default(1);
+        
+        //statistic collection
+        int countOfDays = default(5); 					// number of days will be accounted for collection statistics of total time coonection per a day  
         
         @display("bgb=600,400");
         

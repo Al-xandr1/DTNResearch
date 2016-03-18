@@ -14,6 +14,7 @@ using namespace std;
 #define REQUEST_FOR_ROUTING 5   // за€вка на маршрутизацию
 #define PACKET_RECEIVED 6       // сообщение о полученном пакете
 #define ICT_INFO 7              // сообщение с информацией о ICT
+#define DAY_START 8             // сообщение о начале нового "дн€" моделировани€
 
 
 // ѕакет дл€ передачи

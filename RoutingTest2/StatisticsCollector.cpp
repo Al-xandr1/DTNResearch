@@ -7,7 +7,6 @@ void StatisticsCollector::initialize()
 {
     createdPackes = 0;
     receivedPackets = 0;
-    timeOfCollection = getParentModule()->par("timeOfCollection");
     rdGate = getParentModule()->getSubmodule("routing")->gate("in");
 
     lifeTimePDF = new cDoubleHistogram();

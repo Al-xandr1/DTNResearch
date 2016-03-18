@@ -15,6 +15,8 @@ module MobileHost
         @display("i=device/pocketpc_s");
         
         int indexOfNode = default(0);
+        
+        // parameter for intencity of packet generation (Poisson flow)
         double timeslot = default(50);
     	double lambda = default(0.3);
     
@@ -25,6 +27,6 @@ module MobileHost
         mobility: LevyHotSpotsLATP {
             parameters:
                 @display("is=s;p=72,44");
-                fileSuffix = indexOfNode;
+                NodeID = indexOfNode;
         }
 }
