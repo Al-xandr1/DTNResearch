@@ -256,7 +256,7 @@ void RegularRootLATP::move() {
 
 void RegularRootLATP::makeNewRoot()
 {
-    cout << "Making new root for NodeID: " << NodeID << endl;
+    //cout << "Making new root for NodeID: " << NodeID << endl;
 
     if(currentRoot != NULL) {
         delete currentRoot;

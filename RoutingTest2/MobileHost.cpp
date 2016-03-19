@@ -69,9 +69,10 @@ void MobileHost::handleMessage(cMessage *msg)
 
     } else if (msg->getKind() == DAY_START) {
         // Сообщение о начале нового "дня"
-        cout << "Day started for node: " << nodeId << endl;
+        //cout << "Day started for node: " << nodeId << endl;
         check_and_cast<RegularRootLATP*>(getSubmodule("mobility"))->makeNewRoot();
         delete msg;
+
 
     } else {
         exit(-333);
@@ -104,7 +105,7 @@ void MobileHost::registerPacket(Packet* packet) {
     Request* request = new Request(nodeId, packet->getNodeIdTrg(), packet);
     sendDirect(request, rdGate);
 
-    if (nodeId == request->getNodeIdTrg()) exit(-129); // for debugging
+    //if (nodeId == request->getNodeIdTrg()) exit(-129); // for debugging
 }
 
 void MobileHost::destroyPacket(Packet* packet) {
@@ -115,5 +116,5 @@ void MobileHost::destroyPacket(Packet* packet) {
     PacketReceived* packetReceived = new PacketReceived(liveTime);
     sendDirect(packetReceived, collectorGate);
 
-    if (nodeId != packet->getNodeIdTrg()) exit(-130); // for debugging
+    //if (nodeId != packet->getNodeIdTrg()) exit(-130); // for debugging
 }

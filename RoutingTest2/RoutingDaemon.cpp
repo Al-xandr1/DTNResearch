@@ -7,6 +7,7 @@ double RoutingDaemon::interconnectionRadius;
 bool** RoutingDaemon::connections = NULL;
 simtime_t** RoutingDaemon::connectStart = NULL;
 simtime_t** RoutingDaemon::connectLost = NULL;
+vector<simtime_t**>* RoutingDaemon::connectivityPerDay = NULL;
 vector<Request*>* RoutingDaemon::requests = NULL;
 RoutingDaemon* RoutingDaemon::instance = NULL;
 
@@ -18,20 +19,19 @@ void RoutingDaemon::initialize() {
         cout << "Duplicate initialization exception!" << endl;
         exit(-654);
     }
+    connectivityPerDay = new vector<simtime_t**>();
     requests = new vector<Request*>();
     interconnectionRadius = getParentModule()->par("interconnectionRadius");
     numHosts = getParentModule()->par("numHosts");
 
-    in = gate("in");
     collectorGate = getParentModule()->getSubmodule("collector")->gate("in");
+    dayDuration = getParentModule()->par("dayDuration").doubleValue();
+    countOfDays = getParentModule()->par("countOfDays").doubleValue();
 
     RD_Listener* listener = new RD_Listener();
     getParentModule()->subscribe(mobilityStateChangedSignal, listener);
 
-    currentDay = 1;
-    dayDuration = getParentModule()->par("dayDuration").doubleValue();
-    scheduleAt(simTime() + (simtime_t) dayDuration, new cMessage("Start of the Day", DAY_START));
-    cout << "Day " << currentDay << " started: " << endl;
+    scheduleAt(simTime(), new cMessage("Start of the Day", DAY_START));
 }
 
 void RoutingDaemon::handleMessage(cMessage *msg) {
@@ -42,15 +42,44 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
 
         if (!processIfCan(request)) requests->push_back(request);
 
+
     } else if (msg->isSelfMessage() && msg->getKind() == DAY_START) {
         // Сообщение о начале нового дня. Копия сообщени рассылается всем узлам сети
+        // "Обрезаем" длительность текущих сединений перед окончанием дня
+        for (int i = 0; i < RoutingDaemon::numHosts; i++)
+            for (int j = 0; j < i; j++)
+                if (RoutingDaemon::connections[i][j]) accumulateConnectivity(i, j);
+
         currentDay++;
-        cout << "Day " << currentDay << " started" << endl;
+        startTimeOfCurrentDay = simTime();
+        finishTimeOfCurrentDay = startTimeOfCurrentDay + dayDuration;
+        cout << "Day " << currentDay << " started at " << startTimeOfCurrentDay << endl;
+
+        // Создаём новую матрицу длительности соединений
+        simtime_t** dayConnectivity = new simtime_t*[RoutingDaemon::numHosts];
+        for (int i = 0; i < RoutingDaemon::numHosts; i++) {
+            dayConnectivity[i] = new simtime_t[i+1];
+            // соединение самого себя с собой в течение дня = 1 день
+            dayConnectivity[i][i] = dayDuration;
+            for (int j=0; j<i; j++) dayConnectivity[i][j] = 0;
+        }
+
+        RoutingDaemon::connectivityPerDay->push_back(dayConnectivity);
+
+        if (RoutingDaemon::connectivityPerDay->size() > countOfDays) {
+            simtime_t** oldest = RoutingDaemon::connectivityPerDay->front();
+            RoutingDaemon::connectivityPerDay->erase(RoutingDaemon::connectivityPerDay->begin());
+            for(int i = 1; i < RoutingDaemon::numHosts; i++) {
+                delete[] oldest[i];
+            }
+            delete[] oldest;
+        }
 
         for (int i=0; i < RoutingDaemon::numHosts; i++)
             sendDirect(new cMessage("Start of the Day", DAY_START), getParentModule()->getSubmodule("host", i)->gate("in"));
 
         scheduleAt(simTime() + (simtime_t) dayDuration, msg);
+
 
     } else {
         cout << "RoutingDaemon::handleMessage: msg->getKind() = " << msg->getKind() << endl;
@@ -59,9 +88,12 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
     }
 }
 
-//todo если не учитывать первое появление соединения, то можно почти всё перенести в этот метод
-void RoutingDaemon::calculateICT(int i, int j, simtime_t oldStart, simtime_t oldLost, simtime_t newStart) {
-    if (i <= j) exit(987); //такой ситуации быть не должно
+void RoutingDaemon::calculateICT(int i, int j) {
+    //todo учитывать или нет первое появление соединения
+    simtime_t oldStart = getStartConnectionTime(i, j);
+    simtime_t oldLost = getLostConnectionTime(i, j);
+    simtime_t newStart = simTime();
+
     if (oldStart == 0 && oldLost == 0) return; //первое соединение игнорируем
 
     simtime_t ict = newStart - oldLost;
@@ -69,6 +101,15 @@ void RoutingDaemon::calculateICT(int i, int j, simtime_t oldStart, simtime_t old
     ICTMessage* ictMsg = new ICTMessage(i, j, ict);
     take(ictMsg);
     sendDirect(ictMsg, collectorGate);
+}
+
+void RoutingDaemon::accumulateConnectivity(int i, int j) {
+    if (RoutingDaemon::connectivityPerDay->size() == 0) return;
+
+    simtime_t** current = (*RoutingDaemon::connectivityPerDay)[RoutingDaemon::connectivityPerDay->size()-1];
+    simtime_t end = min(getLostConnectionTime(i, j), finishTimeOfCurrentDay);
+    simtime_t start = max(getStartConnectionTime(i,j), startTimeOfCurrentDay);
+    current[i][j] += (end - start);
 }
 
 void RoutingDaemon::connectionsChanged() {
@@ -96,7 +137,6 @@ bool RoutingDaemon::processIfCan(Request* request) {
                 process(neighbor, request);
                 return true;
             }
-
         }
     }
 
@@ -113,8 +153,10 @@ bool RoutingDaemon::processIfCan(Request* request) {
             simtime_t start = getStartConnectionTime(neighbor, request->getNodeIdTrg());
             if (spentTime < 0) {cout << "spentTime = " << spentTime; exit(-432);}
             if ( !((lost > start) || (lost == start && lost == 0)) ) {
-                cout << "getLostConnectionTime(neighbor, request->getNodeIdTrg()) = " << getLostConnectionTime(neighbor, request->getNodeIdTrg()) << endl;
-                cout << "getStartConnectionTime(neighbor, request->getNodeIdTrg()) = " << getStartConnectionTime(neighbor, request->getNodeIdTrg());
+                cout << "getLostConnectionTime(" << neighbor<< ", "
+                        << request->getNodeIdTrg() << ") = " << getLostConnectionTime(neighbor, request->getNodeIdTrg()) << endl;
+                cout << "getStartConnectionTime(" << neighbor<< ", "
+                        << request->getNodeIdTrg() << ") = " << getStartConnectionTime(neighbor, request->getNodeIdTrg());
                 exit(-433);
             }// for debug
 
@@ -158,6 +200,9 @@ bool RoutingDaemon::isConnected(int nodeId1, int nodeId2) {
     else return RoutingDaemon::connections[nodeId2][nodeId1];
 }
 
+
+
+//-------------------------------------- for debug ---------------------------------------------------
 void RoutingDaemon::log() {
     cout << "NodeIds:" << endl;
     for (int i=0; i<RoutingDaemon::numHosts; i++) {

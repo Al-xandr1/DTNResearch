@@ -20,28 +20,36 @@ private:
     cGate* collectorGate;
 
     unsigned int currentDay;
+    simtime_t startTimeOfCurrentDay;
+    simtime_t finishTimeOfCurrentDay;
     double dayDuration;
+    int countOfDays;
 
 public:
-    cGate* in;
-
     static int numHosts;
     static double interconnectionRadius;
     static bool** connections;
     static simtime_t** connectStart;
     static simtime_t** connectLost;
+    static vector<simtime_t**>* connectivityPerDay;
     static vector<Request*>* requests;
     static RoutingDaemon* instance;
 
 public:
     RoutingDaemon() {
         collectorGate = NULL;
-        in = NULL;
-        dayDuration = -1;
         currentDay = 0;
+        startTimeOfCurrentDay = 0;
+        finishTimeOfCurrentDay = 0;
+        dayDuration = -1;
+        countOfDays = 0;
     }
 
     int getNumHosts() {return numHosts;}
+    unsigned int getCurrentDay() {return currentDay;}
+    simtime_t getStartTimeOfCurrentDay() {return startTimeOfCurrentDay;}
+    double getDayDuration() { return dayDuration;}
+    int getCountOfDays() { return countOfDays;}
 
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
@@ -51,9 +59,11 @@ public:
     bool isConnected(int nodeId1, int nodeId2);
     bool processIfCan(Request* request);
     void process(int nodeId, Request* request);
-    void calculateICT(int i, int j, simtime_t oldStart, simtime_t oldLost, simtime_t newStart);
+    void calculateICT(int i, int j);
+    void accumulateConnectivity(int i, int j);
     void connectionsChanged();
 
+    //-------------- for debug ---------------
     void log();
 };
 

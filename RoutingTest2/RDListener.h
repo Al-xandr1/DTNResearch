@@ -12,6 +12,7 @@
 #include "RoutingDaemon.h"
 #include <LevyHotSpotsLATP.h>
 #include <MobileHost.h>
+#include "DevelopmentHelper.h"
 
 using namespace std;
 
@@ -38,10 +39,11 @@ public:
 
     virtual void  receiveSignal (cComponent *source, simsignal_t signalID, cObject *obj);
 
-    void checkReceivedData();
     bool processReceivedData();
     bool isConnected(int node1, int node2);
 
+    //-------------- for debug ---------------
+    void checkReceivedData();
     void log();
 };
 

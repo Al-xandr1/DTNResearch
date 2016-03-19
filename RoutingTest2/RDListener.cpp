@@ -41,22 +41,12 @@ void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
           NodeId = src->getNodeID();
           position = src->getCurrentPosition();
 
-          checkReceivedData(); // for debugging
-
+          //checkReceivedData(); // for debugging
           if (processReceivedData()) {
               RoutingDaemon::instance->connectionsChanged();
           }
-
           //log(); // for debugging
      }
-}
-
-void RD_Listener::checkReceivedData()
-{
-    if (NodeId < 0 || NodeId >= RoutingDaemon::numHosts) {
-        cout << "NodeId=" << NodeId << ", numHosts=" << RoutingDaemon::numHosts;
-        exit(-987);
-    }
 }
 
 bool RD_Listener::processReceivedData()
@@ -68,15 +58,16 @@ bool RD_Listener::processReceivedData()
     for (int j=0; j<NodeId; j++) {
         bool conn = isConnected(NodeId, j);
         if(!RoutingDaemon::connections[NodeId][j] &&  conn ) {
-            RoutingDaemon::instance->calculateICT(NodeId, j,
-                    RoutingDaemon::connectStart[NodeId][j],
-                    RoutingDaemon::connectLost[NodeId][j], simTime());
-
+            // Устанавливаем соединение
+            RoutingDaemon::instance->calculateICT(NodeId, j);
             RoutingDaemon::connectStart[NodeId][j] = simTime();
+            RoutingDaemon::connectLost[NodeId][j] = MAXTIME;
             anyChanged = true;
 
         } else if( RoutingDaemon::connections[NodeId][j] && !conn ) {
+            // Разрываем соединение
             RoutingDaemon::connectLost[NodeId][j] = simTime();
+            RoutingDaemon::instance->accumulateConnectivity(NodeId, j);
             anyChanged = true;
         }
         RoutingDaemon::connections[NodeId][j] = conn;
@@ -85,15 +76,16 @@ bool RD_Listener::processReceivedData()
     for (int i=NodeId+1; i<RoutingDaemon::numHosts; i++) {
         bool conn = isConnected(i, NodeId);
         if(!RoutingDaemon::connections[i][NodeId] &&  conn ) {
-            RoutingDaemon::instance->calculateICT(i, NodeId,
-                    RoutingDaemon::connectStart[i][NodeId],
-                    RoutingDaemon::connectLost[i][NodeId], simTime());
-
+            // Устанавливаем соединение
+            RoutingDaemon::instance->calculateICT(i, NodeId);
             RoutingDaemon::connectStart[i][NodeId] = simTime();
+            RoutingDaemon::connectLost[i][NodeId] = MAXTIME;
             anyChanged = true;
 
         } else if( RoutingDaemon::connections[i][NodeId] && !conn ) {
+            // Разрываем соединение
             RoutingDaemon::connectLost[i][NodeId] = simTime();
+            RoutingDaemon::instance->accumulateConnectivity(i, NodeId);
             anyChanged = true;
         }
         RoutingDaemon::connections[i][NodeId] = conn;
@@ -109,6 +101,17 @@ bool RD_Listener::isConnected(int node1, int node2)
     double distance = position1.distance(position2);
 
     return distance < RoutingDaemon::interconnectionRadius;
+}
+
+
+
+//-------------------------------------- for debug ---------------------------------------------------
+void RD_Listener::checkReceivedData()
+{
+    if (NodeId < 0 || NodeId >= RoutingDaemon::numHosts) {
+        cout << "NodeId=" << NodeId << ", numHosts=" << RoutingDaemon::numHosts;
+        exit(-987);
+    }
 }
 
 void RD_Listener::log()
