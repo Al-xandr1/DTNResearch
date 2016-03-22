@@ -21,7 +21,7 @@ void StatisticsCollector::handleMessage(cMessage *msg)
 {
     if (msg->getKind() == NEW_PACKET_CREATED) {//новый пакет создан
         createdPackes++;
-        if (createdPackes % 100 == 0) cout << "Created Packes = " << createdPackes << endl;
+        //if (createdPackes % 100 == 0) cout << "Created Packes = " << createdPackes << endl;
         delete msg;
 
 
@@ -29,7 +29,7 @@ void StatisticsCollector::handleMessage(cMessage *msg)
         PacketReceived* packetReceived = check_and_cast<PacketReceived*>(msg);
 
         receivedPackets++;
-        if (receivedPackets % 100 == 0) cout << "Delivered Packets = " << receivedPackets << endl;
+        //if (receivedPackets % 100 == 0) cout << "Delivered Packets = " << receivedPackets << endl;
 
         simtime_t liveTime = packetReceived->getLiveTime();
         lifeTimePDF->collect(liveTime);

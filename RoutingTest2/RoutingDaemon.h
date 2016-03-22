@@ -10,14 +10,19 @@
 #include "MobileHost.h"
 #include "RDListener.h"
 #include "Messages.h"
+#include "RoutingHeuristic.h"
 
 using namespace std;
 
 static simsignal_t mobilityStateChangedSignal = cComponent::registerSignal("mobilityStateChanged");
 
+class RoutingHeuristic;
+
 class RoutingDaemon : public cSimpleModule {
 private:
     cGate* collectorGate;
+
+    vector<RoutingHeuristic*>* routingHeuristics;
 
     unsigned int currentDay;
     simtime_t startTimeOfCurrentDay;
@@ -38,6 +43,7 @@ public:
 public:
     RoutingDaemon() {
         collectorGate = NULL;
+        routingHeuristics = NULL;
         currentDay = 0;
         startTimeOfCurrentDay = 0;
         finishTimeOfCurrentDay = 0;
@@ -58,9 +64,10 @@ public:
     simtime_t getStartConnectionTime(int nodeId1, int nodeId2);
     bool isConnected(int nodeId1, int nodeId2);
     bool processIfCan(Request* request);
-    void process(int nodeId, Request* request);
+    void processNewDay();
     void calculateICT(int i, int j);
     void accumulateConnectivity(int i, int j);
+    simtime_t getConnectivity(int index, int i, int j);
     void connectionsChanged();
 
     //-------------- for debug ---------------
