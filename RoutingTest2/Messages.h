@@ -69,6 +69,7 @@ public:
     int getSourceId()  {return sourceId;}
     int getDestinationId()  {return destinationId;}
     Packet* getPacket() {return packet;}
+    void print() {cout << "req: " << sourceId << "->" << destinationId << " ! ";}
 };
 
 

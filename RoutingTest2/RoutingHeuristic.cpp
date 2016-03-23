@@ -56,7 +56,7 @@ bool LETHeuristic::canProcess(Request* request, int& nodeForRouting) {
                 maxLost = lost;
                 moreSuitableNode = neighbor;
             }
-            //todo process case when spent time of differents nodes are equal and thus neighbors more than one
+            //todo process case when spent time of different nodes are equal and thus neighbors more than one
         }
     }
 
@@ -67,10 +67,10 @@ bool LETHeuristic::canProcess(Request* request, int& nodeForRouting) {
     }
 
     // for debug
-    //cout << "req: " << request->getNodeIdSrc() << "->" << request->getNodeIdTrg() << " ! ";
+    //request->print();
     //for (int neighbor = 0; neighbor < rd->getNumHosts(); neighbor++)
-    //    if (rd->isConnected(request->getNodeIdSrc(), neighbor))
-    //        cout << neighbor << "-" << request->getNodeIdTrg() << ": "<< rd->getLostConnectionTime(neighbor, request->getNodeIdTrg()) << ", ";
+    //    if (rd->isConnected(request->getSourceId(), neighbor))
+    //        cout << neighbor << "-" << request->getDestinationId() << ": "<< rd->getLostConnectionTime(neighbor, request->getDestinationId()) << ", ";
     //cout << endl;
     // for debug
 
@@ -99,6 +99,8 @@ bool MoreFrequentVisibleFHeuristic::canProcess(Request* request, int& nodeForRou
     if (moreSuitableNode != request->getSourceId()) {
         nodeForRouting = moreSuitableNode;
         //todo while do not change time matrix this case unreachable
+        request->print();
+        cout << " moreSuitableNode = " << moreSuitableNode << endl;
         return true;
     }
 
