@@ -21,23 +21,23 @@ using namespace std;
 class Packet : public cPacket
 {
 private:
-    int nodeIdSrc;
-    int nodeIdTrg;
+    int sourceId;
+    int destinationId;
 
     simtime_t creationTime;
     simtime_t receivedTime;
 
 public:
-    Packet(int nodeIdSrc, int nodeIdTrg){
-        this->nodeIdSrc = nodeIdSrc;
-        this->nodeIdTrg = nodeIdTrg;
+    Packet(int sourceId, int destinationId){
+        this->sourceId = sourceId;
+        this->destinationId = destinationId;
         this->creationTime = 0;
         this->receivedTime = 0;
         this->setKind(PACKET);
     }
 
-    int getNodeIdSrc() {return nodeIdSrc;}
-    int getNodeIdTrg() {return nodeIdTrg;}
+    int getSourceId() {return sourceId;}
+    int getDestinationId() {return destinationId;}
 
     void setCreationTime(simtime_t time) {creationTime = time;}
     void setReceivedTime(simtime_t time) {receivedTime = time;}
@@ -50,44 +50,44 @@ public:
 
 
 
-// «а€вка на передачу пакета
+// «а€вка на передачу пакета от узла sourceId узлу destinationId
 class Request : public cMessage
 {
 private:
-    int nodeIdSrc;
-    int nodeIdTrg;
+    int sourceId;
+    int destinationId;
     Packet* packet;
 
 public:
-    Request(int nodeIdSrc, int nodeIdTrg, Packet* packet){
-        this->nodeIdSrc = nodeIdSrc;
-        this->nodeIdTrg = nodeIdTrg;
+    Request(int sourceId, int destinationId, Packet* packet){
+        this->sourceId = sourceId;
+        this->destinationId = destinationId;
         this->packet = packet;
         this->setKind(REQUEST_FOR_ROUTING);
     }
 
-    int getNodeIdSrc()  {return nodeIdSrc;}
-    int getNodeIdTrg()  {return nodeIdTrg;}
+    int getSourceId()  {return sourceId;}
+    int getDestinationId()  {return destinationId;}
     Packet* getPacket() {return packet;}
 };
 
 
 
-// ќтклик на за€вку на передачу пакета
+// ќтклик на за€вку request дл€ передачи пакета узлу destinationId
 class Response : public cMessage
 {
 private:
-    int nodeIdTrg;      //данному узлу нужно отправить пакет, соответствующий запросу
+    int destinationId;      //данному узлу нужно отправить пакет, соответствующий запросу
     Request* request;
 
 public:
-    Response(int nodeIdTrg, Request* request){
-        this->nodeIdTrg = nodeIdTrg;
+    Response(int destinationId, Request* request){
+        this->destinationId = destinationId;
         this->request = request;
         this->setKind(RESPONSE_FOR_REQUEST);
     }
 
-    int getNodeIdTrg()  {return nodeIdTrg;}
+    int getDestinationId()  {return destinationId;}
     Request* getRequest() {return request;}
 };
 

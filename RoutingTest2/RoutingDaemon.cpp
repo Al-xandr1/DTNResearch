@@ -104,30 +104,6 @@ void RoutingDaemon::processNewDay() {
     }
 }
 
-void RoutingDaemon::calculateICT(int i, int j) {
-    //todo учитывать или нет первое появление соединения
-    simtime_t oldStart = getStartConnectionTime(i, j);
-    simtime_t oldLost = getLostConnectionTime(i, j);
-    simtime_t newStart = simTime();
-
-    if (oldStart == 0 && oldLost == 0) return; //первое соединение игнорируем
-
-    simtime_t ict = newStart - oldLost;
-
-    ICTMessage* ictMsg = new ICTMessage(i, j, ict);
-    take(ictMsg);
-    sendDirect(ictMsg, collectorGate);
-}
-
-void RoutingDaemon::accumulateConnectivity(int i, int j) {
-    if (RoutingDaemon::connectivityPerDay->size() == 0) return;
-
-    simtime_t** current = (*RoutingDaemon::connectivityPerDay)[RoutingDaemon::connectivityPerDay->size()-1];
-    simtime_t end = min(getLostConnectionTime(i, j), finishTimeOfCurrentDay);
-    simtime_t start = max(getStartConnectionTime(i,j), startTimeOfCurrentDay);
-    current[i][j] += (end - start);
-}
-
 void RoutingDaemon::connectionsChanged() {
     for(vector<Request*>::iterator it = requests->begin(); it != requests->end(); ) {
         if (processIfCan((*it))) it = requests->erase(it);
@@ -137,17 +113,17 @@ void RoutingDaemon::connectionsChanged() {
 
 bool RoutingDaemon::processIfCan(Request* request) {
     for(int i = 0; i < routingHeuristics->size(); i++) {
-        int nodeForSendResponse = -1;
+        int nodeForRouting = -1;
 
-        if ((*routingHeuristics)[i]->canProcess(request, nodeForSendResponse)) {
+        if ((*routingHeuristics)[i]->canProcess(request, nodeForRouting)) {
             // for debug
-            if (nodeForSendResponse < 0 || nodeForSendResponse >= getNumHosts() || nodeForSendResponse == request->getNodeIdSrc()) exit(-443);
+            if (nodeForRouting < 0 || nodeForRouting >= getNumHosts() || nodeForRouting == request->getSourceId()) exit(-443);
 
             // Посылаем отклик на обработку запроса источнику запроса.
             // nodeForRoutePacket - узел, которому бует передан пакет на узле источнике
-            Response* response = new Response(nodeForSendResponse, request);
+            Response* response = new Response(nodeForRouting, request);
             take(response);
-            sendDirect(response, getParentModule()->getSubmodule("host", request->getNodeIdSrc())->gate("in"));
+            sendDirect(response, getParentModule()->getSubmodule("host", request->getSourceId())->gate("in"));
 
             return true;
         }
@@ -156,9 +132,45 @@ bool RoutingDaemon::processIfCan(Request* request) {
     return false;
 }
 
+void RoutingDaemon::calculateICT(int nodeId1, int nodeId2) {
+    //todo учитывать или нет первое появление соединения
+    simtime_t oldStart = getStartConnectionTime(nodeId1, nodeId2);
+    simtime_t oldLost = getLostConnectionTime(nodeId1, nodeId2);
+    simtime_t newStart = simTime();
+
+    if (oldStart == 0 && oldLost == 0) return; //первое соединение игнорируем
+
+    simtime_t ict = newStart - oldLost;
+
+    ICTMessage* ictMsg = new ICTMessage(nodeId1, nodeId2, ict);
+    take(ictMsg);
+    sendDirect(ictMsg, collectorGate);
+}
+
+void RoutingDaemon::accumulateConnectivity(int nodeId1, int nodeId2) {
+    if (RoutingDaemon::connectivityPerDay->size() == 0) return;
+
+    simtime_t** current = (*RoutingDaemon::connectivityPerDay)[RoutingDaemon::connectivityPerDay->size()-1];
+    simtime_t end = min(getLostConnectionTime(nodeId1, nodeId2), finishTimeOfCurrentDay);
+    simtime_t start = max(getStartConnectionTime(nodeId1,nodeId2), startTimeOfCurrentDay);
+
+    //for debug
+    if (start >= end) exit(-543);
+
+    if (nodeId1 > nodeId2) current[nodeId1][nodeId2] += (end - start);
+    else current[nodeId2][nodeId1] += (end - start);;
+}
+
+simtime_t RoutingDaemon::computeTotalConnectivity(int nodeId1, int nodeId2) {
+    simtime_t totalConnectivity = 0;
+    for (unsigned int day = 0; day < RoutingDaemon::connectivityPerDay->size(); day++)
+        totalConnectivity += getConnectivity(day, nodeId1, nodeId2);
+    return totalConnectivity;
+}
+
 simtime_t RoutingDaemon::getConnectivity(int index, int nodeId1, int nodeId2) {
-    if (nodeId1 > nodeId2) return RoutingDaemon::connectivityPerDay->at(index)[nodeId1][nodeId2];
-    else return RoutingDaemon::connectivityPerDay->at(index)[nodeId2][nodeId1];
+    if (nodeId1 > nodeId2) return (*RoutingDaemon::connectivityPerDay)[index][nodeId1][nodeId2];
+    else return (*RoutingDaemon::connectivityPerDay)[index][nodeId2][nodeId1];
 }
 
 simtime_t RoutingDaemon::getLostConnectionTime(int nodeId1, int nodeId2) {

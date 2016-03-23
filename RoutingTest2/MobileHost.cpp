@@ -39,7 +39,7 @@ void MobileHost::handleMessage(cMessage *msg)
             if (packet == packetForRouting) {
                 it = packetsForSending->erase(it);
 
-                cGate *dst = getParentModule()->getSubmodule("host", response->getNodeIdTrg())->gate("in");
+                cGate *dst = getParentModule()->getSubmodule("host", response->getDestinationId())->gate("in");
                 sendDirect(packet, dst);
                 break;
             } else {
@@ -53,7 +53,7 @@ void MobileHost::handleMessage(cMessage *msg)
     } else if (msg->getKind() == PACKET) {
         // Пакет от другого узла. Если это пунк назначения, то пакет уничтожается, иначе посылается заявка на дальнейшую маршрутизацию
         Packet* packet = check_and_cast<Packet*>(msg);
-        if (packet->getNodeIdTrg() != nodeId) {//пакет транзитный
+        if (packet->getDestinationId() != nodeId) {//пакет транзитный
             //            cout << "MobileHost: Transit packet: nodeId = " << nodeId
             //                    << ", packet->getNodeIdSrc() = " << packet->getNodeIdSrc()
             //                    << ", packet->getNodeIdTrg() = " << packet->getNodeIdTrg() << endl;
@@ -102,7 +102,7 @@ int MobileHost::generateTarget() {
 void MobileHost::registerPacket(Packet* packet) {
     packetsForSending->push_back(packet);
 
-    Request* request = new Request(nodeId, packet->getNodeIdTrg(), packet);
+    Request* request = new Request(nodeId, packet->getDestinationId(), packet);
     sendDirect(request, rdGate);
 
     //if (nodeId == request->getNodeIdTrg()) exit(-129); // for debugging

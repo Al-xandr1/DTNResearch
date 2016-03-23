@@ -1,90 +1,91 @@
 #include "RoutingHeuristic.h"
 
 
-bool OneHopHeuristic::canProcess(Request* request, int& nodeForSendResponse) {
-    bool canProcess = rd->isConnected(request->getNodeIdSrc(), request->getNodeIdTrg());
-    if (canProcess) {
-        nodeForSendResponse = request->getNodeIdTrg();
+bool OneHopHeuristic::canProcess(Request* request, int& nodeForRouting) {
+    if (rd->isConnected(request->getSourceId(), request->getDestinationId())) {
+        nodeForRouting = request->getDestinationId();
         return true;
     }
     return false;
 }
 
 
-bool TwoHopsHeuristic::canProcess(Request* request, int& nodeForSendResponse) {
+bool TwoHopsHeuristic::canProcess(Request* request, int& nodeForRouting) {
+    //for debug
+    if (rd->isConnected(request->getSourceId(), request->getDestinationId())) {exit(-321);}
+
     for (int neighbor = 0; neighbor < rd->getNumHosts(); neighbor++) {
         // просматриваем всех соседей, включая себя
-        if (rd->isConnected(request->getNodeIdSrc(), neighbor)) {
-            bool canProcess = rd->isConnected(neighbor, request->getNodeIdTrg());
-            if (canProcess) {
-                nodeForSendResponse = neighbor;
+        if (rd->isConnected(request->getSourceId(), neighbor)) {
+            if (rd->isConnected(neighbor, request->getDestinationId())) {
+                nodeForRouting = neighbor;
                 return true;
             }
+            //todo process case when thus neighbors more than one
         }
     }
     return false;
 }
 
 
-bool LETHeuristic::canProcess(Request* request, int& nodeForSendResponse) {
-    int moreSuitableNode = request->getNodeIdSrc();
-    simtime_t minTime = simTime() - rd->getLostConnectionTime(request->getNodeIdSrc(), request->getNodeIdTrg());
-    for (int neighbor = 0; neighbor < RoutingDaemon::numHosts; neighbor++) {
+bool LETHeuristic::canProcess(Request* request, int& nodeForRouting) {
+    int moreSuitableNode = request->getSourceId();
+    simtime_t maxLost = rd->getLostConnectionTime(request->getSourceId(), request->getDestinationId());
+
+    for (int neighbor = 0; neighbor < rd->getNumHosts(); neighbor++) {
         // просматриваем всех соседей, включая себя
-        if (rd->isConnected(request->getNodeIdSrc(), neighbor)) {
-            simtime_t lost = rd->getLostConnectionTime(neighbor, request->getNodeIdTrg());
-            simtime_t spentTime = simTime() - lost;
+        if (rd->isConnected(request->getSourceId(), neighbor)) {
+            // for debug
+            if (neighbor == request->getDestinationId()) exit(-333);
+
+            simtime_t lost = rd->getLostConnectionTime(neighbor, request->getDestinationId());
 
             // for debug
-            simtime_t start = rd->getStartConnectionTime(neighbor, request->getNodeIdTrg());
-            if (spentTime < 0) {cout << "spentTime = " << spentTime; exit(-432);}
+            simtime_t start = rd->getStartConnectionTime(neighbor, request->getDestinationId());
+            if (lost < 0 || lost > simTime()) {cout << "lost = " << lost; exit(-432);}
             if ( !((lost > start) || (lost == start && lost == 0)) ) {
                 cout << "getLostConnectionTime(" << neighbor<< ", "
-                       << request->getNodeIdTrg() << ") = " << rd->getLostConnectionTime(neighbor, request->getNodeIdTrg()) << endl;
+                       << request->getDestinationId() << ") = " << rd->getLostConnectionTime(neighbor, request->getDestinationId()) << endl;
                 cout << "getStartConnectionTime(" << neighbor<< ", "
-                        << request->getNodeIdTrg() << ") = " << rd->getStartConnectionTime(neighbor, request->getNodeIdTrg());
+                        << request->getDestinationId() << ") = " << rd->getStartConnectionTime(neighbor, request->getDestinationId());
                 //todo this may happaned in case of switching roots
                 exit(-433);
             }// for debug
 
-            if (spentTime < minTime) {
-                minTime = spentTime;
+            if (lost > maxLost) {
+                maxLost = lost;
                 moreSuitableNode = neighbor;
             }
-            //todo process case when spent time of differents nodes are equal
+            //todo process case when spent time of differents nodes are equal and thus neighbors more than one
         }
     }
 
     // когда выбирается текущий узел как подходящий, тогда маршрутизация невозможна
-    bool canProcess = (moreSuitableNode != request->getNodeIdSrc());
-    if (canProcess) {
-        nodeForSendResponse = moreSuitableNode;
+    if (moreSuitableNode != request->getSourceId()) {
+        nodeForRouting = moreSuitableNode;
         return true;
     }
 
     // for debug
-//    cout << "request: " << request->getNodeIdSrc() << " -> " << request->getNodeIdTrg() << " ! ";
-//    for (int neighbor=0; neighbor<RoutingDaemon::numHosts; neighbor++)
-//        if (rd->isConnected(request->getNodeIdSrc(), neighbor))
-//            cout << neighbor << " - " << rd->getLostConnectionTime(neighbor, request->getNodeIdTrg()) << ", ";
-//    cout << endl;
+    //cout << "req: " << request->getNodeIdSrc() << "->" << request->getNodeIdTrg() << " ! ";
+    //for (int neighbor = 0; neighbor < rd->getNumHosts(); neighbor++)
+    //    if (rd->isConnected(request->getNodeIdSrc(), neighbor))
+    //        cout << neighbor << "-" << request->getNodeIdTrg() << ": "<< rd->getLostConnectionTime(neighbor, request->getNodeIdTrg()) << ", ";
+    //cout << endl;
     // for debug
 
     return false;
 }
 
 
-bool MoreFrequentVisibleFHeuristic::canProcess(Request* request, int& nodeForSendResponse) {
-    int moreSuitableNode = request->getNodeIdSrc();
-    simtime_t maxConnectivity = 0;
-    for (int neighbor=0; neighbor<RoutingDaemon::numHosts; neighbor++) {
-        // просматриваем всех соседей, включая себя
-        if (rd->isConnected(request->getNodeIdSrc(), neighbor)) {
-            if (neighbor == request->getNodeIdTrg()) exit(-916); // for debug
+bool MoreFrequentVisibleFHeuristic::canProcess(Request* request, int& nodeForRouting) {
+    int moreSuitableNode = request->getSourceId();
+    simtime_t maxConnectivity = rd->computeTotalConnectivity(request->getSourceId(), request->getDestinationId());
 
-            simtime_t totalConnectivity = 0;
-            for (unsigned int day = 0; day < RoutingDaemon::connectivityPerDay->size(); day++)
-                totalConnectivity += rd->getConnectivity(day, neighbor, request->getNodeIdTrg());
+    for (int neighbor = 0; neighbor < rd->getNumHosts(); neighbor++) {
+        // просматриваем всех соседей, включая себя
+        if (rd->isConnected(request->getSourceId(), neighbor)) {
+            simtime_t totalConnectivity = rd->computeTotalConnectivity(neighbor, request->getDestinationId());
 
             if (totalConnectivity > maxConnectivity) {
                 maxConnectivity = totalConnectivity;
@@ -95,11 +96,9 @@ bool MoreFrequentVisibleFHeuristic::canProcess(Request* request, int& nodeForSen
     }
 
     // когда выбирается текущий узел как подходящий, тогда маршрутизация невозможна
-    bool canProcess = moreSuitableNode != request->getNodeIdSrc();
-    if (canProcess) {
-        nodeForSendResponse = moreSuitableNode;
+    if (moreSuitableNode != request->getSourceId()) {
+        nodeForRouting = moreSuitableNode;
         //todo while do not change time matrix this case unreachable
-        //exit(-694);
         return true;
     }
 

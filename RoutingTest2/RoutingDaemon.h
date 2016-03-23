@@ -60,15 +60,17 @@ public:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
 
+    void processNewDay();
+    void connectionsChanged();
+    bool processIfCan(Request* request);
+
+    void calculateICT(int nodeId1, int nodeId2);
+    void accumulateConnectivity(int nodeId1, int nodeId2);
+    simtime_t computeTotalConnectivity(int nodeId1, int nodeId2);
+    simtime_t getConnectivity(int index, int i, int j);
     simtime_t getLostConnectionTime(int nodeId1, int nodeId2);
     simtime_t getStartConnectionTime(int nodeId1, int nodeId2);
     bool isConnected(int nodeId1, int nodeId2);
-    bool processIfCan(Request* request);
-    void processNewDay();
-    void calculateICT(int i, int j);
-    void accumulateConnectivity(int i, int j);
-    simtime_t getConnectivity(int index, int i, int j);
-    void connectionsChanged();
 
     //-------------- for debug ---------------
     void log();

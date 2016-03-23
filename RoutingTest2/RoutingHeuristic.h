@@ -24,7 +24,7 @@ public:
 class OneHopHeuristic : public RoutingHeuristic {
 public:
     OneHopHeuristic(RoutingDaemon* rd) : RoutingHeuristic(rd) {};
-    virtual bool canProcess(Request* request, int& nodeForSendResponse);
+    virtual bool canProcess(Request* request, int& nodeForRouting);
 };
 
 
@@ -32,7 +32,7 @@ public:
 class TwoHopsHeuristic : public RoutingHeuristic {
 public:
     TwoHopsHeuristic(RoutingDaemon* rd) : RoutingHeuristic(rd) {};
-    virtual bool canProcess(Request* request, int& nodeForSendResponse);
+    virtual bool canProcess(Request* request, int& nodeForRouting);
 };
 
 
@@ -40,7 +40,7 @@ public:
 class LETHeuristic : public RoutingHeuristic {
 public:
     LETHeuristic(RoutingDaemon* rd) : RoutingHeuristic(rd) {};
-    virtual bool canProcess(Request* request, int& nodeForSendResponse);
+    virtual bool canProcess(Request* request, int& nodeForRouting);
 };
 
 
@@ -48,7 +48,7 @@ public:
 class MoreFrequentVisibleFHeuristic : public RoutingHeuristic {
 public:
     MoreFrequentVisibleFHeuristic(RoutingDaemon* rd) : RoutingHeuristic(rd) {};
-    virtual bool canProcess(Request* request, int& nodeForSendResponse);
+    virtual bool canProcess(Request* request, int& nodeForRouting);
 };
 
 #endif // ROUTING_HEURISTIC_H_INCLUDED
