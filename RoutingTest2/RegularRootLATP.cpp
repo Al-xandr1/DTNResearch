@@ -283,6 +283,8 @@ void RegularRootLATP::makeNewRoot()
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
     nextChange =simTime();
     generateNextPosition(targetPosition, nextChange);
+
+    //todo оповестить RD_Listener об изменении положения
 }
 
 

@@ -22,6 +22,7 @@ class Packet : public cPacket
 {
 private:
     int sourceId;
+    int lastVisitiedId;
     int destinationId;
 
     simtime_t creationTime;
@@ -30,6 +31,7 @@ private:
 public:
     Packet(int sourceId, int destinationId){
         this->sourceId = sourceId;
+        this->lastVisitiedId = sourceId;
         this->destinationId = destinationId;
         this->creationTime = 0;
         this->receivedTime = 0;
@@ -37,6 +39,8 @@ public:
     }
 
     int getSourceId() {return sourceId;}
+    int getLastVisitedId() {return lastVisitiedId;}
+    int setLastVisitedId(int lastVisitiedId) {this->lastVisitiedId = lastVisitiedId;}
     int getDestinationId() {return destinationId;}
 
     void setCreationTime(simtime_t time) {creationTime = time;}

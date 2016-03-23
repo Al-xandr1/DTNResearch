@@ -17,6 +17,7 @@ public:
         this->rd = rd;
     }
     virtual bool canProcess(Request* request, int& nodeForSendResponse) = 0;
+    bool isSuitableTransitNeighbor(int nodeId, Request* request);
 };
 
 
@@ -45,9 +46,9 @@ public:
 
 
 // Логика мартшутизации "кто чаще всего видит адресата в течение последних нескольких дней
-class MoreFrequentVisibleFHeuristic : public RoutingHeuristic {
+class MoreFrequentVisibleHeuristic : public RoutingHeuristic {
 public:
-    MoreFrequentVisibleFHeuristic(RoutingDaemon* rd) : RoutingHeuristic(rd) {};
+    MoreFrequentVisibleHeuristic(RoutingDaemon* rd) : RoutingHeuristic(rd) {};
     virtual bool canProcess(Request* request, int& nodeForRouting);
 };
 

@@ -38,6 +38,7 @@ void MobileHost::handleMessage(cMessage *msg)
             Packet* packet = (*it);
             if (packet == packetForRouting) {
                 it = packetsForSending->erase(it);
+                packet->setLastVisitedId(nodeId);
 
                 cGate *dst = getParentModule()->getSubmodule("host", response->getDestinationId())->gate("in");
                 sendDirect(packet, dst);

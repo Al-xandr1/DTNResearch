@@ -24,7 +24,7 @@ void RoutingDaemon::initialize() {
     routingHeuristics->push_back(new OneHopHeuristic(this));
     routingHeuristics->push_back(new TwoHopsHeuristic(this));
     routingHeuristics->push_back(new LETHeuristic(this));
-//    routingHeuristics->push_back(new MoreFrequentVisibleFHeuristic(this));
+//    routingHeuristics->push_back(new MoreFrequentVisibleHeuristic(this));
 
     connectivityPerDay = new vector<simtime_t**>();
     requests = new vector<Request*>();
