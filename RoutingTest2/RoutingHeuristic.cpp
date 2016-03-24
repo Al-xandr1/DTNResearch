@@ -62,17 +62,17 @@ bool LETHeuristic::canProcess(Request* request, int& nodeForRouting) {
 
             simtime_t lost = rd->getLostConnectionTime(neighbor, request->getDestinationId());
 
-            // for debug
-            simtime_t start = rd->getStartConnectionTime(neighbor, request->getDestinationId());
-            if (lost < 0 || lost > simTime()) {cout << "lost = " << lost; exit(-432);}
-            if ( !((lost > start) || (lost == start && lost == 0)) ) {
-                cout << "getLostConnectionTime(" << neighbor<< ", "
-                       << request->getDestinationId() << ") = " << rd->getLostConnectionTime(neighbor, request->getDestinationId()) << endl;
-                cout << "getStartConnectionTime(" << neighbor<< ", "
-                        << request->getDestinationId() << ") = " << rd->getStartConnectionTime(neighbor, request->getDestinationId());
-                //todo this may happaned in case of switching roots
-                exit(-433);
-            }// for debug
+            //todo for debug
+            //simtime_t start = rd->getStartConnectionTime(neighbor, request->getDestinationId());
+            //if (lost < 0 || lost > simTime()) {cout << "lost = " << lost; exit(-432);}
+            //if ( !((lost > start) || (lost == start && lost == 0)) ) {
+            //    cout << "getLostConnectionTime(" << neighbor<< ", "
+            //           << request->getDestinationId() << ") = " << rd->getLostConnectionTime(neighbor, request->getDestinationId()) << endl;
+            //    cout << "getStartConnectionTime(" << neighbor<< ", "
+            //            << request->getDestinationId() << ") = " << rd->getStartConnectionTime(neighbor, request->getDestinationId());
+            //    //todo this may happaned in case of switching roots
+            //    exit(-433);
+            //}// for debug
 
             if (lost > maxLost) {
                 maxLost = lost;

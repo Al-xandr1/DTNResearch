@@ -40,19 +40,13 @@ class RegularRootLATP : public LevyHotSpotsLATP
 
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
 
-    virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
-    virtual void setInitialPosition();
-
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
-
-    virtual void move();                  /** @brief Overridden from LineSegmentsMobilityBase.*/
-    virtual void finish();
 
   public:
     RegularRootLATP();
     void loadFirstRoot();
-    void PrintFirstRoot();
-    void PrintCurrentRoot();
+    void printFirstRoot();
+    void printCurrentRoot();
     void makeLocalProbMatrix(double powA);
 
     void makeNewRoot();

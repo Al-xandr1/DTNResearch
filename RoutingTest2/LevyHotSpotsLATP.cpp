@@ -49,6 +49,11 @@ void LevyHotSpotsLATP::initialize(int stage) {
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
 
+        constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
+        constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
+        constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
+        constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
+
         NodeID = (int) par("NodeID");
 
         if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") && hasPar("powA")) {
@@ -63,18 +68,11 @@ void LevyHotSpotsLATP::initialize(int stage) {
 
            powA = par("powA").doubleValue();
 
-           constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
-           constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
-           constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
-           constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
-
         } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
     }
 
-    if (jump == NULL || pause == NULL) {
-        jump  = new LeviJump(ciJ, aliJ, aciJ);
-        pause = new LeviPause(ciP, aliP, aciP);
-    }
+    if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, aciJ);
+    if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
 
     if (hsc==NULL) {
         hsc = new HotSpotsCollection();
@@ -231,7 +229,7 @@ bool LevyHotSpotsLATP::findNextHotSpot()
     currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 
-//    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
+    //    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
     return true;
 }
 

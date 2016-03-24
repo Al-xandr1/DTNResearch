@@ -59,7 +59,7 @@ void RegularRootLATP::loadFirstRoot()
 }
 
 
-void RegularRootLATP::PrintFirstRoot()
+void RegularRootLATP::printFirstRoot()
 {
     if( firstRoot != NULL && hsc != NULL)
         for(unsigned int i=0; i<firstRoot->size(); i++) {
@@ -67,7 +67,8 @@ void RegularRootLATP::PrintFirstRoot()
         }
 }
 
-void RegularRootLATP::PrintCurrentRoot()
+
+void RegularRootLATP::printCurrentRoot()
 {
     if( currentRoot != NULL && hsc != NULL)
         for(unsigned int i=0; i<currentRoot->size(); i++) {
@@ -75,66 +76,29 @@ void RegularRootLATP::PrintCurrentRoot()
         }
 }
 
+
 void RegularRootLATP::makeLocalProbMatrix(double powA)
 {
     if(hsd->isMatrixReady && !isLProbReady) {
         LocalProbMatrix = new double*[currentRoot->size()];
-            for(unsigned int i=0; i<currentRoot->size(); i++) {
-                LocalProbMatrix[i]= new double[currentRoot->size()];
-                double h=0;
-                for(unsigned int j=0; j<currentRoot->size(); j++) {
-                    unsigned int ii=currentRootSnumber->at(i);
-                    unsigned int jj=currentRootSnumber->at(j);
-                    if(i!=j) h += LocalProbMatrix[i][j] = pow(1/hsd->getDistance(ii,jj), powA);
-                    else LocalProbMatrix[i][j]=0;
-                }
-                for(unsigned int j=0; j<currentRoot->size(); j++) LocalProbMatrix[i][j]/=h;
+        for(unsigned int i=0; i<currentRoot->size(); i++) {
+            LocalProbMatrix[i]= new double[currentRoot->size()];
+            double h=0;
+            for(unsigned int j=0; j<currentRoot->size(); j++) {
+                unsigned int ii=currentRootSnumber->at(i);
+                unsigned int jj=currentRootSnumber->at(j);
+                if(i!=j) h += LocalProbMatrix[i][j] = pow(1/hsd->getDistance(ii,jj), powA);
+                else LocalProbMatrix[i][j]=0;
             }
-            isLProbReady=true;
+            for(unsigned int j=0; j<currentRoot->size(); j++) LocalProbMatrix[i][j]/=h;
+        }
+        isLProbReady=true;
      }
 }
 
+
 void RegularRootLATP::initialize(int stage) {
-    LineSegmentsMobilityBase::initialize(stage);
-
-    double ciJ,aliJ,aciJ, ciP,aliP,aciP;
-
-    if (stage == 0) {
-        stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
-
-        constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
-        constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
-        constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
-        constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
-
-        NodeID = (int) par("NodeID");
-        if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") && hasPar("powA")) {
-
-            ciJ  = par("ciJ").doubleValue();
-            aliJ = par("aliJ").doubleValue();
-            aciJ = par("aciJ").doubleValue();
-
-            ciP  = par("ciP").doubleValue();
-            aliP = par("aliP").doubleValue();
-            aciP = par("aciP").doubleValue();
-
-            powA = par("powA").doubleValue();
-
-        } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution and intercluster transition"; exit(-112);}
-    }
-
-    if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, aciJ);
-    if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
-
-    if (hsc==NULL) {
-        hsc = new HotSpotsCollection();
-        // загрузка данных о докациях
-        char* TracesDir = DEF_TR_DIR ;
-        double minX, maxX, minY, maxY;
-        hsc->readHotSpotsInfo(TracesDir, minX, maxX, minY, maxY);
-        constraintAreaMin.x=minX; constraintAreaMin.y=minY;
-        constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
-    }
+    LevyHotSpotsLATP::initialize(stage);
 
     if (rc==NULL) {
         rc = new RootsCollection();
@@ -144,7 +108,9 @@ void RegularRootLATP::initialize(int stage) {
         // rc->print();
     }
 
-    if (firstRoot == NULL) { loadFirstRoot(); // PrintFirstRoot();
+    if (firstRoot == NULL) {
+        loadFirstRoot();
+        // printFirstRoot();
     }
 
     if (currentRoot == NULL) {
@@ -162,57 +128,12 @@ void RegularRootLATP::initialize(int stage) {
         currentHSCenter=(currentHSMin+currentHSMax)*0.5;
         hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
 
-        // PrintCurrentRoot();
-    }
-
-    if (hsd==NULL) {
-        hsd = new HSDistanceMatrix();
-        hsd->makeDistanceMatrix();
-        // hsd->makeProbabilityMatrix(powA);
+        // printCurrentRoot();
     }
 
     if (LocalProbMatrix == NULL) makeLocalProbMatrix(powA);
-
-    if (wpFileName == NULL && trFileName == NULL) {
-        wpFileName = new char[256];
-        trFileName = new char[256];
-        wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), WAYPOINTS_TYPE);
-        trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), TRACE_TYPE);
-    }
 }
 
-
-void RegularRootLATP::setInitialPosition() {
-    MobilityBase::setInitialPosition();
-    
-    lastPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
-    lastPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
-
-    if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-555);
-}
-
-void RegularRootLATP::finish() {
-    saveStatistics();
-}
-
-void RegularRootLATP::setTargetPosition() {
-    if (!movementsFinished) {
-        step++;
-        if (isPause) {
-            waitTime = (simtime_t) pause->get_Levi_rv();
-            nextChange = simTime() + waitTime;
-        } else {
-            collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
-            generateNextPosition(targetPosition, nextChange);
-        }
-        isPause = !isPause;
-    } else {
-        // остановка перемещений по документации
-        nextChange = -1;
-    }
-}
 
 bool RegularRootLATP::findNextHotSpot()
 {
@@ -243,20 +164,13 @@ bool RegularRootLATP::findNextHotSpot()
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
     hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
 
-//    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
+    //    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
     return true;
 }
 
-
-void RegularRootLATP::move() {
-    LineSegmentsMobilityBase::move();
-}
-
-
-
 void RegularRootLATP::makeNewRoot()
 {
-    //cout << "Making new root for NodeID: " << NodeID << endl;
+    cout << "Making new root for NodeID: " << NodeID << endl;
 
     if(currentRoot != NULL) {
         delete currentRoot;
@@ -283,8 +197,4 @@ void RegularRootLATP::makeNewRoot()
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
     nextChange =simTime();
     generateNextPosition(targetPosition, nextChange);
-
-    //todo оповестить RD_Listener об изменении положения
 }
-
-

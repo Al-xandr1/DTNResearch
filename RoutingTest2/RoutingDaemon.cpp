@@ -154,8 +154,8 @@ void RoutingDaemon::accumulateConnectivity(int nodeId1, int nodeId2) {
     simtime_t end = min(getLostConnectionTime(nodeId1, nodeId2), finishTimeOfCurrentDay);
     simtime_t start = max(getStartConnectionTime(nodeId1,nodeId2), startTimeOfCurrentDay);
 
-    //for debug
-    if (start >= end) exit(-543);
+    //todo for debug
+    //if (start >= end) {cout << "start = " << start << ", end = " << endl; exit(-543);}
 
     if (nodeId1 > nodeId2) current[nodeId1][nodeId2] += (end - start);
     else current[nodeId2][nodeId1] += (end - start);;
