@@ -3,15 +3,15 @@
 //ќпредел€ет подход€щий ли узел дл€ рассмотрени€ его как потенциального транзитного узла
 bool RoutingHeuristic::isSuitableTransitNeighbor(int trinsitId, Request* request) {
     //for debug
-    if (trinsitId < 0 || trinsitId >= rd->getNumHosts()) exit(-111); // узел должен входить в диапазон
-    if (rd->isConnected(request->getSourceId(), request->getDestinationId())) {exit(-333);} // если ищем транзит, то €вной св€зи нет
+    //if (trinsitId < 0 || trinsitId >= rd->getNumHosts()) exit(-111); // узел должен входить в диапазон
+    //if (rd->isConnected(request->getSourceId(), request->getDestinationId())) {exit(-333);} // если ищем транзит, то €вной св€зи нет
     //for debug
 
     if (rd->isConnected(request->getSourceId(), trinsitId)           //узел €вл€етс€ соседом дл€ источника
             && request->getSourceId() != trinsitId                   //узел не €вл€етс€ сам себе соседом
             && request->getPacket()->getLastVisitedId() != trinsitId) { //сосед не есть последний посещЄнный пакетом узел
         //for debug
-        if (trinsitId == request->getDestinationId()) exit(-222);    // узел именно тразитный
+        //if (trinsitId == request->getDestinationId()) exit(-222);    // узел именно тразитный
         return true;
     }
 
@@ -28,7 +28,7 @@ bool OneHopHeuristic::canProcess(Request* request, int& nodeForRouting) {
         nodeForRouting = request->getDestinationId();
 
         //for debug
-        request->print(); cout << "OneHop: moreSuitableNode = " << nodeForRouting << endl;
+        //request->print(); cout << "OneHop: moreSuitableNode = " << nodeForRouting << endl;
         return true;
     }
     return false;
@@ -43,7 +43,7 @@ bool TwoHopsHeuristic::canProcess(Request* request, int& nodeForRouting) {
                 nodeForRouting = neighbor;
 
                 //for debug
-                request->print(); cout << "TwoHops: moreSuitableNode = " << nodeForRouting << endl;
+                //request->print(); cout << "TwoHops: moreSuitableNode = " << nodeForRouting << endl;
                 return true;
             }
             //todo process case when thus neighbors more than one
@@ -87,7 +87,7 @@ bool LETHeuristic::canProcess(Request* request, int& nodeForRouting) {
         nodeForRouting = moreSuitableNode;
 
         //for debug
-        request->print(); cout << "LET: moreSuitableNode = " << moreSuitableNode << endl;
+        //request->print(); cout << "LET: moreSuitableNode = " << moreSuitableNode << endl;
         return true;
     }
 
@@ -125,7 +125,7 @@ bool MoreFrequentVisibleHeuristic::canProcess(Request* request, int& nodeForRout
         //todo while do not change time matrix this case unreachable
 
         //for debug
-        request->print(); cout << "MoreFreq: moreSuitableNode = " << moreSuitableNode << endl;
+        //request->print(); cout << "MoreFreq: moreSuitableNode = " << moreSuitableNode << endl;
         return true;
     }
 

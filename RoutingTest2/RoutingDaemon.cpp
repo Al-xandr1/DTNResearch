@@ -117,7 +117,7 @@ bool RoutingDaemon::processIfCan(Request* request) {
 
         if ((*routingHeuristics)[i]->canProcess(request, nodeForRouting)) {
             // for debug
-            if (nodeForRouting < 0 || nodeForRouting >= getNumHosts() || nodeForRouting == request->getSourceId()) exit(-443);
+            //if (nodeForRouting < 0 || nodeForRouting >= getNumHosts() || nodeForRouting == request->getSourceId()) exit(-443);
 
             // Посылаем отклик на обработку запроса источнику запроса.
             // nodeForRoutePacket - узел, которому бует передан пакет на узле источнике
