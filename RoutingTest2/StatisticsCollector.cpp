@@ -9,12 +9,11 @@ void StatisticsCollector::initialize()
     receivedPackets = 0;
     rdGate = getParentModule()->getSubmodule("routing")->gate("in");
 
-    lifeTimePDF = new cDoubleHistogram();
-    lifeTimePDF->setCellSize(100);
-    lifeTimePDF->setRangeAutoUpper(0, 100, 5);
-    ictPDF = new cDoubleHistogram();
-    ictPDF->setCellSize(100);
-    ictPDF->setRangeAutoUpper(0, 100, 5);
+    lifeTimePDF = new cDoubleHistogram("lifeTimePDF", 300);
+    lifeTimePDF->setRangeAutoUpper(0.0, 1000, 1.3);
+
+    ictPDF = new cDoubleHistogram("ictPDF", 300);
+    ictPDF->setRangeAutoUpper(0.0, 300, 1.3);
 }
 
 void StatisticsCollector::handleMessage(cMessage *msg)
