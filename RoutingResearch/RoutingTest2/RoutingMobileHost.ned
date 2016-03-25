@@ -5,16 +5,17 @@ import inet.mobility.single.BonnMotionMobility;
 // A host for demonstrating mobility models only -- it contains
 // no protocol layers at all.
 //
-module MobileHost
+module RoutingMobileHost
 {
     parameters:
-        string mobilityType = default("LevyHotSpotsLATP");
-
-		@class(MobileHost);
+        string mobilityType = default("LevyHotSpotsRandom");
+        
         @node();
         @display("i=device/pocketpc_s");
         
         int NodeID_ = default(0);
+        
+		@class(MobileHost);
         
         // parameter for intencity of packet generation (Poisson flow)
         double timeslot = default(50);
@@ -22,11 +23,11 @@ module MobileHost
     
     gates:
         input in @directIn;
-            
+        
     submodules:
-        mobility: LevyHotSpotsLATP {
-            parameters:
+        mobility: RegularRootLATP {
+            parameters: 
                 @display("is=s;p=72,44");
-                NodeID = NodeID_;
-        }
+            	NodeID = NodeID_;
+        }        
 }

@@ -16,6 +16,9 @@
 class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 {
   protected:
+
+    int NodeID;
+
     bool isPause;
     long step;
 
@@ -73,6 +76,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 
   public:
     LevyHotSpotsLATP();
+    int getNodeID();
 
     Coord getLastPosition()      {return this->lastPosition;};
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};

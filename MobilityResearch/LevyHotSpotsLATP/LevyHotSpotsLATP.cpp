@@ -11,6 +11,9 @@
 Define_Module(LevyHotSpotsLATP);
 
 LevyHotSpotsLATP::LevyHotSpotsLATP() {
+
+    NodeID = -1;
+
     isPause = false;
     step = 0;
     jump = NULL;
@@ -41,31 +44,35 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
 void LevyHotSpotsLATP::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
-    if (stage == 0) { stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0; }
+    double ciJ,aliJ,aciJ, ciP,aliP,aciP;
 
-    if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") && hasPar("powA")) {
+    if (stage == 0) {
+        stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
 
-        double ciJ  = par("ciJ").doubleValue();
-        double aliJ = par("aliJ").doubleValue();
-        double aciJ = par("aciJ").doubleValue();
+        constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
+        constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
+        constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
+        constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
 
-        double ciP  = par("ciP").doubleValue();
-        double aliP = par("aliP").doubleValue();
-        double aciP = par("aciP").doubleValue();
+        NodeID = (int) par("NodeID");
 
-        if (jump == NULL || pause == NULL) {
-            jump  = new LeviJump(ciJ, aliJ, aciJ);
-            pause = new LeviPause(ciP, aliP, aciP);
-        }
+        if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") && hasPar("powA")) {
 
-        powA = par("powA").doubleValue();
-    } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
+           ciJ  = par("ciJ").doubleValue();
+           aliJ = par("aliJ").doubleValue();
+           aciJ = par("aciJ").doubleValue();
 
-    constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
-    constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
-    constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
-    constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
+           ciP  = par("ciP").doubleValue();
+           aliP = par("aliP").doubleValue();
+           aciP = par("aciP").doubleValue();
 
+           powA = par("powA").doubleValue();
+
+        } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
+    }
+
+    if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, aciJ);
+    if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
 
     if (hsc==NULL) {
         hsc = new HotSpotsCollection();
@@ -76,6 +83,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
         constraintAreaMin.x=minX; constraintAreaMin.y=minY;
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
     }
+
     if (hsd==NULL) {
         hsd = new HSDistanceMatrix();
         hsd->makeDistanceMatrix();
@@ -90,17 +98,21 @@ void LevyHotSpotsLATP::initialize(int stage) {
         currentHSMax.x=((hsc->HSData)[currentHSindex]).Xmax;
         currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
         currentHSCenter=(currentHSMin+currentHSMax)*0.5;
-//        cout << "initialize: changing location to" << currentHSindex << endl;
     }
 
     if (wpFileName == NULL && trFileName == NULL) {
         wpFileName = new char[256];
         trFileName = new char[256];
         wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
+                (int) ((par("NodeID"))), WAYPOINTS_TYPE);
         trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("fileSuffix"))), TRACE_TYPE);
+                (int) ((par("NodeID"))), TRACE_TYPE);
     }
+}
+
+int LevyHotSpotsLATP::getNodeID()
+{
+    return NodeID;
 }
 
 void LevyHotSpotsLATP::setInitialPosition() {
@@ -108,7 +120,7 @@ void LevyHotSpotsLATP::setInitialPosition() {
     
     lastPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
     lastPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
-    log();
+    //log();
     if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-555);
 }
 
@@ -126,20 +138,20 @@ void LevyHotSpotsLATP::setTargetPosition() {
         if (isPause) {
             waitTime = (simtime_t) pause->get_Levi_rv();
             nextChange = simTime() + waitTime;
-//            log();
-//            if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
+            //log();
+            //if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
         } else {
-//            if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-777);
+            //if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-777);
             collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
             generateNextPosition(targetPosition, nextChange);
-//            log();
-//            if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) exit(-888);
+            //log();
+            //if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) exit(-888);
         }
         isPause = !isPause;
     } else {
         // остановка перемещений по документации
         nextChange = -1;
-        log();
+        //log();
     }
 }
 
@@ -158,11 +170,17 @@ void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
 
     // если вышли за пределы локации
     if (currentHSMin.x >= targetPosition.x || targetPosition.x >= currentHSMax.x || currentHSMin.y >= targetPosition.y || targetPosition.y >= currentHSMax.y) {
-        if (isHotSpotEmpty()) {
+        if (isHotSpotEmpty()) { // если локация точечная
 //            cout << "HotSpot is empty! select next" << endl;
             if ( findNextHotSpot() ) {   // нашли следующую локацию - идём в её случайную точку
                 targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
                 targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+
+                distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
+                speed = kForSpeed * pow(distance, 1 - roForSpeed);
+                travelTime = distance / speed;
+                nextChange = simTime() + travelTime;
+
             } else movementsFinished = true;  // не нашли - останавливаемся
             return;
         }
@@ -190,7 +208,13 @@ void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
         } else { // не можем - надо переходить в другую локацию
             if ( findNextHotSpot() ) {   // нашли следующую локацию - идём в её случайную точку
                targetPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
-               targetPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
+               targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+
+               distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
+               speed = kForSpeed * pow(distance, 1 - roForSpeed);
+               travelTime = distance / speed;
+               nextChange = simTime() + travelTime;
+
             } else movementsFinished = true;  // не нашли - останавливаемся
         }
     }
@@ -211,7 +235,7 @@ bool LevyHotSpotsLATP::findNextHotSpot()
     currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 
-//    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
+    //    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
     return true;
 }
 
@@ -234,7 +258,6 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
 }
 
 void LevyHotSpotsLATP::saveStatistics() {
-    const int nodeIndex = (int) ((par("fileSuffix")));
     char *outDir = "outTrace";
     char *wpsDir = buildFullName(outDir, "waypointfiles");
     char *trsDir = buildFullName(outDir, "tracefiles");
@@ -242,7 +265,7 @@ void LevyHotSpotsLATP::saveStatistics() {
     char *locations = buildFullName(outDir, "locations.loc");
 
 
-    if (nodeIndex == 0 ) {//чтобы записывал только один узел
+    if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---
         if (CreateDirectory(outDir, NULL)) cout << "create output directory: " << outDir << endl;
         else cout << "error create output directory: " << outDir << endl;
@@ -308,7 +331,7 @@ bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
     return false;
 }
 
-void LevyHotSpotsLATP::log() {
+void LevyHotSpotsLATP::log() {  // Отладочная функция
     cout << "-------------------------------------------------------------" << endl;
     cout << "step = " << step << ", isPause = " << isPause << endl;
     cout << "simTime() = " << simTime() << endl;

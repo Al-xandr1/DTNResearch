@@ -149,8 +149,7 @@ void LevyHotSpotsLATP::setTargetPosition() {
     }
 }
 
-void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange)
-{
+void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
     // генерируем прыжок Леви как обычно
     angle = uniform(0, 2 * PI);
     distance = jump->get_Levi_rv();
@@ -219,7 +218,7 @@ bool LevyHotSpotsLATP::findNextHotSpot()
     // выбираем новую локацию
     double rn, pr=0;
     rn=(double)rand()/RAND_MAX;
-    for(int i=0; i<(int)(hsc->HSData).size(); i++) {
+    for(unsigned int i=0; i<(hsc->HSData).size(); i++) {
         if(i != currentHSindex ) pr+=(hsd->ProbabilityMatrix)[currentHSindex][i];
         if(rn <= pr) {currentHSindex=i; break; }
     }

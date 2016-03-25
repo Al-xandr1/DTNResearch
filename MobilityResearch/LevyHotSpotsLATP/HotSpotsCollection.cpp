@@ -29,7 +29,7 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
             int counter;
             (*spotCountFile) >> hotSpotName >> counter;
             for(unsigned int i=0; i<HSData.size(); i++)
-		if( strcmp( (HSData[i]).hotSpotName, hotSpotName)==0 ) { (HSData[i]).counter=counter; break; }
+                if( strcmp( (HSData[i]).hotSpotName, hotSpotName)==0 ) { (HSData[i]).counter=counter; break; }
         }
 
         spotInfoFile->close();
@@ -55,6 +55,20 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
 
    return;
 }
+
+HotSpotShortInfo* HotSpotsCollection::findHotSpotbyName(char* HotSpotName, int& HotSpotNum)
+{
+    for(unsigned int i=1; i<HSData.size(); i++)
+        if( strcmp(HSData[i].hotSpotName, HotSpotName) == 0 ) {
+            HotSpotNum=i;
+            return &HSData[i];
+        }
+    return NULL;
+}
+
+
+
+// --------------------------------------------------------------------------------
 
 bool HSDistanceMatrix::isMatrixReady = false;
 vector<double>* HSDistanceMatrix::DistanceMatrix;

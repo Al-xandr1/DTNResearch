@@ -19,7 +19,6 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 
     int NodeID;
 
-    bool nextMoveIsWait;
     bool isPause;
     long step;
 

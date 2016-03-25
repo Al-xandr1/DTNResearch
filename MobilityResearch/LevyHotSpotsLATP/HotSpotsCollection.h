@@ -76,6 +76,7 @@ public:
     static vector<HotSpotShortInfo> HSData;
 
     void readHotSpotsInfo(char* TracesDir, double& minX, double& maxX, double& minY, double& maxY);
+    HotSpotShortInfo* findHotSpotbyName(char*, int&);
 };
 
 
