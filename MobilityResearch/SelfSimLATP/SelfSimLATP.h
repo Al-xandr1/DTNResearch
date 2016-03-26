@@ -17,6 +17,9 @@
 class SelfSimLATP : public LineSegmentsMobilityBase
 {
   protected:
+
+    int NodeID;
+
     bool nextMoveIsWait;
 
     double kForSpeed;
@@ -64,7 +67,6 @@ class SelfSimLATP : public LineSegmentsMobilityBase
 
   protected:
     virtual int numInitStages() const { return 3; }
-    // virtual int numInitStages() const { return 1; }
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
 
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/

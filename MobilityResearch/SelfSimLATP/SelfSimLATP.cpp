@@ -11,6 +11,9 @@
 Define_Module(SelfSimLATP);
 
 SelfSimLATP::SelfSimLATP() {
+
+    NodeID = -1;
+
     nextMoveIsWait = false;
     kForSpeed = 1;
     roForSpeed = 0;
@@ -30,6 +33,7 @@ SelfSimLATP::SelfSimLATP() {
     isRootReady=false;
     isDstMatrixReady=false;
 
+    currentHSindex = -1;
     isWptLoaded=false;
     gen=NULL;
     isWptMatrixReady=false;
@@ -43,68 +47,83 @@ SelfSimLATP::SelfSimLATP() {
 void SelfSimLATP::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
+    double ciP,aliP,aciP;
+
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
 
-    if (hasPar("powAforHS") && hasPar("powAforWP") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") ) {
+        constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
+        constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
+        constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
+        constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
 
-        double ciP  = par("ciP").doubleValue();
-        double aliP = par("aliP").doubleValue();
-        double aciP = par("aciP").doubleValue();
+        NodeID = (int) par("NodeID");
 
-        if ( pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
+        if (hasPar("powAforHS") && hasPar("powAforWP") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") ) {
 
-        powAforHS = par("powAforHS").doubleValue();
-        powAforWP = par("powAforWP").doubleValue();
+            ciP  = par("ciP").doubleValue();
+            aliP = par("aliP").doubleValue();
+            aciP = par("aciP").doubleValue();
 
-    } else { cout << "It is necessary to specify ALL parameters"; exit(-112);}
+            powAforHS = par("powAforHS").doubleValue();
+            powAforWP = par("powAforWP").doubleValue();
 
-    constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
-    constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
-    constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
-    constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
+        } else { cout << "It is necessary to specify ALL parameters"; exit(-112);}
+    }
 
-    if (hsc==NULL) hsc = new HotSpotsCollection();
-    if (hsd==NULL) hsd = new HSDistanceMatrix();
+    if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
 
-    // загрузка данных о докациях
-    char* TracesDir = DEF_TR_DIR ;
-    double minX, maxX, minY, maxY;
-    hsc->readHotSpotsInfo(TracesDir, minX, maxX, minY, maxY);
-    constraintAreaMin.x=minX; constraintAreaMin.y=minY;
-    constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
+    if (hsc==NULL) {
+        hsc = new HotSpotsCollection();
+        // загрузка данных о докациях
+        char* TracesDir = DEF_TR_DIR ;
+        double minX, maxX, minY, maxY;
+        hsc->readHotSpotsInfo(TracesDir, minX, maxX, minY, maxY);
+        constraintAreaMin.x=minX; constraintAreaMin.y=minY;
+        constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
+    }
 
-    hsd->makeDistanceMatrix();
-    hsd->makeProbabilityMatrix(powAforHS);
+    if (hsd==NULL) {
+        hsd = new HSDistanceMatrix();
+        hsd->makeDistanceMatrix();
+        hsd->makeProbabilityMatrix(powAforHS);
+    }
 
-    if (rc==NULL) rc = new RootCollection();
-    char* RootDir = DEF_RT_DIR ;
-    rc->readRootInfo(RootDir);
-    makeRoot();
-    buildDstMatrix();
+    if (rc==NULL) {
+        rc = new RootCollection();
+        char* RootDir = DEF_RT_DIR ;
+        rc->readRootInfo(RootDir);
+        makeRoot();
+        buildDstMatrix();
+    }
 
     // выбор случайной локации из маршрута
-    currentHSindex = rand() % currentRoot.size();
-    currentHSMin.x=(currentRoot[currentHSindex]).Xmin;
-    currentHSMin.y=(currentRoot[currentHSindex]).Ymin;
-    currentHSMax.x=(currentRoot[currentHSindex]).Xmax;
-    currentHSMax.y=(currentRoot[currentHSindex]).Ymax;
-    currentHSCenter=(currentHSMin+currentHSMax)*0.5;
-    cout << "Root Number:" << RootNumber << endl;
-
-    cout << "Initial HS:" << currentHSindex <<endl;
+    if (currentHSindex == -1) {
+        currentHSindex = rand() % currentRoot.size();
+        cout << " currentHSindex " << currentHSindex << endl;
+        currentHSMin.x=(currentRoot[currentHSindex]).Xmin;
+        currentHSMin.y=(currentRoot[currentHSindex]).Ymin;
+        currentHSMax.x=(currentRoot[currentHSindex]).Xmax;
+        currentHSMax.y=(currentRoot[currentHSindex]).Ymax;
+        currentHSCenter=(currentHSMin+currentHSMax)*0.5;
+        cout << "Root Number:" << RootNumber << endl;
+        cout << "Initial HS:" << currentHSindex <<endl;
+    }
 
     // генерация путевых точек в выбранной локации
-    if( gen == NULL ) loadHSWaypts();
+    if (gen == NULL) {
+        loadHSWaypts();
         buildWptMatrix();
     }
 
-    wpFileName = new char[256];
-    trFileName = new char[256];
-    wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-            (int) ((par("fileSuffix"))), WAYPOINTS_TYPE);
-    trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-            (int) ((par("fileSuffix"))), TRACE_TYPE);
+    if (wpFileName == NULL && trFileName == NULL) {
+        wpFileName = new char[256];
+        trFileName = new char[256];
+        wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
+                (int) ((par("NodeID"))), WAYPOINTS_TYPE);
+        trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
+                (int) ((par("NodeID"))), TRACE_TYPE);
+    }
 }
 
 
@@ -231,6 +250,7 @@ void SelfSimLATP::makeRoot()
        for(unsigned int i=0; i< (rc->RootData[RootNumber])->size(); i++) {
            currentRoot.push_back((rc->RootData[RootNumber])->at(i));
        }
+       cout << "root made" << endl;
     }
     isRootReady=true;
 }
@@ -401,7 +421,7 @@ void SelfSimLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double 
 }
 
 void SelfSimLATP::saveStatistics() {
-    const int nodeIndex = (int) ((par("fileSuffix")));
+    const int nodeIndex = (int) ((par("NodeID")));
     char *outDir = "outTrace";
     char *wpsDir = buildFullName(outDir, "waypointfiles");
     char *trsDir = buildFullName(outDir, "tracefiles");

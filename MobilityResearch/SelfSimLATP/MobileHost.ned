@@ -11,15 +11,13 @@ module MobileHost
         
         @node();
         @display("i=device/pocketpc_s");
-        //@statistic[coordX](title="coord X"; source="xCoord(mobilityPos(mobilityStateChanged))"; record=vector; interpolationmode=linear);
-        //@statistic[coordY](title="coord Y"; source="yCoord(mobilityPos(mobilityStateChanged))"; record=vector; interpolationmode=linear);
-        //@statistic[coordZ](title="coord Z";source="zCoord(mobilityPos(mobilityStateChanged))";record=vector; interpolationmode=linear);
         
-        int indexOfNode = default(0);
+        int NodeID_ = default(0);
+        
     submodules:
-//        mobility: <mobilityType> like IMobility;
         mobility: SelfSimLATP {
             parameters: 
-            	fileSuffix = indexOfNode;
+                @display("is=s;p=72,44");
+            	NodeID = NodeID_;
         }
 }

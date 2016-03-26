@@ -21,12 +21,29 @@ using namespace std;
 #define DEF_WP_DIR "./Traces/waypointfiles"    //Директория по умолчанию для "путевых точек"
 #define DEF_RT_DIR "./Traces/rootfiles"
 
+struct Waypoint{
+    double X, Y, Tb, Te;
+    char* traceName;
+
+    Waypoint(double x, double y, double Tb, double Te, char* traceName) {
+        this->X = x;
+        this->Y = y;
+        this->Tb = Tb;
+        this->Te = Te;
+        this->traceName = traceName;
+    }
+};
+
 struct HotSpotShortInfo {
      double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;
      double sumTime;
      unsigned int waypointNum;
      unsigned int counter;
      char* hotSpotName;
+
+     double generatedSumTime;
+     unsigned int generatedWaypointNum;
+     vector<Waypoint> waypoints;
 
      HotSpotShortInfo(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, unsigned int waypointNum, unsigned int counter=0 )
      {
@@ -39,11 +56,18 @@ struct HotSpotShortInfo {
          this->Ycenter = (Ymin + Ymax) / 2;
          this->sumTime = sumTime;
          this->waypointNum = waypointNum;
+         this->generatedSumTime = 0;
+         this->generatedWaypointNum = 0;
      }
 
      void print()
      {
-         cout << " Xmin=" << Xmin << " Xmax=" << Xmax << "\n" << " Ymin=" << Ymin << " Ymax=" << Ymax << endl << endl;
+         cout << "\t Xmin = " << Xmin << ", Xmax = " << Xmax << endl;
+         cout << "\t Ymin = " << Ymin << ", Ymax = " << Ymax << endl;
+         cout << "\t Xcenter = " << Xcenter << ", Ycenter = " << Ycenter << endl;
+         cout << "\t sumTime = " << sumTime << ", generatedSumTime = " << generatedSumTime << endl;
+         cout << "\t waypointNum = " << waypointNum << ", generatedWaypointNum = " << generatedWaypointNum << endl;
+         cout << "\t hotSpotName = " << hotSpotName << endl;
      }
 };
 
@@ -54,6 +78,7 @@ public:
     static vector<HotSpotShortInfo> HSData;
 
     void readHotSpotsInfo(char* TracesDir, double& minX, double& maxX, double& minY, double& maxY);
+    HotSpotShortInfo* findHotSpotbyName(char*, int&);
 };
 
 
@@ -70,6 +95,9 @@ public:
     void makeProbabilityMatrix(double powA);
     double getDistance(unsigned int i, unsigned int j);
 };
+
+
+// ----------------------------------- for SLAW ----------------------------------------------
 
 struct HotSpotRootInfo {
      char* hotSpotName;
