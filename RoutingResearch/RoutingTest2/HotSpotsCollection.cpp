@@ -67,7 +67,6 @@ HotSpotShortInfo* HotSpotsCollection::findHotSpotbyName(char* HotSpotName, int& 
 }
 
 
-
 // --------------------------------------------------------------------------------
 
 bool HSDistanceMatrix::isMatrixReady = false;
@@ -118,3 +117,62 @@ void HSDistanceMatrix::makeProbabilityMatrix(double powA)
         isProbabilityReady=true;
     }
 }
+
+
+// ----------------------------------- for SLAW ----------------------------------------------
+
+bool RootCollection::isRootDataReady=false;
+vector<vector<HotSpotRootInfo>*> RootCollection::RootData;
+
+void RootCollection::readRootInfo(char* RootDir)
+{
+    if(!isRootDataReady) {
+
+        RootCollection::RootData.clear();
+
+        char* rootFileNamePattern;
+        rootFileNamePattern=buildFullName(RootDir, "*.rot");
+
+        WIN32_FIND_DATA f;
+        HANDLE h = FindFirstFile(rootFileNamePattern, &f);
+        if(h != INVALID_HANDLE_VALUE)
+        {
+            do
+            {
+                char* inputFileName;
+                inputFileName=buildFullName(RootDir, f.cFileName);
+                ifstream* infile = new ifstream(inputFileName);
+                vector<HotSpotRootInfo>* root = new vector<HotSpotRootInfo>;
+                while (!infile->eof()) {
+                    char hotSpotName[256];
+                    double Xmin, Xmax, Ymin, Ymax;
+                    double sumTime;
+                    unsigned int waypointNum;
+                    (*infile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> sumTime >> waypointNum;
+                    HotSpotRootInfo h(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum);
+                    root->push_back(h);
+                }
+                infile->close();
+//                delete infile;
+//                delete[] inputFileName;
+                RootCollection::RootData.push_back(root);
+            }
+            while(FindNextFile(h, &f));
+        }
+        else
+        {
+            cout << "Directory or files not found\n";
+        }
+    }
+    isRootDataReady=true;
+}
+
+
+void RootCollection::prtintRootInfo()
+{
+    for(unsigned int i=0; i<RootData.size(); i++) {
+        cout << "Root " << i <<":" <<endl;
+        for(unsigned int j=0; j<RootData[i]->size(); j++) RootData[i]->at(j).printHotSpotRootInfo();
+    }
+}
+
