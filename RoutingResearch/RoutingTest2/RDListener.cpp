@@ -37,15 +37,20 @@ RD_Listener::RD_Listener()
 void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj)
 {
     if (signalID == mobilityStateChangedSignal) {
-          LevyHotSpotsLATP *src = check_and_cast<LevyHotSpotsLATP*>(source);
-          NodeId = src->getNodeID();
-          position = src->getCurrentPosition();
+        IMobility *mobility = check_and_cast<IMobility*>(source);
+        position = mobility->getCurrentPosition();
 
-          //checkReceivedData(); // for debugging
-          if (processReceivedData()) {
-              RoutingDaemon::instance->connectionsChanged();
-          }
-          //log(); // for debugging
+        LevyHotSpotsLATP* src1 = dynamic_cast<LevyHotSpotsLATP*>(source);
+        if (src1) NodeId = src1->getNodeID();
+
+        SelfSimLATP* src2 = dynamic_cast<SelfSimLATP*>(source);
+        if (src2) NodeId = src2->getNodeID();
+
+        //checkReceivedData(); // for debugging
+        if (processReceivedData()) {
+            RoutingDaemon::instance->connectionsChanged();
+        }
+        //log(); // for debugging
      }
 }
 
