@@ -5,7 +5,7 @@ import inet.mobility.single.BonnMotionMobility;
 // A host for demonstrating mobility models only -- it contains
 // no protocol layers at all.
 //
-module MobileHost
+module LevyMobileHost
 {
     parameters:
         string mobilityType = default("LevyHotSpotsRandom");

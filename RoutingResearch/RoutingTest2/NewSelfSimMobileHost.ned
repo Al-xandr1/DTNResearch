@@ -1,14 +1,6 @@
-import inet.mobility.contract.IMobility;
-import inet.mobility.single.BonnMotionMobility;
-
-//
-// A host for demonstrating mobility models only -- it contains
-// no protocol layers at all.
-//
-module RoutingMobileHost
+module NewSelfSimMobileHost
 {
     parameters:
-        string mobilityType = default("LevyHotSpotsRandom");
         
         @node();
         @display("i=device/pocketpc_s");
@@ -25,7 +17,7 @@ module RoutingMobileHost
         input in @directIn;
         
     submodules:
-        mobility: RegularRootLATP {
+        mobility: SelfSimLATP {
             parameters: 
                 @display("is=s;p=72,44");
             	NodeID = NodeID_;

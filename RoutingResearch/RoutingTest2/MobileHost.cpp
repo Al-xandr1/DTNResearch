@@ -71,7 +71,8 @@ void MobileHost::handleMessage(cMessage *msg)
     } else if (msg->getKind() == DAY_START) {
         // Сообщение о начале нового "дня"
         //cout << "Day started for node: " << nodeId << endl;
-        check_and_cast<RegularRootLATP*>(getSubmodule("mobility"))->makeNewRoot();
+        RegularRootLATP* regularMobility = dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));
+        if (regularMobility) regularMobility->makeNewRoot();
         delete msg;
 
 

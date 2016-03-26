@@ -1,7 +1,4 @@
-import inet.mobility.contract.IMobility;
-import inet.mobility.single.BonnMotionMobility;
-
-network RoutingLevyHotSpotsLATPNetwork
+network RoutingSelfSimLATPNetwork
 {
     parameters:
         int numHosts;
@@ -17,7 +14,7 @@ network RoutingLevyHotSpotsLATPNetwork
         int countOfDays = default(5); 					// number of days will be accounted for collection statistics of total time coonection per a day  
         
     submodules:
-        host[numHosts]: RegularLevyMobileHost {
+        host[numHosts]: NewSelfSimMobileHost {
             parameters:
                 @display("p=300,300;r=,,#707070");
                 NodeID_ = index;

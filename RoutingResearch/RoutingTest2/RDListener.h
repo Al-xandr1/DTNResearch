@@ -11,6 +11,7 @@
 
 #include "RoutingDaemon.h"
 #include <LevyHotSpotsLATP.h>
+#include "SelfSimLATP.h"
 #include <MobileHost.h>
 #include "DevelopmentHelper.h"
 
