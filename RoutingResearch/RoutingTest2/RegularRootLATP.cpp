@@ -156,7 +156,8 @@ bool RegularRootLATP::findNextHotSpot()
         if(curRootIndex != i) pr+=LocalProbMatrix[curRootIndex][i];
         if(rn <= pr) { curRootIndex=i; break; }
     }
-    if(rn > pr) exit(-987);
+    if (currentRoot->size() == 1 && curRootIndex == 0) {pr=LocalProbMatrix[curRootIndex][curRootIndex];} // if one hs in root
+    if (rn > pr) {cout<<"rn="<<rn<<", pr="<<pr<<", currentRoot->size()="<<currentRoot->size()<<endl; exit(-987);}
     currentHSMin.x=(currentRoot->at(curRootIndex))->Xmin;    //std::cout<<currentHSMin.x<<"\t";
     currentHSMin.y=(currentRoot->at(curRootIndex))->Ymin;    //std::cout<<currentHSMin.y<<"\t";
     currentHSMax.x=(currentRoot->at(curRootIndex))->Xmax;    //std::cout<<currentHSMax.x<<"\t";

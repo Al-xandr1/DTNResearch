@@ -115,7 +115,7 @@ void RD_Listener::checkReceivedData()
 {
     if (NodeId < 0 || NodeId >= RoutingDaemon::numHosts) {
         cout << "NodeId=" << NodeId << ", numHosts=" << RoutingDaemon::numHosts;
-        exit(-987);
+        exit(-992);
     }
 }
 
