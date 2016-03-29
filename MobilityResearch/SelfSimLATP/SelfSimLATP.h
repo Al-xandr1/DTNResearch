@@ -1,5 +1,5 @@
-#ifndef LEVY_HSLATP_H
-#define LEVY_HSLATP_H
+#ifndef SELFSIM_LATP_H
+#define SELFSIM_LATP_H
 
 #include <iostream>
 #include <fstream>
