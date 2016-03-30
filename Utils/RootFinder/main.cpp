@@ -252,13 +252,13 @@ void RootFinder::writeAllRoots(char* rootFilesDir)
     }
 
     HotSpotVisit hsv, nexthsv;
-    hsv.HotSpot=new char[256];
-    nexthsv.HotSpot=new char[256];
+    hsv.HotSpot=new char[4096];
+    nexthsv.HotSpot=new char[4096];
     double Tsum=0; int counter=0;
-    char buffer[256];
+    char buffer[4096];
 
     ofstream allroot("allroots.roo");
-    char rootstring[256];
+    char rootstring[4096];
 
     int rootLength[UserNames.size()];
     long int rootT[UserNames.size()], rootP[UserNames.size()];
