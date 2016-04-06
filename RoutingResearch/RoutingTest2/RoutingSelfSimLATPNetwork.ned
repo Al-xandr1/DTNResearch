@@ -6,11 +6,15 @@ network RoutingSelfSimLATPNetwork
         
         double interconnectionRadius = default(700); 	// radius of transmitters of each node in meters
         
+        // heuristic's parameters
+        double trustTimeThreshold @unit(s) = default(-1s);  // Trust time threshold for LET heuristic. 
+        													// Available values [0; +infinity]. Note: -1 means infinity
+        
         // parameters for daily root change
         double dayDuration @unit(s) = default(43200s);  // by default 12 hours;
         int newHS_inRoot = default(1);
         
-        //statistic collection
+        // statistic collection
         int countOfDays = default(5); 					// number of days will be accounted for collection statistics of total time coonection per a day  
         
     submodules:

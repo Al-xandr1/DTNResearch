@@ -83,7 +83,7 @@ bool LETHeuristic::canProcess(Request* request, int& nodeForRouting) {
     }
 
     // когда выбирается текущий узел как подходящий, тогда маршрутизация невозможна
-    if (moreSuitableNode != request->getSourceId()) {
+    if (maxLost < trustTimeThreshold && moreSuitableNode != request->getSourceId()) {
         nodeForRouting = moreSuitableNode;
 
         //for debug

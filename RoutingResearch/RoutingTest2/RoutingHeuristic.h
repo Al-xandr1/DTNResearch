@@ -39,8 +39,13 @@ public:
 
 // Логика мартшутизации "тому кто позже всех видел адресат"
 class LETHeuristic : public RoutingHeuristic {
+private:
+    simtime_t trustTimeThreshold; //порого времени, в рамках которого можно доверять LET эвристике
+
 public:
-    LETHeuristic(RoutingDaemon* rd) : RoutingHeuristic(rd) {};
+    LETHeuristic(RoutingDaemon* rd, simtime_t trustTimeThreshold) : RoutingHeuristic(rd) {
+        this->trustTimeThreshold = trustTimeThreshold;
+    };
     virtual bool canProcess(Request* request, int& nodeForRouting);
 };
 
