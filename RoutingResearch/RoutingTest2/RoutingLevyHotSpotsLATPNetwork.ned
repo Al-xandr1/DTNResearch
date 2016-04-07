@@ -7,6 +7,7 @@ network RoutingLevyHotSpotsLATPNetwork
         double interconnectionRadius = default(700); 	// radius of transmitters of each node in meters
         
         // heuristic's parameters
+        double trustTimeThreshold @unit(s) = default(0s);   // Trust time threshold for LET heuristic. 
         													// Available values [0; +infinity]. Note: -1 means infinity
         
         // parameters for daily root change
