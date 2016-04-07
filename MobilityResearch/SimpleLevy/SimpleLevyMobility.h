@@ -10,7 +10,6 @@
 
 #include "DevelopmentHelper.h"
 #include "LeviStatic.h"
-#include "HotSpot.h"
 
 // определяет конкретную спецификацию мобильности
 enum LeviMobilitySubtype { SimpleLevy = 0,              // простой Леви, без использования кластеров.
@@ -28,7 +27,7 @@ enum LeviMobilitySubtype { SimpleLevy = 0,              // простой Леви, без исп
                                                         // В кластере объект двигается по путевым точкам, загруженным заранее.
                      };
 
-class LevyMobility : public LineSegmentsMobilityBase
+class SimpleLevyMobility : public LineSegmentsMobilityBase
 {
   protected:
     bool nextMoveIsWait;
@@ -65,7 +64,7 @@ class LevyMobility : public LineSegmentsMobilityBase
     void saveStatistics();
 
   public:
-    LevyMobility();
+    SimpleLevyMobility();
 
     Coord getLastPosition()      {return this->lastPosition;};
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};

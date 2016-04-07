@@ -7,7 +7,7 @@ simple LevyMobility extends MovingMobilityBase
         bool initFromDisplayString = default(true);
         volatile double speed @unit(mps) = default(mps); // use uniform(minSpeed, maxSpeed) or another distribution (fake parameter - used by base classes)
         volatile double waitTime @unit(s) = default(0s); // wait time between reaching a target and choosing a new one  (fake parameter - used by base classes)
-        @class(LevyMobility);
+        @class(SimpleLevyMobility);
  
  	double ciJ  = default(1);       // scale coeff (c) in Levy LENGTH disttibution - 10 in external research paper
     	double aliJ = default(1);       // power magnitude (alpha) in Levy LENGTH distribution - 0.5, 1.0, 1.5 in external research paper

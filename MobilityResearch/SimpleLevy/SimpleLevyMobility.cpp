@@ -1,10 +1,10 @@
-#include "LevyMobility.h"
+#include "SimpleLevyMobility.h"
 
 #define TRACE_TYPE ".txt"
 
-Define_Module(LevyMobility);
+Define_Module(SimpleLevyMobility);
 
-LevyMobility::LevyMobility() {
+SimpleLevyMobility::SimpleLevyMobility() {
     nextMoveIsWait = false;
     jump = NULL;
     pause = NULL;
@@ -14,7 +14,7 @@ LevyMobility::LevyMobility() {
     movementsFinished = false;
 }
 
-void LevyMobility::initialize(int stage) {
+void SimpleLevyMobility::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
     if (stage == 0) { stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0; }
@@ -47,18 +47,18 @@ void LevyMobility::initialize(int stage) {
 
 
 
-void LevyMobility::setInitialPosition() {
+void SimpleLevyMobility::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
     lastPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
     lastPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
 }
 
-void LevyMobility::finish() {
+void SimpleLevyMobility::finish() {
     saveStatistics();
 }
 
-void LevyMobility::setTargetPosition() {
+void SimpleLevyMobility::setTargetPosition() {
     if (!movementsFinished) {
         if (nextMoveIsWait) {
             simtime_t waitTime = (simtime_t) pause->get_Levi_rv();
@@ -74,7 +74,7 @@ void LevyMobility::setTargetPosition() {
     }
 }
 
-void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
+void SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
     
     // генерируем прыжок Леви как обычно
     const double angle = uniform(0, 2 * PI);
@@ -117,18 +117,18 @@ void LevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     }
 }
 
-void LevyMobility::move() {
+void SimpleLevyMobility::move() {
     LineSegmentsMobilityBase::move();
 }
 
 //-------------------------- Statistic collection ---------------------------------
-void LevyMobility::collectStatistics(simtime_t appearenceTime, double x, double y) {
+void SimpleLevyMobility::collectStatistics(simtime_t appearenceTime, double x, double y) {
     times.push_back(appearenceTime);
     xCoordinates.push_back(x);
     yCoordinates.push_back(y);
 }
 
-void LevyMobility::saveStatistics() {
+void SimpleLevyMobility::saveStatistics() {
     char outFileName[256];
     char *fileName = createFileName(outFileName, 0, par("traceFileName").stringValue(),
             (int) ((par("fileSuffix"))), TRACE_TYPE);
