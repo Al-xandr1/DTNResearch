@@ -1,5 +1,7 @@
 #include "LevyHotSpotsRandom.h"
 
+#define FILE_TYPE ".txt"
+
 Define_Module(LevyHotSpotsRandom);
 
 LevyHotSpotsRandom::LevyHotSpotsRandom() {
@@ -170,8 +172,8 @@ void LevyHotSpotsRandom::collectStatistics(simtime_t appearenceTime, double x, d
 
 void LevyHotSpotsRandom::saveStatistics() {
     char outFileName[256];
-    char *fileName = createFileName(outFileName, 0,
-            par("traceFileName").stringValue(), (int) ((par("fileSuffix"))));
+    char *fileName = createFileName(outFileName, 0, par("traceFileName").stringValue(),
+            (int) ((par("fileSuffix"))), FILE_TYPE);
 
     ofstream* file = new ofstream(fileName);
     for (unsigned int i = 0; i < times.size(); i++) {

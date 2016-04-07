@@ -14,12 +14,12 @@
 #include <sstream>
 #include <string>
 #include <omnetpp.h>
+
 using namespace std;
 
-#define FILE_TYPE ".txt"
-
 char* buildFullName(char* dir, char* fileName);
-char* createFileName(char* buffer, int numberOfExperiment, const char* rawName, int index);
+char* createFileName(char* buffer, int numberOfExperiment,
+                     const char* rawName, int index, const char* fileType);
 int countMaxValue(list<int> queueSizePoints);
 double getLength(double x1, double y1, double x2, double y2);
 
