@@ -19,7 +19,7 @@
 class HotSpotsAlgorithm;
 typedef HotSpotsAlgorithm HotSpotsAlgorithmDEF;
 // из-за цикличеких определений приходиться делать так
-#include "LevyMobility.h"
+#include "SimpleLevyMobility.h"
 
 #define DEF_HS_DIR "./hotspotfiles"    //Директория по умолчанию для "горячих точек"
 #define DEF_WP_DIR "./waypointfiles"    //Директория по умолчанию для "путевых точек"

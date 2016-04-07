@@ -1,4 +1,4 @@
-#include "LevyMobility.h"
+#include "SimpleLevyMobility.h"
 
 #define TRACE_TYPE ".txt"
 

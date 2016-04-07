@@ -1,4 +1,4 @@
-network FirstMobileNetwork
+network RealMobilityNetwork
 {
     parameters:
         int numHosts;
