@@ -15,7 +15,7 @@ char* buildFullName(char* dir, char* fileName) {
 }
 
 char* createFileName(char* buffer, int numberOfExperiment,
-        const char* rawName, int index) {
+        const char* rawName, int index, const char* fileType) {
 
     ostringstream prefix, postfix;
     char *result;
@@ -32,10 +32,11 @@ char* createFileName(char* buffer, int numberOfExperiment,
     if (index >= 0) {
         postfix << index;
 
-        result = strcat(strcat(strcat(result, "_"), ((postfix.str()).c_str())),
-        FILE_TYPE);
-    } else {
-        result = strcat(result, FILE_TYPE);
+        result = strcat(strcat(result, "_"), ((postfix.str()).c_str()));
+    }
+
+    if (fileType != NULL) {
+        result = strcat(result, fileType);
     }
 
     return result;

@@ -8,6 +8,9 @@
 using namespace std;
 
 
+//todo DEPRICATED! UES HotSpotsCollection.h !!!
+
+
 struct Waypoint{
     double X,Y,Tb,Te;
     char* traceName;

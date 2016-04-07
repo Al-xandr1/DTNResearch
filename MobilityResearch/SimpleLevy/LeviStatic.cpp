@@ -89,9 +89,10 @@ LeviJump::LeviJump(double ci, double ali, double aci) {
 double LeviJump::get_Levi_rv() {
     int i;
     double rnd, h;
-    do
-        rnd = ((double) rand()) / RAND_MAX;
-    while (rnd < 0.5);
+    // do
+    //   rnd = ((double) rand()) / RAND_MAX;
+    // while (rnd < 0.5);
+    rnd= 0.5 + (0.5*rand())/RAND_MAX;
     i = 0;
     while (xinv[i] < rnd && i < imax)
         i++;
@@ -164,9 +165,10 @@ LeviPause::LeviPause(double ci, double ali, double aci) {
 double LeviPause::get_Levi_rv() {
     int i;
     double rnd, h;
-    do
-        rnd = ((double) rand()) / RAND_MAX;
-    while (rnd < 0.5);
+    // do
+    //    rnd = ((double) rand()) / RAND_MAX;
+    // while (rnd < 0.5);
+    rnd= 0.5 + (0.5*rand())/RAND_MAX;
     i = 0;
     while (xinv[i] < rnd && i < imax)
         i++;

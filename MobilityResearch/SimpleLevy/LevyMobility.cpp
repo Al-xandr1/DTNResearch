@@ -1,5 +1,7 @@
 #include "LevyMobility.h"
 
+#define TRACE_TYPE ".txt"
+
 Define_Module(LevyMobility);
 
 LevyMobility::LevyMobility() {
@@ -128,8 +130,8 @@ void LevyMobility::collectStatistics(simtime_t appearenceTime, double x, double 
 
 void LevyMobility::saveStatistics() {
     char outFileName[256];
-    char *fileName = createFileName(outFileName, 0,
-            par("traceFileName").stringValue(), (int) ((par("fileSuffix"))));
+    char *fileName = createFileName(outFileName, 0, par("traceFileName").stringValue(),
+            (int) ((par("fileSuffix"))), TRACE_TYPE);
 
     ofstream* file = new ofstream(fileName);
     for (int i = 0; i < times.size(); i++) {
