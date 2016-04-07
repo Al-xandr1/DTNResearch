@@ -1,4 +1,4 @@
-network SecondMobilityNetwork
+network SimpleLevyNetwork
 {
     parameters:
         int numHosts;
