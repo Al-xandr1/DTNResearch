@@ -9,12 +9,17 @@
 #include "math.h"
 #include "DevelopmentHelper.h"
 
-class SimpleLevyMobility;
-typedef SimpleLevyMobility LevyMobilityDEF;
+
+//todo это старая реализация. Её нужно превратить в RealMobility
+
+
+
+class RealMobility;
+typedef RealMobility RealMobilityDEF;
 // из-за цикличеких определений приходиться делать так
 #include "HotSpotsAlgorithm.h"
 
-class SimpleLevyMobility : public LineSegmentsMobilityBase
+class RealMobility : public LineSegmentsMobilityBase
 {
   protected:
     bool nextMoveIsWait;
@@ -50,7 +55,7 @@ class SimpleLevyMobility : public LineSegmentsMobilityBase
     void saveStatistics();
 
   public:
-    SimpleLevyMobility();
+    RealMobility();
 
     Coord getLastPosition()      {return this->lastPosition;};
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};

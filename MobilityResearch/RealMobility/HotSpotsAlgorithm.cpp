@@ -7,7 +7,7 @@
 
 #include <HotSpotsAlgorithm.h>
 
-HotSpotsAlgorithm::HotSpotsAlgorithm(LevyMobilityDEF* levyMobility, double powA,
+HotSpotsAlgorithm::HotSpotsAlgorithm(RealMobilityDEF* levyMobility, double powA,
         bool useLATP, bool useBetweenCentersLogic, bool useHotSpotAvailabilities,
         bool useWayPoints) {
 

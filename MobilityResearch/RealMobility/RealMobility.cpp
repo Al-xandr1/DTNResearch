@@ -2,9 +2,9 @@
 
 #define TRACE_TYPE ".txt"
 
-Define_Module(SimpleLevyMobility);
+Define_Module(RealMobility);
 
-SimpleLevyMobility::SimpleLevyMobility() {
+RealMobility::RealMobility() {
     nextMoveIsWait = false;
     jump = NULL;
     pause = NULL;
@@ -16,7 +16,7 @@ SimpleLevyMobility::SimpleLevyMobility() {
     hsAlgorithm = NULL;
 }
 
-void SimpleLevyMobility::initialize(int stage) {
+void RealMobility::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
     if (stage == 0) {
@@ -46,7 +46,7 @@ void SimpleLevyMobility::initialize(int stage) {
     initializeSpecification();
 }
 
-void SimpleLevyMobility::initializeSpecification() {
+void RealMobility::initializeSpecification() {
     if (!specification) {
         if (hasPar("specification")) specification = par("specification").stringValue();
         else exit(-113);
@@ -76,17 +76,17 @@ void SimpleLevyMobility::initializeSpecification() {
     }
 }
 
-void SimpleLevyMobility::setInitialPosition() {
+void RealMobility::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
     if (hsAlgorithm) lastPosition = hsAlgorithm->getInitialPosition();
 }
 
-void SimpleLevyMobility::finish() {
+void RealMobility::finish() {
     saveStatistics();
 }
 
-void SimpleLevyMobility::setTargetPosition() {
+void RealMobility::setTargetPosition() {
     if (!movementsFinished) {
         if (nextMoveIsWait) {
             simtime_t waitTime = (simtime_t) pause->get_Levi_rv();
@@ -104,7 +104,7 @@ void SimpleLevyMobility::setTargetPosition() {
 }
 
 // √енерирует следующую позицию в зависимости от того, включено использование гор€чих точек или нет
-void SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
+void RealMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
     // генерируем прыжок Ћеви как обычно
     const double angle = uniform(0, 2 * PI);
     const double distance = jump->get_Levi_rv();
@@ -120,18 +120,18 @@ void SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& 
         movementsFinished = !hsAlgorithm->fixTargetPosition(targetPosition, delta, distance);
 }
 
-void SimpleLevyMobility::move() {
+void RealMobility::move() {
     LineSegmentsMobilityBase::move();
 }
 
 //-------------------------- Statistic collection ---------------------------------
-void SimpleLevyMobility::collectStatistics(simtime_t appearenceTime, double x, double y) {
+void RealMobility::collectStatistics(simtime_t appearenceTime, double x, double y) {
     times.push_back(appearenceTime);
     xCoordinates.push_back(x);
     yCoordinates.push_back(y);
 }
 
-void SimpleLevyMobility::saveStatistics() {
+void RealMobility::saveStatistics() {
     char outFileName[256];
     char *fileName = createFileName(outFileName, 0, par("traceFileName").stringValue(),
             (int) ((par("fileSuffix"))), TRACE_TYPE);

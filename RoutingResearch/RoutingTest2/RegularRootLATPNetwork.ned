@@ -1,4 +1,4 @@
-network RoutingLevyHotSpotsLATPNetwork
+network RegularRootLATPNetwork
 {
     parameters:
         int numHosts;
@@ -18,7 +18,7 @@ network RoutingLevyHotSpotsLATPNetwork
         int countOfDays = default(5); 					// number of days will be accounted for collection statistics of total time coonection per a day  
         
     submodules:
-        host[numHosts]: RegularLevyMobileHost {
+        host[numHosts]: RegularRootLATPHost {
             parameters:
                 @display("p=300,300;r=,,#707070");
                 NodeID_ = index;

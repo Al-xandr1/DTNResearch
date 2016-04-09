@@ -5,7 +5,9 @@
 	<projects>
 		<project>inet</project>
 		<project>LevyHotSpotsLATP</project>
+		<project>LevyHotSpotsRandom</project>
 		<project>SelfSimLATP</project>
+		<project>SimpleLevy</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

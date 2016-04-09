@@ -1,11 +1,11 @@
 import inet.mobility.common.MovingMobilityBase;
 
-simple LevyMobility extends MovingMobilityBase
+simple SimpleLevyMobility extends MovingMobilityBase
 {
     parameters:
         //Ќачальное положение задаетс€ в методе MobilityBase::setInitialPosition()
         bool initFromDisplayString = default(true);
-        volatile double speed @unit(mps) = default(mps); // use uniform(minSpeed, maxSpeed) or another distribution		(fake parameter - used by base classes)
+        volatile double speed @unit(mps) = default(mps); // use uniform(minSpeed, maxSpeed) or another distribution (fake parameter - used by base classes)
         volatile double waitTime @unit(s) = default(0s); // wait time between reaching a target and choosing a new one  (fake parameter - used by base classes)
         @class(SimpleLevyMobility);
  

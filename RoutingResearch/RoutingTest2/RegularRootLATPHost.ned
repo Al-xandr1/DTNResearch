@@ -1,11 +1,4 @@
-import inet.mobility.contract.IMobility;
-import inet.mobility.single.BonnMotionMobility;
-
-//
-// A host for demonstrating mobility models only -- it contains
-// no protocol layers at all.
-//
-module RegularLevyMobileHost
+module RegularRootLATPHost
 {
     parameters:
         string mobilityType = default("LevyHotSpotsRandom");

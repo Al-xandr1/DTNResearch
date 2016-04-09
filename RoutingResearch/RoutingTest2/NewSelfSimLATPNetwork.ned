@@ -1,4 +1,4 @@
-network RoutingSelfSimLATPNetwork
+network NewSelfSimLATPNetwork
 {
     parameters:
         int numHosts;
@@ -18,7 +18,7 @@ network RoutingSelfSimLATPNetwork
         int countOfDays = default(5); 					// number of days will be accounted for collection statistics of total time coonection per a day  
         
     submodules:
-        host[numHosts]: NewSelfSimMobileHost {
+        host[numHosts]: NewSelfSimLATPHost {
             parameters:
                 @display("p=300,300;r=,,#707070");
                 NodeID_ = index;

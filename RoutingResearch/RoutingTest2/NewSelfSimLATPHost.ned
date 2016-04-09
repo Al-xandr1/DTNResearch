@@ -1,4 +1,4 @@
-module NewSelfSimMobileHost
+module NewSelfSimLATPHost
 {
     parameters:
         

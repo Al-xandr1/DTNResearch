@@ -52,7 +52,7 @@ typedef HotSpotsAlgorithm HotSpotsAlgorithmDEF;
 
 class HotSpotsAlgorithm {
 private:
-    LevyMobilityDEF* levyMobility;
+    RealMobilityDEF* levyMobility;
 
     //todo вместо этих переменных сделать грамотную иерархию наследников наследников
     bool useLATP;                  // true - если нужно успользовать LATP алгоритм, false - иначе
@@ -73,7 +73,7 @@ private:
     double powA;                   // показатель степени в диапазоне от 0 до бесконечности
 
 public:
-    HotSpotsAlgorithm(LevyMobilityDEF* levyMobility, double powA,
+    HotSpotsAlgorithm(RealMobilityDEF* levyMobility, double powA,
             bool useLATP, bool useBetweenCentersLogic, bool useHotSpotAvailabilities,
             bool useWayPoints);
     virtual ~HotSpotsAlgorithm();
