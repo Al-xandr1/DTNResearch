@@ -13,6 +13,9 @@ module RegularRootLATPHost
         // parameter for intencity of packet generation (Poisson flow)
         double timeslot = default(50);
     	double lambda = default(0.3);
+    	
+    	double rootPersistence = default(0.5); // Coefficient of persistence for locations. 
+    							 		     // Available values [0, 1]
     
     gates:
         input in @directIn;

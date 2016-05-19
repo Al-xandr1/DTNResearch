@@ -11,13 +11,18 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
         ifstream* spotInfoFile = new ifstream(spotInfoFileName);
         if (!spotInfoFile) { cout << " No spotInfoFile file: " << spotInfoFileName << endl;  exit(104); }
 
+        char lastAddedName[256];
+
         while(!spotInfoFile->eof()) {
             char hotSpotName[256];
             double sumTime;
             unsigned int waypointNum;
             (*spotInfoFile) >> hotSpotName >> sumTime >> waypointNum >> Xmin >> Xmax >> Ymin >> Ymax;
-            HotSpotShortInfo hsi(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum);
-            HSData.push_back( hsi );
+            if (strcmp(lastAddedName, hotSpotName)!=0) {
+                HotSpotShortInfo hsi(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum);
+                HSData.push_back(hsi);
+                strcpy(lastAddedName, hotSpotName);
+            }
         }
 
         char* spotCountFileName = buildFullName(TracesDir, "spotcount.cnt");
@@ -38,6 +43,7 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
         delete spotCountFile;
 
         isHSDataReady=true;
+        print();
    }
 
    Xmin=(HSData[0]).Xmin; Xmax=(HSData[0]).Xmax;
@@ -56,14 +62,35 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
    return;
 }
 
+void HotSpotsCollection::print()
+{
+    for (unsigned int i=0; i < HSData.size(); i++) {
+        cout<< HSData[i].hotSpotName<<", ";
+    }
+    cout<<endl;
+}
+
 HotSpotShortInfo* HotSpotsCollection::findHotSpotbyName(char* HotSpotName, int& HotSpotNum)
 {
-    for(unsigned int i=1; i<HSData.size(); i++)
+    for(unsigned int i=0; i<HSData.size(); i++)
         if( strcmp(HSData[i].hotSpotName, HotSpotName) == 0 ) {
             HotSpotNum=i;
             return &HSData[i];
         }
     return NULL;
+}
+
+HotSpotShortInfo* HotSpotsCollection::randomRemove(vector<HotSpotShortInfo*>* hotSpots, int& HotSpotNum)
+{
+    HotSpotNum = (int) round(uniform(0, (double) (hotSpots->size() - 1)));
+    HotSpotShortInfo* removedItem = hotSpots->at(HotSpotNum);
+
+    //for debug
+    if (HotSpotNum < 0 || HotSpotNum >= hotSpots->size() || removedItem == NULL) exit(-773);
+
+    hotSpots->erase(hotSpots->begin() + HotSpotNum);
+
+    return removedItem;
 }
 
 

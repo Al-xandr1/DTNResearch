@@ -17,6 +17,8 @@ RegularRootLATP::RegularRootLATP()
 {
     rc = NULL;
 
+    rootPersistence = -1;
+
     firstRoot   = NULL;
     firstRootSnumber = NULL;
     firstRootCounter = NULL;
@@ -44,7 +46,7 @@ void RegularRootLATP::loadFirstRoot()
         firstRoot->push_back(h);
         firstRootSnumber->push_back(Snum);
         firstRootCounter->push_back(1);
-    } else exit(-234);
+    } else exit(-235);
 
     for(int i=1; i<(rc->RootData[NodeID]).length; i++ ) {
         h = hsc->findHotSpotbyName((rc->RootData[NodeID]).hotSpot[i], Snum);
@@ -97,15 +99,32 @@ void RegularRootLATP::makeLocalProbMatrix(double powA)
 }
 
 
+void RegularRootLATP::deleteLocalProbMatrix()
+{
+    if(isLProbReady) {
+        for(unsigned int i=0; i<currentRoot->size(); i++) {
+            delete[] LocalProbMatrix[i];
+        }
+        delete[] LocalProbMatrix;
+
+        isLProbReady=false;
+    }
+}
+
+
 void RegularRootLATP::initialize(int stage) {
     LevyHotSpotsLATP::initialize(stage);
 
     if (rc==NULL) {
         rc = new RootsCollection();
-        char* TracesDir = DEF_TR_DIR ;
+        char* TracesDir = DEF_TR_DIR;
         // загрузка данных о маршрутах
         rc->readRootsInfo(TracesDir, "allroots.roo");
         // rc->print();
+    }
+
+    if (rootPersistence == -1) {
+        rootPersistence = getParentModule()->par("rootPersistence").doubleValue();
     }
 
     if (firstRoot == NULL) {
@@ -179,11 +198,65 @@ void RegularRootLATP::makeNewRoot()
         delete currentRootCounter;
     }
 
-    // временна€ затычка! просто копируем первый маршрут
-
     currentRoot = new vector<HotSpotShortInfo*>(*firstRoot);
     currentRootSnumber = new vector<unsigned int>(*firstRootSnumber);
     currentRootCounter = new vector<int>(*firstRootCounter);
+
+    const int nonReplaceble = round(firstRoot->size() * rootPersistence);
+    const int replaceable = firstRoot->size() - nonReplaceble;
+    if (nonReplaceble < 0 || nonReplaceble > firstRoot->size()) {cout << "nonReplaceble = " << nonReplaceble << endl; exit(-765);}
+
+    int maxCount = 0;
+    //remove HS from current root by random manner
+    for (int i = 0; i < replaceable; i++) {
+        int hsNumber = -1;
+        HotSpotShortInfo* removedItem = HotSpotsCollection::randomRemove(currentRoot, hsNumber);
+        if (hsNumber == -1 || removedItem == NULL) exit(-774);
+
+        currentRootSnumber->erase(currentRootSnumber->begin() + hsNumber);
+        if (maxCount < currentRootCounter->at(hsNumber)) maxCount = currentRootCounter->at(hsNumber);
+        currentRootCounter->erase(currentRootCounter->begin() + hsNumber);
+    }
+
+    //copy all HS without remaining in currentRoot
+    vector<HotSpotShortInfo*>* allHSWithoutInCurrentRoot = new vector<HotSpotShortInfo*>();
+    for (unsigned int hsNumber = 0; hsNumber < HotSpotsCollection::HSData.size(); hsNumber++) {
+        bool foundInCurrent = false;
+        for (int i = 0; i < currentRootSnumber->size(); i++)
+            if (foundInCurrent = (currentRootSnumber->at(i) == hsNumber)) break;
+
+        if (!foundInCurrent) {
+            allHSWithoutInCurrentRoot->push_back(&HotSpotsCollection::HSData[hsNumber]);
+        }
+    }
+
+    for (int i = 0; i < replaceable; i++) {
+        int hsNumber = -1;
+        HotSpotShortInfo* removedItem = HotSpotsCollection::randomRemove(allHSWithoutInCurrentRoot, hsNumber);
+        // for debug
+        if (hsNumber == -1 || removedItem == NULL)
+            {cout<<"hsNumber="<<hsNumber<<", removedItem="<<removedItem; exit(-775);}
+
+        HotSpotShortInfo* insertedItem = hsc->findHotSpotbyName(removedItem->hotSpotName, hsNumber = -1);
+        // for debug
+        if (hsNumber == -1 || insertedItem == NULL)
+            {cout<<"hsNumber="<<hsNumber<<", insertedItem="<<insertedItem; exit(-776);}
+
+        // for debug
+        for(unsigned int j=0; j<currentRoot->size(); j++)
+            if( currentRoot->at(j)==insertedItem ) exit(-778);
+
+        currentRoot->push_back(insertedItem);
+        currentRootSnumber->push_back(hsNumber);
+        currentRootCounter->push_back((int) round(uniform(0, (double) maxCount)));
+    }
+
+    delete allHSWithoutInCurrentRoot;
+    //printFirstRoot();
+    //printCurrentRoot();
+
+    deleteLocalProbMatrix();
+    makeLocalProbMatrix(powA);
 
     // начальна€ локаци€ - это перва€ локаци€ текущего маршрута
     curRootIndex=0;
@@ -198,4 +271,6 @@ void RegularRootLATP::makeNewRoot()
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
     nextChange =simTime();
     generateNextPosition(targetPosition, nextChange);
+
+    cout << endl;
 }

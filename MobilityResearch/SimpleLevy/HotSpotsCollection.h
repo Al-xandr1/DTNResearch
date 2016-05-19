@@ -79,6 +79,8 @@ public:
 
     void readHotSpotsInfo(char* TracesDir, double& minX, double& maxX, double& minY, double& maxY);
     HotSpotShortInfo* findHotSpotbyName(char*, int&);
+    void print();
+    static HotSpotShortInfo* randomRemove(vector<HotSpotShortInfo*>* hotSpots, int& HotSpotNum);
 };
 
 

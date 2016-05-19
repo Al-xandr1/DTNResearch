@@ -25,6 +25,8 @@ class RegularRootLATP : public LevyHotSpotsLATP
 
     RootsCollection* rc;
 
+    double rootPersistence;
+
     vector<HotSpotShortInfo*>* firstRoot;
     vector<unsigned int>* firstRootSnumber;
     vector<int>* firstRootCounter;
@@ -48,6 +50,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
     void printFirstRoot();
     void printCurrentRoot();
     void makeLocalProbMatrix(double powA);
+    void deleteLocalProbMatrix();
 
     void makeNewRoot();
 };
