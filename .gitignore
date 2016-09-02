@@ -129,6 +129,7 @@ packages/
 *.vci
 *.vec
 .last-copts
+.nedfolders
 
 
 hotspotfiles/
