@@ -25,3 +25,4 @@ git checkout - в зависимости от параметров используется для извлечения веток или
 Полезные ссылки:
 1)	https://git-scm.com/book/en/v2 
 2)	http://www.tutorialspoint.com/git/git_online_repositories.htm
+4)
