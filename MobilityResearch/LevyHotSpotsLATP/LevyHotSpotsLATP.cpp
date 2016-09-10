@@ -120,8 +120,8 @@ void LevyHotSpotsLATP::setInitialPosition() {
     
     lastPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
     lastPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
-    //log();
-    if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-555);
+    targetPosition = lastPosition;
+    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
 }
 
 bool LevyHotSpotsLATP::isHotSpotEmpty() {
@@ -133,56 +133,55 @@ void LevyHotSpotsLATP::finish() {
 }
 
 void LevyHotSpotsLATP::setTargetPosition() {
-    if (!movementsFinished) {
-        step++;
-        if (isPause) {
-            waitTime = (simtime_t) pause->get_Levi_rv();
-            nextChange = simTime() + waitTime;
-            //log();
-            //if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-666);
-        } else {
-            //if (!isCorrectCoordinates(lastPosition.x, lastPosition.y)) exit(-777);
-            collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
-            generateNextPosition(targetPosition, nextChange);
-            //log();
-            //if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) exit(-888);
-        }
-        isPause = !isPause;
+    if (movementsFinished) {nextChange = -1; return;};
+    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
+    ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+
+    step++;
+    if (isPause) {
+        waitTime = (simtime_t) pause->get_Levi_rv();
+        ASSERT(waitTime > 0);
+        nextChange = simTime() + waitTime;
     } else {
-        // остановка перемещений по документации
-        nextChange = -1;
-        //log();
+        collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
+        movementsFinished = !generateNextPosition(targetPosition, nextChange);
+
+        if (movementsFinished) {nextChange = -1; return;};
+        ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
     }
+    isPause = !isPause;
 }
 
-void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
+bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
     
     // генерируем прыжок Леви как обычно
     angle = uniform(0, 2 * PI);
     distance = jump->get_Levi_rv();
+    ASSERT(distance > 0);
     speed = kForSpeed * pow(distance, 1 - roForSpeed);
     Coord delta(distance * cos(angle), distance * sin(angle), 0);
     deltaVector = delta;
     travelTime = distance / speed;
 
     targetPosition = lastPosition + delta;
+    ASSERT(targetPosition.x != lastPosition.x);
     nextChange = simTime() + travelTime;
 
     // если вышли за пределы локации
     if (currentHSMin.x >= targetPosition.x || targetPosition.x >= currentHSMax.x || currentHSMin.y >= targetPosition.y || targetPosition.y >= currentHSMax.y) {
         if (isHotSpotEmpty()) { // если локация точечная
-//            cout << "HotSpot is empty! select next" << endl;
-            if ( findNextHotSpot() ) {   // нашли следующую локацию - идём в её случайную точку
+            if (findNextHotSpot()) {   // нашли следующую локацию - идём в её случайную точку
                 targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
                 targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
                 distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
+                ASSERT(distance > 0);
                 speed = kForSpeed * pow(distance, 1 - roForSpeed);
                 travelTime = distance / speed;
                 nextChange = simTime() + travelTime;
+                return true;
 
-            } else movementsFinished = true;  // не нашли - останавливаемся
-            return;
+            } else return false;  // не нашли - останавливаемся
         }
 
         // для ускорения вычислений определяем вспомогательные переменные
@@ -205,23 +204,30 @@ void LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
             delta.x = Xdir * distance/dir;
             delta.y = Ydir * distance/dir;
             targetPosition = getLastPosition() + delta;
+
+            return true;
         } else { // не можем - надо переходить в другую локацию
-            if ( findNextHotSpot() ) {   // нашли следующую локацию - идём в её случайную точку
-               targetPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
-               targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+            if (findNextHotSpot()) {   // нашли следующую локацию - идём в её случайную точку
+                targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
+                targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
-               distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
-               speed = kForSpeed * pow(distance, 1 - roForSpeed);
-               travelTime = distance / speed;
-               nextChange = simTime() + travelTime;
+                distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
+                ASSERT(distance > 0);
+                speed = kForSpeed * pow(distance, 1 - roForSpeed);
+                travelTime = distance / speed;
+                nextChange = simTime() + travelTime;
+                return true;
 
-            } else movementsFinished = true;  // не нашли - останавливаемся
+            } else return false;  // не нашли - останавливаемся
         }
     }
+
+    return true;
 }
 
 bool LevyHotSpotsLATP::findNextHotSpot()
 {
+    int oldHSindex = currentHSindex;
     // выбираем новую локацию
     double rn, pr=0;
     rn=(double)rand()/RAND_MAX;
@@ -235,14 +241,10 @@ bool LevyHotSpotsLATP::findNextHotSpot()
     currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 
-    //    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
+    ASSERT(oldHSindex != currentHSindex);
     return true;
 }
 
-
-void LevyHotSpotsLATP::move() {
-    LineSegmentsMobilityBase::move();
-}
 
 //-------------------------- Statistic collection ---------------------------------
 void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
@@ -341,6 +343,7 @@ void LevyHotSpotsLATP::log() {  // Отладочная функция
     cout << "\t currentHSMin.x = " << currentHSMin.x << ", currentHSMax.x = " << currentHSMax.x << endl;
     cout << "\t currentHSMin.y = " << currentHSMin.y << ", currentHSMax.y = " << currentHSMax.y << endl;
     cout << "\t currentHSCenter.x = " << currentHSCenter.x << ", currentHSCenter.y = " << currentHSCenter.y << endl;
+    cout << "\t isHotSpotEmpty = " << isHotSpotEmpty() << endl;
     ((hsc->HSData)[currentHSindex]).print();
 
     if (isPause) {

@@ -20,7 +20,8 @@ class SelfSimLATP : public LineSegmentsMobilityBase
 
     int NodeID;
 
-    bool nextMoveIsWait;
+    bool isPause;
+    long step;
 
     double kForSpeed;
     double roForSpeed;
@@ -72,10 +73,9 @@ class SelfSimLATP : public LineSegmentsMobilityBase
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setInitialPosition();
 
-    void generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+    bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
 
-    virtual void move();                  /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void finish();
 
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);

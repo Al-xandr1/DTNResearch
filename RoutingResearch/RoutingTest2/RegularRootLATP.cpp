@@ -177,12 +177,15 @@ bool RegularRootLATP::findNextHotSpot()
     }
     if (currentRoot->size() == 1 && curRootIndex == 0) {pr=LocalProbMatrix[curRootIndex][curRootIndex];} // if one hs in root
     if (rn > pr) {cout<<"rn="<<rn<<", pr="<<pr<<", currentRoot->size()="<<currentRoot->size()<<endl; exit(-987);}
+    ASSERT(currentHSMin.x != (currentRoot->at(curRootIndex))->Xmin);
     currentHSMin.x=(currentRoot->at(curRootIndex))->Xmin;    //std::cout<<currentHSMin.x<<"\t";
     currentHSMin.y=(currentRoot->at(curRootIndex))->Ymin;    //std::cout<<currentHSMin.y<<"\t";
     currentHSMax.x=(currentRoot->at(curRootIndex))->Xmax;    //std::cout<<currentHSMax.x<<"\t";
     currentHSMax.y=(currentRoot->at(curRootIndex))->Ymax;    //std::cout<<currentHSMax.y<<"\n";
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
+    int oldHSindex = currentHSindex;
     hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
+    ASSERT(oldHSindex != currentHSindex);
 
     //    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
     return true;
@@ -204,14 +207,14 @@ void RegularRootLATP::makeNewRoot()
 
     const int nonReplaceble = round(firstRoot->size() * rootPersistence);
     const int replaceable = firstRoot->size() - nonReplaceble;
-    if (nonReplaceble < 0 || nonReplaceble > firstRoot->size()) {cout << "nonReplaceble = " << nonReplaceble << endl; exit(-765);}
+    ASSERT(nonReplaceble >= 0 && nonReplaceble <= firstRoot->size());
 
     int maxCount = 0;
     //remove HS from current root by random manner
     for (int i = 0; i < replaceable; i++) {
         int hsNumber = -1;
         HotSpotShortInfo* removedItem = HotSpotsCollection::randomRemove(currentRoot, hsNumber);
-        if (hsNumber == -1 || removedItem == NULL) exit(-774);
+        ASSERT(hsNumber != -1 && removedItem != NULL);
 
         currentRootSnumber->erase(currentRootSnumber->begin() + hsNumber);
         if (maxCount < currentRootCounter->at(hsNumber)) maxCount = currentRootCounter->at(hsNumber);
@@ -233,18 +236,11 @@ void RegularRootLATP::makeNewRoot()
     for (int i = 0; i < replaceable; i++) {
         int hsNumber = -1;
         HotSpotShortInfo* removedItem = HotSpotsCollection::randomRemove(allHSWithoutInCurrentRoot, hsNumber);
-        // for debug
-        if (hsNumber == -1 || removedItem == NULL)
-            {cout<<"hsNumber="<<hsNumber<<", removedItem="<<removedItem; exit(-775);}
+        ASSERT(hsNumber != -1 && removedItem != NULL);
 
         HotSpotShortInfo* insertedItem = hsc->findHotSpotbyName(removedItem->hotSpotName, hsNumber = -1);
-        // for debug
-        if (hsNumber == -1 || insertedItem == NULL)
-            {cout<<"hsNumber="<<hsNumber<<", insertedItem="<<insertedItem; exit(-776);}
-
-        // for debug
-        for(unsigned int j=0; j<currentRoot->size(); j++)
-            if( currentRoot->at(j)==insertedItem ) exit(-778);
+        ASSERT(hsNumber != -1 && insertedItem != NULL);
+        for(unsigned int j=0; j<currentRoot->size(); j++) ASSERT(currentRoot->at(j) != insertedItem);
 
         currentRoot->push_back(insertedItem);
         currentRootSnumber->push_back(hsNumber);
@@ -269,8 +265,7 @@ void RegularRootLATP::makeNewRoot()
 
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
-    nextChange =simTime();
-    generateNextPosition(targetPosition, nextChange);
+    //todo стоит ли менять время прибытия?
 
     cout << endl;
 }

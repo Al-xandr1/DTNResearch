@@ -65,7 +65,9 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
 void HotSpotsCollection::print()
 {
     for (unsigned int i=0; i < HSData.size(); i++) {
-        cout<< HSData[i].hotSpotName<<", ";
+        HotSpotShortInfo info = HSData[i];
+        cout << info.hotSpotName<<": xMin=" << info.Xmin << " yMin=" << info.Ymin
+                << " xMax=" << info.Xmax << " yMax=" << info.Ymax << endl;
     }
     cout<<endl;
 }

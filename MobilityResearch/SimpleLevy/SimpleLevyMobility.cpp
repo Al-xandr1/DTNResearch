@@ -117,9 +117,6 @@ void SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& 
     }
 }
 
-void SimpleLevyMobility::move() {
-    LineSegmentsMobilityBase::move();
-}
 
 //-------------------------- Statistic collection ---------------------------------
 void SimpleLevyMobility::collectStatistics(simtime_t appearenceTime, double x, double y) {

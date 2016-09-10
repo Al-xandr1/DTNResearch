@@ -15,7 +15,8 @@ SelfSimLATP::SelfSimLATP() {
 
     NodeID = -1;
 
-    nextMoveIsWait = false;
+    isPause = false;
+    step = 0;
     kForSpeed = 1;
     roForSpeed = 0;
 
@@ -101,14 +102,11 @@ void SelfSimLATP::initialize(int stage) {
     // выбор случайной локации из маршрута
     if (currentHSindex == -1) {
         currentHSindex = rand() % currentRoot.size();
-        cout << " currentHSindex " << currentHSindex << endl;
         currentHSMin.x=(currentRoot[currentHSindex]).Xmin;
         currentHSMin.y=(currentRoot[currentHSindex]).Ymin;
         currentHSMax.x=(currentRoot[currentHSindex]).Xmax;
         currentHSMax.y=(currentRoot[currentHSindex]).Ymax;
         currentHSCenter=(currentHSMin+currentHSMax)*0.5;
-        cout << "Root Number:" << RootNumber << endl;
-        cout << "Initial HS:" << currentHSindex <<endl;
     }
 
     // генерация путевых точек в выбранной локации
@@ -138,6 +136,7 @@ void SelfSimLATP::setInitialPosition() {
     currentWpt = rand() % waypts.size();
     lastPosition.x = waypts[currentWpt].x;
     lastPosition.y = waypts[currentWpt].y;
+    targetPosition = lastPosition;
     cout << "Initial position: point #" << currentWpt << " x="<< lastPosition.x <<" y=" << lastPosition.y <<endl;
 }
 
@@ -146,29 +145,28 @@ void SelfSimLATP::finish() {
 }
 
 void SelfSimLATP::setTargetPosition() {
-    if (!movementsFinished) {
-        if (nextMoveIsWait) {
-            waitTime = (simtime_t) pause->get_Levi_rv();
-            nextChange = simTime() + waitTime;
-        } else {
-            collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
-            generateNextPosition(targetPosition, nextChange);
-        }
-        nextMoveIsWait = !nextMoveIsWait;
+    if (movementsFinished) {cout<<"End of root!"<<endl; nextChange = -1; return;};
+
+    step++;
+    if (isPause) {
+        waitTime = (simtime_t) pause->get_Levi_rv();
+        ASSERT(waitTime > 0);
+        nextChange = simTime() + waitTime;
     } else {
-        // остановка перемещений по документации
-        cout << "End of root!" << endl;
-        nextChange = -1;
+        collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
+        movementsFinished = !generateNextPosition(targetPosition, nextChange);
+
+        if (movementsFinished) {cout<<"End of root!"<<endl; nextChange = -1; return;};
     }
+    isPause = !isPause;
 }
 
-
-void SelfSimLATP::generateNextPosition(Coord& targPos, simtime_t& nextChange)
+bool SelfSimLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange)
 {
-    if( findNextWpt() ) {
-        targPos = waypts[currentWpt];
-        double distance = sqrt((targPos.x-lastPosition.x)*(targPos.x-lastPosition.x) +
-                               (targPos.y-lastPosition.y)*(targPos.y-lastPosition.y));
+    if (findNextWpt()) {
+        targetPosition = waypts[currentWpt];
+        double distance = sqrt((targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x) +
+                               (targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y));
 
         simtime_t travelTime;
         if (distance != 0) {
@@ -180,17 +178,17 @@ void SelfSimLATP::generateNextPosition(Coord& targPos, simtime_t& nextChange)
         }
 
         nextChange = simTime() + travelTime;
-    } else if ( findNextHotSpot() ) {
-//        cout << "changing location to:" << currentHSindex << " HotSpot left:" << currentRoot.size() <<endl;
+
+    } else if (findNextHotSpot()) {
         isWptLoaded=false;
         loadHSWaypts();
         isWptMatrixReady=false;
         buildWptMatrix();
         currentWpt = rand() % waypts.size();
-        targPos.x = waypts[currentWpt].x;
-        targPos.y = waypts[currentWpt].y;
-        double distance = sqrt((targPos.x-lastPosition.x)*(targPos.x-lastPosition.x) +
-                               (targPos.y-lastPosition.y)*(targPos.y-lastPosition.y));
+        targetPosition.x = waypts[currentWpt].x;
+        targetPosition.y = waypts[currentWpt].y;
+        double distance = sqrt((targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x) +
+                               (targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y));
 
         simtime_t travelTime;
         if (distance != 0) {
@@ -202,10 +200,10 @@ void SelfSimLATP::generateNextPosition(Coord& targPos, simtime_t& nextChange)
         }
 
         nextChange = simTime() + travelTime;
-    } else movementsFinished = true;
+    } else return false;
+
+    return true;
 }
-
-
 
 bool SelfSimLATP::findNextHotSpot()
 {
@@ -220,7 +218,7 @@ bool SelfSimLATP::findNextHotSpot()
        for(i=0; i<currentRoot.size(); i++) {
            if( (h=getDistance(currentHSindex, i))>0 ) pr+=pow(1/h, powAforHS);
            if(rn <= pr/sum) {
-//               cout << "rn=" <<rn <<"  pr="<<pr<<endl;
+               //cout << "rn=" <<rn <<"  pr="<<pr<<endl;
                currentRoot.erase(currentRoot.begin()+currentHSindex);
                correctMatrix(dstMatrix, currentHSindex);
                (i < currentHSindex)? currentHSindex=i : currentHSindex=i-1;
@@ -241,10 +239,6 @@ bool SelfSimLATP::findNextHotSpot()
     else return false;
 }
 
-
-void SelfSimLATP::move() {
-    LineSegmentsMobilityBase::move();
-}
 
 //-------------------------- Root operations --------------------------------------
 void SelfSimLATP::makeRoot()
