@@ -5,6 +5,8 @@
 #include <fstream>
 #include <string>
 #include <math.h>
+#include <stdlib.h>
+#include <windows.h>
 
 #include "INETDefs.h"
 #include "LineSegmentsMobilityBase.h"
@@ -16,7 +18,6 @@
 class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 {
   protected:
-
     int NodeID;
 
     bool isPause;

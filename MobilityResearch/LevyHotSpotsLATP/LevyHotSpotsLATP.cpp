@@ -1,8 +1,3 @@
-#include <iostream>
-#include <math.h>
-#include <stdlib.h>
-#include <windows.h>
-
 #include "LevyHotSpotsLATP.h"
 
 #define TRACE_TYPE ".txt"
@@ -11,7 +6,6 @@
 Define_Module(LevyHotSpotsLATP);
 
 LevyHotSpotsLATP::LevyHotSpotsLATP() {
-
     NodeID = -1;
 
     isPause = false;
@@ -74,6 +68,8 @@ void LevyHotSpotsLATP::initialize(int stage) {
     if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, aciJ);
     if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
 
+
+
     if (hsc==NULL) {
         hsc = new HotSpotsCollection();
         // загрузка данных о докациях
@@ -100,6 +96,8 @@ void LevyHotSpotsLATP::initialize(int stage) {
         currentHSCenter=(currentHSMin+currentHSMax)*0.5;
     }
 
+
+
     if (wpFileName == NULL && trFileName == NULL) {
         wpFileName = new char[256];
         trFileName = new char[256];
@@ -110,8 +108,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
     }
 }
 
-int LevyHotSpotsLATP::getNodeID()
-{
+int LevyHotSpotsLATP::getNodeID() {
     return NodeID;
 }
 

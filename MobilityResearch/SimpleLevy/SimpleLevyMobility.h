@@ -30,20 +30,36 @@ enum LeviMobilitySubtype { SimpleLevy = 0,              // простой Леви, без исп
 class SimpleLevyMobility : public LineSegmentsMobilityBase
 {
   protected:
-    bool nextMoveIsWait;
+    int NodeID;
+
+    bool isPause;
+    long step;
 
     LeviJump  *jump;
     LeviPause *pause;
     double kForSpeed;
     double roForSpeed;
 
-    // текущая локация
-    Coord currentHSMin, currentHSMax, currentHSCenter;
+    double angle;
+    double distance;
+    double speed;
+    Coord deltaVector;
+    simtime_t travelTime;
+
+    double powA;
 
     bool movementsFinished;    // показывает окончил ли пользователь движение или нет
 
+    // текущая локация
+    Coord currentHSMin, currentHSMax, currentHSCenter;
+    int currentHSindex;
+
     //statistics collection
-    std::vector<simtime_t> times;
+    char *wpFileName;
+    char *trFileName;
+    simtime_t waitTime;
+    std::vector<simtime_t> inTimes;
+    std::vector<simtime_t> outTimes;
     std::vector<double> xCoordinates;
     std::vector<double> yCoordinates;
 
@@ -54,17 +70,21 @@ class SimpleLevyMobility : public LineSegmentsMobilityBase
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setInitialPosition();
 
-    void generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+    bool isHotSpotEmpty();
+    bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
     virtual bool findNextHotSpot() { return true; }  // ищем новую локацию и устанавливаем её новые границы и центр
 
-    virtual void move();                  /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void finish();
 
-    void collectStatistics(simtime_t appearenceTime, double x, double y);
+    void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
     void saveStatistics();
+
+    bool isCorrectCoordinates(double x, double y);
+    void log();
 
   public:
     SimpleLevyMobility();
+    int getNodeID();
 
     Coord getLastPosition()      {return this->lastPosition;};
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};
