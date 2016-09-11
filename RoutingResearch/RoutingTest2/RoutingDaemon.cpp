@@ -119,8 +119,7 @@ bool RoutingDaemon::processIfCan(Request* request) {
         int nodeForRouting = -1;
 
         if ((*routingHeuristics)[i]->canProcess(request, nodeForRouting)) {
-            // for debug
-            //if (nodeForRouting < 0 || nodeForRouting >= getNumHosts() || nodeForRouting == request->getSourceId()) exit(-443);
+            ASSERT(nodeForRouting >= 0 && nodeForRouting < getNumHosts() && nodeForRouting != request->getSourceId());
 
             // Посылаем отклик на обработку запроса источнику запроса.
             // nodeForRoutePacket - узел, которому бует передан пакет на узле источнике
@@ -156,9 +155,7 @@ void RoutingDaemon::accumulateConnectivity(int nodeId1, int nodeId2) {
     simtime_t** current = (*RoutingDaemon::connectivityPerDay)[RoutingDaemon::connectivityPerDay->size()-1];
     simtime_t end = min(getLostConnectionTime(nodeId1, nodeId2), finishTimeOfCurrentDay);
     simtime_t start = max(getStartConnectionTime(nodeId1,nodeId2), startTimeOfCurrentDay);
-
-    //todo for debug
-    //if (start >= end) {cout << "start = " << start << ", end = " << endl; exit(-543);}
+    ASSERT(start < end);
 
     if (nodeId1 > nodeId2) current[nodeId1][nodeId2] += (end - start);
     else current[nodeId2][nodeId1] += (end - start);;

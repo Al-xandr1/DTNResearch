@@ -40,7 +40,7 @@ public:
 
     int getSourceId() {return sourceId;}
     int getLastVisitedId() {return lastVisitiedId;}
-    int setLastVisitedId(int lastVisitiedId) {this->lastVisitiedId = lastVisitiedId;}
+    void setLastVisitedId(int lastVisitiedId) {this->lastVisitiedId = lastVisitiedId;}
     int getDestinationId() {return destinationId;}
 
     void setCreationTime(simtime_t time) {creationTime = time;}

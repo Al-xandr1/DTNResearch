@@ -46,12 +46,11 @@ void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
         SelfSimLATP* src2 = dynamic_cast<SelfSimLATP*>(source);
         if (src2) NodeId = src2->getNodeID();
 
-        //checkReceivedData(); // for debugging
+        ASSERT(checkReceivedData());
         if (processReceivedData()) {
             RoutingDaemon::instance->connectionsChanged();
         }
-        //log(); // for debugging
-     }
+    }
 }
 
 bool RD_Listener::processReceivedData()
@@ -111,12 +110,11 @@ bool RD_Listener::isConnected(int node1, int node2)
 
 
 //-------------------------------------- for debug ---------------------------------------------------
-void RD_Listener::checkReceivedData()
+bool RD_Listener::checkReceivedData()
 {
-    if (NodeId < 0 || NodeId >= RoutingDaemon::numHosts) {
-        cout << "NodeId=" << NodeId << ", numHosts=" << RoutingDaemon::numHosts;
-        exit(-992);
-    }
+    if (0 <= NodeId && NodeId < RoutingDaemon::numHosts) return true;
+    log();
+    return false;
 }
 
 void RD_Listener::log()

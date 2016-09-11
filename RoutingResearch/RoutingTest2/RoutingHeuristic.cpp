@@ -2,16 +2,13 @@
 
 //ќпредел€ет подход€щий ли узел дл€ рассмотрени€ его как потенциального транзитного узла
 bool RoutingHeuristic::isSuitableTransitNeighbor(int trinsitId, Request* request) {
-    //for debug
-    //if (trinsitId < 0 || trinsitId >= rd->getNumHosts()) exit(-111); // узел должен входить в диапазон
-    //if (rd->isConnected(request->getSourceId(), request->getDestinationId())) {exit(-333);} // если ищем транзит, то €вной св€зи нет
-    //for debug
+    ASSERT(0 <= trinsitId && trinsitId < rd->getNumHosts()); // узел должен входить в диапазон
+    ASSERT(!rd->isConnected(request->getSourceId(), request->getDestinationId())); // если ищем транзит, то €вной св€зи нет
 
     if (rd->isConnected(request->getSourceId(), trinsitId)           //узел €вл€етс€ соседом дл€ источника
             && request->getSourceId() != trinsitId                   //узел не €вл€етс€ сам себе соседом
             && request->getPacket()->getLastVisitedId() != trinsitId) { //сосед не есть последний посещЄнный пакетом узел
-        //for debug
-        //if (trinsitId == request->getDestinationId()) exit(-222);    // узел именно тразитный
+        ASSERT(trinsitId != request->getDestinationId());    // узел именно тразитный
         return true;
     }
 
@@ -26,9 +23,6 @@ bool RoutingHeuristic::isSuitableTransitNeighbor(int trinsitId, Request* request
 bool OneHopHeuristic::canProcess(Request* request, int& nodeForRouting) {
     if (rd->isConnected(request->getSourceId(), request->getDestinationId())) {
         nodeForRouting = request->getDestinationId();
-
-        //for debug
-        //request->print(); cout << "OneHop: moreSuitableNode = " << nodeForRouting << endl;
         return true;
     }
     return false;
@@ -41,9 +35,6 @@ bool TwoHopsHeuristic::canProcess(Request* request, int& nodeForRouting) {
 
             if (rd->isConnected(neighbor, request->getDestinationId())) {
                 nodeForRouting = neighbor;
-
-                //for debug
-                //request->print(); cout << "TwoHops: moreSuitableNode = " << nodeForRouting << endl;
                 return true;
             }
             //todo process case when thus neighbors more than one
@@ -62,17 +53,9 @@ bool LETHeuristic::canProcess(Request* request, int& nodeForRouting) {
 
             simtime_t lost = rd->getLostConnectionTime(neighbor, request->getDestinationId());
 
-            //todo for debug
-            //simtime_t start = rd->getStartConnectionTime(neighbor, request->getDestinationId());
-            //if (lost < 0 || lost > simTime()) {cout << "lost = " << lost; exit(-432);}
-            //if ( !((lost > start) || (lost == start && lost == 0)) ) {
-            //    cout << "getLostConnectionTime(" << neighbor<< ", "
-            //           << request->getDestinationId() << ") = " << rd->getLostConnectionTime(neighbor, request->getDestinationId()) << endl;
-            //    cout << "getStartConnectionTime(" << neighbor<< ", "
-            //            << request->getDestinationId() << ") = " << rd->getStartConnectionTime(neighbor, request->getDestinationId());
-            //    //todo this may happaned in case of switching roots
-            //    exit(-433);
-            //}// for debug
+            simtime_t start = rd->getStartConnectionTime(neighbor, request->getDestinationId());
+            ASSERT(lost >= 0 && lost <= simTime());
+            ASSERT((lost > start) || (lost == start && lost == 0));
 
             if (lost > maxLost) {
                 maxLost = lost;

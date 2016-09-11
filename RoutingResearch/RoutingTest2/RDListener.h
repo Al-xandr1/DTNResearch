@@ -44,7 +44,7 @@ public:
     bool isConnected(int node1, int node2);
 
     //-------------- for debug ---------------
-    void checkReceivedData();
+    bool checkReceivedData();
     void log();
 };
 

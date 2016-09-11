@@ -44,7 +44,7 @@ void StatisticsCollector::handleMessage(cMessage *msg)
         delete ictMsg;
 
     } else {
-        exit(-555);
+        ASSERT(false);
     }
 }
 

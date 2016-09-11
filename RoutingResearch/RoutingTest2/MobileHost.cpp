@@ -77,7 +77,7 @@ void MobileHost::handleMessage(cMessage *msg)
 
 
     } else {
-        exit(-333);
+        ASSERT(false); //unreachable statement
     }
 }
 
@@ -102,21 +102,21 @@ int MobileHost::generateTarget() {
 }
 
 void MobileHost::registerPacket(Packet* packet) {
+    ASSERT(nodeId != packet->getDestinationId());
+
     packetsForSending->push_back(packet);
 
     Request* request = new Request(nodeId, packet->getDestinationId(), packet);
     sendDirect(request, rdGate);
-
-    //if (nodeId == request->getNodeIdTrg()) exit(-129); // for debugging
 }
 
 void MobileHost::destroyPacket(Packet* packet) {
+    ASSERT(nodeId == packet->getDestinationId());
+
     packet->setReceivedTime(simTime());
     simtime_t liveTime = packet->getLiveTime();
     delete packet;
 
     PacketReceived* packetReceived = new PacketReceived(liveTime);
     sendDirect(packetReceived, collectorGate);
-
-    //if (nodeId != packet->getNodeIdTrg()) exit(-130); // for debugging
 }
