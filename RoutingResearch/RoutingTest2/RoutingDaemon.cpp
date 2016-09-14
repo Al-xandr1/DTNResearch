@@ -20,13 +20,15 @@ void RoutingDaemon::initialize() {
         exit(-654);
     }
 
+    //todo create RoutingSettings
+    //todo fill object of RoutingSettings & set to heuristics
     routingHeuristics = new vector<RoutingHeuristic*>();
     routingHeuristics->push_back(new OneHopHeuristic(this));
     routingHeuristics->push_back(new TwoHopsHeuristic(this));
-    simtime_t trustTimeThreshold = getParentModule()->par("trustTimeThreshold").doubleValue() != -1
-            ? getParentModule()->par("trustTimeThreshold").doubleValue()
+    simtime_t trustTimeThresholdLow = getParentModule()->par("trustTimeThresholdLow").doubleValue() != -1
+            ? getParentModule()->par("trustTimeThresholdLow").doubleValue()
             : MAXTIME;
-    routingHeuristics->push_back(new LETHeuristic(this, trustTimeThreshold));
+    routingHeuristics->push_back(new LETHeuristic(this, trustTimeThresholdLow));
     routingHeuristics->push_back(new MoreFrequentVisibleHeuristic(this));
 
     connectivityPerDay = new vector<simtime_t**>();

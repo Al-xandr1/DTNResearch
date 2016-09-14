@@ -6,10 +6,10 @@ network NewSelfSimLATPNetwork
         
         double interconnectionRadius = default(700); 	// radius of transmitters of each node in meters
         
-        // heuristic's parameters
-        double trustTimeThreshold @unit(s) = default(0s);  // Trust time threshold for LET heuristic. 
-        													// Available values [0; +infinity]. Note: -1 means infinity
-        
+        // heuristic's parameters (hysteresis)
+        double trustTimeThresholdLow @unit(s) = default(0s);  // Low bound of trust time for LET algorithm (for hysteresis)
+        double trustTimeThresholdHigh @unit(s) = default(0s); // High bound of trust time for LET algorithm (for hysteresis) 
+        													  // Available values [0; +infinity]. Note: -1 means infinity
         // parameters for daily root change
         double dayDuration @unit(s) = default(43200s);  // by default 12 hours;
         

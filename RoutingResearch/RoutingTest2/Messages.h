@@ -24,6 +24,7 @@ private:
     int sourceId;
     int lastVisitiedId;
     int destinationId;
+    char* lastHeuristric;
 
     simtime_t creationTime;
     simtime_t receivedTime;
@@ -33,15 +34,22 @@ public:
         this->sourceId = sourceId;
         this->lastVisitiedId = sourceId;
         this->destinationId = destinationId;
+        this->lastHeuristric = NULL;
         this->creationTime = 0;
         this->receivedTime = 0;
         this->setKind(PACKET);
+    }
+
+    ~Packet() {
+        lastHeuristric = NULL;
     }
 
     int getSourceId() {return sourceId;}
     int getLastVisitedId() {return lastVisitiedId;}
     void setLastVisitedId(int lastVisitiedId) {this->lastVisitiedId = lastVisitiedId;}
     int getDestinationId() {return destinationId;}
+    char* getLastHeuristric() {return lastHeuristric;}
+    void setLastHeuristric(char* lastHeuristric) {this->lastHeuristric = lastHeuristric;}
 
     void setCreationTime(simtime_t time) {creationTime = time;}
     void setReceivedTime(simtime_t time) {receivedTime = time;}
