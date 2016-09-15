@@ -20,16 +20,21 @@ void RoutingDaemon::initialize() {
         exit(-654);
     }
 
-    //todo create RoutingSettings
-    //todo fill object of RoutingSettings & set to heuristics
-    routingHeuristics = new vector<RoutingHeuristic*>();
-    routingHeuristics->push_back(new OneHopHeuristic(this));
-    routingHeuristics->push_back(new TwoHopsHeuristic(this));
+    RoutingSettings* settings = new RoutingSettings();
     simtime_t trustTimeThresholdLow = getParentModule()->par("trustTimeThresholdLow").doubleValue() != -1
             ? getParentModule()->par("trustTimeThresholdLow").doubleValue()
             : MAXTIME;
-    routingHeuristics->push_back(new LETHeuristic(this, trustTimeThresholdLow));
-    routingHeuristics->push_back(new MoreFrequentVisibleHeuristic(this));
+    simtime_t trustTimeThresholdHigh = getParentModule()->par("trustTimeThresholdHigh").doubleValue() != -1
+            ? getParentModule()->par("trustTimeThresholdHigh").doubleValue()
+            : MAXTIME;
+    settings->setTrustTimeThresholdLow(trustTimeThresholdLow);
+    settings->setTrustTimeThresholdHigh(trustTimeThresholdHigh);
+
+    routingHeuristics = new vector<RoutingHeuristic*>();
+    routingHeuristics->push_back(new OneHopHeuristic(this, settings));
+    routingHeuristics->push_back(new TwoHopsHeuristic(this, settings));
+    routingHeuristics->push_back(new LETHeuristic(this, settings));
+    routingHeuristics->push_back(new MoreFrequentVisibleHeuristic(this, settings));
 
     connectivityPerDay = new vector<simtime_t**>();
     requests = new vector<Request*>();
@@ -122,6 +127,8 @@ bool RoutingDaemon::processIfCan(Request* request) {
 
         if ((*routingHeuristics)[i]->canProcess(request, nodeForRouting)) {
             ASSERT(nodeForRouting >= 0 && nodeForRouting < getNumHosts() && nodeForRouting != request->getSourceId());
+            // проставляем имя сработавшей эвристики для данного пакета
+            request->getPacket()->setLastHeuristric((*routingHeuristics)[i]->getName());
 
             // Посылаем отклик на обработку запроса источнику запроса.
             // nodeForRoutePacket - узел, которому бует передан пакет на узле источнике

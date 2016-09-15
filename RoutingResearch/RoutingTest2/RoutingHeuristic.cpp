@@ -1,5 +1,6 @@
 #include "RoutingHeuristic.h"
 
+
 //Определяет подходящий ли узел для рассмотрения его как потенциального транзитного узла
 bool RoutingHeuristic::isSuitableTransitNeighbor(int trinsitId, Request* request) {
     ASSERT(0 <= trinsitId && trinsitId < rd->getNumHosts()); // узел должен входить в диапазон
@@ -14,10 +15,6 @@ bool RoutingHeuristic::isSuitableTransitNeighbor(int trinsitId, Request* request
 
     return false;
 }
-
-
-//todo помнить о возможности зацикливания пакета из-за принятия решения разными эвристиками
-//временной порог на использование LETHeuristic ?
 
 
 bool OneHopHeuristic::canProcess(Request* request, int& nodeForRouting) {
@@ -65,9 +62,9 @@ bool LETHeuristic::canProcess(Request* request, int& nodeForRouting) {
         }
     }
 
+    simtime_t threshold = settings->determinTrustTimeThreshold(request->getPacket()->getLastHeuristric());
     // когда выбирается текущий узел как подходящий, тогда маршрутизация невозможна
-    //todo get trustTimeThreshold from RoutingSettings
-    if (maxLost < trustTimeThreshold && moreSuitableNode != request->getSourceId()) {
+    if (maxLost < threshold && moreSuitableNode != request->getSourceId()) {
         nodeForRouting = moreSuitableNode;
 
         //for debug
