@@ -27,6 +27,10 @@ void RoutingDaemon::initialize() {
     simtime_t trustTimeThresholdHigh = getParentModule()->par("trustTimeThresholdHigh").doubleValue() != -1
             ? getParentModule()->par("trustTimeThresholdHigh").doubleValue()
             : MAXTIME;
+    ASSERT(trustTimeThresholdLow >= 0 && trustTimeThresholdHigh >= 0);
+    cout << " trustTimeThresholdLow = " << trustTimeThresholdLow << endl;
+    cout << " trustTimeThresholdHigh = " << trustTimeThresholdHigh << endl;
+
     settings->setTrustTimeThresholdLow(trustTimeThresholdLow);
     settings->setTrustTimeThresholdHigh(trustTimeThresholdHigh);
 
