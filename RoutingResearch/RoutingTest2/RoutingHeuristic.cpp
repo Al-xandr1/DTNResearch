@@ -1,5 +1,6 @@
 #include "RoutingHeuristic.h"
 
+
 //Определяет подходящий ли узел для рассмотрения его как потенциального транзитного узла
 bool RoutingHeuristic::isSuitableTransitNeighbor(int trinsitId, Request* request) {
     ASSERT(0 <= trinsitId && trinsitId < rd->getNumHosts()); // узел должен входить в диапазон
@@ -14,10 +15,6 @@ bool RoutingHeuristic::isSuitableTransitNeighbor(int trinsitId, Request* request
 
     return false;
 }
-
-
-//todo помнить о возможности зацикливания пакета из-за принятия решения разными эвристиками
-//временной порог на использование LETHeuristic ?
 
 
 bool OneHopHeuristic::canProcess(Request* request, int& nodeForRouting) {
@@ -65,8 +62,12 @@ bool LETHeuristic::canProcess(Request* request, int& nodeForRouting) {
         }
     }
 
+    simtime_t deltaT = simTime() - maxLost;
+    ASSERT(deltaT >= 0);
+
+    simtime_t threshold = settings->determinTrustTimeThreshold(request->getPacket()->getLastHeuristric());
     // когда выбирается текущий узел как подходящий, тогда маршрутизация невозможна
-    if (maxLost < trustTimeThreshold && moreSuitableNode != request->getSourceId()) {
+    if (deltaT < threshold && moreSuitableNode != request->getSourceId()) {
         nodeForRouting = moreSuitableNode;
 
         //for debug
@@ -107,6 +108,7 @@ bool MoreFrequentVisibleHeuristic::canProcess(Request* request, int& nodeForRout
         nodeForRouting = moreSuitableNode;
         //todo while do not change time matrix this case unreachable
 
+        ASSERT(false);
         //for debug
         //request->print(); cout << "MoreFreq: moreSuitableNode = " << moreSuitableNode << endl;
         return true;
