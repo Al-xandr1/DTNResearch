@@ -10,30 +10,14 @@ using namespace std;
 // Общий объект с настройками для эвристик маршрутизации
 class RoutingSettings {
 private:
-    simtime_t trustTimeThresholdLow;
-    simtime_t trustTimeThresholdHigh;
+    simtime_t LET_Threshold;
 
 public:
     RoutingSettings() {};
     virtual ~RoutingSettings() {};
 
-    simtime_t getTrustTimeThresholdLow() {return trustTimeThresholdLow;};
-    void setTrustTimeThresholdLow(simtime_t trustTimeThresholdLow) {
-        this->trustTimeThresholdLow = trustTimeThresholdLow;
-    };
-
-    simtime_t getTrustTimeThresholdHigh() {return trustTimeThresholdHigh;};
-    void setTrustTimeThresholdHigh(simtime_t trustTimeThresholdHigh) {
-        this->trustTimeThresholdHigh = trustTimeThresholdHigh;
-    };
-
-    simtime_t determinTrustTimeThreshold(char* heuristricName) {
-        simtime_t trustTimeThreshold = trustTimeThresholdHigh;
-        if (heuristricName != NULL && strcmp(heuristricName, "MoreFrequentVisibleHeuristic") == 0) {
-            trustTimeThreshold = trustTimeThresholdLow;
-        }
-        return trustTimeThreshold;
-    }
+    simtime_t getLET_Threshold() {return LET_Threshold;};
+    void setLET_Threshold(simtime_t Threshold) {this->LET_Threshold = Threshold; };
 };
 
 
@@ -56,8 +40,7 @@ public:
     };
 
     char* getName() {return name;}
-    virtual bool canProcess(Request* request, int& nodeForSendResponse) = 0;
-    bool isSuitableTransitNeighbor(int nodeId, Request* request);
+    virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForSendResponse) = 0;
 };
 
 
@@ -65,7 +48,7 @@ public:
 class OneHopHeuristic : public RoutingHeuristic {
 public:
     OneHopHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic("OneHopHeuristic", rd, settings) {};
-    virtual bool canProcess(Request* request, int& nodeForRouting);
+    virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting);
 };
 
 
@@ -73,7 +56,7 @@ public:
 class TwoHopsHeuristic : public RoutingHeuristic {
 public:
     TwoHopsHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic("TwoHopsHeuristic", rd, settings) {};
-    virtual bool canProcess(Request* request, int& nodeForRouting);
+    virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting);
 };
 
 
@@ -81,7 +64,7 @@ public:
 class LETHeuristic : public RoutingHeuristic {
 public:
     LETHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic("LETHeuristic", rd, settings) {};
-    virtual bool canProcess(Request* request, int& nodeForRouting);
+    virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting);
 };
 
 
@@ -89,7 +72,7 @@ public:
 class MoreFrequentVisibleHeuristic : public RoutingHeuristic {
 public:
     MoreFrequentVisibleHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic("MoreFrequentVisibleHeuristic", rd, settings) {};
-    virtual bool canProcess(Request* request, int& nodeForRouting);
+    virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting);
 };
 
 #endif // ROUTING_HEURISTIC_H_INCLUDED

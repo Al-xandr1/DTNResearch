@@ -7,57 +7,66 @@
 
 using namespace std;
 
-#define FOR_NEW_PACKET 1        // сообщение для создании нового пакета
-#define NEW_PACKET_CREATED 2    // сообщение о созданном новом пакете
+#define FOR_NEW_PACKET       1  // сообщение для создании нового пакета
+#define NEW_PACKET_CREATED   2  // сообщение о созданном новом пакете
 #define RESPONSE_FOR_REQUEST 3  // сообщение о соединении
-#define PACKET 4                // обозначение простого пакета
-#define REQUEST_FOR_ROUTING 5   // заявка на маршрутизацию
-#define PACKET_RECEIVED 6       // сообщение о полученном пакете
-#define ICT_INFO 7              // сообщение с информацией о ICT
-#define DAY_START 8             // сообщение о начале нового "дня" моделирования
+#define PACKET               4  // обозначение простого пакета
+#define REQUEST_FOR_ROUTING  5  // заявка на маршрутизацию
+#define PACKET_RECEIVED      6  // сообщение о полученном пакете
+#define ICT_INFO             7  // сообщение с информацией о ICT
+#define DAY_START            8  // сообщение о начале нового "дня" моделирования
 
 
 // Пакет для передачи
 class Packet : public cPacket
 {
 private:
-    int sourceId;
-    int lastVisitiedId;
-    int destinationId;
+    int   sourceId;
+    int   lastVisitiedId;
+    int   destinationId;
     char* lastHeuristric;
 
     simtime_t creationTime;
     simtime_t receivedTime;
+    simtime_t lastLET;          // время потери контакта с адресатом при последней LET маршрутизации
 
 public:
-    Packet(int sourceId, int destinationId){
-        this->sourceId = sourceId;
+
+    vector<int>       IDhistory;
+    vector<simtime_t> ArrivalHistory;
+    vector<char*>     HeuristicHistory;
+
+    Packet(int sourceId, int destinationId) {
+        this->sourceId       = sourceId;
         this->lastVisitiedId = sourceId;
-        this->destinationId = destinationId;
+        this->destinationId  = destinationId;
         this->lastHeuristric = NULL;
-        this->creationTime = 0;
-        this->receivedTime = 0;
+        this->creationTime   = 0;
+        this->receivedTime   = 0;
+        this->lastLET        = 0;
         this->setKind(PACKET);
+
     }
 
     ~Packet() {
         lastHeuristric = NULL;
     }
 
-    int getSourceId() {return sourceId;}
-    int getLastVisitedId() {return lastVisitiedId;}
-    void setLastVisitedId(int lastVisitiedId) {this->lastVisitiedId = lastVisitiedId;}
-    int getDestinationId() {return destinationId;}
+    int   getSourceId()       {return sourceId;}
+    int   getLastVisitedId()  {return lastVisitiedId;}
+    int   getDestinationId()  {return destinationId;}
     char* getLastHeuristric() {return lastHeuristric;}
-    void setLastHeuristric(char* lastHeuristric) {this->lastHeuristric = lastHeuristric;}
 
-    void setCreationTime(simtime_t time) {creationTime = time;}
-    void setReceivedTime(simtime_t time) {receivedTime = time;}
+    void  setLastVisitedId(int lastVisitiedId)    {this->lastVisitiedId = lastVisitiedId;}
+    void  setLastHeuristric(char* lastHeuristric) {this->lastHeuristric = lastHeuristric;}
+    void  setCreationTime(simtime_t time) {creationTime = time;}
+    void  setReceivedTime(simtime_t time) {receivedTime = time;}
+    void  setLastLET(simtime_t time)      {lastLET = time;}
 
     simtime_t getCreationTime() {return creationTime;}
     simtime_t getReceivedTime() {return receivedTime;}
-
-    simtime_t getLiveTime() {return receivedTime - creationTime;}
+    simtime_t getLiveTime()     {return receivedTime - creationTime;}
+    simtime_t getLastLET()      {return lastLET;}
 };
 
 
@@ -66,8 +75,8 @@ public:
 class Request : public cMessage
 {
 private:
-    int sourceId;
-    int destinationId;
+    int     sourceId;
+    int     destinationId;
     Packet* packet;
 
 public:
@@ -78,10 +87,10 @@ public:
         this->setKind(REQUEST_FOR_ROUTING);
     }
 
-    int getSourceId()  {return sourceId;}
-    int getDestinationId()  {return destinationId;}
-    Packet* getPacket() {return packet;}
-    void print() {cout << "req: " << sourceId << "->" << destinationId << " ! ";}
+    int     getSourceId()       {return sourceId;}
+    int     getDestinationId()  {return destinationId;}
+    Packet* getPacket()         {return packet;}
+    void    print()             {cout << "req: " << sourceId << "->" << destinationId << " ! ";}
 };
 
 
@@ -90,7 +99,7 @@ public:
 class Response : public cMessage
 {
 private:
-    int destinationId;      //данному узлу нужно отправить пакет, соответствующий запросу
+    int      destinationId;   //данному узлу нужно отправить пакет, соответствующий запросу
     Request* request;
 
 public:
@@ -100,7 +109,7 @@ public:
         this->setKind(RESPONSE_FOR_REQUEST);
     }
 
-    int getDestinationId()  {return destinationId;}
+    int      getDestinationId()  {return destinationId;}
     Request* getRequest() {return request;}
 };
 

@@ -2,6 +2,7 @@
 
 
 //Определяет подходящий ли узел для рассмотрения его как потенциального транзитного узла
+/*
 bool RoutingHeuristic::isSuitableTransitNeighbor(int trinsitId, Request* request) {
     ASSERT(0 <= trinsitId && trinsitId < rd->getNumHosts()); // узел должен входить в диапазон
     ASSERT(!rd->isConnected(request->getSourceId(), request->getDestinationId())); // если ищем транзит, то явной связи нет
@@ -15,9 +16,9 @@ bool RoutingHeuristic::isSuitableTransitNeighbor(int trinsitId, Request* request
 
     return false;
 }
+*/
 
-
-bool OneHopHeuristic::canProcess(Request* request, int& nodeForRouting) {
+bool OneHopHeuristic::canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting) {
     if (rd->isConnected(request->getSourceId(), request->getDestinationId())) {
         nodeForRouting = request->getDestinationId();
         return true;
@@ -26,94 +27,58 @@ bool OneHopHeuristic::canProcess(Request* request, int& nodeForRouting) {
 }
 
 
-bool TwoHopsHeuristic::canProcess(Request* request, int& nodeForRouting) {
-    for (int neighbor = 0; neighbor < rd->getNumHosts(); neighbor++) {
-        if (isSuitableTransitNeighbor(neighbor, request)) {
-
-            if (rd->isConnected(neighbor, request->getDestinationId())) {
-                nodeForRouting = neighbor;
-                return true;
+bool TwoHopsHeuristic::canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting) {
+    for (unsigned int i = 0;  i<neighbors->size(); i++)
+        if (rd->isConnected(neighbors->at(i), request->getDestinationId())) {
+            nodeForRouting = neighbors->at(i);
+            return true;
             }
-            //todo process case when thus neighbors more than one
-        }
-    }
+    //todo process case when thus neighbors more than one
     return false;
 }
 
 
-bool LETHeuristic::canProcess(Request* request, int& nodeForRouting) {
+bool LETHeuristic::canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting) {
+
     int moreSuitableNode = request->getSourceId();
+    simtime_t lost;
+
+    // ищем, кто последний из нас и соседей видел адресата
     simtime_t maxLost = rd->getLostConnectionTime(request->getSourceId(), request->getDestinationId());
-
-    for (int neighbor = 0; neighbor < rd->getNumHosts(); neighbor++) {
-        if (isSuitableTransitNeighbor(neighbor, request)) {
-
-            simtime_t lost = rd->getLostConnectionTime(neighbor, request->getDestinationId());
-
-            simtime_t start = rd->getStartConnectionTime(neighbor, request->getDestinationId());
-            ASSERT(lost >= 0 && lost <= simTime());
-            ASSERT((lost > start) || (lost == start && lost == 0));
-
-            if (lost > maxLost) {
-                maxLost = lost;
-                moreSuitableNode = neighbor;
-            }
-            //todo process case when spent time of different nodes are equal and thus neighbors more than one
+    for (unsigned int i = 0;  i<neighbors->size(); i++) {
+        lost = rd->getLostConnectionTime(neighbors->at(i), request->getDestinationId());
+        if (lost > maxLost) { maxLost = lost; moreSuitableNode = neighbors->at(i); }
+        //todo process case when best neighbors more than one
         }
-    }
 
-    simtime_t deltaT = simTime() - maxLost;
-    ASSERT(deltaT >= 0);
-
-    simtime_t threshold = settings->determinTrustTimeThreshold(request->getPacket()->getLastHeuristric());
-    // когда выбирается текущий узел как подходящий, тогда маршрутизация невозможна
-    if (deltaT < threshold && moreSuitableNode != request->getSourceId()) {
+    simtime_t threshold = settings->getLET_Threshold();        // порог LET эвристики
+    simtime_t packetLET = request->getPacket()->getLastLET();  // время потери контакта с адресатом при последней LET маршрутизации
+    if (moreSuitableNode == request->getSourceId() || packetLET >= maxLost || simTime() - maxLost > threshold) return false;
+    else {
         nodeForRouting = moreSuitableNode;
-
-        //for debug
-        //request->print(); cout << "LET: moreSuitableNode = " << moreSuitableNode << endl;
+        request->getPacket()->setLastLET(maxLost);
         return true;
     }
-
-    // for debug
-    //request->print();
-    //for (int neighbor = 0; neighbor < rd->getNumHosts(); neighbor++)
-    //    if (rd->isConnected(request->getSourceId(), neighbor))
-    //        cout << neighbor << "-" << request->getDestinationId() << ": "<< rd->getLostConnectionTime(neighbor, request->getDestinationId()) << ", ";
-    //cout << endl;
-    // for debug
-
-    return false;
 }
 
 
-bool MoreFrequentVisibleHeuristic::canProcess(Request* request, int& nodeForRouting) {
+bool MoreFrequentVisibleHeuristic::canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting) {
     int moreSuitableNode = request->getSourceId();
     simtime_t maxConnectivity = rd->computeTotalConnectivity(request->getSourceId(), request->getDestinationId());
 
-    for (int neighbor = 0; neighbor < rd->getNumHosts(); neighbor++) {
-        if (isSuitableTransitNeighbor(neighbor, request)) {
-
-            simtime_t totalConnectivity = rd->computeTotalConnectivity(neighbor, request->getDestinationId());
-            if (totalConnectivity > maxConnectivity) {
-                maxConnectivity = totalConnectivity;
-                moreSuitableNode = neighbor;
-            }
-            //todo process case when spent time of differents nodes are equal
-        }
-    }
+    for (unsigned int i = 0;  i<neighbors->size(); i++) {
+        simtime_t totalConnectivity = rd->computeTotalConnectivity(neighbors->at(i), request->getDestinationId());
+        if (totalConnectivity > maxConnectivity) {
+           maxConnectivity = totalConnectivity;
+           moreSuitableNode = neighbors->at(i);
+           }
+       //todo process case when spent time of differents nodes are equal
+       }
 
     // когда выбирается текущий узел как подходящий, тогда маршрутизация невозможна
     if (moreSuitableNode != request->getSourceId()) {
-        nodeForRouting = moreSuitableNode;
-        //todo while do not change time matrix this case unreachable
-
-        ASSERT(false);
-        //for debug
-        //request->print(); cout << "MoreFreq: moreSuitableNode = " << moreSuitableNode << endl;
-        return true;
-    }
-
-    return false;
+        nodeForRouting = moreSuitableNode; return true;
+        }
+    else return false;
 }
 
