@@ -1,23 +1,6 @@
 #include "RoutingHeuristic.h"
 
 
-//Определяет подходящий ли узел для рассмотрения его как потенциального транзитного узла
-/*
-bool RoutingHeuristic::isSuitableTransitNeighbor(int trinsitId, Request* request) {
-    ASSERT(0 <= trinsitId && trinsitId < rd->getNumHosts()); // узел должен входить в диапазон
-    ASSERT(!rd->isConnected(request->getSourceId(), request->getDestinationId())); // если ищем транзит, то явной связи нет
-
-    if (rd->isConnected(request->getSourceId(), trinsitId)           //узел является соседом для источника
-            && request->getSourceId() != trinsitId                   //узел не является сам себе соседом
-            && request->getPacket()->getLastVisitedId() != trinsitId) { //сосед не есть последний посещённый пакетом узел
-        ASSERT(trinsitId != request->getDestinationId());    // узел именно тразитный
-        return true;
-    }
-
-    return false;
-}
-*/
-
 bool OneHopHeuristic::canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting) {
     if (rd->isConnected(request->getSourceId(), request->getDestinationId())) {
         nodeForRouting = request->getDestinationId();
@@ -32,7 +15,7 @@ bool TwoHopsHeuristic::canProcess(Request* request, vector<int>* neighbors, int&
         if (rd->isConnected(neighbors->at(i), request->getDestinationId())) {
             nodeForRouting = neighbors->at(i);
             return true;
-            }
+        }
     //todo process case when thus neighbors more than one
     return false;
 }
@@ -49,7 +32,7 @@ bool LETHeuristic::canProcess(Request* request, vector<int>* neighbors, int& nod
         lost = rd->getLostConnectionTime(neighbors->at(i), request->getDestinationId());
         if (lost > maxLost) { maxLost = lost; moreSuitableNode = neighbors->at(i); }
         //todo process case when best neighbors more than one
-        }
+    }
 
     simtime_t threshold = settings->getLET_Threshold();        // порог LET эвристики
     simtime_t packetLET = request->getPacket()->getLastLET();  // время потери контакта с адресатом при последней LET маршрутизации
@@ -71,14 +54,14 @@ bool MoreFrequentVisibleHeuristic::canProcess(Request* request, vector<int>* nei
         if (totalConnectivity > maxConnectivity) {
            maxConnectivity = totalConnectivity;
            moreSuitableNode = neighbors->at(i);
-           }
+        }
        //todo process case when spent time of differents nodes are equal
-       }
+    }
 
     // когда выбирается текущий узел как подходящий, тогда маршрутизация невозможна
     if (moreSuitableNode != request->getSourceId()) {
         nodeForRouting = moreSuitableNode; return true;
-        }
+    }
     else return false;
 }
 

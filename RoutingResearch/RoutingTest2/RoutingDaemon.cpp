@@ -60,8 +60,8 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
               for (int i=0; i < RoutingDaemon::numHosts; i++)
                   sendDirect(new cMessage("Start of the Day", DAY_START), getParentModule()->getSubmodule("host", i)->gate("in"));
               scheduleAt(simTime() + (simtime_t) dayDuration, msg);
-              }
-              break;
+           }
+           break;
 
        case REQUEST_FOR_ROUTING: // Запрос на муршрутизацию. Обрабатываем, если можем или ставим в очередь
            Request* request;
@@ -97,8 +97,8 @@ void RoutingDaemon::processNewDay() {
     for (int i = 0; i < RoutingDaemon::numHosts; i++) {
         dayConnectivity[i] = new simtime_t[i+1];
         dayConnectivity[i][i] = RoutingDaemon::sumOfConnectDuration[i][i];
-            for (int j=0; j<i; j++) dayConnectivity[i][j] = RoutingDaemon::sumOfConnectDuration[i][j];
-        }
+        for (int j=0; j<i; j++) dayConnectivity[i][j] = RoutingDaemon::sumOfConnectDuration[i][j];
+    }
 
     // Сохраняем её в контейнере
     RoutingDaemon::connectivityPerDay->push_back(dayConnectivity);
@@ -109,7 +109,7 @@ void RoutingDaemon::processNewDay() {
         RoutingDaemon::connectivityPerDay->erase(RoutingDaemon::connectivityPerDay->begin());
         for(int i = 1; i < RoutingDaemon::numHosts; i++) delete[] oldest[i];
         delete[] oldest;
-        }
+    }
 
     // Приводим в начальное состояние все матрицы
     for (int i=0; i<RoutingDaemon::numHosts; i++) {
@@ -124,8 +124,6 @@ void RoutingDaemon::processNewDay() {
             RoutingDaemon::sumOfConnectDuration[i][j] = 0;
         }
     }
-
-
 }
 
 void RoutingDaemon::connectionsChanged() {
@@ -142,6 +140,7 @@ bool RoutingDaemon::processIfCan(Request* request) {
     neighbors    = new vector<int>();
     for(int i=0; i<senderID; i++)
         if(isConnected(senderID, i)) neighbors->push_back(i);
+
     for(int i=senderID+1; i<instance->getNumHosts(); i++)
        if(isConnected(senderID, i)) neighbors->push_back(i);
 
