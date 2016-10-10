@@ -56,7 +56,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     std::vector<double> yCoordinates;
 
   protected:
-    virtual int numInitStages() const { return 3; }
+    virtual int  numInitStages() const { return 3; }
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
 
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
@@ -81,6 +81,8 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     Coord getLastPosition()      {return this->lastPosition;};
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};
     Coord getConstraintAreaMax() {return this->constraintAreaMax;};
+
+    void setCurrentHSbordersWith(HotSpotShortInfo* hsi);
 };
 
 #endif
