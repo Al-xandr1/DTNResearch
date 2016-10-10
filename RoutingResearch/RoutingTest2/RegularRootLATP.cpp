@@ -226,7 +226,7 @@ void RegularRootLATP::makeNewRoot()
     for (unsigned int hsNumber = 0; hsNumber < HotSpotsCollection::HSData.size(); hsNumber++) {
         bool foundInCurrent = false;
         for (int i = 0; i < currentRootSnumber->size(); i++)
-            if (foundInCurrent = (currentRootSnumber->at(i) == hsNumber)) break;
+            if ( (foundInCurrent = (currentRootSnumber->at(i) == hsNumber)) ) break;
 
         if (!foundInCurrent) {
             allHSWithoutInCurrentRoot->push_back(&HotSpotsCollection::HSData[hsNumber]);
