@@ -35,6 +35,17 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     trFileName = NULL;
 }
 
+void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotShortInfo* hsi)
+{
+    currentHSMin.x = hsi->Xmin;    //std::cout<<currentHSMin.x<<"\t";
+    currentHSMin.y = hsi->Ymin;    //std::cout<<currentHSMin.y<<"\t";
+    currentHSMax.x = hsi->Xmax;    //std::cout<<currentHSMax.x<<"\t";
+    currentHSMax.y = hsi->Ymax;    //std::cout<<currentHSMax.y<<"\n";
+    currentHSCenter=(currentHSMin+currentHSMax)*0.5;
+    return;
+}
+
+
 void LevyHotSpotsLATP::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
@@ -68,8 +79,6 @@ void LevyHotSpotsLATP::initialize(int stage) {
     if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, aciJ);
     if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
 
-
-
     if (hsc==NULL) {
         hsc = new HotSpotsCollection();
         // загрузка данных о докациях
@@ -89,14 +98,8 @@ void LevyHotSpotsLATP::initialize(int stage) {
     // выбор случайной локации
     if (currentHSindex == -1) {
         currentHSindex=rand() % (hsc->HSData).size();
-        currentHSMin.x=((hsc->HSData)[currentHSindex]).Xmin;
-        currentHSMin.y=((hsc->HSData)[currentHSindex]).Ymin;
-        currentHSMax.x=((hsc->HSData)[currentHSindex]).Xmax;
-        currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
-        currentHSCenter=(currentHSMin+currentHSMax)*0.5;
+        setCurrentHSbordersWith( &((hsc->HSData)[currentHSindex]) );
     }
-
-
 
     if (wpFileName == NULL && trFileName == NULL) {
         wpFileName = new char[256];
@@ -232,11 +235,7 @@ bool LevyHotSpotsLATP::findNextHotSpot()
         if(i != currentHSindex ) pr+=(hsd->ProbabilityMatrix)[currentHSindex][i];
         if(rn <= pr) {currentHSindex=i; break; }
     }
-    currentHSMin.x=((hsc->HSData)[currentHSindex]).Xmin;
-    currentHSMin.y=((hsc->HSData)[currentHSindex]).Ymin;
-    currentHSMax.x=((hsc->HSData)[currentHSindex]).Xmax;
-    currentHSMax.y=((hsc->HSData)[currentHSindex]).Ymax;
-    currentHSCenter=(currentHSMin+currentHSMax)*0.5;
+    setCurrentHSbordersWith( &((hsc->HSData)[currentHSindex]) );
 
     ASSERT(oldHSindex != currentHSindex);
     return true;

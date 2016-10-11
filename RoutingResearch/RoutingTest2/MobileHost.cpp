@@ -36,7 +36,7 @@ void MobileHost::handleMessage(cMessage *msg)
        case DAY_START:            // Сообщение о начале нового "дня"
            RegularRootLATP* regularMobility;
            regularMobility = dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));
-           if (regularMobility) regularMobility->makeNewRoot();
+           if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
            delete msg;
            break;
 

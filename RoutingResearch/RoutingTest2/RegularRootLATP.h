@@ -28,16 +28,18 @@ class RegularRootLATP : public LevyHotSpotsLATP
     double rootPersistence;
 
     vector<HotSpotShortInfo*>* firstRoot;
-    vector<unsigned int>* firstRootSnumber;
-    vector<int>* firstRootCounter;
+    vector<unsigned int>*      firstRootSnumber;
+    vector<int>*               firstRootCounter;
+
+    HotSpotShortInfo*          homeHS;             // перва€ локаци€ маршрута, она же последн€€
 
     vector<HotSpotShortInfo*>* currentRoot;
-    vector<unsigned int>* currentRootSnumber;
-    vector<int>* currentRootCounter;
+    vector<unsigned int>*      currentRootSnumber;
+    vector<int>*               currentRootCounter;
 
     unsigned int curRootIndex;
 
-    bool isLProbReady;
+    bool      isLProbReady;
     double**  LocalProbMatrix;
 
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
@@ -51,6 +53,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
     void printCurrentRoot();
     void makeLocalProbMatrix(double powA);
     void deleteLocalProbMatrix();
+    bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
 
     void makeNewRoot();
 };
