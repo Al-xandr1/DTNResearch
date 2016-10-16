@@ -37,6 +37,7 @@ public:
     Packet* createPacket();
     int generateTarget();
     void registerPacket(Packet* packet);
+    void sendPacket(Packet* packet, int destinationId);
     void destroyPacket(Packet* packet);
 
     virtual void initialize();

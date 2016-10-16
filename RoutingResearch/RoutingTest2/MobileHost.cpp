@@ -2,7 +2,7 @@
 
 Define_Module(MobileHost);
 
-
+//todo вызов этого метода будет записывать в файл (2 разных файла)
 void  packetHistoryOut(Packet* packet)
 {
     cout<<"Source:"<<packet->getSourceId()<<"\t Destination:"<<packet->getDestinationId()<<endl;
@@ -43,11 +43,6 @@ void MobileHost::handleMessage(cMessage *msg)
        case FOR_NEW_PACKET:       // Сообщение о создании нового пакета
            if ( msg->isSelfMessage() ) {
               Packet* packet = createPacket();
-
-              packet->IDhistory.push_back(nodeId);
-              packet->ArrivalHistory.push_back(simTime());
-              packet->HeuristicHistory.push_back((char*)"CREATION");
-
               registerPacket(packet);
               scheduleAt(simTime() + timeslot * exponential(1/lambda), msg);
            }
@@ -56,21 +51,10 @@ void MobileHost::handleMessage(cMessage *msg)
        case PACKET:               // Пакет от другого узла. Если наш узел это пункт назначения, то пакет уничтожается, иначе посылается заявка на дальнейшую маршрутизацию
            Packet* packet;
            packet = check_and_cast<Packet*>(msg);
-           if (packet->getDestinationId() == nodeId) {
 
-               packet->IDhistory.push_back(nodeId);
-               packet->ArrivalHistory.push_back(simTime());
-               packet->HeuristicHistory.push_back((char*)packet->getLastHeuristric());
+           if (packet->getDestinationId() == nodeId) destroyPacket(packet);
+           else registerPacket(packet);
 
-               destroyPacket(packet);
-           }
-           else {
-               packet->IDhistory.push_back(nodeId);
-               packet->ArrivalHistory.push_back(simTime());
-               packet->HeuristicHistory.push_back((char*)packet->getLastHeuristric());
-
-               registerPacket(packet);
-           }
            break;
 
        case RESPONSE_FOR_REQUEST: // Ответ на запрос о маршрутизации пакета. Посылаем заготовленный пакет указанному в ответе узлу
@@ -82,12 +66,9 @@ void MobileHost::handleMessage(cMessage *msg)
            for(vector<Packet*>::iterator it = packetsForSending->begin(); it != packetsForSending->end(); ) {
               Packet* packet = (*it);
               if (packet == packetForRouting) {
-                     it = packetsForSending->erase(it);
-                     packet->setLastVisitedId(nodeId);
-
-                     cGate *dst = getParentModule()->getSubmodule("host", response->getDestinationId())->gate("in");
-                     sendDirect(packet, dst);
-                     break;
+                  it = packetsForSending->erase(it);
+                  sendPacket(packet, response->getDestinationId());
+                  break;
                } else ++it;
            }
            delete response->getRequest();
@@ -106,6 +87,7 @@ void MobileHost::finish()
     cout<<"\nPackets in buffer of node:"<<nodeId<<endl;
     for(vector<Packet*>::iterator it = packetsForSending->begin(); it != packetsForSending->end(); it++) {
         Packet* packet = (*it);
+        //todo нужно такое специальное обозначение?  packet->collect(nodeId, simTime(), (char*)"NOT_DELIVERY");
         packetHistoryOut(packet);
     }
     cout<<endl;
@@ -116,6 +98,7 @@ Packet* MobileHost::createPacket()
     int nodeIdTrg = generateTarget();
     Packet* packet = new Packet(nodeId, nodeIdTrg);
     packet->setCreationTime(simTime());
+    packet->collect(nodeId, simTime(), (char*)"CREATION");
 
     NewPacketCreated* newPacketCreated = new NewPacketCreated();
     sendDirect(newPacketCreated, collectorGate);
@@ -137,6 +120,7 @@ void MobileHost::registerPacket(Packet* packet)
     ASSERT(nodeId != packet->getDestinationId());
 
     packet->setReceivedTime(simTime());
+    packet->collect(nodeId, simTime(), (char*)packet->getLastHeuristric());
 
     packetsForSending->push_back(packet);
 
@@ -145,10 +129,25 @@ void MobileHost::registerPacket(Packet* packet)
 }
 
 
-void MobileHost::destroyPacket(Packet* packet) {
+void MobileHost::sendPacket(Packet* packet, int destinationId)
+{
+    ASSERT(nodeId != packet->getDestinationId());
+
+    packet->setLastVisitedId(nodeId);
+    //todo использовать это для фиксации положения ПЕРЕД отправкой packet->collect(nodeId, simTime(), (char*)packet->getLastHeuristric());
+
+    cGate *dst = getParentModule()->getSubmodule("host", destinationId)->gate("in");
+    sendDirect(packet, dst);
+}
+
+
+void MobileHost::destroyPacket(Packet* packet)
+{
     ASSERT(nodeId == packet->getDestinationId());
 
     packet->setReceivedTime(simTime());
+    packet->collect(nodeId, simTime(), (char*)packet->getLastHeuristric());
+    //todo нужно такое специальное обозначение?  packet->collect(nodeId, simTime(), (char*)"DELIVERY");
     simtime_t liveTime = packet->getLiveTime();
 
     cout<<"\nPacket has reached its destination\n";

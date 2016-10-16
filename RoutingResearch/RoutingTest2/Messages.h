@@ -31,7 +31,6 @@ private:
     simtime_t lastLET;          // время потери контакта с адресатом при последней LET маршрутизации
 
 public:
-
     vector<int>       IDhistory;
     vector<simtime_t> ArrivalHistory;
     vector<char*>     HeuristicHistory;
@@ -45,7 +44,6 @@ public:
         this->receivedTime   = 0;
         this->lastLET        = 0;
         this->setKind(PACKET);
-
     }
 
     ~Packet() {
@@ -67,6 +65,12 @@ public:
     simtime_t getReceivedTime() {return receivedTime;}
     simtime_t getLiveTime()     {return receivedTime - creationTime;}
     simtime_t getLastLET()      {return lastLET;}
+
+    void collect(int nodeId, simtime_t time, char* nameOfRow) {
+        IDhistory.push_back(nodeId);
+        ArrivalHistory.push_back(time);
+        HeuristicHistory.push_back(nameOfRow);
+    }
 };
 
 
