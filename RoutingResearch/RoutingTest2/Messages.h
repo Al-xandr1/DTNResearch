@@ -9,6 +9,7 @@
 
 using namespace std;
 
+// Коды сообщений
 #define FOR_NEW_PACKET       1  // сообщение для создании нового пакета
 #define NEW_PACKET_CREATED   2  // сообщение о созданном новом пакете
 #define RESPONSE_FOR_REQUEST 3  // сообщение о соединении
@@ -17,6 +18,13 @@ using namespace std;
 #define PACKET_RECEIVED      6  // сообщение о полученном пакете
 #define ICT_INFO             7  // сообщение с информацией о ICT
 #define DAY_START            8  // сообщение о начале нового "дня" моделирования
+
+// Коды сообытий, происходящими с сообщениями
+#define CREATED_EVENT        "CRT"    // событие создания пакета в системе
+#define REGISTERED_EVENT     "RGS"    // событие регистрации пакета на узле (например, в результате получения или после создания)
+#define BEFORE_SEND_EVENT    "BFS"    // событие перед отправкой события на какой-либо узел
+#define REMOVED_EVENT        "RMV"    // событие удаления пакета из системы БЕЗ доставки до получателя
+#define DELIVERED_EVENT      "DLV"    // событие о доставке сообщения и его последующем удалении
 
 
 // Пакет для передачи
@@ -32,7 +40,6 @@ private:
     simtime_t receivedTime;
     simtime_t lastLET;      // время потери контакта с адресатом при последней LET маршрутизации
 
-    //todo make History class
     //for statistics collection
     vector<int>         IDhistory;
     vector<simtime_t>   timeHistory;
@@ -73,9 +80,16 @@ public:
     simtime_t getLiveTime()     {return receivedTime - creationTime;}
     simtime_t getLastLET()      {return lastLET;}
 
-    //todo make overloaded functions
+    //for statistics collection
+    void collectCreated(int nodeId, Coord position)     {collect(nodeId, position, (char*) CREATED_EVENT);}
+    void collectRegistered(int nodeId, Coord position)  {collect(nodeId, position, (char*) REGISTERED_EVENT);}
+    void collectBeforeSend(int nodeId, Coord position)  {collect(nodeId, position, (char*) BEFORE_SEND_EVENT);}
+    void collectRemoved(int nodeId, Coord position)     {collect(nodeId, position, (char*) REMOVED_EVENT);}
+    void collectDelivered(int nodeId, Coord position)   {collect(nodeId, position, (char*) DELIVERED_EVENT);}
+
+private:
+
     void collect(int nodeId, Coord position, char* event) {
-        //todo make ASSERTs
         IDhistory.push_back(nodeId);
         timeHistory.push_back(simTime());
         xCoordinates.push_back(position.x);
@@ -84,13 +98,18 @@ public:
         eventHistory.push_back(event);
     }
 
-    //todo вызов этого метода будет записывать в файл (2 разных файла)
+public:
+
+    //todo написать метод по формированию записи с данными в файл (xml ?). Использовать его в двух разных контекстах
+
     void printHistory() {
         cout<<"Source:"<<getSourceId()<<"\t Destination:"<<getDestinationId()<<endl;
-        cout<<"Creation time:"<<getCreationTime()<<endl;
+        cout<<"Creation time:"<<getCreationTime()<<"\t Received time:"<<getReceivedTime()<<endl;
+        cout<<"Live time:"<<getLiveTime()<<endl;
         cout<<"Routing history:\n";
         for(int i=0; i<IDhistory.size(); i++)
-            cout<<IDhistory[i]<<"\t"<<timeHistory[i]<<"\t"<<heuristicHistory[i]<<endl;
+            cout<<IDhistory[i]<<"\t"<<timeHistory[i]<<"\t"<<xCoordinates[i]<<"\t"<<yCoordinates[i]
+                <<"\t"<<heuristicHistory[i]<<"\t"<<eventHistory[i]<<endl;
     }
 };
 

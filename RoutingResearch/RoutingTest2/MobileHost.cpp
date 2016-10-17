@@ -78,7 +78,9 @@ void MobileHost::finish()
     cout<<"\nPackets in buffer of node:"<<nodeId<<endl;
     for(vector<Packet*>::iterator it = packetsForSending->begin(); it != packetsForSending->end(); it++) {
         Packet* packet = (*it);
-        packet->collect(nodeId, getMobility()->getLastPosition(), (char*) "REMOVED");
+        packet->collectRemoved(nodeId, getMobility()->getLastPosition());
+
+        //todo сделать сохранение статистики пакетов, недошедших до узлов назначения
         packet->printHistory();
     }
     cout<<endl;
@@ -88,7 +90,7 @@ void MobileHost::finish()
 Packet* MobileHost::createPacket()
 {
     Packet* packet = new Packet(nodeId, generateTarget());
-    packet->collect(nodeId, getMobility()->getLastPosition(), (char*) "CREATED");
+    packet->collectCreated(nodeId, getMobility()->getLastPosition());
 
     sendDirect(new NewPacketCreated(), collectorGate);
 
@@ -109,7 +111,7 @@ void MobileHost::registerPacket(Packet* packet)
     ASSERT(nodeId != packet->getDestinationId());
 
     packet->setReceivedTime(simTime());
-    packet->collect(nodeId, getMobility()->getLastPosition(), (char*) "REGISTERED");
+    packet->collectRegistered(nodeId, getMobility()->getLastPosition());
 
     packetsForSending->push_back(packet);
 
@@ -122,7 +124,7 @@ void MobileHost::sendPacket(Packet* packet, int destinationId)
     ASSERT(nodeId != packet->getDestinationId());
 
     packet->setLastVisitedId(nodeId);
-    packet->collect(nodeId, getMobility()->getLastPosition(), (char*) "BEFORE_SEND");
+    packet->collectBeforeSend(nodeId, getMobility()->getLastPosition());
 
     cGate *dst = getParentModule()->getSubmodule("host", destinationId)->gate("in");
     sendDirect(packet, dst);
@@ -134,9 +136,10 @@ void MobileHost::destroyPacket(Packet* packet)
     ASSERT(nodeId == packet->getDestinationId());
 
     packet->setReceivedTime(simTime());
-    packet->collect(nodeId, getMobility()->getLastPosition(), (char*) "DELIVERED");
+    packet->collectDelivered(nodeId, getMobility()->getLastPosition());
     simtime_t liveTime = packet->getLiveTime();
 
+    //todo сделать сохранение статистики пакетов, дошедших до узлов назначения
     cout<<"\nPacket has reached its destination\n";
     packet->printHistory();
 
