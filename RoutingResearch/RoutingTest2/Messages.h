@@ -5,6 +5,8 @@
 
 #include "INETDefs.h"
 
+#include "Coord.h"
+
 using namespace std;
 
 #define FOR_NEW_PACKET       1  // сообщение для создании нового пакета
@@ -21,26 +23,32 @@ using namespace std;
 class Packet : public cPacket
 {
 private:
-    int   sourceId;
+    int   sourceId;         // const
     int   lastVisitiedId;
-    int   destinationId;
+    int   destinationId;    // const
     char* lastHeuristric;
 
-    simtime_t creationTime;
+    simtime_t creationTime; // const
     simtime_t receivedTime;
-    simtime_t lastLET;          // время потери контакта с адресатом при последней LET маршрутизации
+    simtime_t lastLET;      // время потери контакта с адресатом при последней LET маршрутизации
+
+    //todo make History class
+    //for statistics collection
+    vector<int>         IDhistory;
+    vector<simtime_t>   timeHistory;
+    vector<double>      xCoordinates;
+    vector<double>      yCoordinates;
+    vector<char*>       heuristicHistory;
+    vector<char*>       eventHistory;
 
 public:
-    vector<int>       IDhistory;
-    vector<simtime_t> ArrivalHistory;
-    vector<char*>     HeuristicHistory;
 
     Packet(int sourceId, int destinationId) {
         this->sourceId       = sourceId;
         this->lastVisitiedId = sourceId;
         this->destinationId  = destinationId;
         this->lastHeuristric = NULL;
-        this->creationTime   = 0;
+        this->creationTime   = simTime();
         this->receivedTime   = 0;
         this->lastLET        = 0;
         this->setKind(PACKET);
@@ -57,7 +65,6 @@ public:
 
     void  setLastVisitedId(int lastVisitiedId)    {this->lastVisitiedId = lastVisitiedId;}
     void  setLastHeuristric(char* lastHeuristric) {this->lastHeuristric = lastHeuristric;}
-    void  setCreationTime(simtime_t time) {creationTime = time;}
     void  setReceivedTime(simtime_t time) {receivedTime = time;}
     void  setLastLET(simtime_t time)      {lastLET = time;}
 
@@ -66,10 +73,24 @@ public:
     simtime_t getLiveTime()     {return receivedTime - creationTime;}
     simtime_t getLastLET()      {return lastLET;}
 
-    void collect(int nodeId, simtime_t time, char* nameOfRow) {
+    //todo make overloaded functions
+    void collect(int nodeId, Coord position, char* event) {
+        //todo make ASSERTs
         IDhistory.push_back(nodeId);
-        ArrivalHistory.push_back(time);
-        HeuristicHistory.push_back(nameOfRow);
+        timeHistory.push_back(simTime());
+        xCoordinates.push_back(position.x);
+        yCoordinates.push_back(position.y);
+        heuristicHistory.push_back((char*) getLastHeuristric());
+        eventHistory.push_back(event);
+    }
+
+    //todo вызов этого метода будет записывать в файл (2 разных файла)
+    void printHistory() {
+        cout<<"Source:"<<getSourceId()<<"\t Destination:"<<getDestinationId()<<endl;
+        cout<<"Creation time:"<<getCreationTime()<<endl;
+        cout<<"Routing history:\n";
+        for(int i=0; i<IDhistory.size(); i++)
+            cout<<IDhistory[i]<<"\t"<<timeHistory[i]<<"\t"<<heuristicHistory[i]<<endl;
     }
 };
 

@@ -33,6 +33,7 @@ public:
 
     int getNodeId() {return nodeId;};
     vector<Packet*>* getPacketsForSending() {return packetsForSending;};
+    RegularRootLATP* getMobility() {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
 
     Packet* createPacket();
     int generateTarget();

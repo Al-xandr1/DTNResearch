@@ -18,33 +18,37 @@ void StatisticsCollector::initialize()
 
 void StatisticsCollector::handleMessage(cMessage *msg)
 {
-    if (msg->getKind() == NEW_PACKET_CREATED) {//новый пакет создан
-        createdPackes++;
-        //if (createdPackes % 100 == 0) cout << "Created Packes = " << createdPackes << endl;
-        delete msg;
+    switch (msg->getKind()) {
 
+        case NEW_PACKET_CREATED: {    //новый пакет создан
+            createdPackes++;
+            delete msg;
+            break;
+        }
 
-    } else if (msg->getKind() == PACKET_RECEIVED) {//пакет получен узлом и удалён
-        PacketReceived* packetReceived = check_and_cast<PacketReceived*>(msg);
+        case PACKET_RECEIVED: {      //пакет получен узлом и удалён
+            PacketReceived* packetReceived = check_and_cast<PacketReceived*>(msg);
 
-        receivedPackets++;
-        //if (receivedPackets % 100 == 0) cout << "Delivered Packets = " << receivedPackets << endl;
+            receivedPackets++;
+            lifeTimePDF->collect(packetReceived->getLiveTime());
 
-        simtime_t liveTime = packetReceived->getLiveTime();
-        lifeTimePDF->collect(liveTime);
+            delete packetReceived;
+            break;
+        }
 
-        delete packetReceived;
+        case ICT_INFO: {             //сбор статистики по ICT
+            ICTMessage* ictMsg = check_and_cast<ICTMessage*>(msg);
+            ASSERT(ictMsg->getICT() >= 0);
+            ictPDF->collect(ictMsg->getICT());
 
+            delete ictMsg;
+            break;
+        }
 
-    } else if (msg->getKind() == ICT_INFO) {//сбор статистики по ICT
-        ICTMessage* ictMsg = check_and_cast<ICTMessage*>(msg);
-        if (ictMsg->getICT() < 0) {cout << "ictMsg->getICT() = " << ictMsg->getICT() << endl; exit(-234); }
-        ictPDF->collect(ictMsg->getICT());
-
-        delete ictMsg;
-
-    } else {
-        ASSERT(false);
+        default: {
+            ASSERT(false);           //unreachable statement
+            break;
+        }
     }
 }
 

@@ -12,6 +12,8 @@
 
 using namespace std;
 
+//todo этот класс должен стать отдельно запускаемым. Будет обрабатывать входные файлы статистики
+
 class StatisticsCollector : public cSimpleModule
 {
 private:
