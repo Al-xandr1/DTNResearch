@@ -2,9 +2,7 @@
 #define MESSAGES_H
 
 #include <stdlib.h>
-
 #include "INETDefs.h"
-
 #include "Coord.h"
 
 using namespace std;
@@ -18,17 +16,6 @@ using namespace std;
 #define PACKET_RECEIVED      6  // сообщение о полученном пакете
 #define ICT_INFO             7  // сообщение с информацией о ICT
 #define DAY_START            8  // сообщение о начале нового "дня" моделирования
-
-// Коды сообытий, происходящими с сообщениями
-#define CREATED_EVENT        "CRT"    // событие создания пакета в системе
-#define REGISTERED_EVENT     "RGS"    // событие регистрации пакета на узле (например, в результате получения или после создания)
-#define BEFORE_SEND_EVENT    "BFS"    // событие перед отправкой события на какой-либо узел
-#define REMOVED_EVENT        "RMV"    // событие удаления пакета из системы БЕЗ доставки до получателя
-#define DELIVERED_EVENT      "DLV"    // событие о доставке сообщения и его последующем удалении
-
-// Для xml текста
-#define DLM                  "  "     // DELIMETER - разделитель значений в xml тексе
-#define TAB                  "\t"     // TAB - табуляция для отсутпа в xml тексе
 
 
 // Пакет для передачи
@@ -44,15 +31,15 @@ private:
     simtime_t receivedTime;
     simtime_t lastLET;      // время потери контакта с адресатом при последней LET маршрутизации
 
-    //for statistics collection
+public:
+
+    //for collection of history
     vector<char*>       eventHistory;
     vector<int>         IDhistory;
     vector<simtime_t>   timeHistory;
     vector<double>      xCoordinates;
     vector<double>      yCoordinates;
     vector<char*>       heuristicHistory;
-
-public:
 
     Packet(int sourceId, int destinationId) {
         this->sourceId       = sourceId;
@@ -83,43 +70,6 @@ public:
     simtime_t getReceivedTime() {return receivedTime;}
     simtime_t getLiveTime()     {return receivedTime - creationTime;}
     simtime_t getLastLET()      {return lastLET;}
-
-    //for statistics collection
-    void collectCreated(int nodeId, Coord position)     {collect((char*) CREATED_EVENT,     nodeId, position);}
-    void collectRegistered(int nodeId, Coord position)  {collect((char*) REGISTERED_EVENT,  nodeId, position);}
-    void collectBeforeSend(int nodeId, Coord position)  {collect((char*) BEFORE_SEND_EVENT, nodeId, position);}
-    void collectRemoved(int nodeId, Coord position)     {collect((char*) REMOVED_EVENT,     nodeId, position);}
-    void collectDelivered(int nodeId, Coord position)   {collect((char*) DELIVERED_EVENT,   nodeId, position);}
-
-private:
-
-    void collect(char* event, int nodeId, Coord position) {
-        eventHistory.push_back(event);
-        IDhistory.push_back(nodeId);
-        timeHistory.push_back(simTime());
-        xCoordinates.push_back(position.x);
-        yCoordinates.push_back(position.y);
-        heuristicHistory.push_back((char*) (getLastHeuristric()!=NULL ? getLastHeuristric() : "NULL"));
-    }
-
-public:
-
-    void write(ostream* out) {
-        (*out) <<"<PACKET>" << endl;
-        (*out) <<TAB<<"<SUMMARY>"<<sourceId<<DLM<<destinationId<<DLM<<creationTime<<DLM<<receivedTime<<"</SUMMARY>"<<endl;
-        (*out) <<TAB<<"<HISTORY>"<<endl;
-
-        for(int i=0; i<IDhistory.size(); i++)
-            (*out) <<TAB<<TAB<<"<"<<eventHistory[i]<<">"<<IDhistory[i]<<DLM<<timeHistory[i]
-                   <<DLM<<xCoordinates[i]<<DLM<<yCoordinates[i]<<DLM<<heuristicHistory[i]<<"</"<<eventHistory[i]<<">"<<endl;
-
-        (*out) <<TAB<<"</HISTORY>"<<endl<<endl;
-        (*out) <<"</PACKET>"<<endl;
-    }
-
-    void printHistory() {
-        write(&cout);
-    }
 };
 
 

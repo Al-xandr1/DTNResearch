@@ -15,6 +15,8 @@ void MobileHost::initialize()
 
     packetsForSending = new vector<Packet*>();
 
+    if (nodeId == 0) HistoryCollector::initialize();
+
     scheduleAt(simTime(), new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET));
 }
 
@@ -53,11 +55,11 @@ void MobileHost::handleMessage(cMessage *msg)
            Packet*   packetForRouting = response->getRequest()->getPacket();
            // удаляем пакет из локального буфера пакетов для отправки
            for(vector<Packet*>::iterator it = packetsForSending->begin(); it != packetsForSending->end(); ) {
-              Packet* packet = (*it);
-              if (packet == packetForRouting) {
-                  it = packetsForSending->erase(it);
-                  sendPacket(packet, response->getDestinationId());
-                  break;
+               Packet* packet = (*it);
+               if (packet == packetForRouting) {
+                   it = packetsForSending->erase(it);
+                   sendPacket(packet, response->getDestinationId());
+                   break;
                } else ++it;
            }
            delete response->getRequest();
@@ -75,22 +77,21 @@ void MobileHost::handleMessage(cMessage *msg)
 
 void MobileHost::finish()
 {
-    cout<<"\nPackets in buffer of node:"<<nodeId<<endl;
     for(vector<Packet*>::iterator it = packetsForSending->begin(); it != packetsForSending->end(); it++) {
         Packet* packet = (*it);
-        packet->collectRemoved(nodeId, getMobility()->getLastPosition());
-
-        //todo сделать сохранение статистики пакетов, недошедших до узлов назначения
-        packet->printHistory();
+        HistoryCollector::insertRowRemoved(packet, nodeId, getMobility()->getLastPosition());
+        HistoryCollector::collectRemovedPacket(packet);
+        //todo made erasing & packet deletion
     }
-    cout<<endl;
+
+    if (nodeId == rd->getNumHosts()-1) HistoryCollector::finish();
 }
 
 
 Packet* MobileHost::createPacket()
 {
     Packet* packet = new Packet(nodeId, generateTarget());
-    packet->collectCreated(nodeId, getMobility()->getLastPosition());
+    HistoryCollector::insertRowCreated(packet, nodeId, getMobility()->getLastPosition());
 
     sendDirect(new NewPacketCreated(), collectorGate);
 
@@ -111,7 +112,7 @@ void MobileHost::registerPacket(Packet* packet)
     ASSERT(nodeId != packet->getDestinationId());
 
     packet->setReceivedTime(simTime());
-    packet->collectRegistered(nodeId, getMobility()->getLastPosition());
+    HistoryCollector::insertRowRegistered(packet, nodeId, getMobility()->getLastPosition());
 
     packetsForSending->push_back(packet);
 
@@ -124,7 +125,7 @@ void MobileHost::sendPacket(Packet* packet, int destinationId)
     ASSERT(nodeId != packet->getDestinationId());
 
     packet->setLastVisitedId(nodeId);
-    packet->collectBeforeSend(nodeId, getMobility()->getLastPosition());
+    HistoryCollector::insertRowBeforeSend(packet, nodeId, getMobility()->getLastPosition());
 
     cGate *dst = getParentModule()->getSubmodule("host", destinationId)->gate("in");
     sendDirect(packet, dst);
@@ -136,11 +137,10 @@ void MobileHost::destroyPacket(Packet* packet)
     ASSERT(nodeId == packet->getDestinationId());
 
     packet->setReceivedTime(simTime());
-    packet->collectDelivered(nodeId, getMobility()->getLastPosition());
+    HistoryCollector::insertRowDelivered(packet, nodeId, getMobility()->getLastPosition());
     simtime_t liveTime = packet->getLiveTime();
 
-    //todo сделать сохранение статистики пакетов, дошедших до узлов назначения
-    packet->printHistory();
+    HistoryCollector::collectDeliveredPacket(packet);
 
     delete packet;
 

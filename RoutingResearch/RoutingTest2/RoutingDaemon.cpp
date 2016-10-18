@@ -54,26 +54,28 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
 
     switch (msg->getKind()) {
 
-       case DAY_START:           // Сообщение о начале нового дня. Копия сообщения рассылается всем узлам сети
-           if ( msg->isSelfMessage() ) {
-              processNewDay();
-              for (int i=0; i < RoutingDaemon::numHosts; i++)
-                  sendDirect(new cMessage("Start of the Day", DAY_START), getParentModule()->getSubmodule("host", i)->gate("in"));
-              scheduleAt(simTime() + (simtime_t) dayDuration, msg);
-           }
-           break;
+        case DAY_START: {          // Сообщение о начале нового дня. Копия сообщения рассылается всем узлам сети
+            if ( msg->isSelfMessage() ) {
+                processNewDay();
+                for (int i=0; i < RoutingDaemon::numHosts; i++)
+                    sendDirect(new cMessage("Start of the Day", DAY_START), getParentModule()->getSubmodule("host", i)->gate("in"));
+                scheduleAt(simTime() + (simtime_t) dayDuration, msg);
+            }
+            break;
+        }
 
-       case REQUEST_FOR_ROUTING: // Запрос на муршрутизацию. Обрабатываем, если можем или ставим в очередь
-           Request* request;
-           request = check_and_cast<Request*>(msg);
-           if (!processIfCan(request)) requests->push_back(request);
-           break;
+        case REQUEST_FOR_ROUTING: {// Запрос на муршрутизацию. Обрабатываем, если можем или ставим в очередь
+            Request* request = check_and_cast<Request*>(msg);
+            if (!processIfCan(request)) requests->push_back(request);
+            break;
+        }
 
-       default: // неизвестное сообщение, выводим для отладки
-           cout << "RoutingDaemon::handleMessage: msg->getKind() = " << msg->getKind() << endl;
-           cout << "Sender: " << msg->getSenderModule()->getFullName() << endl;
-           exit(-444);
-           break;
+        default: {// неизвестное сообщение, выводим для отладки
+            cout << "RoutingDaemon::handleMessage: msg->getKind() = " << msg->getKind() << endl;
+            cout << "Sender: " << msg->getSenderModule()->getFullName() << endl;
+            exit(-444);
+            break;
+        }
     }
 }
 

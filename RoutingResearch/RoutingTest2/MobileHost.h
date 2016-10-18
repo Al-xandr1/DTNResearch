@@ -9,6 +9,7 @@
 #include <RoutingDaemon.h>
 #include "RegularRootLATP.h"
 #include <Messages.h>
+#include <HistoryCollector.h>
 
 using namespace std;
 
