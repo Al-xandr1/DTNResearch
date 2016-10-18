@@ -140,7 +140,6 @@ void MobileHost::destroyPacket(Packet* packet)
     simtime_t liveTime = packet->getLiveTime();
 
     //todo сделать сохранение статистики пакетов, дошедших до узлов назначения
-    cout<<"\nPacket has reached its destination\n";
     packet->printHistory();
 
     delete packet;

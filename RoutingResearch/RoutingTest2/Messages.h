@@ -26,6 +26,10 @@ using namespace std;
 #define REMOVED_EVENT        "RMV"    // событие удаления пакета из системы БЕЗ доставки до получателя
 #define DELIVERED_EVENT      "DLV"    // событие о доставке сообщения и его последующем удалении
 
+// Для xml текста
+#define DLM                  "  "     // DELIMETER - разделитель значений в xml тексе
+#define TAB                  "\t"     // TAB - табуляция для отсутпа в xml тексе
+
 
 // Пакет для передачи
 class Packet : public cPacket
@@ -41,12 +45,12 @@ private:
     simtime_t lastLET;      // время потери контакта с адресатом при последней LET маршрутизации
 
     //for statistics collection
+    vector<char*>       eventHistory;
     vector<int>         IDhistory;
     vector<simtime_t>   timeHistory;
     vector<double>      xCoordinates;
     vector<double>      yCoordinates;
     vector<char*>       heuristicHistory;
-    vector<char*>       eventHistory;
 
 public:
 
@@ -81,35 +85,40 @@ public:
     simtime_t getLastLET()      {return lastLET;}
 
     //for statistics collection
-    void collectCreated(int nodeId, Coord position)     {collect(nodeId, position, (char*) CREATED_EVENT);}
-    void collectRegistered(int nodeId, Coord position)  {collect(nodeId, position, (char*) REGISTERED_EVENT);}
-    void collectBeforeSend(int nodeId, Coord position)  {collect(nodeId, position, (char*) BEFORE_SEND_EVENT);}
-    void collectRemoved(int nodeId, Coord position)     {collect(nodeId, position, (char*) REMOVED_EVENT);}
-    void collectDelivered(int nodeId, Coord position)   {collect(nodeId, position, (char*) DELIVERED_EVENT);}
+    void collectCreated(int nodeId, Coord position)     {collect((char*) CREATED_EVENT,     nodeId, position);}
+    void collectRegistered(int nodeId, Coord position)  {collect((char*) REGISTERED_EVENT,  nodeId, position);}
+    void collectBeforeSend(int nodeId, Coord position)  {collect((char*) BEFORE_SEND_EVENT, nodeId, position);}
+    void collectRemoved(int nodeId, Coord position)     {collect((char*) REMOVED_EVENT,     nodeId, position);}
+    void collectDelivered(int nodeId, Coord position)   {collect((char*) DELIVERED_EVENT,   nodeId, position);}
 
 private:
 
-    void collect(int nodeId, Coord position, char* event) {
+    void collect(char* event, int nodeId, Coord position) {
+        eventHistory.push_back(event);
         IDhistory.push_back(nodeId);
         timeHistory.push_back(simTime());
         xCoordinates.push_back(position.x);
         yCoordinates.push_back(position.y);
-        heuristicHistory.push_back((char*) getLastHeuristric());
-        eventHistory.push_back(event);
+        heuristicHistory.push_back((char*) (getLastHeuristric()!=NULL ? getLastHeuristric() : "NULL"));
     }
 
 public:
 
-    //todo написать метод по формированию записи с данными в файл (xml ?). Использовать его в двух разных контекстах
+    void write(ostream* out) {
+        (*out) <<"<PACKET>" << endl;
+        (*out) <<TAB<<"<SUMMARY>"<<sourceId<<DLM<<destinationId<<DLM<<creationTime<<DLM<<receivedTime<<"</SUMMARY>"<<endl;
+        (*out) <<TAB<<"<HISTORY>"<<endl;
+
+        for(int i=0; i<IDhistory.size(); i++)
+            (*out) <<TAB<<TAB<<"<"<<eventHistory[i]<<">"<<IDhistory[i]<<DLM<<timeHistory[i]
+                   <<DLM<<xCoordinates[i]<<DLM<<yCoordinates[i]<<DLM<<heuristicHistory[i]<<"</"<<eventHistory[i]<<">"<<endl;
+
+        (*out) <<TAB<<"</HISTORY>"<<endl<<endl;
+        (*out) <<"</PACKET>"<<endl;
+    }
 
     void printHistory() {
-        cout<<"Source:"<<getSourceId()<<"\t Destination:"<<getDestinationId()<<endl;
-        cout<<"Creation time:"<<getCreationTime()<<"\t Received time:"<<getReceivedTime()<<endl;
-        cout<<"Live time:"<<getLiveTime()<<endl;
-        cout<<"Routing history:\n";
-        for(int i=0; i<IDhistory.size(); i++)
-            cout<<IDhistory[i]<<"\t"<<timeHistory[i]<<"\t"<<xCoordinates[i]<<"\t"<<yCoordinates[i]
-                <<"\t"<<heuristicHistory[i]<<"\t"<<eventHistory[i]<<endl;
+        write(&cout);
     }
 };
 
