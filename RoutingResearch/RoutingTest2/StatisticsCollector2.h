@@ -1,5 +1,5 @@
-#ifndef __ROUTINGTEST2_STATISTICSCOLLECTOR_H_
-#define __ROUTINGTEST2_STATISTICSCOLLECTOR_H_
+#ifndef STATISTICSCOLLECTOR2_H_
+#define STATISTICSCOLLECTOR2_H_
 
 #include <iostream>
 #include <fstream>
@@ -9,12 +9,11 @@
 
 using namespace std;
 
-//todo remove
+//todo этот класс должен стать отдельно запускаемым. Будет обрабатывать входные файлы статистики
 
-class StatisticsCollector : public cSimpleModule
-{
+class StatisticsCollector2 : public cSimpleModule {
 private:
-    cGate* rdGate;
+    ifstream* packetsHistoryFile;   // файл с информацией о всех пакетах
 
     unsigned int createdPackes;
     unsigned int receivedPackets;
@@ -28,4 +27,4 @@ protected:
     virtual void finish();
 };
 
-#endif
+#endif /* STATISTICSCOLLECTOR2_H_ */

@@ -5,7 +5,7 @@ ofstream* HistoryCollector::packetsHistoryFile = NULL;   // файл с информацией о
 
 void HistoryCollector::initialize() {
     if (!packetsHistoryFile) {
-        packetsHistoryFile = new ofstream(buildFullName("outTrace", "packetsHistory.xml"));
+        packetsHistoryFile = new ofstream(buildFullName((char*) "outTrace", (char*) "packetsHistory.xml"));
 
         (*packetsHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
         (*packetsHistoryFile)<<"<PACKETS-HISTORY>"<< endl;
