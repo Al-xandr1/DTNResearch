@@ -117,7 +117,7 @@ public:
 };
 
 
-
+//todo REMOVE
 // Сообщение о создании нового пакета
 class NewPacketCreated : public cMessage
 {
@@ -128,7 +128,7 @@ public:
 };
 
 
-
+//todo REMOVE
 // Сообщение о получении пакета узлом
 class PacketReceived : public cMessage
 {
@@ -145,7 +145,7 @@ public:
 };
 
 
-
+//todo REMOVE
 // Сообщение с временем ICT между узлами i и j
 class ICTMessage : public cMessage
 {
@@ -166,29 +166,5 @@ public:
     int getJ() {return j;}
     simtime_t getICT() {return ict;}
 };
-
-
-
-// Сообщение о наличии соединение узла nodeIdSrc со несколькими узлами
-//class ConnectionMessage : public cMessage
-//{
-//private:
-//    int nodeIdSrc;
-//    vector<int>* connectedTargetIds;
-//
-//public:
-//    ConnectionMessage(int nodeIdSrc, vector<int>* connectedTargetIds){
-//        this->nodeIdSrc = nodeIdSrc;
-//        this->connectedTargetIds = connectedTargetIds;
-//        if (connectedTargetIds->size() != 1) {cout << "ConnectionMessage::connectedTargetIds != 1" << endl; exit(-887);}
-//    }
-//
-//    ~ConnectionMessage() {
-//        if (connectedTargetIds != NULL) delete connectedTargetIds;
-//    }
-//
-//    int getNodeIdSrc() {return nodeIdSrc;}
-//    vector<int>* getConnectedTargetIds() {return connectedTargetIds;}
-//};
 
 #endif

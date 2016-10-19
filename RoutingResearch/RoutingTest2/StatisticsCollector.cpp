@@ -3,6 +3,8 @@
 
 Define_Module(StatisticsCollector);
 
+//todo REMOVE
+
 void StatisticsCollector::initialize()
 {
     createdPackes = 0;

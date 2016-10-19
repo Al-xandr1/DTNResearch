@@ -177,6 +177,7 @@ void RoutingDaemon::calculateICT(int nodeId1, int nodeId2) {
 
     simtime_t ict = Lost - Start;
 
+    HistoryCollector::collectICT(ict);
     ICTMessage* ictMsg = new ICTMessage(nodeId1, nodeId2, ict);
     take(ictMsg);
     sendDirect(ictMsg, collectorGate);

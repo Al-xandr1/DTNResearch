@@ -6,6 +6,10 @@ void StatisticsCollector2::initialize()
 {
     packetsHistoryFile = new ifstream(buildFullName((char*) "outTrace", (char*) "packetsHistory.xml"));
 
+
+    //todo реализовать чтение из файла и реализовать обработку потока
+
+
     createdPackes = 0;
     receivedPackets = 0;
 

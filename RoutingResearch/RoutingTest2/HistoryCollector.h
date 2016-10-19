@@ -22,6 +22,7 @@
 class HistoryCollector {
 private:
     static ofstream* packetsHistoryFile;  // файл с информацией о всех пакетах
+    static ofstream* ictHistoryFile;      // файл с информацией о времени взаимодействия узлов
 
 public:
     HistoryCollector() {};
@@ -32,6 +33,7 @@ public:
 
     static void collectDeliveredPacket(Packet* packet);
     static void collectRemovedPacket(Packet* packet);
+    static void collectICT(simtime_t ict);
 
     static void insertRowCreated(Packet* packet, int nodeId, Coord position);
     static void insertRowRegistered(Packet* packet, int nodeId, Coord position);
@@ -39,13 +41,13 @@ public:
     static void insertRowRemoved(Packet* packet, int nodeId, Coord position);
     static void insertRowDelivered(Packet* packet, int nodeId, Coord position);
 
+    static void printHistory(Packet* packet);
+
 private:
     static void collectPacket(ofstream* out, Packet* packet);
     static void insertRow(Packet* packet, char* event, int nodeId, Coord position);
-
-public:
-    static void printHistory(Packet* packet);
     static void write(Packet* packet, ostream* out);
+    static void write(simtime_t ict, ostream* out);
 };
 
 #endif /* HISTORYCOLLECTOR_H_ */

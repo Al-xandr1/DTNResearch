@@ -9,7 +9,6 @@
 
 using namespace std;
 
-//todo этот класс должен стать отдельно запускаемым. Будет обрабатывать входные файлы статистики
 
 class StatisticsCollector2 : public cSimpleModule {
 private:
