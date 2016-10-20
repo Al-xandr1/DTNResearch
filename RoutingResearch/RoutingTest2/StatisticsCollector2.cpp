@@ -39,7 +39,7 @@ void StatisticsCollector2::processPacketHistory() {
     for(vector<cXMLElement*>::iterator packetPT = packetTags.begin(); packetPT != packetTags.end(); packetPT++) {
         cXMLElement* packet = (*packetPT);
 
-        // обработка тега SUMMARY
+        // считывание тега SUMMARY
         cXMLElement* summary = packet->getElementByPath("./SUMMARY");
         cStringTokenizer summaryTok(summary->getNodeValue());
         vector<double> summaryVec = summaryTok.asDoubleVector();
@@ -48,10 +48,12 @@ void StatisticsCollector2::processPacketHistory() {
         double creationTime     = summaryVec[2];
         double receivedTime     = summaryVec[3];
 
-        lifeTimePDF->collect(receivedTime - creationTime);
-
-        // обработка тега HISTORY
+        // считывание тега HISTORY
         cXMLElement* history = packet->getElementByPath("./HISTORY");
+        bool created = false,
+             removed = false,
+             delivered = false;
+
         cXMLElementList events = history->getChildren();
         for(vector<cXMLElement*>::iterator eventPT = events.begin(); eventPT != events.end(); eventPT++) {
             cXMLElement* event = (*eventPT);
@@ -59,7 +61,9 @@ void StatisticsCollector2::processPacketHistory() {
             const char* eventName = event->getTagName();
 
             if (strcmp(eventName, CREATED_EVENT) == 0) {
+                ASSERT(!created);   //т.е. данное событие для пакета встречается только один раз
                 createdPackes++;
+                created = true;     //т.е. данное событие для пакета уже учли
 
             } else if (strcmp(eventName, REGISTERED_EVENT) == 0) {
                 //nothing yet
@@ -68,14 +72,21 @@ void StatisticsCollector2::processPacketHistory() {
                 //nothing yet
 
             } else if (strcmp(eventName, REMOVED_EVENT) == 0) {
+                ASSERT(!removed && !delivered);
+                removed = true;
                 //nothing yet
 
             } else if (strcmp(eventName, DELIVERED_EVENT) == 0) {
+                ASSERT(!removed && !delivered);
+                delivered = true;
                 deliveredPackets++;
+
+                // время жизни учитываем только у доставленных
+                lifeTimePDF->collect(receivedTime - creationTime);
 
             } else {
                 cout << "Unknown name of event: " << eventName << endl;
-                ASSERT(false);           //unreachable statement
+                ASSERT(false);        //unreachable statement
             }
         }
     }
