@@ -20,8 +20,6 @@ class RoutingHeuristic;
 
 class RoutingDaemon : public cSimpleModule {
 private:
-    cGate* collectorGate;
-
     vector<RoutingHeuristic*>* routingHeuristics;
 
     unsigned int currentDay;
@@ -45,7 +43,6 @@ public:
 
 public:
     RoutingDaemon() {
-        collectorGate     = NULL;
         routingHeuristics = NULL;
         currentDay        = 0;
         startTimeOfCurrentDay  = 0;

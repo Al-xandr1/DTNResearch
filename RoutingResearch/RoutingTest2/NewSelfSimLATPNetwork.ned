@@ -24,5 +24,4 @@ network NewSelfSimLATPNetwork
         }
         
         routing: RoutingDaemon;
-        collector: StatisticsCollector;
 }

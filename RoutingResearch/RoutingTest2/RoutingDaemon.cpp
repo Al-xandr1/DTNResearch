@@ -39,7 +39,6 @@ void RoutingDaemon::initialize() {
     interconnectionRadius = getParentModule()->par("interconnectionRadius");
     numHosts              = getParentModule()->par("numHosts");
 
-    collectorGate = getParentModule()->getSubmodule("collector")->gate("in");
     dayDuration   = getParentModule()->par("dayDuration").doubleValue();
     countOfDays   = getParentModule()->par("countOfDays").doubleValue();
 
@@ -169,18 +168,12 @@ bool RoutingDaemon::processIfCan(Request* request) {
 }
 
 void RoutingDaemon::calculateICT(int nodeId1, int nodeId2) {
-
     simtime_t Start = getStartConnectionTime(nodeId1, nodeId2);
     simtime_t Lost  = getLostConnectionTime(nodeId1, nodeId2);
 
     if (Start == 0 && Lost == 0) return; // начальное состояние игнорируем
 
-    simtime_t ict = Lost - Start;
-
-    HistoryCollector::collectICT(ict);
-    ICTMessage* ictMsg = new ICTMessage(nodeId1, nodeId2, ict);
-    take(ictMsg);
-    sendDirect(ictMsg, collectorGate);
+    HistoryCollector::collectICT(Lost - Start);
 }
 
 

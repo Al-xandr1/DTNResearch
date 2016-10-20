@@ -23,5 +23,4 @@ network RegularRootLATPNetwork
         }
         
         routing: RoutingDaemon;
-        collector: StatisticsCollector;
 }

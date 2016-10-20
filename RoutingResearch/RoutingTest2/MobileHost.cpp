@@ -7,7 +7,6 @@ void MobileHost::initialize()
 {
     rd = check_and_cast<RoutingDaemon*>(getParentModule()->getSubmodule("routing"));
     rdGate = rd->gate("in");
-    collectorGate = getParentModule()->getSubmodule("collector")->gate("in");
 
     nodeId   = par("NodeID_" );
     timeslot = par("timeslot");
@@ -92,9 +91,6 @@ Packet* MobileHost::createPacket()
 {
     Packet* packet = new Packet(nodeId, generateTarget());
     HistoryCollector::insertRowCreated(packet, nodeId, getMobility()->getLastPosition());
-
-    sendDirect(new NewPacketCreated(), collectorGate);
-
     return packet;
 }
 
@@ -138,12 +134,7 @@ void MobileHost::destroyPacket(Packet* packet)
 
     packet->setReceivedTime(simTime());
     HistoryCollector::insertRowDelivered(packet, nodeId, getMobility()->getLastPosition());
-    simtime_t liveTime = packet->getLiveTime();
-
     HistoryCollector::collectDeliveredPacket(packet);
-
     delete packet;
-
-    sendDirect(new PacketReceived(liveTime), collectorGate);
 }
 

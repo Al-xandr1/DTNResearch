@@ -4,13 +4,6 @@ network StatisticsCollectorNetwork
         collector: StatisticsCollector2;
 }
 
-//todo remove
-simple StatisticsCollector
-{
-    gates:
-        input in @directIn;      
-}
-
 simple StatisticsCollector2
 {
     parameters:

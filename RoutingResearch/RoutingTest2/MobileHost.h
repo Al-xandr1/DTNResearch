@@ -20,7 +20,6 @@ class MobileHost : public cSimpleModule
 private:
     RoutingDaemon* rd;
     cGate* rdGate;
-    cGate* collectorGate;
 
     int nodeId;
 
