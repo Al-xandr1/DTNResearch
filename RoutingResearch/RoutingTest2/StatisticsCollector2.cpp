@@ -2,16 +2,21 @@
 
 Define_Module(StatisticsCollector2);
 
+#define gDEBP(A,B) (A->getDocumentElementByPath(A,B))->getNodeValue()
+
+//todo обобщить имена файлов. Сделать удобное использование в HistoryCollector & StatisticsCollector2
+//todo переместить указанные классы в отдельный пакет
+
 void StatisticsCollector2::initialize()
 {
-    packetsHistoryFile = new ifstream(buildFullName((char*) "outTrace", (char*) "packetsHistory.xml"));
+    //packetsHistoryFile = new ifstream(buildFullName((char*) "outTrace", (char*) "packetsHistory.xml"));
+    //ictHistoryFile = new ifstream(buildFullName((char*) "outTrace", (char*) "ictHistory.xml"));
 
-
-    //todo реализовать чтение из файла и реализовать обработку потока
-
+    packetsHistoryDoc = par("packetsHistoryDoc");
+    ictHistoryDoc = par("ictHistoryDoc");
 
     createdPackes = 0;
-    receivedPackets = 0;
+    deliveredPackets = 0;
 
     lifeTimePDF = new cDoubleHistogram("lifeTimePDF", 300);
     lifeTimePDF->setRangeAutoUpper(0.0, 1000, 1.3);
@@ -19,44 +24,73 @@ void StatisticsCollector2::initialize()
     ictPDF = new cDoubleHistogram("ictPDF", 300);
     ictPDF->setRangeAutoUpper(0.0, 300, 1.3);
 
-    cout << "StatisticsCollector2 initialized" << endl;
+    cout << "StatisticsCollector2: initialized" << endl;
+
+    processPacketHistory();
+    processICTHistory();
+
+    cout << "StatisticsCollector2: statistics collected" << endl;
 }
 
-void StatisticsCollector2::handleMessage(cMessage *msg)
-{
-    switch (msg->getKind()) {
 
-        case NEW_PACKET_CREATED: {    //новый пакет создан
-            createdPackes++;
-            delete msg;
-            break;
-        }
+void StatisticsCollector2::processPacketHistory() {
+    cXMLElementList packetTags = packetsHistoryDoc->getChildren();
 
-        case PACKET_RECEIVED: {      //пакет получен узлом и удалён
-            PacketReceived* packetReceived = check_and_cast<PacketReceived*>(msg);
+    for(vector<cXMLElement*>::iterator packetPT = packetTags.begin(); packetPT != packetTags.end(); packetPT++) {
+        cXMLElement* packet = (*packetPT);
 
-            receivedPackets++;
-            lifeTimePDF->collect(packetReceived->getLiveTime());
+        // обработка тега SUMMARY
+        cXMLElement* summary = packet->getElementByPath("./SUMMARY");
+        cStringTokenizer summaryTok(summary->getNodeValue());
+        vector<double> summaryVec = summaryTok.asDoubleVector();
+        double sourceId         = summaryVec[0];
+        double destinationId    = summaryVec[1];
+        double creationTime     = summaryVec[2];
+        double receivedTime     = summaryVec[3];
 
-            delete packetReceived;
-            break;
-        }
+        lifeTimePDF->collect(receivedTime - creationTime);
 
-        case ICT_INFO: {             //сбор статистики по ICT
-            ICTMessage* ictMsg = check_and_cast<ICTMessage*>(msg);
-            ASSERT(ictMsg->getICT() >= 0);
-            ictPDF->collect(ictMsg->getICT());
+        // обработка тега HISTORY
+        cXMLElement* history = packet->getElementByPath("./HISTORY");
+        cXMLElementList events = history->getChildren();
+        for(vector<cXMLElement*>::iterator eventPT = events.begin(); eventPT != events.end(); eventPT++) {
+            cXMLElement* event = (*eventPT);
 
-            delete ictMsg;
-            break;
-        }
+            const char* eventName = event->getTagName();
 
-        default: {
-            ASSERT(false);           //unreachable statement
-            break;
+            if (strcmp(eventName, CREATED_EVENT) == 0) {
+                createdPackes++;
+
+            } else if (strcmp(eventName, REGISTERED_EVENT) == 0) {
+                //nothing yet
+
+            } else if (strcmp(eventName, BEFORE_SEND_EVENT) == 0) {
+                //nothing yet
+
+            } else if (strcmp(eventName, REMOVED_EVENT) == 0) {
+                //nothing yet
+
+            } else if (strcmp(eventName, DELIVERED_EVENT) == 0) {
+                deliveredPackets++;
+
+            } else {
+                cout << "Unknown name of event: " << eventName << endl;
+                ASSERT(false);           //unreachable statement
+            }
         }
     }
 }
+
+
+void StatisticsCollector2::processICTHistory() {
+    cStringTokenizer tok(ictHistoryDoc->getNodeValue());
+    vector<double> ictValues = tok.asDoubleVector();
+    for (unsigned int i=0; i<ictValues.size(); i++) {
+        ASSERT(ictValues[i] >= 0);
+        ictPDF->collect(ictValues[i]);
+    }
+}
+
 
 void StatisticsCollector2::finish() {
     if (!lifeTimePDF->isTransformed()) lifeTimePDF->transform();
@@ -66,7 +100,7 @@ void StatisticsCollector2::finish() {
     out << "<?xml version=\'1.0' ?>" << endl << endl;
     out << "<STATISTICS>" << endl;
 
-    double deliveredPercentage = (1.0 * receivedPackets) / (1.0 * createdPackes) * 100;
+    double deliveredPercentage = (1.0 * deliveredPackets) / (1.0 * createdPackes) * 100;
     out << "    <DELIVERED-PACKETS> " << deliveredPercentage << " </DELIVERED-PACKETS>" << endl << endl;
 
 
