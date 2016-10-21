@@ -6,6 +6,8 @@
 #include <string>
 #include <math.h>
 #include <vector>
+#include <stdlib.h>
+#include <windows.h>
 
 #include "INETDefs.h"
 #include "LineSegmentsMobilityBase.h"
@@ -16,6 +18,8 @@
 #include "HotSpotsCollection.h"
 #include "RootsCollection.h"
 #include "LevyHotSpotsLATP.h"
+
+#include "Messages.h"
 
 using namespace std;
 

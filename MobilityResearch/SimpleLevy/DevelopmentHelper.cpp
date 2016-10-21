@@ -1,11 +1,36 @@
-/*
- * DevelopmentHelper.cpp
- *
- *  Created on: 31 марта 2015 г.
- *      Author: atsarev
- */
-
 #include "DevelopmentHelper.h"
+
+
+char* NamesAndDirs::getOutDir() {
+    return OUT_DIR;
+}
+
+char* NamesAndDirs::getWpsDir() {
+    char *wpsDir = buildFullName((char*) OUT_DIR, (char*) WPS_DIR);
+    return wpsDir;
+}
+
+char* NamesAndDirs::getTrsDir() {
+    char *trsDir = buildFullName((char*) OUT_DIR, (char*) TRS_DIR);
+    return trsDir;
+}
+
+char* NamesAndDirs::getHsDir() {
+    char *hsDir = buildFullName((char*) OUT_DIR, (char*) HS_DIR);
+    return hsDir;
+}
+
+char* NamesAndDirs::getLocFile() {
+    char *locFile = buildFullName((char*) OUT_DIR, (char*) LOC_FILE);
+    return locFile;
+}
+
+char* NamesAndDirs::getSptCntFile() {
+    char *sptCntFile = buildFullName((char*) OUT_DIR, (char*) SPC_FILE);
+    return sptCntFile;
+}
+
+
 
 char* buildFullName(char* dir, char* fileName) {
     char* buffer = new char[256];

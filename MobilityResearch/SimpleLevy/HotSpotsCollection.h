@@ -16,10 +16,6 @@
 
 using namespace std;
 
-#define DEF_TR_DIR "./Traces"                  //Директория по умолчанию для всeй информации о трассах
-#define DEF_HS_DIR "./Traces/hotspotfiles"     //Директория по умолчанию для "локаций"
-#define DEF_WP_DIR "./Traces/waypointfiles"    //Директория по умолчанию для "путевых точек"
-#define DEF_RT_DIR "./Traces/rootfiles"
 
 struct Waypoint{
     double X, Y, Tb, Te;

@@ -6,12 +6,12 @@ ofstream* HistoryCollector::ictHistoryFile = NULL;       // файл с информацией о
 
 void HistoryCollector::initialize() {
     if (!packetsHistoryFile) {
-        packetsHistoryFile = new ofstream(buildFullName((char*) "outTrace", (char*) "packetsHistory.xml"));
+        packetsHistoryFile = new ofstream(buildFullName((char*) OUT_DIR, (char*) PACKETS_HIST));
         (*packetsHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
         (*packetsHistoryFile)<<"<PACKETS-HISTORY>"<< endl;
     }
     if (!ictHistoryFile) {
-        ictHistoryFile = new ofstream(buildFullName((char*) "outTrace", (char*) "ictHistory.xml"));
+        ictHistoryFile = new ofstream(buildFullName((char*) OUT_DIR, (char*) ICT_HIST));
         (*ictHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
         (*ictHistoryFile)<<"<ICT-HISTORY>"<< endl;
     }

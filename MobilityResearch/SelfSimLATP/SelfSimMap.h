@@ -6,8 +6,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <vector>
-
 #include "INETDefs.h"
+
+using namespace std;
+
+#define PI 3.1415926
 
 class SelfSimMapGenerator {
 protected:

@@ -1,8 +1,5 @@
 #include "SimpleLevyMobility.h"
 
-#define TRACE_TYPE ".txt"
-#define WAYPOINTS_TYPE ".wpt"
-
 Define_Module(SimpleLevyMobility);
 
 SimpleLevyMobility::SimpleLevyMobility() {
@@ -184,10 +181,9 @@ void SimpleLevyMobility::collectStatistics(simtime_t inTime, simtime_t outTime, 
 }
 
 void SimpleLevyMobility::saveStatistics() {
-    char *outDir = "outTrace";
-    char *wpsDir = buildFullName(outDir, "waypointfiles");
-    char *trsDir = buildFullName(outDir, "tracefiles");
-
+    char *outDir = NamesAndDirs::getOutDir();
+    char *wpsDir = NamesAndDirs::getWpsDir();
+    char *trsDir = NamesAndDirs::getTrsDir();
 
     if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---

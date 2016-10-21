@@ -1,13 +1,4 @@
-#include <iostream>
-#include <math.h>
-#include <stdlib.h>
-
 #include "SelfSimLATP.h"
-#include "SelfSimMap.h"
-
-#define DEF_TR_DIR "./Traces"                  //Директория по умолчанию для всeй информации о трассах
-#define TRACE_TYPE ".txt"
-#define WAYPOINTS_TYPE ".wpt"
 
 Define_Module(SelfSimLATP);
 
@@ -78,9 +69,8 @@ void SelfSimLATP::initialize(int stage) {
     if (hsc==NULL) {
         hsc = new HotSpotsCollection();
         // загрузка данных о докациях
-        char* TracesDir = DEF_TR_DIR ;
         double minX, maxX, minY, maxY;
-        hsc->readHotSpotsInfo(TracesDir, minX, maxX, minY, maxY);
+        hsc->readHotSpotsInfo((char*) DEF_TR_DIR, minX, maxX, minY, maxY);
         constraintAreaMin.x=minX; constraintAreaMin.y=minY;
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
     }
@@ -93,8 +83,7 @@ void SelfSimLATP::initialize(int stage) {
 
     if (rc==NULL) {
         rc = new RootCollection();
-        char* RootDir = DEF_RT_DIR ;
-        rc->readRootInfo(RootDir);
+        rc->readRootInfo((char*) DEF_RT_DIR);
         makeRoot();
         buildDstMatrix();
     }
@@ -289,12 +278,12 @@ double SelfSimLATP::getDistance(unsigned int i, unsigned int j)
 
 // ------------------------------------------------------------------------
 
+
 void SelfSimLATP::loadHSWaypts()
 {
     if(!isWptLoaded) {
        gen = new SelfSimMapGenerator(currentHSMin.x, currentHSMax.x, currentHSMin.y, currentHSMax.y, 9);
-       char* varianceFile = buildFullName(DEF_TR_DIR, "variances.txt");
-       gen->MakeSelfSimSet(varianceFile, (currentRoot[currentHSindex]).waypointNum);
+       gen->MakeSelfSimSet(buildFullName((char*) DEF_TR_DIR, (char*) VAR_FILE), (currentRoot[currentHSindex]).waypointNum);
        gen->PutSetOnMap();
        waypts.clear();
        for(unsigned int i=0; i<(gen->mapx).size(); i++) {
@@ -420,10 +409,11 @@ void SelfSimLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double 
     yCoordinates.push_back(y);
 }
 
+
 void SelfSimLATP::saveStatistics() {
-    char *outDir = "outTrace";
-    char *wpsDir = buildFullName(outDir, "waypointfiles");
-    char *trsDir = buildFullName(outDir, "tracefiles");
+    char *outDir = NamesAndDirs::getOutDir();
+    char *wpsDir = NamesAndDirs::getWpsDir();
+    char *trsDir = NamesAndDirs::getTrsDir();
 
     if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---

@@ -3,11 +3,12 @@
 bool HotSpotsCollection::isHSDataReady=false;
 vector<HotSpotShortInfo> HotSpotsCollection::HSData;
 
+
 void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double& maxX, double& minY, double& maxY)
 {
    double Xmin, Xmax, Ymin, Ymax;
    if(!isHSDataReady) {
-        char* spotInfoFileName = buildFullName(TracesDir, "locations.loc");
+        char* spotInfoFileName = buildFullName(TracesDir, (char*) LOC_FILE);
         ifstream* spotInfoFile = new ifstream(spotInfoFileName);
         if (!spotInfoFile) { cout << " No spotInfoFile file: " << spotInfoFileName << endl;  exit(104); }
 
@@ -25,7 +26,7 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
             }
         }
 
-        char* spotCountFileName = buildFullName(TracesDir, "spotcount.cnt");
+        char* spotCountFileName = buildFullName(TracesDir, (char*) SPC_FILE);
         ifstream* spotCountFile = new ifstream(spotCountFileName);
         if (!spotCountFile) { cout << " No spotCountFile file: " << spotCountFileName << endl; exit(104); }
 
@@ -87,8 +88,7 @@ HotSpotShortInfo* HotSpotsCollection::randomRemove(vector<HotSpotShortInfo*>* ho
     HotSpotNum = (int) round(uniform(0, (double) (hotSpots->size() - 1)));
     HotSpotShortInfo* removedItem = hotSpots->at(HotSpotNum);
 
-    //for debug
-    if (HotSpotNum < 0 || HotSpotNum >= hotSpots->size() || removedItem == NULL) exit(-773);
+    ASSERT(HotSpotNum >= 0 && HotSpotNum < hotSpots->size() && removedItem != NULL);
 
     hotSpots->erase(hotSpots->begin() + HotSpotNum);
 

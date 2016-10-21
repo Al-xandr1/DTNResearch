@@ -1,16 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <math.h>
-#include <stdlib.h>
-#include <windows.h>
-#include <vector>
-
 #include "RegularRootLATP.h"
-#include "Messages.h"
-
-#define TRACE_TYPE ".txt"
-#define WAYPOINTS_TYPE ".wpt"
-
 
 Define_Module(RegularRootLATP);
 
@@ -64,7 +52,6 @@ void RegularRootLATP::loadFirstRoot()
 
     // загрузка домашней локации
     homeHS = firstRoot->at(0);
-
 }
 
 
@@ -126,8 +113,7 @@ void RegularRootLATP::initialize(int stage) {
     // загрузка данных об эталонных маршрутах
     if (rc==NULL) {
         rc = new RootsCollection();
-        char* TracesDir = DEF_TR_DIR;
-        rc->readRootsInfo(TracesDir, "allroots.roo");
+        rc->readRootsInfo((char*) DEF_TR_DIR, (char*) ALLROOTS_FILE);
         // rc->print();
     }
 

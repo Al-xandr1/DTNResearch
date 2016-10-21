@@ -7,8 +7,8 @@
 
 #include "INETDefs.h"
 #include "LineSegmentsMobilityBase.h"
-
 #include "DevelopmentHelper.h"
+
 #include "LeviStatic.h"
 
 // определяет конкретную спецификацию мобильности

@@ -1,8 +1,5 @@
 #include "LevyHotSpotsLATP.h"
 
-#define TRACE_TYPE ".txt"
-#define WAYPOINTS_TYPE ".wpt"
-
 Define_Module(LevyHotSpotsLATP);
 
 LevyHotSpotsLATP::LevyHotSpotsLATP() {
@@ -82,9 +79,8 @@ void LevyHotSpotsLATP::initialize(int stage) {
     if (hsc==NULL) {
         hsc = new HotSpotsCollection();
         // загрузка данных о докациях
-        char* TracesDir = DEF_TR_DIR ;
         double minX, maxX, minY, maxY;
-        hsc->readHotSpotsInfo(TracesDir, minX, maxX, minY, maxY);
+        hsc->readHotSpotsInfo((char*) DEF_TR_DIR, minX, maxX, minY, maxY);
         constraintAreaMin.x=minX; constraintAreaMin.y=minY;
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
     }
@@ -256,12 +252,11 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
 }
 
 void LevyHotSpotsLATP::saveStatistics() {
-    char *outDir = "outTrace";
-    char *wpsDir = buildFullName(outDir, "waypointfiles");
-    char *trsDir = buildFullName(outDir, "tracefiles");
-    char *hotSpotFilesDir = buildFullName(outDir, "hotspotfiles");
-    char *locations = buildFullName(outDir, "locations.loc");
-
+    char *outDir = NamesAndDirs::getOutDir();
+    char *wpsDir = NamesAndDirs::getWpsDir();
+    char *trsDir = NamesAndDirs::getTrsDir();
+    char *hsDir  = NamesAndDirs::getHsDir();
+    char *locs   = NamesAndDirs::getLocFile();
 
     if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---
@@ -274,12 +269,12 @@ void LevyHotSpotsLATP::saveStatistics() {
         if (CreateDirectory(trsDir, NULL)) cout << "create output directory: " << trsDir << endl;
         else cout << "error create output directory: " << trsDir << endl;
 
-        if (CreateDirectory(hotSpotFilesDir, NULL)) cout << "create output directory: " << hotSpotFilesDir << endl;
-        else cout << "error create output directory: " << hotSpotFilesDir << endl;
+        if (CreateDirectory(hsDir, NULL)) cout << "create output directory: " << hsDir << endl;
+        else cout << "error create output directory: " << hsDir << endl;
 
         // --- Write HotSpots ---
         for (unsigned int i = 0; i < (hsc->HSData).size(); i++) {
-            char* fullNameHS = buildFullName(hotSpotFilesDir, (hsc->HSData)[i].hotSpotName);
+            char* fullNameHS = buildFullName(hsDir, (hsc->HSData)[i].hotSpotName);
             ofstream* hsFile = new ofstream(fullNameHS);
             (*hsFile) << ((hsc->HSData)[i]).Xmin << "\t" << ((hsc->HSData)[i]).Xmax << endl;
             (*hsFile) << ((hsc->HSData)[i]).Ymin << "\t" << ((hsc->HSData)[i]).Ymax << endl;
@@ -295,7 +290,7 @@ void LevyHotSpotsLATP::saveStatistics() {
         }
 
         // --- Write Locations ---
-        ofstream lcfile(locations);
+        ofstream lcfile(locs);
         for(unsigned int i = 0; i < (hsc->HSData).size(); i++) {
             lcfile << ((hsc->HSData)[i]).hotSpotName << "\t"<< ((hsc->HSData)[i]).generatedSumTime << "\t" << "\t";
             lcfile << ((hsc->HSData)[i]).generatedWaypointNum << "\t" << "\t";

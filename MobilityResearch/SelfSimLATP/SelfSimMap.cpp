@@ -1,16 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <math.h>
-#include <stdlib.h>
-#include <vector>
-
-#include "INETDefs.h"
-
 #include "SelfSimMap.h"
-
-using namespace std;
-
-#define PI 3.1415926
 
 bool GVrand(double R, double& q1, double& q2, double& q3, double& q4)
 {
@@ -81,7 +69,6 @@ SelfSimMapGenerator::~SelfSimMapGenerator()
     mapx.clear();
     mapy.clear();
 }
-
 
 
 void SelfSimMapGenerator::MakeSelfSimSet(char* varfile, int waypoints)

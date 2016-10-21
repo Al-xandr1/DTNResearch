@@ -18,6 +18,11 @@
 #define DLM                  "  "     // DELIMETER - разделитель значений в xml тексе
 #define TAB                  "\t"     // TAB - табул€ци€ дл€ отсутпа в xml тексе
 
+// ƒл€ файлов
+#define OUT_DIR         "outTrace"              // директори€ дл€ сохранени€ выходной информации
+#define PACKETS_HIST    "packetsHistory.xml"    // им€ файла дл€ сохранени€ истории пакетов
+#define ICT_HIST        "ictHistory.xml"        // им€ файла дл€ сохранени€ истории ICT
+
 
 class HistoryCollector {
 private:

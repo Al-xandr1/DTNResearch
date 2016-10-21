@@ -1,7 +1,5 @@
 #include "LevyHotSpotsRandom.h"
 
-#define FILE_TYPE ".txt"
-
 Define_Module(LevyHotSpotsRandom);
 
 LevyHotSpotsRandom::LevyHotSpotsRandom() {
@@ -50,9 +48,8 @@ void LevyHotSpotsRandom::initialize(int stage) {
     } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
 
     // загрузка данных о докациях
-    char* TracesDir = DEF_TR_DIR ;
     double minX, maxX, minY, maxY;
-    hsc->readHotSpotsInfo(TracesDir, minX, maxX, minY, maxY);
+    hsc->readHotSpotsInfo((char*) DEF_TR_DIR, minX, maxX, minY, maxY);
     cout << "i: "<< constraintAreaMin.x << "  " << constraintAreaMax.x << "  " << constraintAreaMin.y << "  " << constraintAreaMax.y << endl;
     cout << minX << "  " << maxX << "  " << minY << "  " << maxY << endl;
     constraintAreaMin.x=minX; constraintAreaMin.y=minY;
@@ -173,7 +170,7 @@ void LevyHotSpotsRandom::collectStatistics(simtime_t appearenceTime, double x, d
 void LevyHotSpotsRandom::saveStatistics() {
     char outFileName[256];
     char *fileName = createFileName(outFileName, 0, par("traceFileName").stringValue(),
-            (int) ((par("fileSuffix"))), FILE_TYPE);
+            (int) ((par("fileSuffix"))), TRACE_TYPE);
 
     ofstream* file = new ofstream(fileName);
     for (unsigned int i = 0; i < times.size(); i++) {

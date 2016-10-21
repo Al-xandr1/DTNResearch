@@ -1,11 +1,10 @@
-// Levi distribution
-
 #ifndef LEVISTATIC_H
 #define LEVISTATIC_H
 
 #include <omnetpp.h>
 #include <math.h>
 
+// Levi distribution
 class LeviJump
 {
 public:
