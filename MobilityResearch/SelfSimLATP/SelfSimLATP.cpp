@@ -70,7 +70,7 @@ void SelfSimLATP::initialize(int stage) {
         hsc = new HotSpotsCollection();
         // загрузка данных о докациях
         double minX, maxX, minY, maxY;
-        hsc->readHotSpotsInfo((char*) DEF_TR_DIR, minX, maxX, minY, maxY);
+        hsc->readHotSpotsInfo(DEF_TR_DIR, minX, maxX, minY, maxY);
         constraintAreaMin.x=minX; constraintAreaMin.y=minY;
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
     }
@@ -83,7 +83,7 @@ void SelfSimLATP::initialize(int stage) {
 
     if (rc==NULL) {
         rc = new RootCollection();
-        rc->readRootInfo((char*) DEF_RT_DIR);
+        rc->readRootInfo(DEF_RT_DIR);
         makeRoot();
         buildDstMatrix();
     }
@@ -283,7 +283,7 @@ void SelfSimLATP::loadHSWaypts()
 {
     if(!isWptLoaded) {
        gen = new SelfSimMapGenerator(currentHSMin.x, currentHSMax.x, currentHSMin.y, currentHSMax.y, 9);
-       gen->MakeSelfSimSet(buildFullName((char*) DEF_TR_DIR, (char*) VAR_FILE), (currentRoot[currentHSindex]).waypointNum);
+       gen->MakeSelfSimSet(buildFullName(DEF_TR_DIR, VAR_FILE), (currentRoot[currentHSindex]).waypointNum);
        gen->PutSetOnMap();
        waypts.clear();
        for(unsigned int i=0; i<(gen->mapx).size(); i++) {

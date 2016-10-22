@@ -8,11 +8,9 @@
 #include <vector>
 #include <stdlib.h>
 #include <windows.h>
-
 #include "INETDefs.h"
 #include "LineSegmentsMobilityBase.h"
 #include "cmessage.h"
-
 #include "DevelopmentHelper.h"
 #include "LeviStatic.h"
 #include "HotSpotsCollection.h"

@@ -35,11 +35,11 @@ RD_Listener::RD_Listener()
 
    // Создаём нижнетреугольную матрицу длительностей контакта
     RoutingDaemon::sumOfConnectDuration = new simtime_t*[RoutingDaemon::numHosts];
-        for (int i = 0; i < RoutingDaemon::numHosts; i++) {
-            RoutingDaemon::sumOfConnectDuration[i] = new simtime_t[i+1];
-            RoutingDaemon::sumOfConnectDuration[i][i] = RoutingDaemon::dayDuration;   // соединение самого себя с собой в течение дня = 1 день
-            for (int j=0; j<i; j++) RoutingDaemon::sumOfConnectDuration[i][j] = 0;
-        }
+    for (int i = 0; i < RoutingDaemon::numHosts; i++) {
+        RoutingDaemon::sumOfConnectDuration[i] = new simtime_t[i+1];
+        RoutingDaemon::sumOfConnectDuration[i][i] = RoutingDaemon::dayDuration;   // соединение самого себя с собой в течение дня = 1 день
+        for (int j=0; j<i; j++) RoutingDaemon::sumOfConnectDuration[i][j] = 0;
+    }
 
     cout << "RD_Listener constructor: end! " << endl;
 }

@@ -2,7 +2,6 @@
 
 Define_Module(MobileHost);
 
-
 void MobileHost::initialize()
 {
     rd = check_and_cast<RoutingDaemon*>(getParentModule()->getSubmodule("routing"));

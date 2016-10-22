@@ -11,26 +11,29 @@
 
 using namespace std;
 
-#define DEF_TR_DIR "./Traces"                  //Директория по умолчанию для всeй информации о трассах
-#define DEF_HS_DIR "./Traces/hotspotfiles"     //Директория по умолчанию для "локаций"
-#define DEF_WP_DIR "./Traces/waypointfiles"    //Директория по умолчанию для "путевых точек"
-#define DEF_RT_DIR "./Traces/rootfiles"
+#define DEF_TR_DIR     (char*)"./Traces"              //Директория по умолчанию для всeй информации о трассах
+#define DEF_HS_DIR     (char*)"./Traces/hotspotfiles" //Директория по умолчанию для "локаций"
+#define DEF_WP_DIR     (char*)"./Traces/waypointfiles"//Директория по умолчанию для "путевых точек"
+#define DEF_RT_DIR     (char*)"./Traces/rootfiles"    //Директория по умолчанию для "маршрутов"
 
-
-#define OUT_DIR        "outTrace"              // директория для сохранения выходной информации
-#define WPS_DIR        "waypointfiles"         // директория для сохранения сгенерированных путевых точек
-#define TRS_DIR        "tracefiles"            // директория для сохранения сгенерированных трасс
-#define HS_DIR         "hotspotfiles"          // директория для сохранения выходной информации о локациях
-#define LOC_FILE       "locations.loc"         // имя файла с локациями
-#define SPC_FILE       "spotcount.cnt"         // имя файла с количеством посещенией
-#define ALLROOTS_FILE  "allroots.roo"          // имя файла
-
-
-#define VAR_FILE  "variances.txt"   // имя файла с дисперсиями
+#define OUT_DIR        (char*)"outTrace"              // директория для сохранения выходной информации
+#define WPS_DIR        (char*)"waypointfiles"         // директория для сохранения сгенерированных путевых точек
+#define TRS_DIR        (char*)"tracefiles"            // директория для сохранения сгенерированных трасс
+#define HS_DIR         (char*)"hotspotfiles"          // директория для сохранения выходной информации о локациях
+#define LOC_FILE       (char*)"locations.loc"         // имя файла с локациями
+#define SPC_FILE       (char*)"spotcount.cnt"         // имя файла с количеством посещенией
+#define ALLROOTS_FILE  (char*)"allroots.roo"          // имя файла
+#define VAR_FILE       (char*)"variances.txt"         // имя файла с дисперсиями
+#define PACKETS_HIST   (char*)"packetsHistory.xml"    // имя файла для сохранения истории пакетов
+#define ICT_HIST       (char*)"ictHistory.xml"        // имя файла для сохранения истории ICT
+#define STAT_FILE      (char*)"statistics.xml"        // имя файла для сохранения статистики
 
 // формат файлов
-#define TRACE_TYPE ".txt"
-#define WAYPOINTS_TYPE ".wpt"
+#define TRACE_TYPE     (char*)".txt"
+#define WAYPOINTS_TYPE (char*)".wpt"
+
+// шаблон файлов
+#define ROOT_PATTERT   (char*)"*.rot"
 
 
 class NamesAndDirs {

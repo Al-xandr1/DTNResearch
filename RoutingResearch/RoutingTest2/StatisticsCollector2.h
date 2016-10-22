@@ -11,11 +11,8 @@ using namespace std;
 
 class StatisticsCollector2 : public cSimpleModule {
 private:
-    //ifstream* packetsHistoryFile;   // файл с информацией о всех пакетах
     cXMLElement *packetsHistoryDoc; // заргуженный xml документ с историей пакетов
-
-    //ifstream* ictHistoryFile;       // файл с информацией о времени взаимодействия узлов
-    cXMLElement *ictHistoryDoc;     // заргуженный xml документ с историей пакетов
+    cXMLElement *ictHistoryDoc;     // заргуженный xml документ с историей ICT
 
     unsigned int createdPackes;
     unsigned int deliveredPackets;

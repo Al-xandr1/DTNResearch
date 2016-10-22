@@ -49,7 +49,7 @@ void LevyHotSpotsRandom::initialize(int stage) {
 
     // загрузка данных о докациях
     double minX, maxX, minY, maxY;
-    hsc->readHotSpotsInfo((char*) DEF_TR_DIR, minX, maxX, minY, maxY);
+    hsc->readHotSpotsInfo(DEF_TR_DIR, minX, maxX, minY, maxY);
     cout << "i: "<< constraintAreaMin.x << "  " << constraintAreaMax.x << "  " << constraintAreaMin.y << "  " << constraintAreaMax.y << endl;
     cout << minX << "  " << maxX << "  " << minY << "  " << maxY << endl;
     constraintAreaMin.x=minX; constraintAreaMin.y=minY;

@@ -2,15 +2,11 @@
 
 Define_Module(StatisticsCollector2);
 
-#define gDEBP(A,B) (A->getDocumentElementByPath(A,B))->getNodeValue()
-
-//todo обобщить имена файлов. Сделать удобное использование в HistoryCollector & StatisticsCollector2
-//todo переместить указанные классы в отдельный пакет
-
 void StatisticsCollector2::initialize()
 {
-    //packetsHistoryFile = new ifstream(buildFullName((char*) "outTrace", (char*) "packetsHistory.xml"));
-    //ictHistoryFile = new ifstream(buildFullName((char*) "outTrace", (char*) "ictHistory.xml"));
+    //todo сделать напрямую из файлов отсюда
+    //ifstream* packetsHistoryFile = new ifstream(buildFullName(OUT_DIR, PACKETS_HIST));
+    //ifstream* ictHistoryFile = new ifstream(buildFullName(OUT_DIR, ICT_HIST));
 
     packetsHistoryDoc = par("packetsHistoryDoc");
     ictHistoryDoc = par("ictHistoryDoc");
@@ -107,7 +103,7 @@ void StatisticsCollector2::finish() {
     if (!lifeTimePDF->isTransformed()) lifeTimePDF->transform();
     if (!ictPDF->isTransformed()) ictPDF->transform();
 
-    ofstream out(buildFullName((char*) "outTrace", (char*) "statistics.xml"));
+    ofstream out(buildFullName(OUT_DIR, STAT_FILE));
     out << "<?xml version=\'1.0' ?>" << endl << endl;
     out << "<STATISTICS>" << endl;
 

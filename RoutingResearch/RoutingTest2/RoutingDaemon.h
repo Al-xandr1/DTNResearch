@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string>
 #include <math.h>
-
 #include "INETDefs.h"
 #include "MobileHost.h"
 #include "RDListener.h"

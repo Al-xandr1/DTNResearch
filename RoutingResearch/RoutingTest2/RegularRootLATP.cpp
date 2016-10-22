@@ -113,7 +113,7 @@ void RegularRootLATP::initialize(int stage) {
     // загрузка данных об эталонных маршрутах
     if (rc==NULL) {
         rc = new RootsCollection();
-        rc->readRootsInfo((char*) DEF_TR_DIR, (char*) ALLROOTS_FILE);
+        rc->readRootsInfo(DEF_TR_DIR, ALLROOTS_FILE);
         // rc->print();
     }
 
@@ -227,8 +227,8 @@ void RegularRootLATP::makeNewRoot()
     while( remCount > 0 ) {
         rem = rand() % currentRoot->size();
         if ( (rem == 0 && currentRootCounter->at(0) > 1) || (rem > 0 && currentRootCounter->at(rem) > 0) ) {
-        currentRootCounter->at(rem)--;
-        remCount--;
+            currentRootCounter->at(rem)--;
+            remCount--;
         }
     }
 
@@ -240,8 +240,8 @@ void RegularRootLATP::makeNewRoot()
     // чтобы корректно работал erase в possibleReplace
     while( cur->size() > 0 ) {
         for(unsigned i=1; i<cur->size(); i++) if( cur->at(0) < cur->at(i) ) {
-                unsigned int tmp=cur->at(0); cur->at(0)=cur->at(i); cur->at(i)=tmp;
-            }
+            unsigned int tmp=cur->at(0); cur->at(0)=cur->at(i); cur->at(i)=tmp;
+        }
         possibleReplace.erase( possibleReplace.begin() + cur->at(0) );
         cur->erase(cur->begin());
     }
@@ -273,7 +273,6 @@ void RegularRootLATP::makeNewRoot()
            currentRootSnumber->push_back(hsNumber);
            currentRootCounter->push_back(1);
        } else currentRootCounter->back()++;
-
     }
 
     // printFirstRoot();
@@ -289,5 +288,4 @@ void RegularRootLATP::makeNewRoot()
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
     //todo стоит ли мен€ть врем€ прибыти€?
-
 }

@@ -3,9 +3,7 @@
 
 #include <stdlib.h>
 #include <math.h>
-
 #include "INETDefs.h"
-
 #include <RoutingDaemon.h>
 #include "RegularRootLATP.h"
 #include <Messages.h>

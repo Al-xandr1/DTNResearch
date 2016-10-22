@@ -8,7 +8,7 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
 {
    double Xmin, Xmax, Ymin, Ymax;
    if(!isHSDataReady) {
-        char* spotInfoFileName = buildFullName(TracesDir, (char*) LOC_FILE);
+        char* spotInfoFileName = buildFullName(TracesDir, LOC_FILE);
         ifstream* spotInfoFile = new ifstream(spotInfoFileName);
         if (!spotInfoFile) { cout << " No spotInfoFile file: " << spotInfoFileName << endl;  exit(104); }
 
@@ -26,7 +26,7 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
             }
         }
 
-        char* spotCountFileName = buildFullName(TracesDir, (char*) SPC_FILE);
+        char* spotCountFileName = buildFullName(TracesDir, SPC_FILE);
         ifstream* spotCountFile = new ifstream(spotCountFileName);
         if (!spotCountFile) { cout << " No spotCountFile file: " << spotCountFileName << endl; exit(104); }
 
@@ -160,7 +160,7 @@ void RootCollection::readRootInfo(char* RootDir)
         RootCollection::RootData.clear();
 
         char* rootFileNamePattern;
-        rootFileNamePattern=buildFullName(RootDir, "*.rot");
+        rootFileNamePattern=buildFullName(RootDir, ROOT_PATTERT);
 
         WIN32_FIND_DATA f;
         HANDLE h = FindFirstFile(rootFileNamePattern, &f);

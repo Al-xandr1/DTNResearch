@@ -6,27 +6,27 @@ char* NamesAndDirs::getOutDir() {
 }
 
 char* NamesAndDirs::getWpsDir() {
-    char *wpsDir = buildFullName((char*) OUT_DIR, (char*) WPS_DIR);
+    char *wpsDir = buildFullName(OUT_DIR, WPS_DIR);
     return wpsDir;
 }
 
 char* NamesAndDirs::getTrsDir() {
-    char *trsDir = buildFullName((char*) OUT_DIR, (char*) TRS_DIR);
+    char *trsDir = buildFullName(OUT_DIR, TRS_DIR);
     return trsDir;
 }
 
 char* NamesAndDirs::getHsDir() {
-    char *hsDir = buildFullName((char*) OUT_DIR, (char*) HS_DIR);
+    char *hsDir = buildFullName(OUT_DIR, HS_DIR);
     return hsDir;
 }
 
 char* NamesAndDirs::getLocFile() {
-    char *locFile = buildFullName((char*) OUT_DIR, (char*) LOC_FILE);
+    char *locFile = buildFullName(OUT_DIR, LOC_FILE);
     return locFile;
 }
 
 char* NamesAndDirs::getSptCntFile() {
-    char *sptCntFile = buildFullName((char*) OUT_DIR, (char*) SPC_FILE);
+    char *sptCntFile = buildFullName(OUT_DIR, SPC_FILE);
     return sptCntFile;
 }
 

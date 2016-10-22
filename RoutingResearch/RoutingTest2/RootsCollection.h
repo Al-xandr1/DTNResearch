@@ -8,23 +8,18 @@
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
-
 #include "INETDefs.h"
 #include "Coord.h"
-
 #include "DevelopmentHelper.h"
 
 using namespace std;
-
-#define DEF_TR_DIR "./Traces"                  //Директория по умолчанию для всeй информации о трассах
-#define DEF_ROOT_DIR "./Traces/rootfiles"      //Директория по умолчанию для "маршрутов"
 
 struct RootShortInfo {
     char RootName[256];
     int length;
     char** hotSpot;
 
-    RootShortInfo( string rootinfo)
+    RootShortInfo(string rootinfo)
     {
         istringstream info(rootinfo);
         info>>RootName>>length;

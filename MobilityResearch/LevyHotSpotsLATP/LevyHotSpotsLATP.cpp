@@ -80,7 +80,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
         hsc = new HotSpotsCollection();
         // загрузка данных о докациях
         double minX, maxX, minY, maxY;
-        hsc->readHotSpotsInfo((char*) DEF_TR_DIR, minX, maxX, minY, maxY);
+        hsc->readHotSpotsInfo(DEF_TR_DIR, minX, maxX, minY, maxY);
         constraintAreaMin.x=minX; constraintAreaMin.y=minY;
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
     }

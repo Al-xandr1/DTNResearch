@@ -32,7 +32,6 @@ private:
     simtime_t lastLET;      // время потери контакта с адресатом при последней LET маршрутизации
 
 public:
-
     //for collection of history
     vector<char*>       eventHistory;
     vector<int>         IDhistory;

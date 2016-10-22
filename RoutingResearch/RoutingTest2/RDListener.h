@@ -5,10 +5,8 @@
 #include <stdlib.h>
 #include <string>
 #include <math.h>
-
 #include "INETDefs.h"
 #include <clistener.h>
-
 #include "RoutingDaemon.h"
 #include <LevyHotSpotsLATP.h>
 #include "SelfSimLATP.h"
