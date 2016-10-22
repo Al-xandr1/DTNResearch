@@ -6,6 +6,7 @@
 #include "INETDefs.h"
 #include <RoutingDaemon.h>
 #include "RegularRootLATP.h"
+#include "SelfSimLATP.h"
 #include <Messages.h>
 #include <HistoryCollector.h>
 
@@ -31,7 +32,10 @@ public:
 
     int getNodeId() {return nodeId;};
     vector<Packet*>* getPacketsForSending() {return packetsForSending;};
-    RegularRootLATP* getMobility() {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
+
+    MovingMobilityBase* getMobility()                {return (MovingMobilityBase*)getSubmodule("mobility");}
+    RegularRootLATP*    getRegularRootLATPMobility() {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
+    SelfSimLATP*        getSelfSimLATPMobility()     {return dynamic_cast<SelfSimLATP*>(getSubmodule("mobility"));}
 
     Packet* createPacket();
     int generateTarget();

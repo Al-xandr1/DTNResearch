@@ -78,7 +78,6 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     LevyHotSpotsLATP();
     int getNodeID();
 
-    Coord getLastPosition()      {return this->lastPosition;};
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};
     Coord getConstraintAreaMax() {return this->constraintAreaMax;};
 

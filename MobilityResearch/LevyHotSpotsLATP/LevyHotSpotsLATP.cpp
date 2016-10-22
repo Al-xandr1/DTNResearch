@@ -182,11 +182,11 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
 
         // для ускорения вычислений определяем вспомогательные переменные
         double x, y, Xdir, Ydir, dir;
-        bool flag = ( (y=getLastPosition().y) < currentHSCenter.y);
+        bool flag = ( (y=lastPosition.y) < currentHSCenter.y);
 
         // выбираем самую дальнюю от текущей позиции вершину прямоугольника текущей локации 
         // и вычисляем координаты вектора из текущей позиции в эту вершину
-        if ( (x=getLastPosition().x) < currentHSCenter.x ) {
+        if ( (x=lastPosition.x) < currentHSCenter.x ) {
             if (flag) { Xdir=currentHSMax.x-x; Ydir=currentHSMax.y-y; }
             else      { Xdir=currentHSMax.x-x; Ydir=currentHSMin.y-y; }
         } else {
@@ -199,7 +199,7 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
             // можем - прыгаем
             delta.x = Xdir * distance/dir;
             delta.y = Ydir * distance/dir;
-            targetPosition = getLastPosition() + delta;
+            targetPosition = lastPosition + delta;
 
             return true;
         } else { // не можем - надо переходить в другую локацию

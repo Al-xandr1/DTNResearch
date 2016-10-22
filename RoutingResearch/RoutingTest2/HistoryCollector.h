@@ -25,9 +25,6 @@ private:
     static ofstream* ictHistoryFile;      // файл с информацией о времени взаимодействия узлов
 
 public:
-    HistoryCollector() {};
-    virtual ~HistoryCollector() {};
-
     static void initialize();
     static void finish();
 

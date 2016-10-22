@@ -24,7 +24,7 @@ void MobileHost::handleMessage(cMessage *msg)
     switch(msg->getKind()) {
 
        case DAY_START: {           // Сообщение о начале нового "дня"
-           RegularRootLATP* regularMobility = getMobility();
+           RegularRootLATP* regularMobility = getRegularRootLATPMobility();
            if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
            delete msg;
            break;
@@ -77,7 +77,7 @@ void MobileHost::finish()
 {
     for(vector<Packet*>::iterator it = packetsForSending->begin(); it != packetsForSending->end(); it++) {
         Packet* packet = (*it);
-        HistoryCollector::insertRowRemoved(packet, nodeId, getMobility()->getLastPosition());
+        HistoryCollector::insertRowRemoved(packet, nodeId, getMobility()->getCurrentPosition());
         HistoryCollector::collectRemovedPacket(packet);
         //todo made erasing & packet deletion
     }
@@ -89,7 +89,7 @@ void MobileHost::finish()
 Packet* MobileHost::createPacket()
 {
     Packet* packet = new Packet(nodeId, generateTarget());
-    HistoryCollector::insertRowCreated(packet, nodeId, getMobility()->getLastPosition());
+    HistoryCollector::insertRowCreated(packet, nodeId, getMobility()->getCurrentPosition());
     return packet;
 }
 
@@ -107,7 +107,7 @@ void MobileHost::registerPacket(Packet* packet)
     ASSERT(nodeId != packet->getDestinationId());
 
     packet->setReceivedTime(simTime());
-    HistoryCollector::insertRowRegistered(packet, nodeId, getMobility()->getLastPosition());
+    HistoryCollector::insertRowRegistered(packet, nodeId, getMobility()->getCurrentPosition());
 
     packetsForSending->push_back(packet);
 
@@ -120,7 +120,7 @@ void MobileHost::sendPacket(Packet* packet, int destinationId)
     ASSERT(nodeId != packet->getDestinationId());
 
     packet->setLastVisitedId(nodeId);
-    HistoryCollector::insertRowBeforeSend(packet, nodeId, getMobility()->getLastPosition());
+    HistoryCollector::insertRowBeforeSend(packet, nodeId, getMobility()->getCurrentPosition());
 
     cGate *dst = getParentModule()->getSubmodule("host", destinationId)->gate("in");
     sendDirect(packet, dst);
@@ -132,7 +132,7 @@ void MobileHost::destroyPacket(Packet* packet)
     ASSERT(nodeId == packet->getDestinationId());
 
     packet->setReceivedTime(simTime());
-    HistoryCollector::insertRowDelivered(packet, nodeId, getMobility()->getLastPosition());
+    HistoryCollector::insertRowDelivered(packet, nodeId, getMobility()->getCurrentPosition());
     HistoryCollector::collectDeliveredPacket(packet);
     delete packet;
 }
