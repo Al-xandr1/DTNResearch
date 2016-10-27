@@ -7,8 +7,15 @@ network RegularRootLATPNetwork
         double interconnectionRadius = default(700); 	// radius of transmitters of each node in meters
         
 		// heuristic's parameters 
-        double LET_Threshold @unit(s) = default(0s);  // bound of trust time for LET algorithm 
-        										      // Available values [0; +infinity]. Note: -1 means infinity        
+        double LET_Threshold @unit(s) = default(0s);  	// bound of trust time for LET algorithm 
+        										      	// Available values [0; +infinity]. Note: -1 means infinity
+        										
+		// параметр, показыющий какие эвристики использовать        										      
+        // 0 - нет ограничений (все эвристики) - LET_Threshold работает
+        // 1 - использовать только LET - LET_Threshold отключается (равен "бесконечности)
+        // 2 - использоват только MFV - LET_Threshold не имеет смысла, не используется
+        int usedHeuristics = default(0);		
+                
         // parameters for daily root change
         double dayDuration @unit(s) = default(43200s);  // by default 12 hours;
         

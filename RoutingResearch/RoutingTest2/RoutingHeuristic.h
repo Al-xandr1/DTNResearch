@@ -2,8 +2,12 @@
 #define ROUTING_HEURISTIC_H_INCLUDED
 
 #include <omnetpp.h>
-
 #include "RoutingDaemon.h"
+
+#define OH_HEURISTIC    (char*)"OneHopHeuristic"
+#define TH_HEURISTIC    (char*)"TwoHopsHeuristic"
+#define LET_HEURISTIC   (char*)"LETHeuristic"
+#define MFV_HEURISTIC   (char*)"MoreFrequentVisibleHeuristic"
 
 using namespace std;
 
@@ -47,7 +51,7 @@ public:
 // Логика маршрутизации в один прыжок
 class OneHopHeuristic : public RoutingHeuristic {
 public:
-    OneHopHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic("OneHopHeuristic", rd, settings) {};
+    OneHopHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic(OH_HEURISTIC, rd, settings) {};
     virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting);
 };
 
@@ -55,7 +59,7 @@ public:
 // Логика маршрутизации в два прыжка
 class TwoHopsHeuristic : public RoutingHeuristic {
 public:
-    TwoHopsHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic("TwoHopsHeuristic", rd, settings) {};
+    TwoHopsHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic(TH_HEURISTIC, rd, settings) {};
     virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting);
 };
 
@@ -63,7 +67,7 @@ public:
 // Логика мартшутизации "тому кто позже всех видел адресат"
 class LETHeuristic : public RoutingHeuristic {
 public:
-    LETHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic("LETHeuristic", rd, settings) {};
+    LETHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic(LET_HEURISTIC, rd, settings) {};
     virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting);
 };
 
@@ -71,7 +75,7 @@ public:
 // Логика мартшутизации "кто чаще всего видит адресата в течение последних нескольких дней
 class MoreFrequentVisibleHeuristic : public RoutingHeuristic {
 public:
-    MoreFrequentVisibleHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic("MoreFrequentVisibleHeuristic", rd, settings) {};
+    MoreFrequentVisibleHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic(MFV_HEURISTIC, rd, settings) {};
     virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting);
 };
 
