@@ -22,7 +22,6 @@ bool TwoHopsHeuristic::canProcess(Request* request, vector<int>* neighbors, int&
 
 
 bool LETHeuristic::canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting) {
-
     int moreSuitableNode = request->getSourceId();
     simtime_t lost;
 

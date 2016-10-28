@@ -13,6 +13,9 @@ vector<simtime_t**>* RoutingDaemon::connectivityPerDay = NULL;
 vector<Request*>*    RoutingDaemon::requests = NULL;
 RoutingDaemon*       RoutingDaemon::instance = NULL;
 
+#define ALL         0   // 0 - нет ограничений (все эвристики) - LET_Threshold работает
+#define LET_ONLY    1   // 1 - использовать только LET - LET_Threshold отключается (равен "бесконечности)
+#define MFV_ONLY    2   // 2 - использоват только MFV - LET_Threshold не имеет смысла, не используется
 
 void RoutingDaemon::initialize() {
     if (instance == NULL) instance = this;
@@ -22,6 +25,7 @@ void RoutingDaemon::initialize() {
     simtime_t LET_Threshold =
        (getParentModule()->par("LET_Threshold").doubleValue() != -1) ?
         getParentModule()->par("LET_Threshold").doubleValue() : MAXTIME;
+    int usedHeuristics = getParentModule()->par("usedHeuristics").doubleValue();
 
     ASSERT(LET_Threshold >= 0);
     cout << " LET_Threshold = "  << LET_Threshold  << endl;
@@ -31,8 +35,24 @@ void RoutingDaemon::initialize() {
     routingHeuristics = new vector<RoutingHeuristic*>();
     routingHeuristics->push_back(new OneHopHeuristic(this, settings));
     routingHeuristics->push_back(new TwoHopsHeuristic(this, settings));
-    routingHeuristics->push_back(new LETHeuristic(this, settings));
-    routingHeuristics->push_back(new MoreFrequentVisibleHeuristic(this, settings));
+    switch (usedHeuristics) {
+        case LET_ONLY: {
+            settings->setLET_Threshold(MAXTIME); // turn off this constraint
+            routingHeuristics->push_back(new LETHeuristic(this, settings));
+            break;
+        }
+        case MFV_ONLY: {
+            routingHeuristics->push_back(new MoreFrequentVisibleHeuristic(this, settings));
+            break;
+        }
+        case ALL: {
+            routingHeuristics->push_back(new LETHeuristic(this, settings));
+            routingHeuristics->push_back(new MoreFrequentVisibleHeuristic(this, settings));
+            break;
+        }
+        default:
+            ASSERT(FALSE); //unreacheable statement
+    }
 
     connectivityPerDay    = new vector<simtime_t**>();
     requests              = new vector<Request*>();
