@@ -140,6 +140,8 @@ bounds.bnd
 locations.loc
 length.hst
 spotcount.cnt
+allroots.roo
+statistics.stat
 herst.txt
 variances.txt
 ictstatistics.xml
