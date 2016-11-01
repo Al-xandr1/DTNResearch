@@ -1,7 +1,6 @@
 //---------------------------- Параметры ---------------------------------------
-// Директория, в которой лежат нужные файлы или папки
-//PATH = '/Volumes/Macintosh/Users/Alexander/soft/omnetpp-4.5/GitHub/WaypointGenerator/';
-PATH = 'C:\omnetpp-4.6\GitHub\DTNResearch\Utils\WaypointFinder\waypointfiles\';
+// Директория, в которой лежат нужные файлы или папки: DTNResearch\Utils\Visualizing\input\
+PATH = 'C:\Users\sbt-tsarev-aa\Soft\omnetpp-4.6\GitHub\DTNResearch\Utils\Visualizing\input\';
 SEPARATOR = '\';
 
 GRAPH_COLOR = 2;    // Цвет первого графика
