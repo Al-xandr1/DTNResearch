@@ -147,5 +147,6 @@ variances.txt
 ictstatistics.xml
 ictstatistics2.xml
 statistics.xml
+statistics_*.xml
 packetsHistory.xml
 ictHistory.xml
