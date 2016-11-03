@@ -96,7 +96,7 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
         default: {// неизвестное сообщение, выводим для отладки
             cout << "RoutingDaemon::handleMessage: msg->getKind() = " << msg->getKind() << endl;
             cout << "Sender: " << msg->getSenderModule()->getFullName() << endl;
-            exit(-444);
+            ASSERT(false);
             break;
         }
     }
