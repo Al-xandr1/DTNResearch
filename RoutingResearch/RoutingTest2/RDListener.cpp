@@ -56,7 +56,7 @@ void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
         SelfSimLATP* src2 = dynamic_cast<SelfSimLATP*>(source);
         if (src2) NodeId = src2->getNodeID();
 
-        ASSERT(checkReceivedData());
+//        ASSERT(checkReceivedData());
         if (processReceivedData()) {
             RoutingDaemon::instance->connectionsChanged();
         }

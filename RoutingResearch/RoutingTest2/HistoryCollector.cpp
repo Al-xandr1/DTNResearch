@@ -19,8 +19,8 @@ void HistoryCollector::initialize(RoutingDaemon* rd) {
 }
 
 void HistoryCollector::finish() {
-    ASSERT(packetsHistoryFile);
-    ASSERT(ictHistoryFile);
+//    ASSERT(packetsHistoryFile);
+//    ASSERT(ictHistoryFile);
 
     (*packetsHistoryFile)<<"</PACKETS-HISTORY>"<<endl;
     (*ictHistoryFile)<<"</ICT-HISTORY>"<<endl;
@@ -35,10 +35,10 @@ void HistoryCollector::finish() {
     ictHistoryFile = NULL;
 }
 
-void HistoryCollector::collectDeliveredPacket(Packet* packet)       {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
-void HistoryCollector::collectRemovedPacket(Packet* packet)         {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
-void HistoryCollector::collectICT(simtime_t ict)                    {ASSERT(ictHistoryFile); write(ict, ictHistoryFile);}
-void HistoryCollector::collectPacket(ofstream* out, Packet* packet) {ASSERT(out); write(packet, out);}
+void HistoryCollector::collectDeliveredPacket(Packet* packet)       {/*ASSERT(packetsHistoryFile); */collectPacket(packetsHistoryFile, packet);}
+void HistoryCollector::collectRemovedPacket(Packet* packet)         {/*ASSERT(packetsHistoryFile); */collectPacket(packetsHistoryFile, packet);}
+void HistoryCollector::collectICT(simtime_t ict)                    {/*ASSERT(ictHistoryFile); */write(ict, ictHistoryFile);}
+void HistoryCollector::collectPacket(ofstream* out, Packet* packet) {/*ASSERT(out); */write(packet, out);}
 
 void HistoryCollector::insertRowCreated(Packet* packet, int nodeId, Coord position)     {insertRow(packet, (char*) CREATED_EVENT,     nodeId, position);}
 void HistoryCollector::insertRowRegistered(Packet* packet, int nodeId, Coord position)  {insertRow(packet, (char*) REGISTERED_EVENT,  nodeId, position);}

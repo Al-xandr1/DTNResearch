@@ -28,7 +28,7 @@ void RoutingDaemon::initialize() {
         getParentModule()->par("LET_Threshold").doubleValue() : MAXTIME;
     int usedHeuristics = getParentModule()->par("usedHeuristics").doubleValue();
 
-    ASSERT(LET_Threshold >= 0);
+//    ASSERT(LET_Threshold >= 0);
     cout << " LET_Threshold = "  << LET_Threshold  << endl;
 
     settings->setLET_Threshold(LET_Threshold);
@@ -176,7 +176,7 @@ bool RoutingDaemon::processIfCan(Request* request) {
         int nodeForRouting = -1;
 
         if ((*routingHeuristics)[i]->canProcess(request, neighbors, nodeForRouting)) {
-            ASSERT(nodeForRouting >= 0 && nodeForRouting < getNumHosts() && nodeForRouting != request->getSourceId());
+//            ASSERT(nodeForRouting >= 0 && nodeForRouting < getNumHosts() && nodeForRouting != request->getSourceId());
             // проставл€ем им€ сработавшей эвристики дл€ данного пакета
             request->getPacket()->setLastHeuristric((*routingHeuristics)[i]->getName());
 

@@ -33,7 +33,7 @@ void RegularRootLATP::loadFirstRoot()
 
     // загрузка первого маршрута (эталона)
     h = hsc->findHotSpotbyName((rc->RootData[NodeID]).hotSpot[0], Snum);
-    ASSERT(h != NULL);
+//    ASSERT(h != NULL);
     firstRoot->push_back(h);
     firstRootSnumber->push_back(Snum);
     firstRootCounter->push_back(1);
@@ -176,7 +176,7 @@ bool RegularRootLATP::findNextHotSpot()
         if(curRootIndex != i) pr+=LocalProbMatrix[curRootIndex][i];
         if(rn <= pr) { curRootIndex=i; break; }
     }
-    ASSERT(rn <= pr);
+//    ASSERT(rn <= pr);
     setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
     hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
     //    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
@@ -204,7 +204,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
         targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
         distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
-        ASSERT(distance > 0);
+//        ASSERT(distance > 0);
         speed = kForSpeed * pow(distance, 1 - roForSpeed);
         travelTime = distance / speed;
         nextChange = simTime() + travelTime;
