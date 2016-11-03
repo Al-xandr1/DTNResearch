@@ -142,6 +142,7 @@ length.hst
 spotcount.cnt
 allroots.roo
 statistics.stat
+statistics_*.stat
 herst.txt
 variances.txt
 ictstatistics.xml
