@@ -13,8 +13,6 @@ void MobileHost::initialize()
 
     packetsForSending = new vector<Packet*>();
 
-    if (nodeId == 0) HistoryCollector::initialize();
-
     scheduleAt(simTime(), new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET));
 }
 

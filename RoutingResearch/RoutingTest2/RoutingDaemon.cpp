@@ -17,6 +17,7 @@ RoutingDaemon*       RoutingDaemon::instance = NULL;
 #define LET_ONLY    1   // 1 - использовать только LET - LET_Threshold отключается (равен "бесконечности)
 #define MFV_ONLY    2   // 2 - использоват только MFV - LET_Threshold не имеет смысла, не используется
 
+
 void RoutingDaemon::initialize() {
     if (instance == NULL) instance = this;
     else { cout << "Duplicate initialization exception!" << endl; exit(-654); }
@@ -61,6 +62,9 @@ void RoutingDaemon::initialize() {
 
     dayDuration   = getParentModule()->par("dayDuration").doubleValue();
     countOfDays   = getParentModule()->par("countOfDays").doubleValue();
+    useCODForStat = getParentModule()->par("useCODForStat").boolValue();
+
+    HistoryCollector::initialize(this);
 
     RD_Listener* listener = new RD_Listener();
     getParentModule()->subscribe(mobilityStateChangedSignal, listener);
@@ -98,6 +102,9 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
     }
 }
 
+bool RoutingDaemon::canCollectStatistics() {
+    return !useCODForStat || currentDay > countOfDays;
+}
 
 void RoutingDaemon::processNewDay() {
 

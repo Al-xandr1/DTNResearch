@@ -20,7 +20,11 @@ network RegularRootLATPNetwork
         double dayDuration @unit(s) = default(43200s);  // by default 12 hours;
         
         // statistic collection
-        int countOfDays = default(5); 					// number of days will be accounted for collection statistics of total time coonection per a day  
+        int countOfDays = default(5); 					// number of days will be accounted for collection statistics of total time coonection per a day
+        // параметр, который включает или выключает использование 
+        // параметра countOfDays как порог времени в начале моделирования,
+        // в течение которго сбор статистики по маршрутизации не происходит
+        bool useCODForStat = default(false);  
         
     submodules:
         host[numHosts]: RegularRootLATPHost {

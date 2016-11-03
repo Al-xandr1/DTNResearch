@@ -24,7 +24,8 @@ private:
     unsigned int currentDay;
     simtime_t    startTimeOfCurrentDay;
     simtime_t    finishTimeOfCurrentDay;
-    int          countOfDays;
+    unsigned int countOfDays;
+    bool         useCODForStat;
 
     vector<int>*  neighbors;
 
@@ -48,18 +49,21 @@ public:
         finishTimeOfCurrentDay = 0;
         dayDuration       = -1;
         countOfDays       = 0;
+        useCODForStat     = FALSE;
         neighbors         = NULL;
     }
 
-    int          getNumHosts()    {return numHosts;}
-    unsigned int getCurrentDay()  {return currentDay;}
+    int          getNumHosts()      {return numHosts;}
+    unsigned int getCurrentDay()    {return currentDay;}
     simtime_t    getStartTimeOfCurrentDay() {return startTimeOfCurrentDay;}
-    double       getDayDuration() { return dayDuration;}
-    int          getCountOfDays() { return countOfDays;}
+    double       getDayDuration()   {return dayDuration;}
+    unsigned int getCountOfDays()   {return countOfDays;}
+    bool         getUseCODForStat() {return useCODForStat;}
 
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
 
+    bool canCollectStatistics();
     void processNewDay();
     void connectionsChanged();
     bool processIfCan(Request* request);

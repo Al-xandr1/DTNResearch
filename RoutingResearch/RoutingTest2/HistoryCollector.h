@@ -5,6 +5,7 @@
 #include <fstream>
 #include <omnetpp.h>
 #include <Messages.h>
+#include <RoutingDaemon.h>
 #include "DevelopmentHelper.h"
 
 // Коды сообытий, происходящими с сообщениями
@@ -18,14 +19,16 @@
 #define DLM                  "  "     // DELIMETER - разделитель значений в xml тексе
 #define TAB                  "\t"     // TAB - табуляция для отсутпа в xml тексе
 
+class RoutingDaemon;
 
 class HistoryCollector {
 private:
     static ofstream* packetsHistoryFile;  // файл с информацией о всех пакетах
     static ofstream* ictHistoryFile;      // файл с информацией о времени взаимодействия узлов
+    static RoutingDaemon* rd;
 
 public:
-    static void initialize();
+    static void initialize(RoutingDaemon* rd);
     static void finish();
 
     static void collectDeliveredPacket(Packet* packet);
