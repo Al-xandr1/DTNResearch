@@ -60,6 +60,8 @@ public:
     unsigned int getCountOfDays()   {return countOfDays;}
     bool         getUseCODForStat() {return useCODForStat;}
 
+    void matricesCreation();
+    void matricesInitialization();
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
 

@@ -27,7 +27,7 @@ protected:
     vector<Coord> nodePositions;
 
 public:
-    RD_Listener();
+    RD_Listener(RoutingDaemon* rd);
 
     virtual void  receiveSignal (cComponent *source, simsignal_t signalID, bool b)              { cout << "not supported"; };
     virtual void  receiveSignal (cComponent *source, simsignal_t signalID, long l)              { cout << "not supported"; };
