@@ -19,7 +19,7 @@ RoutingDaemon*       RoutingDaemon::instance = NULL;
 
 
 void RoutingDaemon::initialize() {
-    if (instance == NULL) instance = this;
+    if (instance == NULL) instance = this; //todo remove this & all static fields
     else { cout << "Duplicate initialization exception!" << endl; exit(-654); }
 
     RoutingSettings* settings = new RoutingSettings();
@@ -64,17 +64,49 @@ void RoutingDaemon::initialize() {
     countOfDays   = getParentModule()->par("countOfDays").doubleValue();
     useCODForStat = getParentModule()->par("useCODForStat").boolValue();
 
-    HistoryCollector::initialize(this);
+    matricesCreation();
+    matricesInitialization();
 
-    RD_Listener* listener = new RD_Listener();
-    getParentModule()->subscribe(mobilityStateChangedSignal, listener);
+    HistoryCollector::initialize(this);
+    getParentModule()->subscribe(mobilityStateChangedSignal, new RD_Listener(this));
 
     scheduleAt(simTime(), new cMessage("Start of the Day", DAY_START));
 }
 
+void RoutingDaemon::matricesCreation() {
+    // Создаём нижнетреугольную матрицу связности
+    RoutingDaemon::connections = new bool*[RoutingDaemon::numHosts];
+    // Создаём нижнетреугольную матрицу моментов установления связи
+    RoutingDaemon::connectStart = new simtime_t*[RoutingDaemon::numHosts];
+    // Создаём нижнетреугольную матрицу моментов разрыва связи
+    RoutingDaemon::connectLost = new simtime_t*[RoutingDaemon::numHosts];
+    // Создаём нижнетреугольную матрицу длительностей контакта
+    RoutingDaemon::sumOfConnectDuration = new simtime_t*[RoutingDaemon::numHosts];
+    for (int i=0; i<RoutingDaemon::numHosts; i++) {
+        RoutingDaemon::connections[i]   = new bool[i+1];
+        RoutingDaemon::connectStart[i]  = new simtime_t[i+1];
+        RoutingDaemon::connectLost[i]   = new simtime_t[i+1];
+        RoutingDaemon::sumOfConnectDuration[i] = new simtime_t[i+1];
+    }
+}
+
+void RoutingDaemon::matricesInitialization() {
+    // Приводим в начальное состояние все матрицы
+    for (int i=0; i<RoutingDaemon::numHosts; i++) {
+        RoutingDaemon::connections[i][i]  = true;
+        RoutingDaemon::connectStart[i][i] = 0;
+        RoutingDaemon::connectLost[i][i]  = 0;
+        RoutingDaemon::sumOfConnectDuration[i][i] = RoutingDaemon::dayDuration;
+        for (int j=0; j<i; j++) {
+            RoutingDaemon::connections[i][j]  = false;
+            RoutingDaemon::connectStart[i][j] = 0;
+            RoutingDaemon::connectLost[i][j]  = 0;
+            RoutingDaemon::sumOfConnectDuration[i][j] = 0;
+        }
+    }
+}
 
 void RoutingDaemon::handleMessage(cMessage *msg) {
-
     switch (msg->getKind()) {
 
         case DAY_START: {          // Сообщение о начале нового дня. Копия сообщения рассылается всем узлам сети
@@ -117,15 +149,21 @@ void RoutingDaemon::processNewDay() {
     // "Обрезаем" длительность текущих сединений перед окончанием дня и корректируем их матрицу
     for (int i = 0; i < RoutingDaemon::numHosts; i++)
         for (int j = 0; j < i; j++)
-            if (RoutingDaemon::connections[i][j])
-                RoutingDaemon::sumOfConnectDuration[i][j] += simTime() - RoutingDaemon::connectStart[i][j];
+            if (RoutingDaemon::connections[i][j]) {
+                RoutingDaemon::sumOfConnectDuration[i][j] += (simTime() - RoutingDaemon::connectStart[i][j]);
+                ASSERT(RoutingDaemon::sumOfConnectDuration[i][j] <= RoutingDaemon::dayDuration);
+            }
 
     // Создаём матрицу длительности соединений для хранения результаов дня
     simtime_t** dayConnectivity = new simtime_t*[RoutingDaemon::numHosts];
     for (int i = 0; i < RoutingDaemon::numHosts; i++) {
         dayConnectivity[i] = new simtime_t[i+1];
         dayConnectivity[i][i] = RoutingDaemon::sumOfConnectDuration[i][i];
-        for (int j=0; j<i; j++) dayConnectivity[i][j] = RoutingDaemon::sumOfConnectDuration[i][j];
+        ASSERT(dayConnectivity[i][i] == RoutingDaemon::dayDuration);
+        for (int j=0; j<i; j++) {
+            dayConnectivity[i][j] = RoutingDaemon::sumOfConnectDuration[i][j];
+            ASSERT(dayConnectivity[i][j] <= RoutingDaemon::dayDuration);
+        }
     }
 
     // Сохраняем её в контейнере
@@ -140,18 +178,7 @@ void RoutingDaemon::processNewDay() {
     }
 
     // Приводим в начальное состояние все матрицы
-    for (int i=0; i<RoutingDaemon::numHosts; i++) {
-        RoutingDaemon::connections[i][i]  = true;
-        RoutingDaemon::connectStart[i][i] = 0;
-        RoutingDaemon::connectLost[i][i]  = 0;
-        RoutingDaemon::sumOfConnectDuration[i][i] = RoutingDaemon::dayDuration;
-        for (int j=0; j<i; j++) {
-            RoutingDaemon::connections[i][j]  = false;
-            RoutingDaemon::connectStart[i][j] = 0;
-            RoutingDaemon::connectLost[i][j]  = 0;
-            RoutingDaemon::sumOfConnectDuration[i][j] = 0;
-        }
-    }
+    matricesInitialization();
 }
 
 void RoutingDaemon::connectionsChanged() {
@@ -169,7 +196,7 @@ bool RoutingDaemon::processIfCan(Request* request) {
     for(int i=0; i<senderID; i++)
         if(isConnected(senderID, i)) neighbors->push_back(i);
 
-    for(int i=senderID+1; i<instance->getNumHosts(); i++)
+    for(int i=senderID+1; i<getNumHosts(); i++)
        if(isConnected(senderID, i)) neighbors->push_back(i);
 
     for(int i = 0; i < routingHeuristics->size(); i++) {
@@ -200,38 +227,47 @@ void RoutingDaemon::calculateICT(int nodeId1, int nodeId2) {
 
     if (Start == 0 && Lost == 0) return; // начальное состояние игнорируем
 
-    HistoryCollector::collectICT(Lost - Start);
+    //ict = S_i+1 - L_i, поэтому считать нужно после УСТАНОВЛЕНИЯ соединения
+    HistoryCollector::collectICT(Start - Lost);
 }
 
 
 simtime_t RoutingDaemon::getLostConnectionTime(int nodeId1, int nodeId2) {
+    ASSERT(nodeId1 != nodeId2);
     if (nodeId1 > nodeId2) return RoutingDaemon::connectLost[nodeId1][nodeId2];
     else return RoutingDaemon::connectLost[nodeId2][nodeId1];
 }
 
 
 simtime_t RoutingDaemon::getStartConnectionTime(int nodeId1, int nodeId2) {
+    ASSERT(nodeId1 != nodeId2);
     if (nodeId1 > nodeId2) return RoutingDaemon::connectStart[nodeId1][nodeId2];
     else return RoutingDaemon::connectStart[nodeId2][nodeId1];
 }
 
 
 bool RoutingDaemon::isConnected(int nodeId1, int nodeId2) {
+    ASSERT(nodeId1 != nodeId2);
     if (nodeId1 > nodeId2) return RoutingDaemon::connections[nodeId1][nodeId2];
     else return RoutingDaemon::connections[nodeId2][nodeId1];
 }
 
 
 simtime_t RoutingDaemon::getConnectivity(int index, int nodeId1, int nodeId2) {
+    ASSERT(nodeId1 != nodeId2);
+    ASSERT(index >= 0 && index < RoutingDaemon::connectivityPerDay->size());
     if (nodeId1 > nodeId2) return (*RoutingDaemon::connectivityPerDay)[index][nodeId1][nodeId2];
     else return (*RoutingDaemon::connectivityPerDay)[index][nodeId2][nodeId1];
 }
 
 
 simtime_t RoutingDaemon::computeTotalConnectivity(int nodeId1, int nodeId2) {
+    ASSERT(nodeId1 != nodeId2);
+    ASSERT(RoutingDaemon::connectivityPerDay->size() <= countOfDays);
     simtime_t totalConnectivity = 0;
     for (unsigned int day = 0; day < RoutingDaemon::connectivityPerDay->size(); day++)
         totalConnectivity += getConnectivity(day, nodeId1, nodeId2);
+    ASSERT(totalConnectivity <= RoutingDaemon::dayDuration * RoutingDaemon::connectivityPerDay->size());
     return totalConnectivity;
 }
 

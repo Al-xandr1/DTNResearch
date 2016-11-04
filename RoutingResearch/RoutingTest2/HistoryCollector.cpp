@@ -37,7 +37,7 @@ void HistoryCollector::finish() {
 
 void HistoryCollector::collectDeliveredPacket(Packet* packet)       {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
 void HistoryCollector::collectRemovedPacket(Packet* packet)         {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
-void HistoryCollector::collectICT(simtime_t ict)                    {ASSERT(ictHistoryFile); write(ict, ictHistoryFile);}
+void HistoryCollector::collectICT(simtime_t ict)                    {ASSERT(ictHistoryFile); ASSERT(ict>0); write(ict, ictHistoryFile);}
 void HistoryCollector::collectPacket(ofstream* out, Packet* packet) {ASSERT(out); write(packet, out);}
 
 void HistoryCollector::insertRowCreated(Packet* packet, int nodeId, Coord position)     {insertRow(packet, (char*) CREATED_EVENT,     nodeId, position);}

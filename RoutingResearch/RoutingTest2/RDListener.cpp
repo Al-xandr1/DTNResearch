@@ -1,45 +1,14 @@
 #include "RDListener.h"
 
-RD_Listener::RD_Listener()
+RD_Listener::RD_Listener(RoutingDaemon* rd)
 {
     cout << "RD_Listener constructor: start... " << endl;
+    this->rd = rd;
 
     NodeId = -1;
     position = Coord::ZERO;
 
     for (int i=0; i<RoutingDaemon::numHosts; i++) nodePositions.push_back(Coord::ZERO);
-
-    // Создаём нижнетреугольную матрицу связности
-    RoutingDaemon::connections = new bool*[RoutingDaemon::numHosts];
-    for (int i=0; i<RoutingDaemon::numHosts; i++) {
-        RoutingDaemon::connections[i] = new bool[i+1];
-        RoutingDaemon::connections[i][i] = true;
-        for (int j=0; j<i; j++) RoutingDaemon::connections[i][j] = false;
-    }
-
-    // Создаём нижнетреугольную матрицу моментов установления связи
-    RoutingDaemon::connectStart = new simtime_t*[RoutingDaemon::numHosts];
-    for (int i=0; i<RoutingDaemon::numHosts; i++) {
-        RoutingDaemon::connectStart[i] = new simtime_t[i+1];
-        RoutingDaemon::connectStart[i][i] = 0;
-        for (int j=0; j<i; j++) RoutingDaemon::connectStart[i][j] = 0;
-    }
-
-    // Создаём нижнетреугольную матрицу моментов разрыва связи
-    RoutingDaemon::connectLost = new simtime_t*[RoutingDaemon::numHosts];
-    for (int i=0; i<RoutingDaemon::numHosts; i++) {
-        RoutingDaemon::connectLost[i] = new simtime_t[i+1];
-        RoutingDaemon::connectLost[i][i] = 0;
-        for (int j=0; j<i; j++) RoutingDaemon::connectLost[i][j] = 0;
-    }
-
-   // Создаём нижнетреугольную матрицу длительностей контакта
-    RoutingDaemon::sumOfConnectDuration = new simtime_t*[RoutingDaemon::numHosts];
-    for (int i = 0; i < RoutingDaemon::numHosts; i++) {
-        RoutingDaemon::sumOfConnectDuration[i] = new simtime_t[i+1];
-        RoutingDaemon::sumOfConnectDuration[i][i] = RoutingDaemon::dayDuration;   // соединение самого себя с собой в течение дня = 1 день
-        for (int j=0; j<i; j++) RoutingDaemon::sumOfConnectDuration[i][j] = 0;
-    }
 
     cout << "RD_Listener constructor: end! " << endl;
 }
@@ -58,7 +27,7 @@ void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
 
         ASSERT(checkReceivedData());
         if (processReceivedData()) {
-            RoutingDaemon::instance->connectionsChanged();
+            rd->connectionsChanged();
         }
     }
 }
@@ -85,13 +54,14 @@ bool RD_Listener::processReceivedData()
         if(!RoutingDaemon::connections[NodeId][j] &&  conn ) {
             // Устанавливаем соединение
             RoutingDaemon::connectStart[NodeId][j] = simTime();
+            rd->calculateICT(NodeId, j);
             anyChanged = true;
 
         } else if( RoutingDaemon::connections[NodeId][j] && !conn ) {
             // Разрываем соединение
             RoutingDaemon::connectLost[NodeId][j] = simTime();
-            RoutingDaemon::sumOfConnectDuration[NodeId][j] += simTime() - RoutingDaemon::connectStart[NodeId][j];
-            RoutingDaemon::instance->calculateICT(NodeId, j);
+            RoutingDaemon::sumOfConnectDuration[NodeId][j] += (simTime() - RoutingDaemon::connectStart[NodeId][j]);
+            ASSERT(RoutingDaemon::sumOfConnectDuration[NodeId][j] <= RoutingDaemon::dayDuration);
             anyChanged = true;
         }
         RoutingDaemon::connections[NodeId][j] = conn;
@@ -102,13 +72,14 @@ bool RD_Listener::processReceivedData()
         if(!RoutingDaemon::connections[i][NodeId] &&  conn ) {
             // Устанавливаем соединение
             RoutingDaemon::connectStart[i][NodeId] = simTime();
+            rd->calculateICT(i, NodeId);
             anyChanged = true;
 
         } else if( RoutingDaemon::connections[i][NodeId] && !conn ) {
             // Разрываем соединение
             RoutingDaemon::connectLost[i][NodeId] = simTime();
-            RoutingDaemon::sumOfConnectDuration[i][NodeId] += simTime() - RoutingDaemon::connectStart[i][NodeId];
-            RoutingDaemon::instance->calculateICT(i, NodeId);
+            RoutingDaemon::sumOfConnectDuration[i][NodeId] += (simTime() - RoutingDaemon::connectStart[i][NodeId]);
+            ASSERT(RoutingDaemon::sumOfConnectDuration[i][NodeId] <= RoutingDaemon::dayDuration);
             anyChanged = true;
         }
         RoutingDaemon::connections[i][NodeId] = conn;
