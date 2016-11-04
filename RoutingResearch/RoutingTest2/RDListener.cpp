@@ -61,7 +61,7 @@ bool RD_Listener::processReceivedData()
             // Разрываем соединение
             RoutingDaemon::connectLost[NodeId][j] = simTime();
             RoutingDaemon::sumOfConnectDuration[NodeId][j] += (simTime() - RoutingDaemon::connectStart[NodeId][j]);
-            ASSERT(RoutingDaemon::sumOfConnectDuration[NodeId][j] <= RoutingDaemon::dayDuration);
+//            ASSERT(RoutingDaemon::sumOfConnectDuration[NodeId][j] <= RoutingDaemon::dayDuration);
             anyChanged = true;
         }
         RoutingDaemon::connections[NodeId][j] = conn;
@@ -79,7 +79,7 @@ bool RD_Listener::processReceivedData()
             // Разрываем соединение
             RoutingDaemon::connectLost[i][NodeId] = simTime();
             RoutingDaemon::sumOfConnectDuration[i][NodeId] += (simTime() - RoutingDaemon::connectStart[i][NodeId]);
-            ASSERT(RoutingDaemon::sumOfConnectDuration[i][NodeId] <= RoutingDaemon::dayDuration);
+//            ASSERT(RoutingDaemon::sumOfConnectDuration[i][NodeId] <= RoutingDaemon::dayDuration);
             anyChanged = true;
         }
         RoutingDaemon::connections[i][NodeId] = conn;

@@ -151,7 +151,7 @@ void RoutingDaemon::processNewDay() {
         for (int j = 0; j < i; j++)
             if (RoutingDaemon::connections[i][j]) {
                 RoutingDaemon::sumOfConnectDuration[i][j] += (simTime() - RoutingDaemon::connectStart[i][j]);
-                ASSERT(RoutingDaemon::sumOfConnectDuration[i][j] <= RoutingDaemon::dayDuration);
+//                ASSERT(RoutingDaemon::sumOfConnectDuration[i][j] <= RoutingDaemon::dayDuration);
             }
 
     // Создаём матрицу длительности соединений для хранения результаов дня
@@ -159,10 +159,10 @@ void RoutingDaemon::processNewDay() {
     for (int i = 0; i < RoutingDaemon::numHosts; i++) {
         dayConnectivity[i] = new simtime_t[i+1];
         dayConnectivity[i][i] = RoutingDaemon::sumOfConnectDuration[i][i];
-        ASSERT(dayConnectivity[i][i] == RoutingDaemon::dayDuration);
+//        ASSERT(dayConnectivity[i][i] == RoutingDaemon::dayDuration);
         for (int j=0; j<i; j++) {
             dayConnectivity[i][j] = RoutingDaemon::sumOfConnectDuration[i][j];
-            ASSERT(dayConnectivity[i][j] <= RoutingDaemon::dayDuration);
+//            ASSERT(dayConnectivity[i][j] <= RoutingDaemon::dayDuration);
         }
     }
 
@@ -233,41 +233,41 @@ void RoutingDaemon::calculateICT(int nodeId1, int nodeId2) {
 
 
 simtime_t RoutingDaemon::getLostConnectionTime(int nodeId1, int nodeId2) {
-    ASSERT(nodeId1 != nodeId2);
+//    ASSERT(nodeId1 != nodeId2);
     if (nodeId1 > nodeId2) return RoutingDaemon::connectLost[nodeId1][nodeId2];
     else return RoutingDaemon::connectLost[nodeId2][nodeId1];
 }
 
 
 simtime_t RoutingDaemon::getStartConnectionTime(int nodeId1, int nodeId2) {
-    ASSERT(nodeId1 != nodeId2);
+//    ASSERT(nodeId1 != nodeId2);
     if (nodeId1 > nodeId2) return RoutingDaemon::connectStart[nodeId1][nodeId2];
     else return RoutingDaemon::connectStart[nodeId2][nodeId1];
 }
 
 
 bool RoutingDaemon::isConnected(int nodeId1, int nodeId2) {
-    ASSERT(nodeId1 != nodeId2);
+//    ASSERT(nodeId1 != nodeId2);
     if (nodeId1 > nodeId2) return RoutingDaemon::connections[nodeId1][nodeId2];
     else return RoutingDaemon::connections[nodeId2][nodeId1];
 }
 
 
 simtime_t RoutingDaemon::getConnectivity(int index, int nodeId1, int nodeId2) {
-    ASSERT(nodeId1 != nodeId2);
-    ASSERT(index >= 0 && index < RoutingDaemon::connectivityPerDay->size());
+//    ASSERT(nodeId1 != nodeId2);
+//    ASSERT(index >= 0 && index < RoutingDaemon::connectivityPerDay->size());
     if (nodeId1 > nodeId2) return (*RoutingDaemon::connectivityPerDay)[index][nodeId1][nodeId2];
     else return (*RoutingDaemon::connectivityPerDay)[index][nodeId2][nodeId1];
 }
 
 
 simtime_t RoutingDaemon::computeTotalConnectivity(int nodeId1, int nodeId2) {
-    ASSERT(nodeId1 != nodeId2);
-    ASSERT(RoutingDaemon::connectivityPerDay->size() <= countOfDays);
+//    ASSERT(nodeId1 != nodeId2);
+//    ASSERT(RoutingDaemon::connectivityPerDay->size() <= countOfDays);
     simtime_t totalConnectivity = 0;
     for (unsigned int day = 0; day < RoutingDaemon::connectivityPerDay->size(); day++)
         totalConnectivity += getConnectivity(day, nodeId1, nodeId2);
-    ASSERT(totalConnectivity <= RoutingDaemon::dayDuration * RoutingDaemon::connectivityPerDay->size());
+//    ASSERT(totalConnectivity <= RoutingDaemon::dayDuration * RoutingDaemon::connectivityPerDay->size());
     return totalConnectivity;
 }
 
