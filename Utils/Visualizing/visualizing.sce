@@ -260,7 +260,7 @@ function drawNodeHistograms(varargin)
     drawHistograms(fileNames, "ICT-PDF-HISTOGRAM", "ICT, simsecs");
 endfunction
 
-//Рисование всех гистрограмм из одного файла статистики
+//Рисование всех гистрограмм из файлов статистики
 function drawWPHistograms(varargin)
     [lhs, rhs] = argn();// rhs - количество входных параметров
     if (rhs < 1) then
@@ -276,7 +276,7 @@ function drawWPHistograms(varargin)
     //drawHistograms(fileNames, "PAUSE-HISTOGRAM", "Pause time, sec");
 endfunction
 
-//Рисование гистрограммы из одного файла статистики
+//Рисование гистрограммы из вектора файлов статистики
 function drawHistograms(filenames, tag, xlable)
     fileCount = size(filenames, 1);
     
@@ -355,6 +355,48 @@ function drawHistograms(filenames, tag, xlable)
     prepareGraphic("CCDF for "+ tag, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
 endfunction
 
+
+//Вывод в таблицу значений из файлов статистики
+function drawNodeValues(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("drawNodeValues: Ожидалось один или более параметров (имён файлов)"));
+    end
+    
+    fileNames = [];
+    for i = 1 : rhs
+        fileNames = [fileNames ; varargin(i)];
+    end
+    tags = ["DELIVERED-PACKETS" ; "LIFE-TIME-HISTOGRAM/MEAN"]
+    drawTable(fileNames, tags);
+endfunction
+
+
+//Вывод в таблицу указанного вектора значений из вектора файлов статистики
+function drawTable(filenames, tags)
+    fileCount = size(filenames, 1);
+    tagCount = size(tags, 1);
+    
+    table  = [];
+    header = []; header = [header , "Files:   \   Tags:"];
+    for j=1:tagCount
+        header = [header , tags(j)];
+    end
+    table = [table ; header];
+    
+    for i=1:fileCount
+        doc = xmlRead(PATH + filenames(i));
+        row = []; row = [row , filenames(i)];
+        for j=1:tagCount
+            val = getDoubleFromXml(doc, "//" + tags(j) + "/text()");
+            row = [row , string(val)];
+        end
+        table = [table ; row];
+        xmlDelete(doc);
+    end
+    
+    disp(table);
+endfunction
 
 
 //Рисование зависимости Dx от масштаба по имени файла
