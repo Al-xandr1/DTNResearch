@@ -132,7 +132,7 @@ void RegularRootLATP::initialize(int stage) {
 
         // начальная локация - это первая локация текущего маршрута
         curRootIndex=0;
-        setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
+        LevyHotSpotsLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
         hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
 
         // printCurrentRoot();
@@ -144,7 +144,6 @@ void RegularRootLATP::initialize(int stage) {
 
 bool RegularRootLATP::findNextHotSpot()
 {
-    // ASSERT((currentRoot->at(curRootIndex))->counter>0);
     if ( (currentRoot->at(curRootIndex))->counter>0 ) (currentRoot->at(curRootIndex))->counter-=1;  // покидая локацию, уменьшаем её счётчик посещений
 
     unsigned int hh=0, ii;                               // находим сумму всех счётчиков посещений на маршруте,
@@ -155,7 +154,7 @@ bool RegularRootLATP::findNextHotSpot()
     if( hh == (currentRoot->at(ii))->counter ) {         // осталась одна локация (может быть, с несколькими посещениями)
         curRootIndex = ii;
         (currentRoot->at(curRootIndex))->counter = 1;    // если посещений несколько, заменяем одним
-        setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
+        LevyHotSpotsLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
         hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
         return true;
     }
@@ -167,7 +166,7 @@ bool RegularRootLATP::findNextHotSpot()
             for(unsigned int j=0; j<currentRoot->size(); j++) h+=LocalProbMatrix[i][j];
             if ( h!=0 ) for(unsigned int j=0; j<currentRoot->size(); j++) LocalProbMatrix[i][j]/=h;
             else return false; // все вероятности перехода уже нули, мы в конце маршрута (на всякий случай)
-            }
+        }
     }
     // случайным образом выбираем новую локацию
     double rn, pr=0;
@@ -177,7 +176,7 @@ bool RegularRootLATP::findNextHotSpot()
         if(rn <= pr) { curRootIndex=i; break; }
     }
     ASSERT(rn <= pr);
-    setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
+    LevyHotSpotsLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
     hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
     //    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
     return true;
@@ -190,7 +189,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
     if (flag) return true;   // идём по маршруту
     else {                   // маршрут кончился, идём домой
         currentHSindex=0;
-        setCurrentHSbordersWith( homeHS );
+        LevyHotSpotsLATP::setCurrentHSbordersWith( homeHS );
 
         // проверяем, не дома ли мы уже
         if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
@@ -231,6 +230,7 @@ void RegularRootLATP::makeNewRoot()
     unsigned int ii=0;
     for (unsigned int i=0; i<firstRoot->size(); i++) ii+=firstRootCounter->at(i);
     int replaceCount = ii - round( ii * rootPersistence);
+    ASSERT(0 <= replaceCount && replaceCount <= ii);
     // уменьшаем счётчики посещений у заданного числа случайных локаций на маршруте.
     // у первой локации (домашней), счётчик нулём не делаем.
     int rem, remCount=replaceCount;
@@ -241,26 +241,31 @@ void RegularRootLATP::makeNewRoot()
             remCount--;
         }
     }
+    // домашн€€ локаци€ сохран€етс€
+    ASSERT(currentRootCounter->at(0) >= 1);
 
     // инициализируем набор возможных локаций всеми возможными номерами локаций в порядке возрастания
     vector<int> possibleReplace;
     for(unsigned int i=0; i< HotSpotsCollection::HSData.size(); i++) possibleReplace.push_back(i);
     vector<unsigned int>* cur = new vector<unsigned int> (*currentRootSnumber);
-    // удаляем номера, присутствующие в маршруте, из possibleReplace, начиная с самого большого,
-    // чтобы корректно работал erase в possibleReplace
+    // удаляем номера, присутствующие в маршруте, из possibleReplace, начиная с самого большого в cur,
+    // чтобы корректно работал erase в possibleReplace - т.к. в таком случае удаление будет проходить с конца
     while( cur->size() > 0 ) {
-        for(unsigned i=1; i<cur->size(); i++) if( cur->at(0) < cur->at(i) ) {
+        for(unsigned int i=1; i<cur->size(); i++) if( cur->at(0) < cur->at(i) ) {
             unsigned int tmp=cur->at(0); cur->at(0)=cur->at(i); cur->at(i)=tmp;
         }
         possibleReplace.erase( possibleReplace.begin() + cur->at(0) );
         cur->erase(cur->begin());
     }
     delete cur;
+    ASSERT(possibleReplace.size() == (HotSpotsCollection::HSData.size() - currentRootSnumber->size()));
 
-    // генерируем нужное число случайных номеров новых локаций в отсортированном виде
+    // генерируем нужное число случайных номеров новых локаций
+    // из тех, что остались в possibleReplace в отсортированном по возрастанию виде
     vector<int> sortReplace;
-    unsigned ri = rand() % possibleReplace.size();
+    unsigned int ri = rand() % possibleReplace.size();
     sortReplace.push_back(possibleReplace[ri]);
+    unsigned int replaceCountForCheck = replaceCount;
     replaceCount--;
     while( replaceCount > 0) {
         unsigned int i;
@@ -274,6 +279,7 @@ void RegularRootLATP::makeNewRoot()
         if( i == sortReplace.size() ) sortReplace.push_back(possibleReplace[ri]);
         replaceCount--;
     }
+    ASSERT(sortReplace.size() == replaceCountForCheck);
 
     // добавляем нужное число новых локаций в маршрут
     for(unsigned int i=0; i<sortReplace.size(); i++) {
@@ -285,15 +291,25 @@ void RegularRootLATP::makeNewRoot()
        } else currentRootCounter->back()++;
     }
 
-    // printFirstRoot();
-    // printCurrentRoot();
+    // for debug
+    printFirstRoot();
+    printCurrentRoot();
+    unsigned int sumCurrent=0, sumFirst=0;
+    for(unsigned int i=0; i<currentRootCounter->size(); i++) sumCurrent += currentRootCounter->at(i);
+    for(unsigned int i=0; i<firstRootCounter->size();   i++) sumFirst +=   firstRootCounter->at(i);
+    ASSERT(sumCurrent == sumFirst);
+    // все структуры одинаковы по размеру
+    ASSERT((currentRoot->size() == currentRootSnumber->size()) && (currentRoot->size() == currentRootCounter->size()));
 
     makeLocalProbMatrix(powA);
 
-    // начальная локация - это первая локация текущего маршрута
+    // начальная локация - это первая локация текущего маршрута - она же домашн€€
     curRootIndex=0;
-    setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
-    hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
+    HotSpotShortInfo* homeHS = currentRoot->at(curRootIndex);
+    ASSERT(this->homeHS == homeHS);
+    LevyHotSpotsLATP::setCurrentHSbordersWith(homeHS);
+    HotSpotShortInfo* hsi = hsc->findHotSpotbyName(homeHS->hotSpotName, currentHSindex);
+    ASSERT(hsi);
 
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
