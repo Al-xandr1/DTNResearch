@@ -1,7 +1,8 @@
 //---------------------------- Параметры ---------------------------------------
 
 // Директория, в которой лежат нужные файлы или папки: DTNResearch\Utils\Visualizing\input\
-PATH = 'C:\Users\sbt-tsarev-aa\Soft\omnetpp-4.6\GitHub\DTNResearch\Utils\Visualizing\input\';
+//PATH = 'C:\Users\sbt-tsarev-aa\Soft\omnetpp-4.6\GitHub\DTNResearch\Utils\Visualizing\input\'; //work laptop
+PATH = 'c:\omnetpp-4.6\GitHub\DTNResearch\Utils\Visualizing\input\'; //home laptop
 SEPARATOR = '\';
 
 GRAPH_COLOR = 2;    // Цвет первого графика
