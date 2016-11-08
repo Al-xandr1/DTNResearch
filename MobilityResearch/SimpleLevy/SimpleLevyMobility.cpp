@@ -92,7 +92,7 @@ void SimpleLevyMobility::setInitialPosition() {
     lastPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
     lastPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
     targetPosition = lastPosition;
-    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
+//    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
 }
 
 bool SimpleLevyMobility::isHotSpotEmpty() {
@@ -105,20 +105,20 @@ void SimpleLevyMobility::finish() {
 
 void SimpleLevyMobility::setTargetPosition() {
     if (movementsFinished) {nextChange = -1; return;};
-    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
-    ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+//    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
+//    ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
 
     step++;
     if (isPause) {
         waitTime = (simtime_t) pause->get_Levi_rv();
-        ASSERT(waitTime > 0);
+//        ASSERT(waitTime > 0);
         nextChange = simTime() + waitTime;
     } else {
         collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
         movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
         if (movementsFinished) {nextChange = -1; return;};
-        ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+//        ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
     }
     isPause = !isPause;
 }
@@ -128,14 +128,14 @@ bool SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& 
     // генерируем прыжок Леви как обычно
     angle = uniform(0, 2 * PI);
     distance = jump->get_Levi_rv();
-    ASSERT(distance > 0);
+//    ASSERT(distance > 0);
     speed = kForSpeed * pow(distance, 1 - roForSpeed);
     Coord delta(distance * cos(angle), distance * sin(angle), 0);
     deltaVector = delta;
     travelTime = distance / speed;
 
     targetPosition = lastPosition + delta;
-    ASSERT(targetPosition.x != lastPosition.x);
+//    ASSERT(targetPosition.x != lastPosition.x);
     nextChange = simTime() + travelTime;
 
     // если вышли за пределы локации

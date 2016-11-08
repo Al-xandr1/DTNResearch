@@ -88,7 +88,7 @@ HotSpotShortInfo* HotSpotsCollection::randomRemove(vector<HotSpotShortInfo*>* ho
     HotSpotNum = (int) round(uniform(0, (double) (hotSpots->size() - 1)));
     HotSpotShortInfo* removedItem = hotSpots->at(HotSpotNum);
 
-    ASSERT(HotSpotNum >= 0 && HotSpotNum < hotSpots->size() && removedItem != NULL);
+//    ASSERT(HotSpotNum >= 0 && HotSpotNum < hotSpots->size() && removedItem != NULL);
 
     hotSpots->erase(hotSpots->begin() + HotSpotNum);
 

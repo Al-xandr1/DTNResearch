@@ -25,7 +25,7 @@ void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
         SelfSimLATP* src2 = dynamic_cast<SelfSimLATP*>(source);
         if (src2) NodeId = src2->getNodeID();
 
-        ASSERT(checkReceivedData());
+//        ASSERT(checkReceivedData());
         if (processReceivedData()) {
             rd->connectionsChanged();
         }
@@ -61,7 +61,7 @@ bool RD_Listener::processReceivedData()
             // Разрываем соединение
             RoutingDaemon::connectLost[NodeId][j] = simTime();
             RoutingDaemon::sumOfConnectDuration[NodeId][j] += (simTime() - RoutingDaemon::connectStart[NodeId][j]);
-            ASSERT(RoutingDaemon::sumOfConnectDuration[NodeId][j] <= RoutingDaemon::dayDuration);
+//            ASSERT(RoutingDaemon::sumOfConnectDuration[NodeId][j] <= RoutingDaemon::dayDuration);
             anyChanged = true;
         }
         RoutingDaemon::connections[NodeId][j] = conn;
@@ -79,7 +79,7 @@ bool RD_Listener::processReceivedData()
             // Разрываем соединение
             RoutingDaemon::connectLost[i][NodeId] = simTime();
             RoutingDaemon::sumOfConnectDuration[i][NodeId] += (simTime() - RoutingDaemon::connectStart[i][NodeId]);
-            ASSERT(RoutingDaemon::sumOfConnectDuration[i][NodeId] <= RoutingDaemon::dayDuration);
+//            ASSERT(RoutingDaemon::sumOfConnectDuration[i][NodeId] <= RoutingDaemon::dayDuration);
             anyChanged = true;
         }
         RoutingDaemon::connections[i][NodeId] = conn;

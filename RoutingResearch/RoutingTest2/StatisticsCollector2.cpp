@@ -57,7 +57,7 @@ void StatisticsCollector2::processPacketHistory() {
             const char* eventName = event->getTagName();
 
             if (strcmp(eventName, CREATED_EVENT) == 0) {
-                ASSERT(!created);   //т.е. данное событие для пакета встречается только один раз
+//                ASSERT(!created);   //т.е. данное событие для пакета встречается только один раз
                 createdPackes++;
                 created = true;     //т.е. данное событие для пакета уже учли
 
@@ -68,12 +68,12 @@ void StatisticsCollector2::processPacketHistory() {
                 //nothing yet
 
             } else if (strcmp(eventName, REMOVED_EVENT) == 0) {
-                ASSERT(!removed && !delivered);
+//                ASSERT(!removed && !delivered);
                 removed = true;
                 //nothing yet
 
             } else if (strcmp(eventName, DELIVERED_EVENT) == 0) {
-                ASSERT(!removed && !delivered);
+//                ASSERT(!removed && !delivered);
                 delivered = true;
                 deliveredPackets++;
 
@@ -93,7 +93,7 @@ void StatisticsCollector2::processICTHistory() {
     cStringTokenizer tok(ictHistoryDoc->getNodeValue());
     vector<double> ictValues = tok.asDoubleVector();
     for (unsigned int i=0; i<ictValues.size(); i++) {
-        ASSERT(ictValues[i] >= 0);
+//        ASSERT(ictValues[i] >= 0);
         ictPDF->collect(ictValues[i]);
     }
 }

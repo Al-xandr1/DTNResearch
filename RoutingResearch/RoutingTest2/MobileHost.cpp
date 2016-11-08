@@ -102,7 +102,7 @@ int MobileHost::generateTarget()
 
 void MobileHost::registerPacket(Packet* packet)
 {
-    ASSERT(nodeId != packet->getDestinationId());
+//    ASSERT(nodeId != packet->getDestinationId());
 
     packet->setReceivedTime(simTime());
     HistoryCollector::insertRowRegistered(packet, nodeId, getMobility()->getCurrentPosition());
@@ -115,7 +115,7 @@ void MobileHost::registerPacket(Packet* packet)
 
 void MobileHost::sendPacket(Packet* packet, int destinationId)
 {
-    ASSERT(nodeId != packet->getDestinationId());
+//    ASSERT(nodeId != packet->getDestinationId());
 
     packet->setLastVisitedId(nodeId);
     HistoryCollector::insertRowBeforeSend(packet, nodeId, getMobility()->getCurrentPosition());
@@ -127,7 +127,7 @@ void MobileHost::sendPacket(Packet* packet, int destinationId)
 
 void MobileHost::destroyPacket(Packet* packet)
 {
-    ASSERT(nodeId == packet->getDestinationId());
+//    ASSERT(nodeId == packet->getDestinationId());
 
     packet->setReceivedTime(simTime());
     HistoryCollector::insertRowDelivered(packet, nodeId, getMobility()->getCurrentPosition());

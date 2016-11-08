@@ -139,7 +139,7 @@ void SelfSimLATP::setTargetPosition() {
     step++;
     if (isPause) {
         waitTime = (simtime_t) pause->get_Levi_rv();
-        ASSERT(waitTime > 0);
+//        ASSERT(waitTime > 0);
         nextChange = simTime() + waitTime;
     } else {
         collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
