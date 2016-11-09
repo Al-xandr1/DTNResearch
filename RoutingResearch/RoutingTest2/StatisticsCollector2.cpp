@@ -7,9 +7,11 @@ void StatisticsCollector2::initialize()
     //todo сделать напрямую из файлов отсюда
     //ifstream* packetsHistoryFile = new ifstream(buildFullName(OUT_DIR, PACKETS_HIST));
     //ifstream* ictHistoryFile = new ifstream(buildFullName(OUT_DIR, ICT_HIST));
+    //ifstream* routeInfoHistoryFile = new ifstream(buildFullName(OUT_DIR, RT_HIST));
 
     packetsHistoryDoc = par("packetsHistoryDoc");
     ictHistoryDoc = par("ictHistoryDoc");
+    routeHistoryDoc = par("routeHistoryDoc");
 
     createdPackes = 0;
     deliveredPackets = 0;
@@ -24,6 +26,7 @@ void StatisticsCollector2::initialize()
 
     processPacketHistory();
     processICTHistory();
+    processRouteHistory();
 
     cout << "StatisticsCollector2: statistics collected" << endl;
 }
@@ -96,6 +99,11 @@ void StatisticsCollector2::processICTHistory() {
         ASSERT(ictValues[i] >= 0);
         ictPDF->collect(ictValues[i]);
     }
+}
+
+
+void StatisticsCollector2::processRouteHistory() {
+    //todo сделать чтение истории и формирование статистики
 }
 
 

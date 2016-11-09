@@ -7,13 +7,12 @@ void MobileHost::initialize()
     rd = check_and_cast<RoutingDaemon*>(getParentModule()->getSubmodule("routing"));
     rdGate = rd->gate("in");
 
-    nodeId   = par("NodeID_" );
-    timeslot = par("timeslot");
-    lambda   = par("lambda"  );
+    nodeId       = par("NodeID_" );
+    timeslot     = par("timeslot");
+    lambda       = par("lambda"  );
+    newPacketMsg = new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET);
 
     packetsForSending = new vector<Packet*>();
-
-    scheduleAt(simTime(), new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET));
 }
 
 
@@ -32,7 +31,9 @@ void MobileHost::handleMessage(cMessage *msg)
               Packet* packet = createPacket();
               registerPacket(packet);
               scheduleAt(simTime() + timeslot * exponential(1/lambda), msg);
-           }
+           } else {
+               ASSERT(false); //unreachable statement
+           };
            break;
        }
 
@@ -88,17 +89,18 @@ void MobileHost::startRoute()
     RegularRootLATP* regularMobility = getRegularRootLATPMobility();
     if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
 
-    //todo включение генерации пакетов
+    // включение генерации пакетов
+    scheduleAt(simTime(), newPacketMsg);
 }
 
 //todo найти где вызвать: определить, где как считать окончание маршрута в RegularRootLATP
 void MobileHost::endRoute()
 {
-    ASSERT(rd->getStartTimeOfCurrentDay() < simTime());
-    //сделать запись с длительностью маршрута в файл routeHystory.xml
     HistoryCollector::collectRouteInfo(nodeId, rd->getCurrentDay(), rd->getStartTimeOfCurrentDay(), simTime());
 
-    //todo отключение генерации пакетов
+    // отключение генерации пакетов
+    cMessage* canceled = cancelEvent(newPacketMsg);
+    ASSERT(canceled == newPacketMsg);
 }
 
 

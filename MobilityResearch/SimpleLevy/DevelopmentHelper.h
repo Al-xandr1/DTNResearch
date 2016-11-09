@@ -26,6 +26,7 @@ using namespace std;
 #define VAR_FILE       (char*)"variances.txt"         // имя файла с дисперсиями
 #define PACKETS_HIST   (char*)"packetsHistory.xml"    // имя файла для сохранения истории пакетов
 #define ICT_HIST       (char*)"ictHistory.xml"        // имя файла для сохранения истории ICT
+#define RT_HIST        (char*)"routeHistory.xml"      // имя файла для сохранения истории о пройденных маршрутах узлами
 #define STAT_FILE      (char*)"statistics.xml"        // имя файла для сохранения статистики
 
 // формат файлов

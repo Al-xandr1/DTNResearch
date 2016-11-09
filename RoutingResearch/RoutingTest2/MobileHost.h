@@ -24,6 +24,7 @@ private:
 
     double lambda;
     simtime_t timeslot;
+    cMessage* newPacketMsg;
 
     vector<Packet*>* packetsForSending;
 
