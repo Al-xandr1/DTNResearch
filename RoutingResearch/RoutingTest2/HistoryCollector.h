@@ -25,11 +25,14 @@ class HistoryCollector {
 private:
     static ofstream* packetsHistoryFile;  // файл с информацией о всех пакетах
     static ofstream* ictHistoryFile;      // файл с информацией о времени взаимодействия узлов
+    static ofstream* routeInfoHistoryFile;// файл с информацией о пройденных маршрутах узлов
     static RoutingDaemon* rd;
 
 public:
     static void initialize(RoutingDaemon* rd);
     static void finish();
+
+    static void collectRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute);
 
     static void collectDeliveredPacket(Packet* packet);
     static void collectRemovedPacket(Packet* packet);

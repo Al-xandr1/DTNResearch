@@ -22,8 +22,7 @@ void MobileHost::handleMessage(cMessage *msg)
     switch(msg->getKind()) {
 
        case DAY_START: {           // Сообщение о начале нового "дня"
-           RegularRootLATP* regularMobility = getRegularRootLATPMobility();
-           if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
+           startRoute();
            delete msg;
            break;
        }
@@ -81,6 +80,25 @@ void MobileHost::finish()
     }
 
     if (nodeId == rd->getNumHosts()-1) HistoryCollector::finish();
+}
+
+
+void MobileHost::startRoute()
+{
+    RegularRootLATP* regularMobility = getRegularRootLATPMobility();
+    if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
+
+    //todo включение генерации пакетов
+}
+
+//todo найти где вызвать: определить, где как считать окончание маршрута в RegularRootLATP
+void MobileHost::endRoute()
+{
+    ASSERT(rd->getStartTimeOfCurrentDay() < simTime());
+    //сделать запись с длительностью маршрута в файл routeHystory.xml
+    HistoryCollector::collectRouteInfo(nodeId, rd->getCurrentDay(), rd->getStartTimeOfCurrentDay(), simTime());
+
+    //todo отключение генерации пакетов
 }
 
 

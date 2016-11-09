@@ -2,6 +2,7 @@
 
 ofstream* HistoryCollector::packetsHistoryFile = NULL;   // файл с информацией о всех пакетах
 ofstream* HistoryCollector::ictHistoryFile = NULL;       // файл с информацией о времени взаимодействия узлов
+ofstream* HistoryCollector::routeInfoHistoryFile = NULL; // файл с информацией о времени взаимодействия узлов
 RoutingDaemon* HistoryCollector::rd = NULL;
 
 void HistoryCollector::initialize(RoutingDaemon* rd) {
@@ -15,6 +16,11 @@ void HistoryCollector::initialize(RoutingDaemon* rd) {
         ictHistoryFile = new ofstream(buildFullName(OUT_DIR, ICT_HIST));
         (*ictHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
         (*ictHistoryFile)<<"<ICT-HISTORY>"<< endl;
+    }
+    if (!routeInfoHistoryFile) {
+        routeInfoHistoryFile = new ofstream(buildFullName(OUT_DIR, RTE_HIST));
+        (*routeInfoHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
+        (*routeInfoHistoryFile)<<"<ROUTE-HISTORY>"<< endl;
     }
 }
 
@@ -34,6 +40,12 @@ void HistoryCollector::finish() {
     packetsHistoryFile = NULL;
     ictHistoryFile = NULL;
 }
+
+void collectRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute) {
+    //todo сделать сбор истории
+}
+
+//todo сделать обработку истории маршрутов
 
 void HistoryCollector::collectDeliveredPacket(Packet* packet)       {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
 void HistoryCollector::collectRemovedPacket(Packet* packet)         {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}

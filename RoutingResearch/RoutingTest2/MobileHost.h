@@ -37,6 +37,8 @@ public:
     RegularRootLATP*    getRegularRootLATPMobility() {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
     SelfSimLATP*        getSelfSimLATPMobility()     {return dynamic_cast<SelfSimLATP*>(getSubmodule("mobility"));}
 
+    void startRoute();
+    void endRoute();
     Packet* createPacket();
     int generateTarget();
     void registerPacket(Packet* packet);
