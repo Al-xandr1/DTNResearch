@@ -10,7 +10,7 @@ void MobileHost::initialize()
     nodeId       = par("NodeID_" );
     timeslot     = par("timeslot");
     lambda       = par("lambda"  );
-    newPacketMsg = new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET);
+    newPacketMsg = NULL;
 
     packetsForSending = new vector<Packet*>();
 }
@@ -80,27 +80,44 @@ void MobileHost::finish()
         //todo made erasing & packet deletion
     }
 
+    //так как при окончании маршрута сразу стартует новый, в конце его нужно принудительно закончить
+    endRoute();
     if (nodeId == rd->getNumHosts()-1) HistoryCollector::finish();
 }
 
 
+MovingMobilityBase* MobileHost::getMobility()                {return (MovingMobilityBase*)getSubmodule("mobility");}
+RegularRootLATP*    MobileHost::getRegularRootLATPMobility() {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
+SelfSimLATP*        MobileHost::getSelfSimLATPMobility()     {return dynamic_cast<SelfSimLATP*>(getSubmodule("mobility"));}
+
+
 void MobileHost::startRoute()
 {
+    ASSERT(!newPacketMsg);
+    ASSERT(rd->getCurrentDay() >= 1);
+
     RegularRootLATP* regularMobility = getRegularRootLATPMobility();
+    //для первого дня маршрут построен при инициализации мобильности
     if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
 
     // включение генерации пакетов
+    newPacketMsg = new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET);
     scheduleAt(simTime(), newPacketMsg);
 }
 
-//todo найти где вызвать: определить, где как считать окончание маршрута в RegularRootLATP
+
 void MobileHost::endRoute()
 {
-    HistoryCollector::collectRouteInfo(nodeId, rd->getCurrentDay(), rd->getStartTimeOfCurrentDay(), simTime());
+    ASSERT(newPacketMsg);
+    ASSERT(rd->getCurrentDay() >= 1);
+
+    HistoryCollector::insertRouteInfo(nodeId, rd->getCurrentDay(), rd->getStartTimeOfCurrentDay(), simTime());
 
     // отключение генерации пакетов
     cMessage* canceled = cancelEvent(newPacketMsg);
     ASSERT(canceled == newPacketMsg);
+    delete newPacketMsg;
+    newPacketMsg = NULL;
 }
 
 

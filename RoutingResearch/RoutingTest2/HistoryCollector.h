@@ -19,25 +19,43 @@
 #define DLM                  "  "     // DELIMETER - разделитель значений в xml тексе
 #define TAB                  "\t"     // TAB - табул€ци€ дл€ отсутпа в xml тексе
 
+
 class RoutingDaemon;
+
+
+struct RouteInfoForNode {
+public:
+    unsigned int day;
+    simtime_t startTimeRoute;
+    simtime_t endTimeRoute;
+
+    RouteInfoForNode(unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute) {
+        this->day = day;
+        this->startTimeRoute = startTimeRoute;
+        this->endTimeRoute = endTimeRoute;
+    }
+};
+
 
 class HistoryCollector {
 private:
     static ofstream* packetsHistoryFile;  // файл с информацией о всех пакетах
     static ofstream* ictHistoryFile;      // файл с информацией о времени взаимодействи€ узлов
-    static ofstream* routeHistoryFile;// файл с информацией о пройденных маршрутах узлов
+    static ofstream* routeHistoryFile;    // файл с информацией о пройденных маршрутах узлов
     static RoutingDaemon* rd;
+
+    // for route history: 1 dimension - nodeId, 2 - routes
+    static vector<vector<RouteInfoForNode*>*>* routeHistory;
 
 public:
     static void initialize(RoutingDaemon* rd);
     static void finish();
 
-    static void collectRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute);
-
     static void collectDeliveredPacket(Packet* packet);
     static void collectRemovedPacket(Packet* packet);
     static void collectICT(simtime_t ict);
 
+    static void insertRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute);
     static void insertRowCreated(Packet* packet, int nodeId, Coord position);
     static void insertRowRegistered(Packet* packet, int nodeId, Coord position);
     static void insertRowBeforeSend(Packet* packet, int nodeId, Coord position);
@@ -47,9 +65,9 @@ public:
     static void printHistory(Packet* packet);
 
 private:
-    static void write(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute, ostream* out);
-    static void collectPacket(ofstream* out, Packet* packet);
+    static void write(int nodeId, vector<RouteInfoForNode*>* routesForNode, ostream* out);
     static void insertRow(Packet* packet, char* event, int nodeId, Coord position);
+    static void collectPacket(ofstream* out, Packet* packet);
     static void write(Packet* packet, ostream* out);
     static void write(simtime_t ict, ostream* out);
 };

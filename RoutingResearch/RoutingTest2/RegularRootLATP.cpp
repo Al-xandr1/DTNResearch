@@ -194,7 +194,9 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
         // проверЯем, не дома ли мы уже
         if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
             currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
-            // TO DO послать сообщение, что день окончен!
+
+            //todo правильно закачивать маршрут тут? и только тут?? а если DAY_START и makeNewRoot случиться раньше???
+            (check_and_cast<MobileHost*>(getParentModule()))->endRoute();
             return false;
         }
 

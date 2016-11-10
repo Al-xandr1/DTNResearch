@@ -111,9 +111,18 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
 
         case DAY_START: {          // —ообщение о начале нового дн€.  опи€ сообщени€ рассылаетс€ всем узлам сети
             if ( msg->isSelfMessage() ) {
+                //синхронное оповещение об окончании дн€
+                if (getCurrentDay() >= 1)
+                    for (int i=0; i < RoutingDaemon::numHosts; i++)
+                        check_and_cast<MobileHost*>(getParentModule()->getSubmodule("host", i))->endRoute();
+
                 processNewDay();
-                for (int i=0; i < RoutingDaemon::numHosts; i++)
-                    sendDirect(new cMessage("Start of the Day", DAY_START), getParentModule()->getSubmodule("host", i)->gate("in"));
+
+                //"асинхронное" оповещение об окончании дн€
+                if (getCurrentDay() >= 1)
+                    for (int i=0; i < RoutingDaemon::numHosts; i++)
+                        sendDirect(new cMessage("Start of the Day", DAY_START), getParentModule()->getSubmodule("host", i)->gate("in"));
+
                 scheduleAt(simTime() + (simtime_t) dayDuration, msg);
             }
             break;

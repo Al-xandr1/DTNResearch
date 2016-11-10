@@ -16,6 +16,7 @@
 #include "HotSpotsCollection.h"
 #include "RootsCollection.h"
 #include "LevyHotSpotsLATP.h"
+#include "MobileHost.h"
 
 #include "Messages.h"
 
