@@ -131,10 +131,7 @@ void StatisticsCollector2::processRouteHistory() {
              const double dayEnd   = routeInfo[2];
 
              double duration = dayEnd - dayStart;
-
-             if (duration <= 0) cout<<"nodeId="<<nodeId<<", day="<<day<<", dayStart="<<dayStart<<", dayEnd="<< dayEnd<< endl;
              ASSERT(duration > 0);
-             cout<< duration << endl;
              routeDurationHist->collect(duration);
          }
     }
