@@ -20,12 +20,14 @@ private:
 
     cDoubleHistogram* lifeTimePDF;
     cDoubleHistogram* ictPDF;
+    vector<cDoubleHistogram*>* routesDurationPDFbyNode;
 
 protected:
     virtual void initialize();
     void processPacketHistory();
     void processICTHistory();
     void processRouteHistory();
+    void write(cDoubleHistogram* routesDurationPDF, ofstream* out);
     virtual void handleMessage(cMessage *msg) {};
     virtual void finish();
 };

@@ -16,11 +16,13 @@ void StatisticsCollector2::initialize()
     createdPackes = 0;
     deliveredPackets = 0;
 
-    lifeTimePDF = new cDoubleHistogram("lifeTimePDF", 300);
+    lifeTimePDF = new cDoubleHistogram("LIFE-TIME-HISTOGRAM", 300);
     lifeTimePDF->setRangeAutoUpper(0.0, 1000, 1.3);
 
-    ictPDF = new cDoubleHistogram("ictPDF", 300);
+    ictPDF = new cDoubleHistogram("ICT-HISTOGRAM", 300);
     ictPDF->setRangeAutoUpper(0.0, 300, 1.3);
+
+    routesDurationPDFbyNode = new vector<cDoubleHistogram*>();
 
     cout << "StatisticsCollector2: initialized" << endl;
 
@@ -103,7 +105,75 @@ void StatisticsCollector2::processICTHistory() {
 
 
 void StatisticsCollector2::processRouteHistory() {
-    //todo сделать чтение истории и формирование статистики
+    ASSERT(routesDurationPDFbyNode->size() == 0);
+    double maxDayDuration = atof(routeHistoryDoc->getAttribute("maxDayDuration"));
+
+    cXMLElementList nodes = routeHistoryDoc->getChildren();
+    for(vector<cXMLElement*>::iterator nodePT = nodes.begin(); nodePT != nodes.end(); nodePT++) {
+         cXMLElement* node = (*nodePT);
+         int nodeId = atoi(node->getAttribute((char*) "nodeId"));
+
+         cDoubleHistogram* routeDurationHist = new cDoubleHistogram("ROUTE-DURATION-HISTOGRAM", 10);
+         routeDurationHist->setRange(0.0, maxDayDuration + 1);
+         routesDurationPDFbyNode->push_back(routeDurationHist);
+
+         // ensures that nodeId match to the index of list
+         ASSERT((*routesDurationPDFbyNode)[nodeId] == routeDurationHist);
+
+         cXMLElementList rotes = node->getChildren();
+         for(vector<cXMLElement*>::iterator routePT = rotes.begin(); routePT != rotes.end(); routePT++) {
+             cXMLElement* route = (*routePT);
+
+             cStringTokenizer summaryTok(route->getNodeValue());
+             vector<double> routeInfo = summaryTok.asDoubleVector();
+             const double day      = routeInfo[0];
+             const double dayStart = routeInfo[1];
+             const double dayEnd   = routeInfo[2];
+
+             double duration = dayEnd - dayStart;
+
+             if (duration <= 0) cout<<"nodeId="<<nodeId<<", day="<<day<<", dayStart="<<dayStart<<", dayEnd="<< dayEnd<< endl;
+             ASSERT(duration > 0);
+             cout<< duration << endl;
+             routeDurationHist->collect(duration);
+         }
+    }
+}
+
+//todo сделать запись ВСЕХ гистограмм через этот метод
+void StatisticsCollector2::write(cDoubleHistogram* hist, ofstream* out) {
+    (*out) << "            <"<<hist->getName()<<"> "<< endl;
+    (*out) << "                <COLLECTED> " << hist->getCount() << " </COLLECTED>" << endl;
+    (*out) << "                <MIN> " << hist->getMin() << " </MIN>" << endl;
+    (*out) << "                <MEAN> " << hist->getMean() << " </MEAN>" << endl;
+    (*out) << "                <MAX> " << hist->getMax() << " </MAX>" << endl;
+    (*out) << "                <VARIANCE> " << hist->getVariance() << " </VARIANCE>" << endl;
+    (*out) << "                <OVERFLOW-CELL> " << hist->getOverflowCell() << " </OVERFLOW-CELL>" << endl;
+    (*out) << "                <UNDERFLOW-CELL> " << hist->getUnderflowCell() << " </UNDERFLOW-CELL>" << endl;
+
+    (*out) << "                <CELLS> " << hist->getNumCells() << " </CELLS>"<< endl;
+    (*out) << "                <CELL-WIDTH> " << hist->getCellSize() << " </CELL-WIDTH>"<< endl;
+    (*out) << "                <LEFT-BOUND> " << hist->getCellInfo(0).lower << " </LEFT-BOUND>" << endl;
+    (*out) << "                <RIGHT-BOUND> " << hist->getCellInfo(hist->getNumCells()-1).upper << " </RIGHT-BOUND>"<< endl;
+
+    (*out) << "                <PDF-VALS> " << endl;
+    for (int i = 0; i < hist->getNumCells(); i++) (*out) << hist->getCellPDF(i) << "  ";
+    (*out) << endl << "                </PDF-VALS> " << endl;
+    (*out) << "                <CDF-VALS> " << endl;
+    for (int i = 0; i < hist->getNumCells(); i++) {
+        double val = 0;
+        for (int j = 0; j <= i; j++) val += hist->getCellPDF(j);
+        (*out) << val << "  ";
+    }
+    (*out) << endl << "                </CDF-VALS> " << endl;
+    (*out) << "                <CCDF-VALS> " << endl;
+    for (int i = 0; i < hist->getNumCells(); i++) {
+        double val = 0;
+        for (int j = i+1; j < hist->getNumCells(); j++) val += hist->getCellPDF(j);
+        (*out) << val << "  ";
+    }
+    (*out) << endl << "                </CCDF-VALS> " << endl;
+    (*out) << "            </"<<hist->getName()<<"> " << endl;
 }
 
 
@@ -152,7 +222,7 @@ void StatisticsCollector2::finish() {
     out << "    </LIFE-TIME-HISTOGRAM> " << endl << endl;
 
 
-    out << "    <ICT-PDF-HISTOGRAM> " << endl;
+    out << "    <ICT-HISTOGRAM> " << endl;
     out << "        <COLLECTED> " << ictPDF->getCount() << " </COLLECTED>" << endl;
     out << "        <MIN> " << ictPDF->getMin() << " </MIN>" << endl;
     out << "        <MEAN> " << ictPDF->getMean() << " </MEAN>" << endl;
@@ -183,10 +253,22 @@ void StatisticsCollector2::finish() {
         out << val << "  ";
     }
     out << endl << "        </CCDF-VALS> " << endl;
-    out << "    </ICT-PDF-HISTOGRAM> " << endl;
+    out << "    </ICT-HISTOGRAM> " << endl << endl;
 
+    out << "    <NODES-INFO> " << endl;
+    for (unsigned int nodeId=0; nodeId<routesDurationPDFbyNode->size(); nodeId++) {
+        out << "        <NODE nodeId=\""<<nodeId<<"\"> " << endl;
+        write((*routesDurationPDFbyNode)[nodeId], &out);
+        out << "        </NODE> " << endl;
+    }
+    out << "    </NODES-INFO> " << endl;
 
     out << "</STATISTICS>" << endl;
+
+    delete ictPDF;
+    delete lifeTimePDF;
+    for (unsigned int i=0; i<routesDurationPDFbyNode->size(); i++) delete (*routesDurationPDFbyNode)[i];
+    delete routesDurationPDFbyNode;
 
     cout << "StatisticsCollector2 finished" << endl;
 }

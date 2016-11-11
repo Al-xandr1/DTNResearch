@@ -21,7 +21,7 @@ void HistoryCollector::initialize(RoutingDaemon* rd) {
     if (!routeHistoryFile) {
         routeHistoryFile = new ofstream(buildFullName(OUT_DIR, RT_HIST));
         (*routeHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
-        (*routeHistoryFile)<<"<ROUTE-HISTORY>"<< endl;
+        (*routeHistoryFile)<<"<ROUTE-HISTORY maxDayDuration=\""<<rd->getDayDuration()<<"\">"<< endl;
     }
     if (!routeHistory) {
         routeHistory = new vector<vector<RouteInfoForNode*>*>();
@@ -91,7 +91,7 @@ void HistoryCollector::printHistory(Packet* packet) {write(packet, &cout);}
 //-------------------------------------- private ------------------------------------------------
 
 void HistoryCollector::write(int nodeId, vector<RouteInfoForNode*>* routesForNode, ostream* out) {
-    (*out) <<TAB<<"<NODE nodeId="<<nodeId<<">"<< endl;
+    (*out) <<TAB<<"<NODE nodeId=\""<<nodeId<<"\">"<< endl;
     for (unsigned int i=0; i<routesForNode->size(); i++) {
         RouteInfoForNode* info = (*routesForNode)[i];
         (*out) <<TAB<<TAB<<"<ROUTE>"<<info->day<<DLM<<info->startTimeRoute<<DLM<<info->endTimeRoute<<"</ROUTE>"<<endl;

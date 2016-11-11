@@ -196,6 +196,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
             currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
 
             //todo правильно закачивать маршрут тут? и только тут?? а если DAY_START и makeNewRoot случиться раньше???
+            ASSERT(false); //todo for check reachability`REMOVE!!!
             (check_and_cast<MobileHost*>(getParentModule()))->endRoute();
             return false;
         }

@@ -33,7 +33,7 @@ function drawNodeHistograms(varargin)
         fileNames = [fileNames ; varargin(i)];
     end
     privateDrawHistograms(fileNames, "LIFE-TIME-HISTOGRAM", "Life time, simsecs");
-    privateDrawHistograms(fileNames, "ICT-PDF-HISTOGRAM", "ICT, simsecs");
+    privateDrawHistograms(fileNames, "ICT-HISTOGRAM", "ICT, simsecs");
 endfunction
 
 
