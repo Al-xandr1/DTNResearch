@@ -2,7 +2,9 @@
 
 ofstream* HistoryCollector::packetsHistoryFile = NULL;   // файл с информацией о всех пакетах
 ofstream* HistoryCollector::ictHistoryFile = NULL;       // файл с информацией о времени взаимодействия узлов
+ofstream* HistoryCollector::routeHistoryFile = NULL;     // файл с информацией о времени взаимодействия узлов
 RoutingDaemon* HistoryCollector::rd = NULL;
+vector<vector<RouteInfoForNode*>*>* HistoryCollector::routeHistory = NULL;
 
 void HistoryCollector::initialize(RoutingDaemon* rd) {
     HistoryCollector::rd = rd;
@@ -16,30 +18,66 @@ void HistoryCollector::initialize(RoutingDaemon* rd) {
         (*ictHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
         (*ictHistoryFile)<<"<ICT-HISTORY>"<< endl;
     }
+    if (!routeHistoryFile) {
+        routeHistoryFile = new ofstream(buildFullName(OUT_DIR, RT_HIST));
+        (*routeHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
+        (*routeHistoryFile)<<"<ROUTE-HISTORY maxDayDuration=\""<<rd->getDayDuration()<<"\">"<< endl;
+    }
+    if (!routeHistory) {
+        routeHistory = new vector<vector<RouteInfoForNode*>*>();
+        for (int i=0; i<rd->getNumHosts(); i++) {
+            routeHistory->push_back(new vector<RouteInfoForNode*>());
+        }
+    }
 }
 
 void HistoryCollector::finish() {
 //    ASSERT(packetsHistoryFile);
-//    ASSERT(ictHistoryFile);
-
     (*packetsHistoryFile)<<"</PACKETS-HISTORY>"<<endl;
-    (*ictHistoryFile)<<"</ICT-HISTORY>"<<endl;
-
     packetsHistoryFile->close();
-    ictHistoryFile->close();
-
-    delete ictHistoryFile;
     delete packetsHistoryFile;
-
     packetsHistoryFile = NULL;
+
+//    ASSERT(ictHistoryFile);
+    (*ictHistoryFile)<<"</ICT-HISTORY>"<<endl;
+    ictHistoryFile->close();
+    delete ictHistoryFile;
     ictHistoryFile = NULL;
+
+//    ASSERT(routeHistoryFile);
+//    ASSERT(routeHistory->size() == rd->getNumHosts());
+    for (unsigned int nodeId=0; nodeId<routeHistory->size(); nodeId++) {
+        write(nodeId, (*routeHistory)[nodeId], routeHistoryFile);
+    }
+
+    for (unsigned int nodeId=0; nodeId<routeHistory->size(); nodeId++) {
+        for (unsigned int i=0; i<(*routeHistory)[nodeId]->size(); i++) {
+            RouteInfoForNode* info = (*(*routeHistory)[nodeId])[i];
+            delete info;
+        }
+        delete (*routeHistory)[nodeId];
+    }
+    delete routeHistory;
+
+    (*routeHistoryFile)<<"</ROUTE-HISTORY>"<<endl;
+    routeHistoryFile->close();
+    delete routeHistoryFile;
+    routeHistoryFile = NULL;
 }
 
 void HistoryCollector::collectDeliveredPacket(Packet* packet)       {/*ASSERT(packetsHistoryFile);*/ collectPacket(packetsHistoryFile, packet);}
 void HistoryCollector::collectRemovedPacket(Packet* packet)         {/*ASSERT(packetsHistoryFile);*/ collectPacket(packetsHistoryFile, packet);}
 void HistoryCollector::collectICT(simtime_t ict)                    {/*ASSERT(ictHistoryFile); ASSERT(ict>0);*/ write(ict, ictHistoryFile);}
-void HistoryCollector::collectPacket(ofstream* out, Packet* packet) {/*ASSERT(out);*/ write(packet, out);}
 
+void HistoryCollector::insertRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute) {
+    if (rd && rd->canCollectStatistics()) {
+//        ASSERT(0 <= nodeId && nodeId <= rd->getNumHosts());
+//        ASSERT(startTimeRoute < endTimeRoute);
+
+        RouteInfoForNode* routeInfo = new RouteInfoForNode(day, startTimeRoute, endTimeRoute);
+        (*routeHistory)[nodeId]->push_back(routeInfo);
+    }
+}
 void HistoryCollector::insertRowCreated(Packet* packet, int nodeId, Coord position)     {insertRow(packet, (char*) CREATED_EVENT,     nodeId, position);}
 void HistoryCollector::insertRowRegistered(Packet* packet, int nodeId, Coord position)  {insertRow(packet, (char*) REGISTERED_EVENT,  nodeId, position);}
 void HistoryCollector::insertRowBeforeSend(Packet* packet, int nodeId, Coord position)  {insertRow(packet, (char*) BEFORE_SEND_EVENT, nodeId, position);}
@@ -48,8 +86,19 @@ void HistoryCollector::insertRowDelivered(Packet* packet, int nodeId, Coord posi
 
 void HistoryCollector::printHistory(Packet* packet) {write(packet, &cout);}
 
+
+//-------------------------------------- private ------------------------------------------------
+
+void HistoryCollector::write(int nodeId, vector<RouteInfoForNode*>* routesForNode, ostream* out) {
+    (*out) <<TAB<<"<NODE nodeId=\""<<nodeId<<"\">"<< endl;
+    for (unsigned int i=0; i<routesForNode->size(); i++) {
+        RouteInfoForNode* info = (*routesForNode)[i];
+        (*out) <<TAB<<TAB<<"<ROUTE>"<<info->day<<DLM<<info->startTimeRoute<<DLM<<info->endTimeRoute<<"</ROUTE>"<<endl;
+    }
+    (*out) <<TAB<<"</NODE>"<< endl;
+}
+
 void HistoryCollector::insertRow(Packet* packet, char* event, int nodeId, Coord position) {
-    // означает, если функция canCollectStatistics не NULL и вернула true
     if (rd && rd->canCollectStatistics()) {
         packet->eventHistory.push_back(event);
         packet->IDhistory.push_back(nodeId);
@@ -61,8 +110,9 @@ void HistoryCollector::insertRow(Packet* packet, char* event, int nodeId, Coord 
     }
 }
 
+void HistoryCollector::collectPacket(ofstream* out, Packet* packet) {/*ASSERT(out);*/ write(packet, out);}
+
 void HistoryCollector::write(Packet* packet, ostream* out) {
-    // означает, если функция canCollectStatistics не NULL и вернула true
     if (rd && rd->canCollectStatistics()) {
         (*out) <<TAB<<"<PACKET>" << endl;
         (*out) <<TAB<<TAB<<"<SUMMARY>"<<packet->getSourceId()<<DLM<<packet->getDestinationId()
@@ -80,7 +130,6 @@ void HistoryCollector::write(Packet* packet, ostream* out) {
 }
 
 void HistoryCollector::write(simtime_t ict, ostream* out) {
-    // означает, если функция canCollectStatistics не NULL и вернула true
     if (rd && rd->canCollectStatistics()) {
         (*out) <<TAB<<ict<< endl;
     }

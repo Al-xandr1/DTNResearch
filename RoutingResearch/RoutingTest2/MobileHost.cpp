@@ -7,13 +7,12 @@ void MobileHost::initialize()
     rd = check_and_cast<RoutingDaemon*>(getParentModule()->getSubmodule("routing"));
     rdGate = rd->gate("in");
 
-    nodeId   = par("NodeID_" );
-    timeslot = par("timeslot");
-    lambda   = par("lambda"  );
+    nodeId       = par("NodeID_" );
+    timeslot     = par("timeslot");
+    lambda       = par("lambda"  );
+    newPacketMsg = NULL;
 
     packetsForSending = new vector<Packet*>();
-
-    scheduleAt(simTime(), new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET));
 }
 
 
@@ -22,8 +21,7 @@ void MobileHost::handleMessage(cMessage *msg)
     switch(msg->getKind()) {
 
        case DAY_START: {           // Сообщение о начале нового "дня"
-           RegularRootLATP* regularMobility = getRegularRootLATPMobility();
-           if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
+           startRoute();
            delete msg;
            break;
        }
@@ -33,7 +31,9 @@ void MobileHost::handleMessage(cMessage *msg)
               Packet* packet = createPacket();
               registerPacket(packet);
               scheduleAt(simTime() + timeslot * exponential(1/lambda), msg);
-           }
+           } else {
+               ASSERT(false); //unreachable statement
+           };
            break;
        }
 
@@ -80,7 +80,44 @@ void MobileHost::finish()
         //todo made erasing & packet deletion
     }
 
+    //так как при окончании маршрута сразу стартует новый, в конце его нужно принудительно закончить
+    endRoute();
     if (nodeId == rd->getNumHosts()-1) HistoryCollector::finish();
+}
+
+
+MovingMobilityBase* MobileHost::getMobility()                {return (MovingMobilityBase*)getSubmodule("mobility");}
+RegularRootLATP*    MobileHost::getRegularRootLATPMobility() {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
+SelfSimLATP*        MobileHost::getSelfSimLATPMobility()     {return dynamic_cast<SelfSimLATP*>(getSubmodule("mobility"));}
+
+
+void MobileHost::startRoute()
+{
+//    ASSERT(!newPacketMsg);
+//    ASSERT(rd->getCurrentDay() >= 1);
+
+    RegularRootLATP* regularMobility = getRegularRootLATPMobility();
+    //для первого дня маршрут построен при инициализации мобильности
+    if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
+
+    // включение генерации пакетов
+    newPacketMsg = new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET);
+    scheduleAt(simTime(), newPacketMsg);
+}
+
+
+void MobileHost::endRoute()
+{
+//    ASSERT(newPacketMsg);
+//    ASSERT(rd->getCurrentDay() >= 1);
+
+    HistoryCollector::insertRouteInfo(nodeId, rd->getCurrentDay(), rd->getStartTimeOfCurrentDay(), simTime());
+
+    // отключение генерации пакетов
+    cMessage* canceled = cancelEvent(newPacketMsg);
+//    ASSERT(canceled == newPacketMsg);
+    delete newPacketMsg;
+    newPacketMsg = NULL;
 }
 
 

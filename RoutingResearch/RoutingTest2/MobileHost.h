@@ -13,6 +13,7 @@
 using namespace std;
 
 class RoutingDaemon;
+class RegularRootLATP;
 
 class MobileHost : public cSimpleModule
 {
@@ -24,6 +25,7 @@ private:
 
     double lambda;
     simtime_t timeslot;
+    cMessage* newPacketMsg;
 
     vector<Packet*>* packetsForSending;
 
@@ -33,10 +35,12 @@ public:
     int getNodeId() {return nodeId;};
     vector<Packet*>* getPacketsForSending() {return packetsForSending;};
 
-    MovingMobilityBase* getMobility()                {return (MovingMobilityBase*)getSubmodule("mobility");}
-    RegularRootLATP*    getRegularRootLATPMobility() {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
-    SelfSimLATP*        getSelfSimLATPMobility()     {return dynamic_cast<SelfSimLATP*>(getSubmodule("mobility"));}
+    MovingMobilityBase* getMobility();
+    RegularRootLATP*    getRegularRootLATPMobility();
+    SelfSimLATP*        getSelfSimLATPMobility();
 
+    void startRoute();
+    void endRoute();
     Packet* createPacket();
     int generateTarget();
     void registerPacket(Packet* packet);
