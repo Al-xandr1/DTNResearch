@@ -317,4 +317,6 @@ void RegularRootLATP::makeNewRoot()
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
     //todo стоит ли менять время прибытия?
+
+    emitMobilityStateChangedSignal();
 }
