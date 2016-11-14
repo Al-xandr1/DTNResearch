@@ -81,7 +81,7 @@ void MobileHost::finish()
     }
 
     //так как при окончании маршрута сразу стартует новый, в конце его нужно принудительно закончить
-    endRoute();
+    if (newPacketMsg) endRoute();
     if (nodeId == rd->getNumHosts()-1) HistoryCollector::finish();
 }
 

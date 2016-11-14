@@ -82,7 +82,7 @@ void RegularRootLATP::makeLocalProbMatrix(double powA)
             for(unsigned int j=0; j<currentRoot->size(); j++) {
                 unsigned int ii=currentRootSnumber->at(i);
                 unsigned int jj=currentRootSnumber->at(j);
-                if(  (i!=j)  && ((currentRoot->at(j))->counter > 0)  )
+                if(  (i!=j)  && (currentRootCounter->at(j) > 0)  )
                     h += LocalProbMatrix[i][j] = pow(1/hsd->getDistance(ii,jj), powA);
                 else LocalProbMatrix[i][j]=0;
             }
@@ -144,22 +144,22 @@ void RegularRootLATP::initialize(int stage) {
 
 bool RegularRootLATP::findNextHotSpot()
 {
-    if ( (currentRoot->at(curRootIndex))->counter>0 ) (currentRoot->at(curRootIndex))->counter-=1;  // покидая локацию, уменьшаем её счётчик посещений
+    if (currentRootCounter->at(curRootIndex) > 0) (*currentRootCounter)[curRootIndex]-=1;  // покидая локацию, уменьшаем её счётчик посещений
 
     unsigned int hh=0, ii;                               // находим сумму всех счётчиков посещений на маршруте,
     for(unsigned int i=0; i<currentRoot->size(); i++)    // чтобы определить, когда конец маршрута
-        if ( (currentRoot->at(i))->counter > 0) { ii=i; hh+=(currentRoot->at(i))->counter; }
+        if (currentRootCounter->at(i) > 0) { ii=i; hh+=currentRootCounter->at(i); }
 
     if( hh == 0 ) return false;                          // маршрут кончился
-    if( hh == (currentRoot->at(ii))->counter ) {         // осталась одна локация (может быть, с несколькими посещениями)
+    if( hh == currentRootCounter->at(ii) ) {              // осталась одна локация (может быть, с несколькими посещениями)
         curRootIndex = ii;
-        (currentRoot->at(curRootIndex))->counter = 1;    // если посещений несколько, заменяем одним
+        (*currentRootCounter)[curRootIndex]=1;           // если посещений несколько, заменяем одним
         LevyHotSpotsLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
         hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
         return true;
     }
 
-    if((currentRoot->at(curRootIndex))->counter == 0) {  // пересчитываем матрицу вероятностей переходов, если счётчик посещений обнулился
+    if(currentRootCounter->at(curRootIndex) == 0) {       // пересчитываем матрицу вероятностей переходов, если счётчик посещений обнулился
         for(unsigned int i=0; i<currentRoot->size(); i++) {
             LocalProbMatrix[i][curRootIndex]=0;
             double h=0;
@@ -317,4 +317,6 @@ void RegularRootLATP::makeNewRoot()
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
     //todo стоит ли мен€ть врем€ прибыти€?
+
+    emitMobilityStateChangedSignal();
 }
