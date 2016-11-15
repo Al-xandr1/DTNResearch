@@ -21,6 +21,20 @@ endfunction
 
 //-------------------- Функции для Статистики Маршрутизации --------------------
 
+//Рисование всех гистрограмм из одного файла статистики маршрутизации, взятых из папки folder
+function drawNodeHistogramsFolder(folder)
+    SAVE_PATH = PATH;
+    
+    if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
+    statisticFiles = getFiles(PATH, "*.xml");
+    
+    privateDrawHistograms(statisticFiles, "LIFE-TIME-HISTOGRAM", "Life time, simsecs");
+    privateDrawHistograms(statisticFiles, "ICT-HISTOGRAM", "ICT, simsecs");
+    
+    PATH = SAVE_PATH;
+endfunction
+
+
 //Рисование всех гистрограмм из одного файла статистики маршрутизации
 function drawNodeHistograms(varargin)
     [lhs, rhs] = argn();// rhs - количество входных параметров
@@ -37,8 +51,22 @@ function drawNodeHistograms(varargin)
 endfunction
 
 
+//Вывод в таблицу значений из файлов статистики маршрутизации, взятых из папки folder
+function printNodeValuesFolder(folder)
+    SAVE_PATH = PATH;
+    
+    if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
+    statisticFiles = getFiles(PATH, "*.xml");
+    
+    tags = ["DELIVERED-PACKETS" ; "LIFE-TIME-HISTOGRAM/MEAN"]
+    privatePrintTable(statisticFiles, tags);
+    
+    PATH = SAVE_PATH;
+endfunction
+
+
 //Вывод в таблицу значений из файлов статистики маршрутизации
-function drawNodeValues(varargin)
+function printNodeValues(varargin)
     [lhs, rhs] = argn();// rhs - количество входных параметров
     if (rhs < 1) then
         error(msprintf("drawNodeValues: Ожидалось один или более параметров (имён файлов)"));
@@ -48,8 +76,9 @@ function drawNodeValues(varargin)
     for i = 1 : rhs
         fileNames = [fileNames ; varargin(i)];
     end
+    
     tags = ["DELIVERED-PACKETS" ; "LIFE-TIME-HISTOGRAM/MEAN"]
-    privateDrawTable(fileNames, tags);
+    privatePrintTable(fileNames, tags);
 endfunction
 
 
@@ -136,7 +165,7 @@ endfunction
 
 
 //Вывод в таблицу указанного вектора значений из вектора файлов статистики
-function privateDrawTable(filenames, tags)
+function privatePrintTable(filenames, tags)
     fileCount = size(filenames, 1);
     tagCount = size(tags, 1);
     
