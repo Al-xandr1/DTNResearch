@@ -81,7 +81,7 @@ void MobileHost::finish()
     }
 
     //так как при окончании маршрута сразу стартует новый, в конце его нужно принудительно закончить
-    if (newPacketMsg) endRoute();
+    ensureEndRoute();
     if (nodeId == rd->getNumHosts()-1) HistoryCollector::finish();
 }
 
@@ -103,6 +103,11 @@ void MobileHost::startRoute()
     // включение генерации пакетов
     newPacketMsg = new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET);
     scheduleAt(simTime(), newPacketMsg);
+}
+
+
+void MobileHost::ensureEndRoute() {
+    if (newPacketMsg) endRoute();
 }
 
 
