@@ -215,11 +215,8 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
 
 
 bool RegularRootLATP::isRootFinished() {
-    //todo проверить правильность определения конца маршрута
     ASSERT(currentRoot->size() > 1);
     ASSERT(homeHS == currentRoot->at(0));
-    //if (currentRootCounter->at(0) < 1) cout<<"!!! currentRootCounter->at(0)=" << currentRootCounter->at(0) << endl;
-    //ASSERT(currentRootCounter->at(0) >= 1); тут падает ошибка...
     bool finished = true;
     for (unsigned int i=1; i<currentRootCounter->size(); i++) {
         finished &= (currentRootCounter->at(i) == 0);
