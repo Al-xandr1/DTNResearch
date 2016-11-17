@@ -56,7 +56,9 @@ class RegularRootLATP : public LevyHotSpotsLATP
     void printCurrentRoot();
     void makeLocalProbMatrix(double powA);
     void deleteLocalProbMatrix();
-    bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+    virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+
+    bool isRootFinished();
 
     void makeNewRoot();
 };

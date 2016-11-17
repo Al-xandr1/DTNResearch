@@ -114,7 +114,7 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
                 //синхронное оповещение об окончании дня
                 if (getCurrentDay() >= 1)
                     for (int i=0; i < RoutingDaemon::numHosts; i++)
-                        check_and_cast<MobileHost*>(getParentModule()->getSubmodule("host", i))->endRoute();
+                        check_and_cast<MobileHost*>(getParentModule()->getSubmodule("host", i))->ensureEndRoute();
 
                 processNewDay();
 

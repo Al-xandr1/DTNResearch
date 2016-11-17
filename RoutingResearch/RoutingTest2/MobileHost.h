@@ -40,6 +40,7 @@ public:
     SelfSimLATP*        getSelfSimLATPMobility();
 
     void startRoute();
+    void ensureEndRoute();
     void endRoute();
     Packet* createPacket();
     int generateTarget();

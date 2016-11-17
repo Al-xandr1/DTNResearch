@@ -195,8 +195,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
         if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
             currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
 
-            //todo правильно закачивать маршрут тут? и только тут?? а если DAY_START и makeNewRoot случиться раньше???
-            ASSERT(false); //todo for check reachability`REMOVE!!!
+            ASSERT(isRootFinished());
             (check_and_cast<MobileHost*>(getParentModule()))->endRoute();
             return false;
         }
@@ -212,6 +211,25 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
         nextChange = simTime() + travelTime;
         return true;
     }
+}
+
+
+bool RegularRootLATP::isRootFinished() {
+    //todo проверить правильность определения конца маршрута
+    ASSERT(currentRoot->size() > 1);
+    ASSERT(homeHS == currentRoot->at(0));
+    //if (currentRootCounter->at(0) < 1) cout<<"!!! currentRootCounter->at(0)=" << currentRootCounter->at(0) << endl;
+    //ASSERT(currentRootCounter->at(0) >= 1); тут падает ошибка...
+    bool finished = true;
+    for (unsigned int i=1; i<currentRootCounter->size(); i++) {
+        finished &= (currentRootCounter->at(i) == 0);
+    }
+    if (finished) {
+        cout<<"NodeId="<<NodeID<<", size="<<currentRoot->size()<<": ";
+        for (unsigned int i=0; i<currentRootCounter->size(); i++) cout<<currentRootCounter->at(i)<<", ";
+        cout << endl;
+    }
+    return finished;
 }
 
 
