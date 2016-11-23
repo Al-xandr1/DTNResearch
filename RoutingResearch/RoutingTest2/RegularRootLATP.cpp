@@ -187,7 +187,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
 {
     cout <<"RegularRootLATP::generateNextPosition: NodeID="<<NodeID<<endl;
     unsigned int curDay = check_and_cast<RoutingDaemon*>(getParentModule()->getParentModule()->getSubmodule("routing"))->getCurrentDay();
-    cout <<"RegularRootLATP::generateNextPosition: curDay=" <<curDay<<endl;
+    cout <<"RegularRootLATP::generateNextPosition: dayForCallerFunction="<<day<<", curDay="<<curDay<<endl;
     if (curDay>1) ASSERT(false);
 
     bool flag=LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange, curDay);
