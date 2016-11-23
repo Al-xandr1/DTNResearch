@@ -140,7 +140,7 @@ void LevyHotSpotsLATP::setTargetPosition() {
         nextChange = simTime() + waitTime;
     } else {
         collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
-        movementsFinished = !generateNextPosition(targetPosition, nextChange);
+        movementsFinished = !generateNextPosition(targetPosition, nextChange, -1);
 
         if (movementsFinished) {nextChange = -1; return;};
         ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
@@ -148,7 +148,9 @@ void LevyHotSpotsLATP::setTargetPosition() {
     isPause = !isPause;
 }
 
-bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
+bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, int day) {
+
+    if (day>1) ASSERT(false);
     
     // генерируем прыжок Леви как обычно
     angle = uniform(0, 2 * PI);
@@ -177,7 +179,7 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
                 nextChange = simTime() + travelTime;
                 return true;
 
-            } else return false;  // не нашли - останавливаемся
+            } else {if (day>1) ASSERT(false); return false;}  // не нашли - останавливаемся
         }
 
         // для ускорения вычислений определяем вспомогательные переменные
@@ -214,7 +216,7 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
                 nextChange = simTime() + travelTime;
                 return true;
 
-            } else return false;  // не нашли - останавливаемся
+            } else {if (day>1) ASSERT(false); return false;}  // не нашли - останавливаемся
         }
     }
 

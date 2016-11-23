@@ -183,18 +183,27 @@ bool RegularRootLATP::findNextHotSpot()
 }
 
 
-bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange)
+bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, int day)
 {
-    bool flag=LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange);
+    cout <<"RegularRootLATP::generateNextPosition: NodeID="<<NodeID<<endl;
+    unsigned int curDay = check_and_cast<RoutingDaemon*>(getParentModule()->getParentModule()->getSubmodule("routing"))->getCurrentDay();
+    cout <<"RegularRootLATP::generateNextPosition: curDay=" <<curDay<<endl;
+    if (curDay>1) ASSERT(false);
+
+    bool flag=LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange, curDay);
     if (flag) return true;   // идём по маршруту
     else {                   // маршрут кончился, идём домой
         currentHSindex=0;
         LevyHotSpotsLATP::setCurrentHSbordersWith( homeHS );
 
+        ASSERT(curDay == 1);//todo
+
         // проверяем, не дома ли мы уже
         if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
             currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
 
+
+            ASSERT(curDay == 1);//todo
             ASSERT(isRootFinished());
             (check_and_cast<MobileHost*>(getParentModule()))->endRoute();
             return false;
