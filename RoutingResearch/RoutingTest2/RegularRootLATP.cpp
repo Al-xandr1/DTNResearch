@@ -142,6 +142,23 @@ void RegularRootLATP::initialize(int stage) {
 }
 
 
+void RegularRootLATP::handleMessage(cMessage * message)
+{
+    if (message->isSelfMessage())
+        MobilityBase::handleMessage(message);
+    else
+        switch (message->getKind()) {
+            case MOBILITY_START:{
+                if (nextChange == -1) nextChange = simTime();
+                MovingMobilityBase::scheduleUpdate();
+                break;
+            }
+            default:
+                ASSERT(false); //unreacheble statement
+        }
+}
+
+
 bool RegularRootLATP::findNextHotSpot()
 {
     if (currentRootCounter->at(curRootIndex) > 0) (*currentRootCounter)[curRootIndex]-=1;  // покидая локацию, уменьшаем её счётчик посещений

@@ -99,6 +99,7 @@ void MobileHost::startRoute()
     RegularRootLATP* regularMobility = getRegularRootLATPMobility();
     //для первого дня маршрут построен при инициализации мобильности
     if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
+    sendDirect(new cMessage("Start mobility", MOBILITY_START), getSubmodule("mobility")->gate("in"));
 
     // включение генерации пакетов
     newPacketMsg = new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET);

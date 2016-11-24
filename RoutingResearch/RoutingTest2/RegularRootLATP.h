@@ -46,6 +46,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
     double**  LocalProbMatrix;
 
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
+    virtual void handleMessage(cMessage * message);
     virtual bool findNextHotSpot();
     virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange, int day);
 
