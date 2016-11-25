@@ -142,21 +142,26 @@ void RegularRootLATP::initialize(int stage) {
 }
 
 
-void RegularRootLATP::handleMessage(cMessage * message)
-{
-    if (message->isSelfMessage())
-        MobilityBase::handleMessage(message);
-    else
-        switch (message->getKind()) {
-            case MOBILITY_START:{
-                if (nextChange == -1) nextChange = simTime();
-                MovingMobilityBase::scheduleUpdate();
-                break;
-            }
-            default:
-                ASSERT(false); //unreacheble statement
-        }
+void RegularRootLATP::setTargetPosition() {
+    LevyHotSpotsLATP::setTargetPosition();
 }
+
+
+//void RegularRootLATP::handleMessage(cMessage * message)
+//{
+//    if (message->isSelfMessage())
+//        MobilityBase::handleMessage(message);
+//    else
+//        switch (message->getKind()) {
+//            case MOBILITY_START:{
+//                if (nextChange == -1) nextChange = simTime();
+//                MovingMobilityBase::scheduleUpdate();
+//                break;
+//            }
+//            default:
+//                ASSERT(false); //unreacheble statement
+//        }
+//}
 
 
 bool RegularRootLATP::findNextHotSpot()
