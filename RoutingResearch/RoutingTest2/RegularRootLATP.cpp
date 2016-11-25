@@ -142,26 +142,35 @@ void RegularRootLATP::initialize(int stage) {
 }
 
 
-void RegularRootLATP::setTargetPosition() {
-    LevyHotSpotsLATP::setTargetPosition();
+void RegularRootLATP::handleMessage(cMessage * message)
+{
+    if (message->isSelfMessage())
+        MobilityBase::handleMessage(message);
+    else
+        switch (message->getKind()) {
+            // используетс€ дл€ "пинка" дл€ мобильности, чтобы снова начать ходить
+            case MOBILITY_START:{
+                nextChange = simTime() + 1;
+                MovingMobilityBase::scheduleUpdate();
+                emitMobilityStateChangedSignal();
+                ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+                break;
+            }
+            default:
+                ASSERT(false); //unreacheble statement
+        }
 }
 
 
-//void RegularRootLATP::handleMessage(cMessage * message)
-//{
-//    if (message->isSelfMessage())
-//        MobilityBase::handleMessage(message);
-//    else
-//        switch (message->getKind()) {
-//            case MOBILITY_START:{
-//                if (nextChange == -1) nextChange = simTime();
-//                MovingMobilityBase::scheduleUpdate();
-//                break;
-//            }
-//            default:
-//                ASSERT(false); //unreacheble statement
-//        }
-//}
+void RegularRootLATP::setTargetPosition() {
+    LevyHotSpotsLATP::setTargetPosition();
+
+    if (movementsFinished) {
+        // очищают статус и планируем в бесконечность - чтобы приостановить, но не завершить
+        movementsFinished = false;
+        nextChange = MAXTIME;
+    }
+}
 
 
 bool RegularRootLATP::findNextHotSpot()
@@ -205,27 +214,18 @@ bool RegularRootLATP::findNextHotSpot()
 }
 
 
-bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, int day)
+bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange)
 {
-    cout <<"RegularRootLATP::generateNextPosition: NodeID="<<NodeID<<endl;
-    unsigned int curDay = check_and_cast<RoutingDaemon*>(getParentModule()->getParentModule()->getSubmodule("routing"))->getCurrentDay();
-    cout <<"RegularRootLATP::generateNextPosition: dayForCallerFunction="<<day<<", curDay="<<curDay<<endl;
-    if (curDay>1) ASSERT(false);
-
-    bool flag=LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange, curDay);
+    bool flag=LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange);
     if (flag) return true;   // идём по маршруту
     else {                   // маршрут кончился, идём домой
         currentHSindex=0;
         LevyHotSpotsLATP::setCurrentHSbordersWith( homeHS );
 
-        ASSERT(curDay == 1);//todo
-
         // проверяем, не дома ли мы уже
         if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
             currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
 
-
-            ASSERT(curDay == 1);//todo
             ASSERT(isRootFinished());
             (check_and_cast<MobileHost*>(getParentModule()))->endRoute();
             return false;
@@ -362,7 +362,4 @@ void RegularRootLATP::makeNewRoot()
 
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
-    //todo стоит ли мен€ть врем€ прибыти€?
-
-    emitMobilityStateChangedSignal();
 }
