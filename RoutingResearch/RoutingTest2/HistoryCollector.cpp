@@ -67,7 +67,7 @@ void HistoryCollector::finish() {
 
 void HistoryCollector::collectDeliveredPacket(Packet* packet)       {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
 void HistoryCollector::collectRemovedPacket(Packet* packet)         {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
-void HistoryCollector::collectICT(simtime_t ict)                    {ASSERT(ictHistoryFile); ASSERT(ict>0); write(ict, ictHistoryFile);}
+void HistoryCollector::collectICT(simtime_t ict)                    {ASSERT(ictHistoryFile); ASSERT(ict>=0); if (ict>0) write(ict, ictHistoryFile);}
 
 void HistoryCollector::insertRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute) {
     if (rd && rd->canCollectStatistics()) {
