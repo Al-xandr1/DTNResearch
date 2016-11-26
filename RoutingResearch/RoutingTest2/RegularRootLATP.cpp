@@ -142,6 +142,37 @@ void RegularRootLATP::initialize(int stage) {
 }
 
 
+void RegularRootLATP::handleMessage(cMessage * message)
+{
+    if (message->isSelfMessage())
+        MobilityBase::handleMessage(message);
+    else
+        switch (message->getKind()) {
+            // используется для "пинка" для мобильности, чтобы снова начать ходить
+            case MOBILITY_START:{
+                nextChange = simTime();
+                MovingMobilityBase::scheduleUpdate();
+                emitMobilityStateChangedSignal();
+//                ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+                break;
+            }
+            default:
+                ASSERT(false); //unreacheble statement
+        }
+}
+
+
+void RegularRootLATP::setTargetPosition() {
+    LevyHotSpotsLATP::setTargetPosition();
+
+    if (movementsFinished) {
+        // очищают статус и планируем в бесконечность - чтобы приостановить, но не завершить
+        movementsFinished = false;
+        nextChange = MAXTIME;
+    }
+}
+
+
 bool RegularRootLATP::findNextHotSpot()
 {
     if (currentRootCounter->at(curRootIndex) > 0) (*currentRootCounter)[curRootIndex]-=1;  // покидаЯ локацию, уменьшаем еЮ счЮтчик посещений
@@ -331,7 +362,4 @@ void RegularRootLATP::makeNewRoot()
 
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
-    //todo стоит ли менять время прибытия?
-
-    emitMobilityStateChangedSignal();
 }

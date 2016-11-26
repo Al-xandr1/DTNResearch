@@ -16,6 +16,7 @@ using namespace std;
 #define PACKET_RECEIVED      6  // сообщение о полученном пакете
 #define ICT_INFO             7  // сообщение с информацией о ICT
 #define DAY_START            8  // сообщение о начале нового "дня" моделирования
+#define MOBILITY_START       9  // сообщение о начале моделирования перемещений
 
 
 // Пакет для передачи
