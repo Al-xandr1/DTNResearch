@@ -150,7 +150,7 @@ void RegularRootLATP::handleMessage(cMessage * message)
         switch (message->getKind()) {
             // используется для "пинка" для мобильности, чтобы снова начать ходить
             case MOBILITY_START:{
-                nextChange = simTime() + 1;
+                nextChange = simTime();
                 MovingMobilityBase::scheduleUpdate();
                 emitMobilityStateChangedSignal();
                 ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
