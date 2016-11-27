@@ -150,6 +150,13 @@ void LevyHotSpotsLATP::setTargetPosition() {
 
 bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
     
+    //todo проверяем счётчик и если он на нуле - выбираем следующую локацию
+    //ASSERT(counter >=0);
+    //if (counter == 0) {
+    //    if (findNextHotSpotAndTargetPosition()) return true;
+    //    else return false; // не нашли - останавливаемся
+    //}
+
     // генерируем прыжок Леви как обычно
     angle = uniform(0, 2 * PI);
     distance = jump->get_Levi_rv();
@@ -166,18 +173,8 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
     // если вышли за пределы локации
     if (currentHSMin.x >= targetPosition.x || targetPosition.x >= currentHSMax.x || currentHSMin.y >= targetPosition.y || targetPosition.y >= currentHSMax.y) {
         if (isHotSpotEmpty()) { // если локация точечная
-            if (findNextHotSpot()) {   // нашли следующую локацию - идём в её случайную точку
-                targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
-                targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
-
-                distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
-                ASSERT(distance > 0);
-                speed = kForSpeed * pow(distance, 1 - roForSpeed);
-                travelTime = distance / speed;
-                nextChange = simTime() + travelTime;
-                return true;
-
-            } else return false;  // не нашли - останавливаемся
+            if (findNextHotSpotAndTargetPosition()) return true;
+            else return false; // не нашли - останавливаемся
         }
 
         // для ускорения вычислений определяем вспомогательные переменные
@@ -200,26 +197,34 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
             delta.x = Xdir * distance/dir;
             delta.y = Ydir * distance/dir;
             targetPosition = lastPosition + delta;
-
             return true;
+
         } else { // не можем - надо переходить в другую локацию
-            if (findNextHotSpot()) {   // нашли следующую локацию - идём в её случайную точку
-                targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
-                targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
-
-                distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
-                ASSERT(distance > 0);
-                speed = kForSpeed * pow(distance, 1 - roForSpeed);
-                travelTime = distance / speed;
-                nextChange = simTime() + travelTime;
-                return true;
-
-            } else return false;  // не нашли - останавливаемся
+            if (findNextHotSpotAndTargetPosition()) return true;
+            else return false; // не нашли - останавливаемся
         }
     }
 
     return true;
 }
+
+
+bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
+    if (findNextHotSpot()) {   // нашли следующую локацию - идём в её случайную точку
+        targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
+        targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+
+        distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
+        ASSERT(distance > 0);
+        speed = kForSpeed * pow(distance, 1 - roForSpeed);
+        travelTime = distance / speed;
+        nextChange = simTime() + travelTime;
+        return true;
+    }
+
+    return false;
+}
+
 
 bool LevyHotSpotsLATP::findNextHotSpot()
 {
