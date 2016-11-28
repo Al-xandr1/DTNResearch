@@ -164,7 +164,7 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
     nextChange = simTime() + travelTime;
 
     // если вышли за пределы локации
-    if (currentHSMin.x >= targetPosition.x || targetPosition.x >= currentHSMax.x || currentHSMin.y >= targetPosition.y || targetPosition.y >= currentHSMax.y) {
+    if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) {
         if (isHotSpotEmpty()) { // если локация точечная
             if (findNextHotSpot()) {   // нашли следующую локацию - идём в её случайную точку
                 targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
@@ -319,13 +319,12 @@ void LevyHotSpotsLATP::saveStatistics() {
 
 bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
     if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) return true;
-    cout << "------------- ERROR! -------------" << endl;
-    log();
+    //log();
     return false;
 }
 
 void LevyHotSpotsLATP::log() {  // Отладочная функция
-    cout << "-------------------------------------------------------------" << endl;
+    cout << "----------------------------- LOG --------------------------------" << endl;
     cout << "step = " << step << ", isPause = " << isPause << endl;
     cout << "simTime() = " << simTime() << endl;
     cout << "lastPosition = " << lastPosition << endl;
