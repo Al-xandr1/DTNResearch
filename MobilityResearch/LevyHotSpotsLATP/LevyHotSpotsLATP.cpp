@@ -155,7 +155,7 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
     if (currentHSWaypointNum == 0) {
         //если счётчик равен 0, то пора менять локацию
         if (findNextHotSpotAndTargetPosition()) return true;
-        else return false; // не нашли - останавливаемся
+        else {ASSERT(false); return false;} //todo  // не нашли - останавливаемся
     }
 
     while (true) {
@@ -238,6 +238,8 @@ bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
 
 bool LevyHotSpotsLATP::findNextHotSpot()
 {
+    ASSERT(false);//todo
+
     int oldHSindex = currentHSindex;
     // выбираем новую локацию
     double rn, pr=0;
