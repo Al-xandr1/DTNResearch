@@ -151,67 +151,70 @@ void LevyHotSpotsLATP::setTargetPosition() {
 }
 
 bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
-    
-//    ASSERT(currentHSWaypointNum >=0);
-//    if (currentHSWaypointNum == 0) {
-//        if (findNextHotSpotAndTargetPosition()) return true;
-//        else return false; // не нашли - останавливаемся
-//    }
-
-    // генерируем прыжок Леви как обычно
-    angle = uniform(0, 2 * PI);
-    distance = jump->get_Levi_rv();
-    ASSERT(distance > 0);
-    speed = kForSpeed * pow(distance, 1 - roForSpeed);
-    Coord delta(distance * cos(angle), distance * sin(angle), 0);
-    deltaVector = delta;
-    travelTime = distance / speed;
-
-    targetPosition = lastPosition + delta;
-    ASSERT(targetPosition.x != lastPosition.x);
-    nextChange = simTime() + travelTime;
-
-    // если вышли за пределы локации
-    //todo while() {
-    if (currentHSMin.x >= targetPosition.x || targetPosition.x >= currentHSMax.x || currentHSMin.y >= targetPosition.y || targetPosition.y >= currentHSMax.y) {
-
-        if (isHotSpotEmpty()) { // если локация точечная
-            //todo сделать генерацию опять этой же позиции - т.к счётчик ещё больше 0 в этой локации и переходить нельзя (такого быть не должно, но...) ИЛИ
-            //todo continue OR
-            if (findNextHotSpotAndTargetPosition()) return true;
-            else return false; // не нашли - останавливаемся
-        }
-
-        // для ускорения вычислений определяем вспомогательные переменные
-        double x, y, Xdir, Ydir, dir;
-        bool flag = ( (y=lastPosition.y) < currentHSCenter.y);
-
-        // выбираем самую дальнюю от текущей позиции вершину прямоугольника текущей локации 
-        // и вычисляем координаты вектора из текущей позиции в эту вершину
-        if ( (x=lastPosition.x) < currentHSCenter.x ) {
-            if (flag) { Xdir=currentHSMax.x-x; Ydir=currentHSMax.y-y; }
-            else      { Xdir=currentHSMax.x-x; Ydir=currentHSMin.y-y; }
-        } else {
-            if (flag) { Xdir=currentHSMin.x-x; Ydir=currentHSMax.y-y; }
-            else      { Xdir=currentHSMin.x-x; Ydir=currentHSMin.y-y; }
-        }
-
-        // проверяем, можем ли остаться в прямоугольнике текущей локации, если прыгать к дальнему углу прямоугольника
-        if ( distance > (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {// не можем - надо переходить в другую локацию
-            //todo генерация новой позиции ИЛИ
-            //todo continue OR
-
-            if (findNextHotSpotAndTargetPosition()) return true;
-            else return false; // не нашли - останавливаемся
-        }
-
-        // можем - прыгаем
-        delta.x = Xdir * distance/dir;
-        delta.y = Ydir * distance/dir;
-        targetPosition = lastPosition + delta;
+    ASSERT(currentHSWaypointNum >=0);
+    if (currentHSWaypointNum == 0) {
+        //если счётчик равен 0, то пора менять локацию
+        if (findNextHotSpotAndTargetPosition()) return true;
+        else return false; // не нашли - останавливаемся
     }
 
-//    currentHSWaypointNum--;
+    while (true) {
+        // генерируем прыжок Леви как обычно
+        angle = uniform(0, 2 * PI);
+        distance = jump->get_Levi_rv();
+        ASSERT(distance > 0);
+        speed = kForSpeed * pow(distance, 1 - roForSpeed);
+        Coord delta(distance * cos(angle), distance * sin(angle), 0);
+        deltaVector = delta;
+        travelTime = distance / speed;
+        targetPosition = lastPosition + delta;
+        ASSERT(targetPosition.x != lastPosition.x);
+        nextChange = simTime() + travelTime;
+
+        // если вышли за пределы локации
+        //todo проверить на master'е будет ли работать с такой заменой
+        if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) {
+            if (isHotSpotEmpty()) { // если локация точечная
+                // в этой ситуации (счётчик не нуль, а локация вырожденная - в такой обычно должна быть только одна точка)
+                // нужно выбрать снова ТУ ЖЕ позицию OR генерируем заново - todo сделать "переключатетль"
+                targetPosition = lastPosition;
+                break;
+                //todo OR //if (findNextHotSpotAndTargetPosition()) return true;
+                //        //else return false; // не нашли - останавливаемся
+            }
+
+            // для ускорения вычислений определяем вспомогательные переменные
+            double x, y, Xdir, Ydir, dir;
+            bool flag = ( (y=lastPosition.y) < currentHSCenter.y);
+
+            // выбираем самую дальнюю от текущей позиции вершину прямоугольника текущей локации
+            // и вычисляем координаты вектора из текущей позиции в эту вершину
+            if ( (x=lastPosition.x) < currentHSCenter.x ) {
+                if (flag) { Xdir=currentHSMax.x-x; Ydir=currentHSMax.y-y; }
+                else      { Xdir=currentHSMax.x-x; Ydir=currentHSMin.y-y; }
+            } else {
+                if (flag) { Xdir=currentHSMin.x-x; Ydir=currentHSMax.y-y; }
+                else      { Xdir=currentHSMin.x-x; Ydir=currentHSMin.y-y; }
+            }
+
+            // проверяем, можем ли остаться в прямоугольнике текущей локации, если прыгать к дальнему углу прямоугольника
+            if ( distance > (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
+                // не можем - надо переходить в другую локацию OR генерируем заново - todo сделать "переключатетль"
+                continue;
+                //todo OR //if (findNextHotSpotAndTargetPosition()) return true;
+                //        //else return false; // не нашли - останавливаемся
+            }
+
+            // можем - прыгаем
+            delta.x = Xdir * distance/dir;
+            delta.y = Ydir * distance/dir;
+            targetPosition = lastPosition + delta;
+        }
+        break; //получили правильный targetPosition
+    }
+
+    // уменьшаем счётчик количества путевых точек
+    currentHSWaypointNum--;
     return true;
 }
 
@@ -331,13 +334,12 @@ void LevyHotSpotsLATP::saveStatistics() {
 
 bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
     if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) return true;
-    cout << "------------- ERROR! -------------" << endl;
-    log();
+    //log();
     return false;
 }
 
 void LevyHotSpotsLATP::log() {  // Отладочная функция
-    cout << "-------------------------------------------------------------" << endl;
+    cout << "----------------------------- LOG --------------------------------" << endl;
     cout << "step = " << step << ", isPause = " << isPause << endl;
     cout << "simTime() = " << simTime() << endl;
     cout << "lastPosition = " << lastPosition << endl;
