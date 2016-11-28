@@ -13,6 +13,7 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     roForSpeed = 0;
 
     currentHSindex = -1;
+    currentHSWaypointNum = 0;
 
     movementsFinished = false;
 
@@ -39,6 +40,7 @@ void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotShortInfo* hsi)
     currentHSMax.x = hsi->Xmax;    //std::cout<<currentHSMax.x<<"\t";
     currentHSMax.y = hsi->Ymax;    //std::cout<<currentHSMax.y<<"\n";
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
+    currentHSWaypointNum = hsi->waypointNum;
     return;
 }
 
@@ -150,12 +152,11 @@ void LevyHotSpotsLATP::setTargetPosition() {
 
 bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
     
-    //todo проверяем счётчик и если он на нуле - выбираем следующую локацию
-    //ASSERT(counter >=0);
-    //if (counter == 0) {
-    //    if (findNextHotSpotAndTargetPosition()) return true;
-    //    else return false; // не нашли - останавливаемся
-    //}
+//    ASSERT(currentHSWaypointNum >=0);
+//    if (currentHSWaypointNum == 0) {
+//        if (findNextHotSpotAndTargetPosition()) return true;
+//        else return false; // не нашли - останавливаемся
+//    }
 
     // генерируем прыжок Леви как обычно
     angle = uniform(0, 2 * PI);
@@ -171,8 +172,12 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
     nextChange = simTime() + travelTime;
 
     // если вышли за пределы локации
+    //todo while() {
     if (currentHSMin.x >= targetPosition.x || targetPosition.x >= currentHSMax.x || currentHSMin.y >= targetPosition.y || targetPosition.y >= currentHSMax.y) {
+
         if (isHotSpotEmpty()) { // если локация точечная
+            //todo сделать генерацию опять этой же позиции - т.к счётчик ещё больше 0 в этой локации и переходить нельзя (такого быть не должно, но...) ИЛИ
+            //todo continue OR
             if (findNextHotSpotAndTargetPosition()) return true;
             else return false; // не нашли - останавливаемся
         }
@@ -192,19 +197,21 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
         }
 
         // проверяем, можем ли остаться в прямоугольнике текущей локации, если прыгать к дальнему углу прямоугольника
-        if ( distance <= (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
-            // можем - прыгаем
-            delta.x = Xdir * distance/dir;
-            delta.y = Ydir * distance/dir;
-            targetPosition = lastPosition + delta;
-            return true;
+        if ( distance > (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {// не можем - надо переходить в другую локацию
+            //todo генерация новой позиции ИЛИ
+            //todo continue OR
 
-        } else { // не можем - надо переходить в другую локацию
             if (findNextHotSpotAndTargetPosition()) return true;
             else return false; // не нашли - останавливаемся
         }
+
+        // можем - прыгаем
+        delta.x = Xdir * distance/dir;
+        delta.y = Ydir * distance/dir;
+        targetPosition = lastPosition + delta;
     }
 
+//    currentHSWaypointNum--;
     return true;
 }
 

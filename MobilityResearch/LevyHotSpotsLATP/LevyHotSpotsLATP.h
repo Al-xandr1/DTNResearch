@@ -43,6 +43,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 
     HotSpotsCollection* hsc;
     int currentHSindex;
+    unsigned int currentHSWaypointNum;
 
     HSDistanceMatrix* hsd;
 
