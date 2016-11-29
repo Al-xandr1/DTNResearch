@@ -175,8 +175,6 @@ void RegularRootLATP::setTargetPosition() {
 
 bool RegularRootLATP::findNextHotSpot()
 {
-    ASSERT(false);//todo
-
     if (currentRootCounter->at(curRootIndex) > 0) (*currentRootCounter)[curRootIndex]-=1;  // покидая локацию, уменьшаем её счётчик посещений
 
     unsigned int hh=0, ii;                               // находим сумму всех счётчиков посещений на маршруте,
@@ -221,16 +219,12 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
     bool flag=LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange);
     if (flag) return true;   // идём по маршруту
     else {                   // маршрут кончился, идём домой
-        ASSERT(false);//todo
-
         currentHSindex=0;
         LevyHotSpotsLATP::setCurrentHSbordersWith( homeHS );
 
         // проверяем, не дома ли мы уже
         if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
             currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
-
-            ASSERT(false);//todo
 
             ASSERT(isRootFinished());
             (check_and_cast<MobileHost*>(getParentModule()))->endRoute();
