@@ -43,6 +43,9 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 
     HotSpotsCollection* hsc;
     int currentHSindex;
+
+    // параметры для использования счётчиков количества путевых точек в локации
+    bool usedWPcounts;
     unsigned int currentHSWaypointNum;
 
     HSDistanceMatrix* hsd;
