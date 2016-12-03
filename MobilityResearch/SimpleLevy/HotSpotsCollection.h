@@ -32,14 +32,14 @@ struct Waypoint{
 
 struct HotSpotShortInfo {
      double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;
-     double sumTime;
-     unsigned int waypointNum;
-     unsigned int counter;
-     char* hotSpotName;
+     double sumTime;            // (READ-ONLY) время нахождения в локации
+     unsigned int waypointNum;  // (READ-ONLY) количество путевых точек в локации
+     unsigned int counter;      // (READ-ONLY) количество посещений локации
+     char* hotSpotName;         // (READ-ONLY) имя локации
 
-     double generatedSumTime;
-     unsigned int generatedWaypointNum;
-     vector<Waypoint> waypoints;
+     double generatedSumTime;           // время нахождения в локации при моделировании
+     unsigned int generatedWaypointNum; // количество путевых точек в локации при моделиронии
+     vector<Waypoint> waypoints;        // сгенерированные путевые точки
 
      HotSpotShortInfo(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, unsigned int waypointNum, unsigned int counter=0 )
      {
@@ -63,7 +63,7 @@ struct HotSpotShortInfo {
          cout << "\t Xcenter = " << Xcenter << ", Ycenter = " << Ycenter << endl;
          cout << "\t sumTime = " << sumTime << ", generatedSumTime = " << generatedSumTime << endl;
          cout << "\t waypointNum = " << waypointNum << ", generatedWaypointNum = " << generatedWaypointNum << endl;
-         cout << "\t hotSpotName = " << hotSpotName << endl;
+         cout << "\t hotSpotName = " << hotSpotName << endl << endl;
      }
 };
 

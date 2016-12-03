@@ -23,6 +23,7 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
                 HotSpotShortInfo hsi(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum);
                 HSData.push_back(hsi);
                 strcpy(lastAddedName, hotSpotName);
+                hsi.print();
             }
         }
 

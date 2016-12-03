@@ -24,6 +24,8 @@ simple LevyHotSpotsLATP extends MovingMobilityBase
     	double aliP = default(1);       // power magnitude (alpha) in Levy PAUSE distribution - 0.5 in external research paper
     	double aciP = default(0.001);	// accurancy for Levy PAUSE distribution 
     	
+    	bool usedWPcounts = default(false); //параметр для вкл/выкл использования счётчиков количества путевых точек в локации
+    	
     	string specification = default("LevyHotSpotsLATP"); // concrete specification for Levy mobility 
     												  // available values = SimpleLevy | LevyHotSpotsRandom | LevyHotSpotsLATPCenterLogic | LevyHotSpotsLATP | LevyHotSpotsLATPPathCounts 
         double powA = default(1);		// is a fixed floating number constant within 0 to infinity - power for distance
