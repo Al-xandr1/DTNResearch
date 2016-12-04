@@ -183,8 +183,8 @@ void RootCollection::readRootInfo(char* RootDir)
                     root->push_back(h);
                 }
                 infile->close();
-//                delete infile;
-//                delete[] inputFileName;
+                delete infile;
+                delete[] inputFileName;
                 RootCollection::RootData.push_back(root);
             }
             while(FindNextFile(h, &f));

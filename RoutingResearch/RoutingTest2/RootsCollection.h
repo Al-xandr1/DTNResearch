@@ -14,10 +14,14 @@
 
 using namespace std;
 
+/*
+ * Информация о маршруте для конкретного пользователся
+ * todo стоит объединить с HotSpotRootInfo
+ */
 struct RootShortInfo {
-    char RootName[256];
-    int length;
-    char** hotSpot;
+    char RootName[256];     // имя маршрута - соответствует файлу *.rot
+    int length;             // длина маршрута
+    char** hotSpot;         // последовательность локаций маршрута
 
     RootShortInfo(string rootinfo)
     {
@@ -34,7 +38,9 @@ struct RootShortInfo {
     }
 };
 
-
+/*
+ * todo стоит объединить с RootCollection
+ */
 class RootsCollection
 {
 public:

@@ -42,7 +42,9 @@ void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotShortInfo* hsi)
     currentHSMax.x = hsi->Xmax;    //std::cout<<currentHSMax.x<<"\t";
     currentHSMax.y = hsi->Ymax;    //std::cout<<currentHSMax.y<<"\n";
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
-    currentHSWaypointNum = hsi->waypointNum; //todo сделать инициализацию ѕ–ј¬»Ћ№Ќќ√ќ —–≈ƒЌ≈√ќ количества точек
+    //todo сделать инициализацию ѕ–ј¬»Ћ№Ќќ√ќ —–≈ƒЌ≈√ќ количества точек
+    //todo вз€ть число точек из соответсвующей локации (по имени) текущего root'а
+    currentHSWaypointNum = hsi->waypointNum;
     return;
 }
 

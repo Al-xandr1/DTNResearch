@@ -110,10 +110,14 @@ void RegularRootLATP::initialize(int stage) {
     LevyHotSpotsLATP::initialize(stage);
 
     // загрузка данных об эталонных маршрутах
-    if (rc==NULL) {
+    if (rc==NULL && rcFull==NULL) {
+        rcFull = new RootCollection();
+        rcFull->readRootInfo(DEF_RT_DIR);
+
         rc = new RootsCollection();
         rc->readRootsInfo(DEF_TR_DIR, ALLROOTS_FILE);
-        // rc->print();
+
+        rc->print();
     }
 
     if (rootPersistence == -1)

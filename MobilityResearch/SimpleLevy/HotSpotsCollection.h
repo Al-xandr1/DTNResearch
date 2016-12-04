@@ -97,6 +97,9 @@ public:
 
 // ----------------------------------- for SLAW ----------------------------------------------
 
+/*
+ * todo стоит объединить с RootShortInfo
+ */
 struct HotSpotRootInfo {
      char* hotSpotName;
      double Xmin, Xmax, Ymin, Ymax;
@@ -122,7 +125,9 @@ struct HotSpotRootInfo {
      }
 };
 
-
+/*
+ * todo стоит объединить с RootsCollection
+ */
 class RootCollection {
 public:
         static bool isRootDataReady;

@@ -6,15 +6,18 @@ vector<RootShortInfo> RootsCollection::RootData;
 
 void RootsCollection::readRootsInfo(char* TracesDir, char* rootsfile)
 {
-    ifstream rfile(buildFullName(TracesDir, rootsfile));
-    while(!rfile.eof()) {
-        string rootinfo;
-        getline(rfile, rootinfo);
-        RootData.push_back(RootShortInfo(rootinfo));
+    if(!RootsCollection::isRootDataReady) {
+        ifstream rfile(buildFullName(TracesDir, rootsfile));
+        while(!rfile.eof()) {
+            string rootinfo;
+            getline(rfile, rootinfo);
+            RootData.push_back(RootShortInfo(rootinfo));
+        }
+        RootData.pop_back();
+        RootsCollection::isRootDataReady = true;
     }
-    RootData.pop_back();
-    isRootDataReady = true;
 }
+
 
 void RootsCollection::print()
 {
