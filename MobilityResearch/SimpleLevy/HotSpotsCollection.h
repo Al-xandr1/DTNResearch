@@ -8,10 +8,8 @@
 #include <fstream>
 #include <stdlib.h>
 #include <windows.h>
-
 #include "INETDefs.h"
 #include "Coord.h"
-
 #include "DevelopmentHelper.h"
 
 using namespace std;
@@ -29,6 +27,7 @@ struct Waypoint{
         this->traceName = traceName;
     }
 };
+
 
 struct HotSpotShortInfo {
      double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;
@@ -67,6 +66,7 @@ struct HotSpotShortInfo {
      }
 };
 
+
 class HotSpotsCollection
 {
 public:
@@ -92,49 +92,6 @@ public:
     void makeDistanceMatrix();
     void makeProbabilityMatrix(double powA);
     double getDistance(unsigned int i, unsigned int j);
-};
-
-
-// ----------------------------------- for SLAW ----------------------------------------------
-
-/*
- * todo стоит объединить с RootShortInfo
- */
-struct HotSpotRootInfo {
-     char* hotSpotName;
-     double Xmin, Xmax, Ymin, Ymax;
-     double sumTime;
-     unsigned int waypointNum;
-
-     HotSpotRootInfo(char* hotSpotName=NULL, double Xmin=0, double Xmax=0, double Ymin=0, double Ymax=0, double sumTime=0, unsigned int waypointNum=0)
-     {
-         if(hotSpotName!=NULL) strcpy(this->hotSpotName = new char[256], hotSpotName);
-         else this->hotSpotName=NULL;
-         this->Xmin=Xmin;
-         this->Xmax=Xmax;
-         this->Ymin=Ymin;
-         this->Ymax=Ymax;
-         this->sumTime = sumTime;
-         this->waypointNum = waypointNum;
-     }
-
-     void printHotSpotRootInfo()
-     {
-         cout << this->hotSpotName <<" "<<this->Xmin<<" "<<this->Xmax<<" "
-              << this->Ymin<<" "<<this->Ymax<<" "<<this->sumTime<<" "<<waypointNum<<endl;
-     }
-};
-
-/*
- * todo стоит объединить с RootsCollection
- */
-class RootCollection {
-public:
-        static bool isRootDataReady;
-        static vector<vector<HotSpotRootInfo>*> RootData;
-
-        void readRootInfo(char* RootDir);
-        void prtintRootInfo();
 };
 
 

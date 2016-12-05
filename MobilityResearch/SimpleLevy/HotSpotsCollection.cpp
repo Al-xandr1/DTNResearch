@@ -1,5 +1,6 @@
 #include "HotSpotsCollection.h"
 
+
 bool HotSpotsCollection::isHSDataReady=false;
 vector<HotSpotShortInfo> HotSpotsCollection::HSData;
 
@@ -64,6 +65,7 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, double& minX, double&
    return;
 }
 
+
 void HotSpotsCollection::print()
 {
     for (unsigned int i=0; i < HSData.size(); i++) {
@@ -74,6 +76,7 @@ void HotSpotsCollection::print()
     cout<<endl;
 }
 
+
 HotSpotShortInfo* HotSpotsCollection::findHotSpotbyName(char* HotSpotName, int& HotSpotNum)
 {
     for(unsigned int i=0; i<HSData.size(); i++)
@@ -83,6 +86,7 @@ HotSpotShortInfo* HotSpotsCollection::findHotSpotbyName(char* HotSpotName, int& 
         }
     return NULL;
 }
+
 
 HotSpotShortInfo* HotSpotsCollection::randomRemove(vector<HotSpotShortInfo*>* hotSpots, int& HotSpotNum)
 {
@@ -101,6 +105,7 @@ HotSpotShortInfo* HotSpotsCollection::randomRemove(vector<HotSpotShortInfo*>* ho
 
 bool HSDistanceMatrix::isMatrixReady = false;
 vector<double>* HSDistanceMatrix::DistanceMatrix;
+
 
 void HSDistanceMatrix::makeDistanceMatrix()
 {
@@ -121,6 +126,7 @@ void HSDistanceMatrix::makeDistanceMatrix()
     }
 }
 
+
 double HSDistanceMatrix::getDistance(unsigned int i, unsigned int j)
 {
     if(i<=j) return (DistanceMatrix[i]).at(j-i);
@@ -130,6 +136,7 @@ double HSDistanceMatrix::getDistance(unsigned int i, unsigned int j)
 
 bool HSDistanceMatrix::isProbabilityReady = false;
 double**  HSDistanceMatrix::ProbabilityMatrix;
+
 
 void HSDistanceMatrix::makeProbabilityMatrix(double powA)
 {
@@ -145,63 +152,5 @@ void HSDistanceMatrix::makeProbabilityMatrix(double powA)
             for(unsigned int j=0; j<HotSpotsCollection::HSData.size(); j++) ProbabilityMatrix[i][j]/=h;
         }
         isProbabilityReady=true;
-    }
-}
-
-
-// ----------------------------------- for SLAW ----------------------------------------------
-
-bool RootCollection::isRootDataReady=false;
-vector<vector<HotSpotRootInfo>*> RootCollection::RootData;
-
-void RootCollection::readRootInfo(char* RootDir)
-{
-    if(!isRootDataReady) {
-
-        RootCollection::RootData.clear();
-
-        char* rootFileNamePattern;
-        rootFileNamePattern=buildFullName(RootDir, ROOT_PATTERT);
-
-        WIN32_FIND_DATA f;
-        HANDLE h = FindFirstFile(rootFileNamePattern, &f);
-        if(h != INVALID_HANDLE_VALUE)
-        {
-            do
-            {
-                char* inputFileName;
-                inputFileName=buildFullName(RootDir, f.cFileName);
-                ifstream* infile = new ifstream(inputFileName);
-                vector<HotSpotRootInfo>* root = new vector<HotSpotRootInfo>;
-                while (!infile->eof()) {
-                    char hotSpotName[256];
-                    double Xmin, Xmax, Ymin, Ymax;
-                    double sumTime;
-                    unsigned int waypointNum;
-                    (*infile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> sumTime >> waypointNum;
-                    HotSpotRootInfo h(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum);
-                    root->push_back(h);
-                }
-                infile->close();
-                delete infile;
-                delete[] inputFileName;
-                RootCollection::RootData.push_back(root);
-            }
-            while(FindNextFile(h, &f));
-        }
-        else
-        {
-            cout << "Directory or files not found\n";
-        }
-    }
-    isRootDataReady=true;
-}
-
-
-void RootCollection::prtintRootInfo()
-{
-    for(unsigned int i=0; i<RootData.size(); i++) {
-        cout << "Root " << i <<":" <<endl;
-        for(unsigned int j=0; j<RootData[i]->size(); j++) RootData[i]->at(j).printHotSpotRootInfo();
     }
 }

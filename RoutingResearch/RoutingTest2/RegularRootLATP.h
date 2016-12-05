@@ -27,7 +27,6 @@ class RegularRootLATP : public LevyHotSpotsLATP
   protected:
 
     RootsCollection* rc;
-    RootCollection* rcFull;
 
     double rootPersistence;
 

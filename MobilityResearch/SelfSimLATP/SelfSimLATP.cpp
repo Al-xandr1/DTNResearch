@@ -81,9 +81,10 @@ void SelfSimLATP::initialize(int stage) {
         hsd->makeProbabilityMatrix(powAforHS);
     }
 
-    if (rc==NULL) {
-        rc = new RootCollection();
-        rc->readRootInfo(DEF_RT_DIR);
+    if (!rc) {
+        rc = new RootsCollection();
+        rc->readRootsData(DEF_TR_DIR, ALLROOTS_FILE, DEF_RT_DIR, ROOT_PATTERT);
+        rc->printRootsDataShort();
         makeRoot();
         buildDstMatrix();
     }
@@ -233,10 +234,10 @@ bool SelfSimLATP::findNextHotSpot()
 void SelfSimLATP::makeRoot()
 {
     if(!isRootReady) {
-       RootNumber = rand() % rc->RootData.size();
+       RootNumber = rand() % rc->RootsData.size();
        currentRoot.clear();
-       for(unsigned int i=0; i< (rc->RootData[RootNumber])->size(); i++) {
-           currentRoot.push_back((rc->RootData[RootNumber])->at(i));
+       for(unsigned int i=0; i< (rc->RootsData[RootNumber])->size(); i++) {
+           currentRoot.push_back((rc->RootsData[RootNumber])->at(i));
        }
        cout << "root made" << endl;
     }
