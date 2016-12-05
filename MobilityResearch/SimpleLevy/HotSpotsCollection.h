@@ -9,74 +9,25 @@
 #include <stdlib.h>
 #include <windows.h>
 #include "INETDefs.h"
+#include "Data.h"
 #include "Coord.h"
 #include "DevelopmentHelper.h"
 
 using namespace std;
 
-
-struct Waypoint{
-    double X, Y, Tb, Te;
-    char* traceName;
-
-    Waypoint(double x, double y, double Tb, double Te, char* traceName) {
-        this->X = x;
-        this->Y = y;
-        this->Tb = Tb;
-        this->Te = Te;
-        this->traceName = traceName;
-    }
-};
-
-
-struct HotSpotShortInfo {
-     double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;
-     double sumTime;            // (READ-ONLY) время нахождения в локации
-     unsigned int waypointNum;  // (READ-ONLY) количество путевых точек в локации
-     unsigned int counter;      // (READ-ONLY) количество посещений локации
-     char* hotSpotName;         // (READ-ONLY) имя локации
-
-     double generatedSumTime;           // время нахождения в локации при моделировании
-     unsigned int generatedWaypointNum; // количество путевых точек в локации при моделиронии
-     vector<Waypoint> waypoints;        // сгенерированные путевые точки
-
-     HotSpotShortInfo(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, unsigned int waypointNum, unsigned int counter=0 )
-     {
-         strcpy(this->hotSpotName = new char[256], hotSpotName);
-         this->Xmin = Xmin;
-         this->Xmax = Xmax;
-         this->Ymin = Ymin;
-         this->Ymax = Ymax;
-         this->Xcenter = (Xmin + Xmax) / 2;
-         this->Ycenter = (Ymin + Ymax) / 2;
-         this->sumTime = sumTime;
-         this->waypointNum = waypointNum;
-         this->generatedSumTime = 0;
-         this->generatedWaypointNum = 0;
-     }
-
-     void print()
-     {
-         cout << "\t Xmin = " << Xmin << ", Xmax = " << Xmax << endl;
-         cout << "\t Ymin = " << Ymin << ", Ymax = " << Ymax << endl;
-         cout << "\t Xcenter = " << Xcenter << ", Ycenter = " << Ycenter << endl;
-         cout << "\t sumTime = " << sumTime << ", generatedSumTime = " << generatedSumTime << endl;
-         cout << "\t waypointNum = " << waypointNum << ", generatedWaypointNum = " << generatedWaypointNum << endl;
-         cout << "\t hotSpotName = " << hotSpotName << endl << endl;
-     }
-};
-
-
+/**
+ * Коллекция всех локаций в моделировании. Соответствует папке hotspotfiles
+ */
 class HotSpotsCollection
 {
 public:
-    static bool isHSDataReady;
-    static vector<HotSpotShortInfo> HSData;
+    static bool isHotSpotsCollectionReady;
+    static vector<HotSpotData> HSData;     // набор всех локаций
 
     void readHotSpotsInfo(char* TracesDir, double& minX, double& maxX, double& minY, double& maxY);
-    HotSpotShortInfo* findHotSpotbyName(char*, int&);
+    HotSpotData* findHotSpotbyName(char*, int&);
     void print();
-    static HotSpotShortInfo* randomRemove(vector<HotSpotShortInfo*>* hotSpots, int& HotSpotNum);
+    static HotSpotData* randomRemove(vector<HotSpotData*>* hotSpots, int& HotSpotNum);
 };
 
 

@@ -25,10 +25,10 @@ RegularRootLATP::RegularRootLATP()
 
 void RegularRootLATP::loadFirstRoot()
 {
-    firstRoot = new vector<HotSpotShortInfo*>;
+    firstRoot = new vector<HotSpotData*>;
     firstRootCounter = new vector<int>;
     firstRootSnumber = new vector<unsigned int>;
-    HotSpotShortInfo* h=NULL;
+    HotSpotData* h=NULL;
     int Snum=-1;
 
     // загрузка первого маршрута (эталона)
@@ -126,7 +126,7 @@ void RegularRootLATP::initialize(int stage) {
 
     if (currentRoot == NULL) {
         // первый раз ходим по эталонному маршруту
-        currentRoot = new vector<HotSpotShortInfo*>(*firstRoot);
+        currentRoot = new vector<HotSpotData*>(*firstRoot);
         currentRootSnumber = new vector<unsigned int>(*firstRootSnumber);
         currentRootCounter = new vector<int>(*firstRootCounter);
 
@@ -272,7 +272,7 @@ void RegularRootLATP::makeNewRoot()
         delete currentRootCounter;
     }
 
-    currentRoot        = new vector<HotSpotShortInfo*>(*firstRoot);
+    currentRoot        = new vector<HotSpotData*>(*firstRoot);
     currentRootSnumber = new vector<unsigned int>(*firstRootSnumber);
     currentRootCounter = new vector<int>(*firstRootCounter);
 
@@ -354,10 +354,10 @@ void RegularRootLATP::makeNewRoot()
 
     // начальная локация - это первая локация текущего маршрута - она же домашн€€
     curRootIndex=0;
-    HotSpotShortInfo* homeHS = currentRoot->at(curRootIndex);
+    HotSpotData* homeHS = currentRoot->at(curRootIndex);
     ASSERT(this->homeHS == homeHS);
     LevyHotSpotsLATP::setCurrentHSbordersWith(homeHS);
-    HotSpotShortInfo* hsi = hsc->findHotSpotbyName(homeHS->hotSpotName, currentHSindex);
+    HotSpotData* hsi = hsc->findHotSpotbyName(homeHS->hotSpotName, currentHSindex);
     ASSERT(hsi);
 
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);

@@ -86,7 +86,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};
     Coord getConstraintAreaMax() {return this->constraintAreaMax;};
 
-    void setCurrentHSbordersWith(HotSpotShortInfo* hsi);
+    void setCurrentHSbordersWith(HotSpotData* hsi);
 };
 
 #endif

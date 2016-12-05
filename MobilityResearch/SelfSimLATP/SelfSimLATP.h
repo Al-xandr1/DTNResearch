@@ -46,7 +46,7 @@ class SelfSimLATP : public LineSegmentsMobilityBase
 
     RootsCollection* rc;
     unsigned int RootNumber;
-    vector<HotSpotRootInfo> currentRoot;
+    vector<HotSpotData> currentRoot;
     bool isRootReady;
 
     SelfSimMapGenerator* gen;

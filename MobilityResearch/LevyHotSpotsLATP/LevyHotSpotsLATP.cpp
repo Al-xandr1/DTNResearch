@@ -35,7 +35,7 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     trFileName = NULL;
 }
 
-void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotShortInfo* hsi)
+void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi)
 {
     currentHSMin.x = hsi->Xmin;    //std::cout<<currentHSMin.x<<"\t";
     currentHSMin.y = hsi->Ymin;    //std::cout<<currentHSMin.y<<"\t";

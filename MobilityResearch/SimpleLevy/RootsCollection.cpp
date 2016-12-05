@@ -3,7 +3,7 @@
 
 bool RootsCollection::isRootsCollectionReady = false;
 vector<RootDataShort> RootsCollection::RootsDataShort;
-vector<vector<HotSpotRootInfo>*> RootsCollection::RootsData;
+vector<vector<HotSpotDataRoot>*> RootsCollection::RootsData;
 
 
 void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* rootsDir, char* filePatter)
@@ -27,14 +27,14 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
             do {
                 char* inputFileName = buildFullName(rootsDir, f.cFileName);
                 ifstream* infile = new ifstream(inputFileName);
-                vector<HotSpotRootInfo>* root = new vector<HotSpotRootInfo>;
+                vector<HotSpotDataRoot>* root = new vector<HotSpotDataRoot>;
                 while (!infile->eof()) {
                     char hotSpotName[256];
                     double Xmin, Xmax, Ymin, Ymax;
                     double sumTime;
                     unsigned int waypointNum;
                     (*infile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> sumTime >> waypointNum;
-                    root->push_back(HotSpotRootInfo(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum));
+                    root->push_back(HotSpotDataRoot(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum));
                 }
                 infile->close();
                 delete infile;
@@ -60,6 +60,6 @@ void RootsCollection::printRootsData()
 {
     for(unsigned int i=0; i<RootsData.size(); i++) {
         cout << "Root " << i <<":" <<endl;
-        for(unsigned int j=0; j<RootsData[i]->size(); j++) RootsData[i]->at(j).printHotSpotRootInfo();
+        for(unsigned int j=0; j<RootsData[i]->size(); j++) RootsData[i]->at(j).print();
     }
 }
