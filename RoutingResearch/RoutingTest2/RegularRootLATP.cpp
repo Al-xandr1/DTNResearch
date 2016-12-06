@@ -291,7 +291,7 @@ void RegularRootLATP::makeNewRoot()
 
     // инициализируем набор возможных локаций всеми возможными номерами локаций в порЯдке возрастаниЯ
     vector<int> possibleReplace;
-    for(unsigned int i=0; i< HotSpotsCollection::HSData.size(); i++) possibleReplace.push_back(i);
+    for(unsigned int i=0; i< hsc->getHSData()->size(); i++) possibleReplace.push_back(i);
     vector<unsigned int>* cur = new vector<unsigned int> (*currentRootSnumber);
     // удалЯем номера, присутствующие в маршруте, из possibleReplace, начинаЯ с самого большого в cur,
     // чтобы корректно работал erase в possibleReplace - т.к. в таком случае удаление будет проходить с конца
@@ -303,7 +303,7 @@ void RegularRootLATP::makeNewRoot()
         cur->erase(cur->begin());
     }
     delete cur;
-    ASSERT(possibleReplace.size() == (HotSpotsCollection::HSData.size() - currentRootSnumber->size()));
+    ASSERT(possibleReplace.size() == (hsc->getHSData()->size() - currentRootSnumber->size()));
 
     // генерируем нужное число случайных номеров новых локаций
     // из тех, что остались в possibleReplace в отсортированном по возрастанию виде
@@ -330,7 +330,7 @@ void RegularRootLATP::makeNewRoot()
     for(unsigned int i=0; i<sortReplace.size(); i++) {
        unsigned int hsNumber=sortReplace[i];
        if( hsNumber != currentRootSnumber->back() ) {
-           currentRoot->push_back(&(HotSpotsCollection::HSData[hsNumber]));
+           currentRoot->push_back(&(hsc->getHSData()->at(hsNumber)));
            currentRootSnumber->push_back(hsNumber);
            currentRootCounter->push_back(1);
        } else currentRootCounter->back()++;

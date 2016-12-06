@@ -66,11 +66,11 @@ void SelfSimLATP::initialize(int stage) {
 
     if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
 
-    if (hsc==NULL) {
-        hsc = new HotSpotsCollection();
+    if (!hsc) {
         // загрузка данных о докациях
+        hsc = HotSpotsCollection::getInstance();
         double minX, maxX, minY, maxY;
-        hsc->readHotSpotsInfo(DEF_TR_DIR, minX, maxX, minY, maxY);
+        hsc->getTotalSize(minX, maxX, minY, maxY);
         constraintAreaMin.x=minX; constraintAreaMin.y=minY;
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
     }

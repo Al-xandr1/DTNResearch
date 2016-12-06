@@ -83,11 +83,11 @@ void LevyHotSpotsLATP::initialize(int stage) {
     if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, aciJ);
     if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
 
-    if (hsc==NULL) {
-        hsc = new HotSpotsCollection();
+    if (!hsc) {
         // загрузка данных о докациях
+        hsc = HotSpotsCollection::getInstance();
         double minX, maxX, minY, maxY;
-        hsc->readHotSpotsInfo(DEF_TR_DIR, minX, maxX, minY, maxY);
+        hsc->getTotalSize(minX, maxX, minY, maxY);
         constraintAreaMin.x=minX; constraintAreaMin.y=minY;
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
     }
@@ -100,8 +100,8 @@ void LevyHotSpotsLATP::initialize(int stage) {
 
     // выбор случайной локации
     if (currentHSindex == -1) {
-        currentHSindex=rand() % (hsc->HSData).size();
-        setCurrentHSbordersWith( &((hsc->HSData)[currentHSindex]) );
+        currentHSindex=rand() % hsc->getHSData()->size();
+        setCurrentHSbordersWith( &(hsc->getHSData()->at(currentHSindex)) );
     }
 
     if (wpFileName == NULL && trFileName == NULL) {
@@ -249,11 +249,11 @@ bool LevyHotSpotsLATP::findNextHotSpot()
     // выбираем новую локацию
     double rn, pr=0;
     rn=(double)rand()/RAND_MAX;
-    for(unsigned int i=0; i<(hsc->HSData).size(); i++) {
+    for(unsigned int i=0; i<hsc->getHSData()->size(); i++) {
         if(i != currentHSindex ) pr+=(hsd->ProbabilityMatrix)[currentHSindex][i];
         if(rn <= pr) {currentHSindex=i; break; }
     }
-    setCurrentHSbordersWith( &((hsc->HSData)[currentHSindex]) );
+    setCurrentHSbordersWith( &(hsc->getHSData()->at(currentHSindex)) );
 
     ASSERT(oldHSindex != currentHSindex);
     return true;
@@ -266,11 +266,11 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
     outTimes.push_back(outTime);
     xCoordinates.push_back(x);
     yCoordinates.push_back(y);
-    ((hsc->HSData)[currentHSindex]).generatedSumTime += (outTime - inTime).dbl();
-    ((hsc->HSData)[currentHSindex]).generatedWaypointNum++;
+    hsc->getHSData()->at(currentHSindex).generatedSumTime += (outTime - inTime).dbl();
+    hsc->getHSData()->at(currentHSindex).generatedWaypointNum++;
 
     Waypoint h(x, y, inTime.dbl(), outTime.dbl(), wpFileName);
-    ((hsc->HSData)[currentHSindex]).waypoints.push_back(h);
+    hsc->getHSData()->at(currentHSindex).waypoints.push_back(h);
 }
 
 void LevyHotSpotsLATP::saveStatistics() {
@@ -295,17 +295,17 @@ void LevyHotSpotsLATP::saveStatistics() {
         else cout << "error create output directory: " << hsDir << endl;
 
         // --- Write HotSpots ---
-        for (unsigned int i = 0; i < (hsc->HSData).size(); i++) {
-            char* fullNameHS = buildFullName(hsDir, (hsc->HSData)[i].hotSpotName);
+        for (unsigned int i = 0; i < hsc->getHSData()->size(); i++) {
+            char* fullNameHS = buildFullName(hsDir, hsc->getHSData()->at(i).hotSpotName);
             ofstream* hsFile = new ofstream(fullNameHS);
-            (*hsFile) << ((hsc->HSData)[i]).Xmin << "\t" << ((hsc->HSData)[i]).Xmax << endl;
-            (*hsFile) << ((hsc->HSData)[i]).Ymin << "\t" << ((hsc->HSData)[i]).Ymax << endl;
-            (*hsFile) << ((hsc->HSData)[i]).generatedSumTime << "\t"<< ((hsc->HSData)[i]).generatedWaypointNum << endl;
+            (*hsFile) << hsc->getHSData()->at(i).Xmin << "\t" << hsc->getHSData()->at(i).Xmax << endl;
+            (*hsFile) << hsc->getHSData()->at(i).Ymin << "\t" << hsc->getHSData()->at(i).Ymax << endl;
+            (*hsFile) << hsc->getHSData()->at(i).generatedSumTime << "\t"<< hsc->getHSData()->at(i).generatedWaypointNum << endl;
 
-            for(unsigned int j = 0; j < ((hsc->HSData)[i]).waypoints.size(); j++)
-                (*hsFile) << (((hsc->HSData)[i]).waypoints[j]).X  << "\t" << (((hsc->HSData)[i]).waypoints[j]).Y  << "\t"
-                          << (((hsc->HSData)[i]).waypoints[j]).Tb << "\t" << (((hsc->HSData)[i]).waypoints[j]).Te << "\t"
-                          << (((hsc->HSData)[i]).waypoints[j]).traceName << endl;
+            for(unsigned int j = 0; j < hsc->getHSData()->at(i).waypoints.size(); j++)
+                (*hsFile) << hsc->getHSData()->at(i).waypoints[j].X  << "\t" << hsc->getHSData()->at(i).waypoints[j].Y  << "\t"
+                          << hsc->getHSData()->at(i).waypoints[j].Tb << "\t" << hsc->getHSData()->at(i).waypoints[j].Te << "\t"
+                          << hsc->getHSData()->at(i).waypoints[j].traceName << endl;
 
             hsFile->close();
             delete hsFile;
@@ -313,11 +313,11 @@ void LevyHotSpotsLATP::saveStatistics() {
 
         // --- Write Locations ---
         ofstream lcfile(locs);
-        for(unsigned int i = 0; i < (hsc->HSData).size(); i++) {
-            lcfile << ((hsc->HSData)[i]).hotSpotName << "\t"<< ((hsc->HSData)[i]).generatedSumTime << "\t" << "\t";
-            lcfile << ((hsc->HSData)[i]).generatedWaypointNum << "\t" << "\t";
-            lcfile << ((hsc->HSData)[i]).Xmin << "\t"<< ((hsc->HSData)[i]).Xmax << "\t";
-            lcfile << ((hsc->HSData)[i]).Ymin << "\t"<< ((hsc->HSData)[i]).Ymax << endl;
+        for(unsigned int i = 0; i < hsc->getHSData()->size(); i++) {
+            lcfile << hsc->getHSData()->at(i).hotSpotName << "\t"<< hsc->getHSData()->at(i).generatedSumTime << "\t" << "\t";
+            lcfile << hsc->getHSData()->at(i).generatedWaypointNum << "\t" << "\t";
+            lcfile << hsc->getHSData()->at(i).Xmin << "\t"<< hsc->getHSData()->at(i).Xmax << "\t";
+            lcfile << hsc->getHSData()->at(i).Ymin << "\t"<< hsc->getHSData()->at(i).Ymax << endl;
         }
         lcfile.close();
     }
@@ -356,7 +356,7 @@ void LevyHotSpotsLATP::log() {  // Отладочная функция
     cout << "\t currentHSMin.y = " << currentHSMin.y << ", currentHSMax.y = " << currentHSMax.y << endl;
     cout << "\t currentHSCenter.x = " << currentHSCenter.x << ", currentHSCenter.y = " << currentHSCenter.y << endl;
     cout << "\t isHotSpotEmpty = " << isHotSpotEmpty() << endl;
-    ((hsc->HSData)[currentHSindex]).print();
+    hsc->getHSData()->at(currentHSindex).print();
 
     if (isPause) {
         cout << "waitTime = " << waitTime << endl;

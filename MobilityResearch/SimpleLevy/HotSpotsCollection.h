@@ -15,22 +15,45 @@
 
 using namespace std;
 
-/**
- * Коллекция всех локаций в моделировании. Соответствует папке hotspotfiles
- */
-class HotSpotsCollection
-{
-public:
-    static bool isHotSpotsCollectionReady;
-    static vector<HotSpotData> HSData;     // набор всех локаций
 
-    void readHotSpotsInfo(char* TracesDir, double& minX, double& maxX, double& minY, double& maxY);
+/**
+ * Коллекция всех локаций в моделировании. Соответствует папке hotspotfiles. Singleton объект
+ */
+class HotSpotsCollection {
+private:
+    static HotSpotsCollection* instance;   // указатель на singleton объект
+
+    vector<HotSpotData>* HSData;           // набор всех локаций
+
+    HotSpotsCollection() {
+        this->HSData = NULL;
+        this->readHotSpotsInfo(DEF_TR_DIR, SPC_FILE);
+        this->print();
+    }
+
+    ~HotSpotsCollection() {
+        if (HSData) delete HSData;
+    }
+
+    void readHotSpotsInfo(char* TracesDir, char* spotcountfile);
+
+public:
+    /**
+     * Получение готового проинициализированного объекта для работы
+     */
+    static HotSpotsCollection* getInstance();
+    static HotSpotData* randomRemove(vector<HotSpotData*>* hotSpots, int& HotSpotNum);
+
+    vector<HotSpotData>* getHSData() {return HSData;}
+    void getTotalSize(double& minX, double& maxX, double& minY, double& maxY);
     HotSpotData* findHotSpotbyName(char*, int&);
     void print();
-    static HotSpotData* randomRemove(vector<HotSpotData*>* hotSpots, int& HotSpotNum);
 };
 
 
+/**
+ * Расчитанный матрица дистанций и вероятностей.
+ */
 class HSDistanceMatrix
 {
 public:

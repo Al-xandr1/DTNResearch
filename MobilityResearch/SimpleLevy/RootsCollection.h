@@ -50,6 +50,9 @@ private:
     void readRootsData(char* TracesDir, char* allRootsFile, char* rootsDir, char* filePatter);
 
 public:
+    /**
+    * Получение готового проинициализированного объекта для работы
+    */
     static RootsCollection* getInstance();
 
     vector<RootDataShort>* getRootsDataShort()       {return RootsDataShort;}
