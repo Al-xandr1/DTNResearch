@@ -32,14 +32,14 @@ void RegularRootLATP::loadFirstRoot()
     int Snum=-1;
 
     // загрузка первого маршрута (эталона)
-    h = hsc->findHotSpotbyName((rc->RootsDataShort[NodeID]).hotSpot[0], Snum);
+    h = hsc->findHotSpotbyName(rc->getRootsDataShort()->at(NodeID).hotSpot[0], Snum);
     ASSERT(h != NULL);
     firstRoot->push_back(h);
     firstRootSnumber->push_back(Snum);
     firstRootCounter->push_back(1);
 
-    for(int i=1; i<(rc->RootsDataShort[NodeID]).length; i++ ) {
-        h = hsc->findHotSpotbyName((rc->RootsDataShort[NodeID]).hotSpot[i], Snum);
+    for(int i=1; i<rc->getRootsDataShort()->at(NodeID).length; i++ ) {
+        h = hsc->findHotSpotbyName(rc->getRootsDataShort()->at(NodeID).hotSpot[i], Snum);
         for(unsigned int j=0; j<firstRoot->size(); j++)
             if( firstRoot->at(j)==h ) { firstRootCounter->at(j)+=1; h=NULL; }
         if (h!=NULL) {
@@ -110,11 +110,7 @@ void RegularRootLATP::initialize(int stage) {
     LevyHotSpotsLATP::initialize(stage);
 
     // загрузка данных об эталонных маршрутах
-    if (!rc) {
-        rc = new RootsCollection();
-        rc->readRootsData(DEF_TR_DIR, ALLROOTS_FILE, DEF_RT_DIR, ROOT_PATTERT);
-        rc->printRootsDataShort();
-    }
+    if (!rc) rc = RootsCollection::getInstance();
 
     if (rootPersistence == -1)
         rootPersistence = getParentModule()->par("rootPersistence").doubleValue();

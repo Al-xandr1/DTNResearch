@@ -81,10 +81,9 @@ void SelfSimLATP::initialize(int stage) {
         hsd->makeProbabilityMatrix(powAforHS);
     }
 
+    // загрузка данных об эталонных маршрутах
     if (!rc) {
-        rc = new RootsCollection();
-        rc->readRootsData(DEF_TR_DIR, ALLROOTS_FILE, DEF_RT_DIR, ROOT_PATTERT);
-        rc->printRootsDataShort();
+        rc = RootsCollection::getInstance();
         makeRoot();
         buildDstMatrix();
     }
@@ -234,10 +233,10 @@ bool SelfSimLATP::findNextHotSpot()
 void SelfSimLATP::makeRoot()
 {
     if(!isRootReady) {
-       RootNumber = rand() % rc->RootsData.size();
+       RootNumber = rand() % rc->getRootsData()->size();
        currentRoot.clear();
-       for(unsigned int i=0; i< (rc->RootsData[RootNumber])->size(); i++) {
-           currentRoot.push_back((rc->RootsData[RootNumber])->at(i));
+       for(unsigned int i=0; i< rc->getRootsData()->at(RootNumber)->size(); i++) {
+           currentRoot.push_back(rc->getRootsData()->at(RootNumber)->at(i));
        }
        cout << "root made" << endl;
     }
