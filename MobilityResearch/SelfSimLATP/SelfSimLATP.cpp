@@ -75,11 +75,7 @@ void SelfSimLATP::initialize(int stage) {
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
     }
 
-    if (hsd==NULL) {
-        hsd = new HSDistanceMatrix();
-        hsd->makeDistanceMatrix();
-        hsd->makeProbabilityMatrix(powAforHS);
-    }
+    if (!hsd) hsd = HSDistanceMatrix::getInstance(powAforHS);
 
     // загрузка данных об эталонных маршрутах
     if (!rc) {

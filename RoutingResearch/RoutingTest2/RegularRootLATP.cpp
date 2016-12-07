@@ -74,7 +74,7 @@ void RegularRootLATP::printCurrentRoot()
 
 void RegularRootLATP::makeLocalProbMatrix(double powA)
 {
-    if(hsd->isMatrixReady && !isLProbReady) {
+    if(!isLProbReady) {
         LocalProbMatrix = new double*[currentRoot->size()];
         for(unsigned int i=0; i<currentRoot->size(); i++) {
             LocalProbMatrix[i]= new double[currentRoot->size()];
@@ -89,7 +89,7 @@ void RegularRootLATP::makeLocalProbMatrix(double powA)
             for(unsigned int j=0; j<currentRoot->size(); j++) LocalProbMatrix[i][j]/=h;
         }
         isLProbReady=true;
-     }
+    }
 }
 
 

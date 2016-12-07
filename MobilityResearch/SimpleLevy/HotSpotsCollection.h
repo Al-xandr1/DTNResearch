@@ -54,17 +54,46 @@ public:
 /**
  * Расчитанный матрица дистанций и вероятностей.
  */
-class HSDistanceMatrix
-{
-public:
-    static bool isMatrixReady;
-    static vector<double>*  DistanceMatrix;
+class HSDistanceMatrix {
+private:
+    static HSDistanceMatrix* instance;     // указатель на singleton объект
 
-    static bool isProbabilityReady;
-    static double**  ProbabilityMatrix;
+    vector<double>*  DistanceMatrix;
+    double**         ProbabilityMatrix;
+
+    HSDistanceMatrix(double powA) {
+        this->DistanceMatrix = NULL;
+        this->ProbabilityMatrix = NULL;
+        this->makeDistanceMatrix();
+        this->makeProbabilityMatrix(powA);
+    }
+
+    ~HSDistanceMatrix() {
+        if (DistanceMatrix) {
+            delete DistanceMatrix;
+            DistanceMatrix = NULL;
+        }
+        if (ProbabilityMatrix) {
+            HotSpotsCollection* hsc = HotSpotsCollection::getInstance();
+            for(int i=0; i<hsc->getHSData()->size();i++) {
+                delete[] ProbabilityMatrix[i];
+            }
+            delete[]  ProbabilityMatrix;
+            ProbabilityMatrix = NULL;
+        }
+    }
 
     void makeDistanceMatrix();
     void makeProbabilityMatrix(double powA);
+
+public:
+    /**
+     * Получение готового проинициализированного объекта для работы
+     */
+    static HSDistanceMatrix* getInstance(double powA);
+
+    vector<double>*  getDistanceMatrix()    {return DistanceMatrix;}
+    double**         getProbabilityMatrix() {return ProbabilityMatrix;}
     double getDistance(unsigned int i, unsigned int j);
 };
 

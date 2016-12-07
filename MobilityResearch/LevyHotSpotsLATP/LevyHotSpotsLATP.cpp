@@ -92,11 +92,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
     }
 
-    if (hsd==NULL) {
-        hsd = new HSDistanceMatrix();
-        hsd->makeDistanceMatrix();
-        hsd->makeProbabilityMatrix(powA);
-    }
+    if (!hsd) hsd = HSDistanceMatrix::getInstance(powA);
 
     // выбор случайной локации
     if (currentHSindex == -1) {
@@ -250,7 +246,7 @@ bool LevyHotSpotsLATP::findNextHotSpot()
     double rn, pr=0;
     rn=(double)rand()/RAND_MAX;
     for(unsigned int i=0; i<hsc->getHSData()->size(); i++) {
-        if(i != currentHSindex ) pr+=(hsd->ProbabilityMatrix)[currentHSindex][i];
+        if(i != currentHSindex ) pr+=(hsd->getProbabilityMatrix())[currentHSindex][i];
         if(rn <= pr) {currentHSindex=i; break; }
     }
     setCurrentHSbordersWith( &(hsc->getHSData()->at(currentHSindex)) );

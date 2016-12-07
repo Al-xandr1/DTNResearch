@@ -5,9 +5,7 @@ HotSpotsCollection* HotSpotsCollection::instance = NULL;   // указатель на singl
 
 
 HotSpotsCollection* HotSpotsCollection::getInstance() {
-    if (!instance) {
-        instance = new HotSpotsCollection();
-    }
+    if (!instance) instance = new HotSpotsCollection();
     return instance;
 }
 
@@ -111,28 +109,32 @@ HotSpotData* HotSpotsCollection::randomRemove(vector<HotSpotData*>* hotSpots, in
 }
 
 
+// ----------------------------------- HSDistanceMatrix --------------------------------------------
 
-bool HSDistanceMatrix::isMatrixReady = false;
-vector<double>* HSDistanceMatrix::DistanceMatrix;
 
+HSDistanceMatrix* HSDistanceMatrix::instance = NULL;     // указатель на singleton объект
+
+
+HSDistanceMatrix* HSDistanceMatrix::getInstance(double powA) {
+    if (!instance) instance = new HSDistanceMatrix(powA);
+    return instance;
+}
 
 void HSDistanceMatrix::makeDistanceMatrix()
 {
+    ASSERT(!DistanceMatrix);
     HotSpotsCollection* hsc = HotSpotsCollection::getInstance();
-    if(!isMatrixReady) {
-        DistanceMatrix = new vector<double>[hsc->getHSData()->size()];
-        for(unsigned int i=0; i<hsc->getHSData()->size(); i++) {
-            DistanceMatrix[i].clear();
-            DistanceMatrix[i].push_back(0);
-            for(unsigned int j=i+1; j<hsc->getHSData()->size(); j++) {
-                double d2=(hsc->getHSData()->at(i).Xcenter - hsc->getHSData()->at(j).Xcenter)*
-                          (hsc->getHSData()->at(i).Xcenter - hsc->getHSData()->at(j).Xcenter)+
-                          (hsc->getHSData()->at(i).Ycenter - hsc->getHSData()->at(j).Ycenter)*
-                          (hsc->getHSData()->at(i).Ycenter - hsc->getHSData()->at(j).Ycenter);
-                DistanceMatrix[i].push_back(sqrt( d2 ));
-            }
+    DistanceMatrix = new vector<double>[hsc->getHSData()->size()];
+    for(unsigned int i=0; i<hsc->getHSData()->size(); i++) {
+        DistanceMatrix[i].clear();
+        DistanceMatrix[i].push_back(0);
+        for(unsigned int j=i+1; j<hsc->getHSData()->size(); j++) {
+            double d2=(hsc->getHSData()->at(i).Xcenter - hsc->getHSData()->at(j).Xcenter)*
+                (hsc->getHSData()->at(i).Xcenter - hsc->getHSData()->at(j).Xcenter)+
+                (hsc->getHSData()->at(i).Ycenter - hsc->getHSData()->at(j).Ycenter)*
+                (hsc->getHSData()->at(i).Ycenter - hsc->getHSData()->at(j).Ycenter);
+            DistanceMatrix[i].push_back(sqrt( d2 ));
         }
-        isMatrixReady=true;
     }
 }
 
@@ -144,24 +146,19 @@ double HSDistanceMatrix::getDistance(unsigned int i, unsigned int j)
 }
 
 
-bool HSDistanceMatrix::isProbabilityReady = false;
-double**  HSDistanceMatrix::ProbabilityMatrix;
-
-
 void HSDistanceMatrix::makeProbabilityMatrix(double powA)
 {
+    ASSERT(DistanceMatrix);
+    ASSERT(!ProbabilityMatrix);
     HotSpotsCollection* hsc = HotSpotsCollection::getInstance();
-    if(isMatrixReady && !isProbabilityReady) {
-        ProbabilityMatrix = new double*[hsc->getHSData()->size()];
-        for(unsigned int i=0; i<hsc->getHSData()->size(); i++) {
-            ProbabilityMatrix[i]= new double[hsc->getHSData()->size()];
-            double h=0;
-            for(unsigned int j=0; j<hsc->getHSData()->size(); j++) {
-                if(i!=j) h += ProbabilityMatrix[i][j] = pow(1/getDistance(i,j), powA);
-                else ProbabilityMatrix[i][j]=0;
-            }
-            for(unsigned int j=0; j<hsc->getHSData()->size(); j++) ProbabilityMatrix[i][j]/=h;
+    ProbabilityMatrix = new double*[hsc->getHSData()->size()];
+    for(unsigned int i=0; i<hsc->getHSData()->size(); i++) {
+        ProbabilityMatrix[i]= new double[hsc->getHSData()->size()];
+        double h=0;
+        for(unsigned int j=0; j<hsc->getHSData()->size(); j++) {
+            if(i!=j) h += ProbabilityMatrix[i][j] = pow(1/getDistance(i,j), powA);
+            else ProbabilityMatrix[i][j]=0;
         }
-        isProbabilityReady=true;
+        for(unsigned int j=0; j<hsc->getHSData()->size(); j++) ProbabilityMatrix[i][j]/=h;
     }
 }
