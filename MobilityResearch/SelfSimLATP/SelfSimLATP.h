@@ -70,6 +70,7 @@ class SelfSimLATP : public LineSegmentsMobilityBase
   protected:
     virtual int numInitStages() const { return 3; }
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
+    virtual void handleMessage(cMessage * message);
 
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setInitialPosition();

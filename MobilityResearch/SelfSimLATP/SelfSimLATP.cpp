@@ -110,6 +110,16 @@ void SelfSimLATP::initialize(int stage) {
     }
 }
 
+void SelfSimLATP::handleMessage(cMessage * message)
+{
+    if (message->isSelfMessage())
+        MobilityBase::handleMessage(message);
+    else
+        switch (message->getKind()) {
+            //todo Заглушка. Делать окончание и начало дня как для RegularRootLATP::handleMessage
+        }
+}
+
 int SelfSimLATP::getNodeID()
 {
     return NodeID;
