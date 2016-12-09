@@ -30,13 +30,13 @@ class RegularRootLATP : public LevyHotSpotsLATP
 
     double rootPersistence;
 
-    vector<HotSpotShortInfo*>* firstRoot;
+    vector<HotSpotData*>* firstRoot;
     vector<unsigned int>*      firstRootSnumber;
     vector<int>*               firstRootCounter;
 
-    HotSpotShortInfo*          homeHS;             // перва€ локаци€ маршрута, она же последн€€
+    HotSpotData*          homeHS;             // перва€ локаци€ маршрута, она же последн€€
 
-    vector<HotSpotShortInfo*>* currentRoot;
+    vector<HotSpotData*>* currentRoot;
     vector<unsigned int>*      currentRootSnumber;
     vector<int>*               currentRootCounter;
 

@@ -66,24 +66,20 @@ void SelfSimLATP::initialize(int stage) {
 
     if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
 
-    if (hsc==NULL) {
-        hsc = new HotSpotsCollection();
+    if (!hsc) {
         // загрузка данных о докаци€х
+        hsc = HotSpotsCollection::getInstance();
         double minX, maxX, minY, maxY;
-        hsc->readHotSpotsInfo(DEF_TR_DIR, minX, maxX, minY, maxY);
+        hsc->getTotalSize(minX, maxX, minY, maxY);
         constraintAreaMin.x=minX; constraintAreaMin.y=minY;
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
     }
 
-    if (hsd==NULL) {
-        hsd = new HSDistanceMatrix();
-        hsd->makeDistanceMatrix();
-        hsd->makeProbabilityMatrix(powAforHS);
-    }
+    if (!hsd) hsd = HSDistanceMatrix::getInstance(powAforHS);
 
-    if (rc==NULL) {
-        rc = new RootCollection();
-        rc->readRootInfo(DEF_RT_DIR);
+    // загрузка данных об эталонных маршрутах
+    if (!rc) {
+        rc = RootsCollection::getInstance();
         makeRoot();
         buildDstMatrix();
     }
@@ -112,6 +108,16 @@ void SelfSimLATP::initialize(int stage) {
         trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
                 (int) ((par("NodeID"))), TRACE_TYPE);
     }
+}
+
+void SelfSimLATP::handleMessage(cMessage * message)
+{
+    if (message->isSelfMessage())
+        MobilityBase::handleMessage(message);
+    else
+        switch (message->getKind()) {
+            //todo «аглушка. ƒелать окончание и начало дн€ как дл€ RegularRootLATP::handleMessage
+        }
 }
 
 int SelfSimLATP::getNodeID()
@@ -233,10 +239,10 @@ bool SelfSimLATP::findNextHotSpot()
 void SelfSimLATP::makeRoot()
 {
     if(!isRootReady) {
-       RootNumber = rand() % rc->RootData.size();
+       RootNumber = rand() % rc->getRootsData()->size();
        currentRoot.clear();
-       for(unsigned int i=0; i< (rc->RootData[RootNumber])->size(); i++) {
-           currentRoot.push_back((rc->RootData[RootNumber])->at(i));
+       for(unsigned int i=0; i< rc->getRootsData()->at(RootNumber)->size(); i++) {
+           currentRoot.push_back(rc->getRootsData()->at(RootNumber)->at(i));
        }
        cout << "root made" << endl;
     }

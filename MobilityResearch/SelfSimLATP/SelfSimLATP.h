@@ -11,6 +11,7 @@
 
 #include "LeviStatic.h"
 #include "HotSpotsCollection.h"
+#include "RootsCollection.h"
 #include "SelfSimMap.h"
 #include "DevelopmentHelper.h"
 
@@ -43,9 +44,9 @@ class SelfSimLATP : public LineSegmentsMobilityBase
 
     HSDistanceMatrix* hsd;
 
-    RootCollection* rc;
+    RootsCollection* rc;
     unsigned int RootNumber;
-    vector <HotSpotRootInfo> currentRoot;
+    vector<HotSpotData> currentRoot;
     bool isRootReady;
 
     SelfSimMapGenerator* gen;
@@ -69,6 +70,7 @@ class SelfSimLATP : public LineSegmentsMobilityBase
   protected:
     virtual int numInitStages() const { return 3; }
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
+    virtual void handleMessage(cMessage * message);
 
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setInitialPosition();

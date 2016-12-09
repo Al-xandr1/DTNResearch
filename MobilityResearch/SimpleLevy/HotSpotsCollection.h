@@ -8,128 +8,93 @@
 #include <fstream>
 #include <stdlib.h>
 #include <windows.h>
-
 #include "INETDefs.h"
+#include "Data.h"
 #include "Coord.h"
-
 #include "DevelopmentHelper.h"
 
 using namespace std;
 
 
-struct Waypoint{
-    double X, Y, Tb, Te;
-    char* traceName;
+/**
+ * Коллекция всех локаций в моделировании. Соответствует папке hotspotfiles. Singleton объект
+ */
+class HotSpotsCollection {
+private:
+    static HotSpotsCollection* instance;   // указатель на singleton объект
 
-    Waypoint(double x, double y, double Tb, double Te, char* traceName) {
-        this->X = x;
-        this->Y = y;
-        this->Tb = Tb;
-        this->Te = Te;
-        this->traceName = traceName;
+    vector<HotSpotData>* HSData;           // набор всех локаций
+
+    HotSpotsCollection() {
+        this->HSData = NULL;
+        this->readHotSpotsInfo(DEF_TR_DIR, SPC_FILE);
+        this->print();
     }
-};
 
-struct HotSpotShortInfo {
-     double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;
-     double sumTime;            // (READ-ONLY) время нахождения в локации
-     unsigned int waypointNum;  // (READ-ONLY) количество путевых точек в локации
-     unsigned int counter;      // (READ-ONLY) количество посещений локации
-     char* hotSpotName;         // (READ-ONLY) имя локации
+    ~HotSpotsCollection() {
+        if (HSData) delete HSData;
+    }
 
-     double generatedSumTime;           // время нахождения в локации при моделировании
-     unsigned int generatedWaypointNum; // количество путевых точек в локации при моделиронии
-     vector<Waypoint> waypoints;        // сгенерированные путевые точки
+    void readHotSpotsInfo(char* TracesDir, char* spotcountfile);
 
-     HotSpotShortInfo(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, unsigned int waypointNum, unsigned int counter=0 )
-     {
-         strcpy(this->hotSpotName = new char[256], hotSpotName);
-         this->Xmin = Xmin;
-         this->Xmax = Xmax;
-         this->Ymin = Ymin;
-         this->Ymax = Ymax;
-         this->Xcenter = (Xmin + Xmax) / 2;
-         this->Ycenter = (Ymin + Ymax) / 2;
-         this->sumTime = sumTime;
-         this->waypointNum = waypointNum;
-         this->generatedSumTime = 0;
-         this->generatedWaypointNum = 0;
-     }
-
-     void print()
-     {
-         cout << "\t Xmin = " << Xmin << ", Xmax = " << Xmax << endl;
-         cout << "\t Ymin = " << Ymin << ", Ymax = " << Ymax << endl;
-         cout << "\t Xcenter = " << Xcenter << ", Ycenter = " << Ycenter << endl;
-         cout << "\t sumTime = " << sumTime << ", generatedSumTime = " << generatedSumTime << endl;
-         cout << "\t waypointNum = " << waypointNum << ", generatedWaypointNum = " << generatedWaypointNum << endl;
-         cout << "\t hotSpotName = " << hotSpotName << endl << endl;
-     }
-};
-
-class HotSpotsCollection
-{
 public:
-    static bool isHSDataReady;
-    static vector<HotSpotShortInfo> HSData;
+    /**
+     * Получение готового проинициализированного объекта для работы
+     */
+    static HotSpotsCollection* getInstance();
+    static HotSpotData* randomRemove(vector<HotSpotData*>* hotSpots, int& HotSpotNum);
 
-    void readHotSpotsInfo(char* TracesDir, double& minX, double& maxX, double& minY, double& maxY);
-    HotSpotShortInfo* findHotSpotbyName(char*, int&);
+    vector<HotSpotData>* getHSData() {return HSData;}
+    void getTotalSize(double& minX, double& maxX, double& minY, double& maxY);
+    HotSpotData* findHotSpotbyName(char*, int&);
     void print();
-    static HotSpotShortInfo* randomRemove(vector<HotSpotShortInfo*>* hotSpots, int& HotSpotNum);
 };
 
 
-class HSDistanceMatrix
-{
-public:
-    static bool isMatrixReady;
-    static vector<double>*  DistanceMatrix;
+/**
+ * Расчитанный матрица дистанций и вероятностей.
+ */
+class HSDistanceMatrix {
+private:
+    static HSDistanceMatrix* instance;     // указатель на singleton объект
 
-    static bool isProbabilityReady;
-    static double**  ProbabilityMatrix;
+    vector<double>*  DistanceMatrix;
+    double**         ProbabilityMatrix;
+
+    HSDistanceMatrix(double powA) {
+        this->DistanceMatrix = NULL;
+        this->ProbabilityMatrix = NULL;
+        this->makeDistanceMatrix();
+        this->makeProbabilityMatrix(powA);
+    }
+
+    ~HSDistanceMatrix() {
+        if (DistanceMatrix) {
+            delete DistanceMatrix;
+            DistanceMatrix = NULL;
+        }
+        if (ProbabilityMatrix) {
+            HotSpotsCollection* hsc = HotSpotsCollection::getInstance();
+            for(int i=0; i<hsc->getHSData()->size();i++) {
+                delete[] ProbabilityMatrix[i];
+            }
+            delete[]  ProbabilityMatrix;
+            ProbabilityMatrix = NULL;
+        }
+    }
 
     void makeDistanceMatrix();
     void makeProbabilityMatrix(double powA);
-    double getDistance(unsigned int i, unsigned int j);
-};
 
-
-// ----------------------------------- for SLAW ----------------------------------------------
-
-struct HotSpotRootInfo {
-     char* hotSpotName;
-     double Xmin, Xmax, Ymin, Ymax;
-     double sumTime;
-     unsigned int waypointNum;
-
-     HotSpotRootInfo(char* hotSpotName=NULL, double Xmin=0, double Xmax=0, double Ymin=0, double Ymax=0, double sumTime=0, unsigned int waypointNum=0)
-     {
-         if(hotSpotName!=NULL) strcpy(this->hotSpotName = new char[256], hotSpotName);
-         else this->hotSpotName=NULL;
-         this->Xmin=Xmin;
-         this->Xmax=Xmax;
-         this->Ymin=Ymin;
-         this->Ymax=Ymax;
-         this->sumTime = sumTime;
-         this->waypointNum = waypointNum;
-     }
-
-     void printHotSpotRootInfo()
-     {
-         cout << this->hotSpotName <<" "<<this->Xmin<<" "<<this->Xmax<<" "
-              << this->Ymin<<" "<<this->Ymax<<" "<<this->sumTime<<" "<<waypointNum<<endl;
-     }
-};
-
-
-class RootCollection {
 public:
-        static bool isRootDataReady;
-        static vector<vector<HotSpotRootInfo>*> RootData;
+    /**
+     * Получение готового проинициализированного объекта для работы
+     */
+    static HSDistanceMatrix* getInstance(double powA);
 
-        void readRootInfo(char* RootDir);
-        void prtintRootInfo();
+    vector<double>*  getDistanceMatrix()    {return DistanceMatrix;}
+    double**         getProbabilityMatrix() {return ProbabilityMatrix;}
+    double getDistance(unsigned int i, unsigned int j);
 };
 
 
