@@ -26,9 +26,7 @@ void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
         if (src2) NodeId = src2->getNodeID();
 
         ASSERT(checkReceivedData());
-        if (processReceivedData()) {
-            rd->connectionsChanged();
-        }
+		if (processReceivedData()) rd->connectionsChanged();
     }
 }
 
@@ -57,12 +55,21 @@ bool RD_Listener::processReceivedData()
             rd->calculateICT(NodeId, j);
             anyChanged = true;
 
+            // PROPHET -------------------------------------------------
+            rd->PROPHET_connection_starts(NodeId, j);
+            // ---------------------------------------------------------
+			
         } else if( RoutingDaemon::connections[NodeId][j] && !conn ) {
             // Разрываем соединение
             RoutingDaemon::connectLost[NodeId][j] = simTime();
             RoutingDaemon::sumOfConnectDuration[NodeId][j] += (simTime() - RoutingDaemon::connectStart[NodeId][j]);
             ASSERT(RoutingDaemon::sumOfConnectDuration[NodeId][j] <= RoutingDaemon::dayDuration);
             anyChanged = true;
+			
+            // PROPHET -------------------------------------------------
+            rd->PROPHET_connection_ends(NodeId, j);
+            // ---------------------------------------------------------
+			
         }
         RoutingDaemon::connections[NodeId][j] = conn;
     }
@@ -75,12 +82,18 @@ bool RD_Listener::processReceivedData()
             rd->calculateICT(i, NodeId);
             anyChanged = true;
 
+            // PROPHET -------------------------------------------------
+            rd->PROPHET_connection_starts(i, NodeId);
+            // ---------------------------------------------------------
         } else if( RoutingDaemon::connections[i][NodeId] && !conn ) {
             // Разрываем соединение
             RoutingDaemon::connectLost[i][NodeId] = simTime();
             RoutingDaemon::sumOfConnectDuration[i][NodeId] += (simTime() - RoutingDaemon::connectStart[i][NodeId]);
             ASSERT(RoutingDaemon::sumOfConnectDuration[i][NodeId] <= RoutingDaemon::dayDuration);
             anyChanged = true;
+            // PROPHET -------------------------------------------------
+            rd->PROPHET_connection_ends(i, NodeId);
+            // ---------------------------------------------------------
         }
         RoutingDaemon::connections[i][NodeId] = conn;
     }

@@ -64,3 +64,24 @@ bool MoreFrequentVisibleHeuristic::canProcess(Request* request, vector<int>* nei
     else return false;
 }
 
+
+// PROPHET ---------------------------------------------------------------------------------
+bool PROPHET_Heuristic::canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting)
+{
+    int    moreSuitableNode = request->getSourceId();
+    int    i_max = request->getSourceId();
+    int    dest  = request->getDestinationId();
+    double P_max = RoutingDaemon::P_prophet[moreSuitableNode][dest];
+
+    for(unsigned int i = 0;  i<neighbors->size(); i++)
+        if( P_max < RoutingDaemon::P_prophet[neighbors->at(i)][dest])
+            P_max = RoutingDaemon::P_prophet[ i_max=neighbors->at(i) ][dest];
+    if ( P_max > RoutingDaemon::P_first_threshold ) moreSuitableNode = i_max;
+
+    // когда выбирается текущий узел как подходящий, тогда передача не нужна
+    if (moreSuitableNode != request->getSourceId()) {
+        nodeForRouting = moreSuitableNode; return true;
+    }
+    else return false;
+}
+// --------------------------------------------------------------------------------------------

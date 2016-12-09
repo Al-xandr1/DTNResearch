@@ -13,6 +13,22 @@ vector<simtime_t**>* RoutingDaemon::connectivityPerDay = NULL;
 vector<Request*>*    RoutingDaemon::requests = NULL;
 RoutingDaemon*       RoutingDaemon::instance = NULL;
 
+// PROPHET data structures initialization ---------------------------------------------
+double**    RoutingDaemon::P_prophet = NULL;
+simtime_t*  RoutingDaemon::U_prophet = NULL;
+unsigned**  RoutingDaemon::C_prophet = NULL;
+// PROPHET parameters initialization ---------------------------------------------------
+double      RoutingDaemon::P_encounter_max    = 0.7;
+double      RoutingDaemon::P_encounter_first  = 0.5;
+double      RoutingDaemon::P_first_threshold  = 0.1;
+double      RoutingDaemon::alpha_prophet      = 0.5;
+double      RoutingDaemon::beta_prophet       = 0.9;
+double      RoutingDaemon::gamma_prophet      = 0.999;
+double      RoutingDaemon::delta_prophet      = 0.01;
+double      RoutingDaemon::I_typ              = 100;
+int         RoutingDaemon::several            = 5;
+// -------------------------------------------------------------------------------------
+
 #define ALL         0   // 0 - нет ограничений (все эвристики) - LET_Threshold работает
 #define LET_ONLY    1   // 1 - использовать только LET - LET_Threshold отключается (равен "бесконечности)
 #define MFV_ONLY    2   // 2 - использоват только MFV - LET_Threshold не имеет смысла, не используется
@@ -71,39 +87,67 @@ void RoutingDaemon::initialize() {
     getParentModule()->subscribe(mobilityStateChangedSignal, new RD_Listener(this));
 
     scheduleAt(simTime(), new cMessage("Start of the Day", DAY_START));
+
+    // PROPHET ----------------------------------------------------------------------------------
+    scheduleAt(simTime()+(simtime_t)(several*I_typ), new cMessage("PROPHET Timer", SET_TIMER));
+    // ------------------------------------------------------------------------------------------
 }
 
 void RoutingDaemon::matricesCreation() {
     // Создаём нижнетреугольную матрицу связности
-    RoutingDaemon::connections = new bool*[RoutingDaemon::numHosts];
+    connections = new bool*[numHosts];
     // Создаём нижнетреугольную матрицу моментов установления связи
-    RoutingDaemon::connectStart = new simtime_t*[RoutingDaemon::numHosts];
+    connectStart = new simtime_t*[numHosts];
     // Создаём нижнетреугольную матрицу моментов разрыва связи
-    RoutingDaemon::connectLost = new simtime_t*[RoutingDaemon::numHosts];
+    connectLost = new simtime_t*[numHosts];
     // Создаём нижнетреугольную матрицу длительностей контакта
-    RoutingDaemon::sumOfConnectDuration = new simtime_t*[RoutingDaemon::numHosts];
-    for (int i=0; i<RoutingDaemon::numHosts; i++) {
-        RoutingDaemon::connections[i]   = new bool[i+1];
-        RoutingDaemon::connectStart[i]  = new simtime_t[i+1];
-        RoutingDaemon::connectLost[i]   = new simtime_t[i+1];
-        RoutingDaemon::sumOfConnectDuration[i] = new simtime_t[i+1];
+    sumOfConnectDuration = new simtime_t*[numHosts];
+    for (int i=0; i<numHosts; i++) {
+        connections[i]   = new bool[i+1];
+        connectStart[i]  = new simtime_t[i+1];
+        connectLost[i]   = new simtime_t[i+1];
+        sumOfConnectDuration[i] = new simtime_t[i+1];
     }
+
+    // PROPHET ---------------------------------------------------------------
+    // Создаём квадратную матрицу шансов доставки
+    P_prophet = new double*[numHosts];
+    // Создаём нижнетреугольную матрицу счётчиков контактов
+    C_prophet = new unsigned*[numHosts];
+    for (int i=0; i<numHosts; i++) {
+        P_prophet[i] = new double[numHosts];
+        C_prophet[i] = new unsigned[i+1];
+    }
+    // Создаём вектор моментов последнего обновления матрицы шансов
+    U_prophet = new simtime_t[numHosts];
+    // -----------------------------------------------------------------------
 }
 
 void RoutingDaemon::matricesInitialization() {
     // Приводим в начальное состояние все матрицы
-    for (int i=0; i<RoutingDaemon::numHosts; i++) {
-        RoutingDaemon::connections[i][i]  = true;
-        RoutingDaemon::connectStart[i][i] = 0;
-        RoutingDaemon::connectLost[i][i]  = 0;
-        RoutingDaemon::sumOfConnectDuration[i][i] = RoutingDaemon::dayDuration;
+    for (int i=0; i<numHosts; i++) {
+        connections[i][i]  = true;
+        connectStart[i][i] = 0;
+        connectLost[i][i]  = 0;
+        sumOfConnectDuration[i][i] = dayDuration;
         for (int j=0; j<i; j++) {
-            RoutingDaemon::connections[i][j]  = false;
-            RoutingDaemon::connectStart[i][j] = 0;
-            RoutingDaemon::connectLost[i][j]  = 0;
-            RoutingDaemon::sumOfConnectDuration[i][j] = 0;
+            connections[i][j]  = false;
+            connectStart[i][j] = 0;
+            connectLost[i][j]  = 0;
+            sumOfConnectDuration[i][j] = 0;
         }
     }
+
+	// PROPHET -------------------------------------------------------------------
+    for (int i=0; i<numHosts; i++) {
+        U_prophet[i]    = 0;
+        P_prophet[i][i] = 1;
+        C_prophet[i][i] = 0;
+        for (int j=0; j<numHosts; j++) P_prophet[i][j] = 0;
+        for (int j=0; j<i; j++) C_prophet[i][j] = 0;
+    }
+    // ---------------------------------------------------------------------------
+
 }
 
 void RoutingDaemon::handleMessage(cMessage *msg) {
@@ -120,7 +164,7 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
 
                 //"асинхронное" оповещение об окончании дня
                 if (getCurrentDay() >= 1)
-                    for (int i=0; i < RoutingDaemon::numHosts; i++)
+                    for (int i=0; i < numHosts; i++)
                         sendDirect(new cMessage("Start of the Day", DAY_START), getParentModule()->getSubmodule("host", i)->gate("in"));
 
                 scheduleAt(simTime() + (simtime_t) dayDuration, msg);
@@ -133,6 +177,13 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
             if (!processIfCan(request)) requests->push_back(request);
             break;
         }
+
+		// PROPHET message handling --------------------------------------------------------
+        case SET_TIMER:
+            scheduleAt(simTime()+(simtime_t)I_typ, msg);
+            PROPHET_timer_processing();
+            break;
+        // ---------------------------------------------------------------------------------
 
         default: {// неизвестное сообщение, выводим для отладки
             cout << "RoutingDaemon::handleMessage: msg->getKind() = " << msg->getKind() << endl;
@@ -197,8 +248,8 @@ void RoutingDaemon::connectionsChanged() {
     }
 }
 
-bool RoutingDaemon::processIfCan(Request* request) {
 
+bool RoutingDaemon::processIfCan(Request* request) {
     // ищем соседей узла, пославшего запрос
     int senderID = request->getSourceId();
     neighbors    = new vector<int>();
@@ -281,10 +332,90 @@ simtime_t RoutingDaemon::computeTotalConnectivity(int nodeId1, int nodeId2) {
 }
 
 
+// PROPHET methods ------------------------------------------------------------------------
+void  RoutingDaemon::PROPHET_aging_P(int node1, int node2, simtime_t lastUpdate)
+{
+    P_prophet[node1][node2] = P_prophet[node1][node2]*pow(gamma_prophet, SIMTIME_DBL(simTime()-lastUpdate) );
+}
+
+
+void  RoutingDaemon::PROPHET_growing_P(int node1, int node2, simtime_t lastContact)
+{
+    double P_encounter = ( simTime()-lastContact >= (simtime_t)I_typ)? P_encounter_max : P_encounter_max*SIMTIME_DBL(simTime()-lastContact)/I_typ;
+    P_prophet[node1][node2] =  P_prophet[node1][node2] + (1-delta_prophet-P_prophet[node1][node2])*P_encounter;
+}
+
+
+double  RoutingDaemon::PROPHET_transitivity_P(int node1, int node2, int node3)
+{
+   return max( P_prophet[node1][node3], P_prophet[node1][node2]*P_prophet[node2][node3]*beta_prophet);
+}
+
+
+void RoutingDaemon::PROPHET_connection_starts(int node1, int node2)
+ {
+    for(int i=0; i<numHosts; i++) {
+        if(i != node1 && i != node2) {        // это не тот узел, у которого начался контакт
+            if( !isConnected(i, node1) && !isConnected(i, node2)) {  // обработка узлов, не соединённых с обоими сторонами контакта
+                PROPHET_aging_P( node1, i, U_prophet[node1]);
+                PROPHET_aging_P( node2, i, U_prophet[node2]);
+            }
+            if( isConnected(node1, i) ) PROPHET_growing_P(node1, i, connectStart[max(node1,i)][min(node1,i)]);
+            if( isConnected(node2, i) ) PROPHET_growing_P(node2, i, connectStart[max(node2,i)][min(node2,i)]);
+        } else if( i == min(node1, node2) ) { // это узел c меньшим номером, у которого начался контакт, чтобы исключить дублирование
+            PROPHET_aging_P( node1, node2, U_prophet[node1]);
+            PROPHET_aging_P( node2, node1, U_prophet[node2]);
+            if( P_prophet[node1][node2] < P_first_threshold ) P_prophet[node1][node2] = P_encounter_first;
+            else PROPHET_growing_P(node1, node2, connectLost[max(node1,node2)][min(node1,node2)]);
+            if( P_prophet[node2][node1] < P_first_threshold ) P_prophet[node2][node1] = P_encounter_first;
+            else PROPHET_growing_P(node2, node1, connectLost[max(node1,node2)][min(node1,node2)]);
+        }
+    }
+    for(int i=0; i<numHosts; i++) if(i != node1 && i != node2) {
+        P_prophet[node1][i] = PROPHET_transitivity_P(node1, node2, i);
+        P_prophet[node2][i] = PROPHET_transitivity_P(node2, node1, i);
+        C_prophet[max(node1,i)][min(node1,i)]++;
+        C_prophet[max(node2,i)][min(node2,i)]++;
+        // TODO Послать C_prophet[max(node1,node2)][min(node1,node2)] в коллектор сстатистики
+        C_prophet[max(node1,node2)][min(node1,node2)]=0;
+    }
+    U_prophet[node1]=U_prophet[node2]=simTime();
+}
+
+
+// затычка на всякий случай
+void RoutingDaemon::PROPHET_connection_ends(int node1, int node2) {}
+
+
+void RoutingDaemon::PROPHET_timer_processing()
+{
+    int node;
+    bool isConn;
+    for(node=0; node<numHosts; node++) {
+        isConn = false;
+        for(int i=0; i<node; i++) isConn = (isConn || isConnected(node, i));         // соединён ли узел хоть с кем-нибудь?
+        if( isConn && ((simTime()-U_prophet[node])>=(simtime_t)(several*I_typ)) ) {  // если да и уже давно, обрабатываем
+            for(int i=0; i<numHosts; i++) {
+               if( i != node &&  isConnected(node, i) ) PROPHET_growing_P(node, i, U_prophet[node]);
+               if( i != node && !isConnected(node, i) ) PROPHET_aging_P  (node, i, U_prophet[node]);
+            }
+            for(int i=0; i<numHosts; i++)
+            for(int j=0; j<i; j++)
+               if(i != node && j != node ) {
+                  double         tmp = PROPHET_transitivity_P(node, j, i);
+                  P_prophet[node][j] = PROPHET_transitivity_P(node, i, j);
+                  P_prophet[node][i] = tmp;
+               }
+            U_prophet[node]=simTime();
+        }
+    }
+}
+// ----------------------------------------------------------------------------------------
+
 //-------------------------------------- for debug ---------------------------------------------------
 void RoutingDaemon::log() {
     cout << "NodeIds:" << endl;
-    for (int i=0; i<RoutingDaemon::numHosts; i++) {
+    for (int i=0; i<numHosts; i++) {
         MobileHost* host = check_and_cast<MobileHost*>(getParentModule()->getSubmodule("host", i));
         int nodeId = host->getNodeId();
         cout << "nodeId = " << nodeId << "  ";
