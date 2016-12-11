@@ -25,23 +25,28 @@ RegularRootLATP::RegularRootLATP()
 
 void RegularRootLATP::loadFirstRoot()
 {
-    firstRoot = new vector<HotSpotData*>;
+    firstRoot = new vector<HotSpotDataRoot*>;
     firstRootCounter = new vector<int>;
     firstRootSnumber = new vector<unsigned int>;
-    HotSpotData* h=NULL;
     int Snum=-1;
 
     // загрузка первого маршрута (эталона)
-    h = hsc->findHotSpotbyName(rc->getRootsDataShort()->at(NodeID).hotSpot[0], Snum);
-    ASSERT(h != NULL);
+    vector<HotSpotDataRoot>* root = rc->getRootDataByNodeId(NodeID);
+    // получение индекса в полной коллекции локаций
+    hsc->findHotSpotbyName(root->at(0).hotSpotName, Snum);
+    ASSERT(Snum != -1);
+    HotSpotDataRoot* h = &(root->at(0));
     firstRoot->push_back(h);
     firstRootSnumber->push_back(Snum);
     firstRootCounter->push_back(1);
 
-    for(int i=1; i<rc->getRootsDataShort()->at(NodeID).length; i++ ) {
-        h = hsc->findHotSpotbyName(rc->getRootsDataShort()->at(NodeID).hotSpot[i], Snum);
+    for(unsigned int i=1; i<root->size(); i++ ) {
+        hsc->findHotSpotbyName(h->hotSpotName, Snum);
+        h = &(root->at(i));
         for(unsigned int j=0; j<firstRoot->size(); j++)
-            if( firstRoot->at(j)==h ) { firstRootCounter->at(j)+=1; h=NULL; }
+            if( strcmp(firstRoot->at(j)->hotSpotName, h->hotSpotName) == 0) {
+                firstRootCounter->at(j)+=1; h=NULL;
+            }
         if (h!=NULL) {
             firstRoot->push_back(h);
             firstRootSnumber->push_back(Snum);
@@ -51,6 +56,7 @@ void RegularRootLATP::loadFirstRoot()
 
     // загрузка домашней локации
     homeHS = firstRoot->at(0);
+    // printFirstRoot();
 }
 
 
@@ -115,26 +121,24 @@ void RegularRootLATP::initialize(int stage) {
     if (rootPersistence == -1)
         rootPersistence = getParentModule()->par("rootPersistence").doubleValue();
 
-    if (firstRoot == NULL) {
-        loadFirstRoot();
-        // printFirstRoot();
-    }
+    if (!firstRoot) loadFirstRoot();
 
-    if (currentRoot == NULL) {
+    if (!currentRoot) {
         // первый раз ходим по эталонному маршруту
-        currentRoot = new vector<HotSpotData*>(*firstRoot);
+        currentRoot = new vector<HotSpotDataRoot*>(*firstRoot);
         currentRootSnumber = new vector<unsigned int>(*firstRootSnumber);
         currentRootCounter = new vector<int>(*firstRootCounter);
 
         // начальная локация - это первая локация текущего маршрута
         curRootIndex=0;
         LevyHotSpotsLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
-        hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
+        hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex); // todo remove
+        ASSERT(currentRootSnumber->at(curRootIndex) == currentHSindex);
 
         // printCurrentRoot();
     }
 
-    if (LocalProbMatrix == NULL) makeLocalProbMatrix(powA);
+    if (!LocalProbMatrix) makeLocalProbMatrix(powA);
 }
 
 
@@ -182,7 +186,8 @@ bool RegularRootLATP::findNextHotSpot()
         curRootIndex = ii;
         (*currentRootCounter)[curRootIndex]=1;           // если посещений несколько, заменяем одним
         LevyHotSpotsLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
-        hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
+        hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex); // todo remove
+        ASSERT(currentRootSnumber->at(curRootIndex) == currentHSindex);
         return true;
     }
 
@@ -204,7 +209,8 @@ bool RegularRootLATP::findNextHotSpot()
     }
     ASSERT(rn <= pr);
     LevyHotSpotsLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
-    hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex);
+    hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex); // todo remove
+    ASSERT(currentRootSnumber->at(curRootIndex) == currentHSindex);
     //    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
     return true;
 }
@@ -268,7 +274,7 @@ void RegularRootLATP::makeNewRoot()
         delete currentRootCounter;
     }
 
-    currentRoot        = new vector<HotSpotData*>(*firstRoot);
+    currentRoot        = new vector<HotSpotDataRoot*>(*firstRoot);
     currentRootSnumber = new vector<unsigned int>(*firstRootSnumber);
     currentRootCounter = new vector<int>(*firstRootCounter);
 
@@ -327,6 +333,7 @@ void RegularRootLATP::makeNewRoot()
     ASSERT(sortReplace.size() == replaceCountForCheck);
 
     // добавляем нужное число новых локаций в маршрут
+    //todo сделать инициализацию ѕ–ј¬»Ћ№Ќќ√ќ —–≈ƒЌ≈√ќ количества точек в новых локаци€х
     for(unsigned int i=0; i<sortReplace.size(); i++) {
        unsigned int hsNumber=sortReplace[i];
        if( hsNumber != currentRootSnumber->back() ) {

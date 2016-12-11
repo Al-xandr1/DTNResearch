@@ -30,13 +30,14 @@ class RegularRootLATP : public LevyHotSpotsLATP
 
     double rootPersistence;
 
-    vector<HotSpotData*>* firstRoot;
+    //todo либо всЄ вернуть назад и добавить совершенно отдельный vector с HotSpotDataRoot, где будут счЄтчики только дл€ текущего узла
+    vector<HotSpotDataRoot*>*  firstRoot;
     vector<unsigned int>*      firstRootSnumber;
     vector<int>*               firstRootCounter;
 
-    HotSpotData*          homeHS;             // перва€ локаци€ маршрута, она же последн€€
+    HotSpotDataRoot*           homeHS;             // перва€ локаци€ маршрута, она же последн€€
 
-    vector<HotSpotData*>* currentRoot;
+    vector<HotSpotDataRoot*>*  currentRoot;
     vector<unsigned int>*      currentRootSnumber;
     vector<int>*               currentRootCounter;
 
