@@ -23,7 +23,7 @@ private:
     static RootsCollection* instance;             // указатель на singleton объект
 
     vector<RootDataShort>* RootsDataShort;        // набор маршрутов пользователей. Структура соответствует файлу allroots.roo
-    vector<vector<HotSpotDataRoot>*>* RootsData;  // набор маршрутов пользователей. Структура - набор последовательностей *.hts
+    vector<vector<HotSpotDataRoot>*>* RootsData;  // набор маршрутов пользователей. Структура - информация из файлов *.rot
 
     RootsCollection() {
         this->RootsDataShort = NULL;
