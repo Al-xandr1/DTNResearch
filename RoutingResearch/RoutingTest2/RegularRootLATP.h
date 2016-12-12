@@ -31,15 +31,17 @@ class RegularRootLATP : public LevyHotSpotsLATP
     double rootPersistence;
 
     //todo либо всЄ вернуть назад и добавить совершенно отдельный vector с HotSpotDataRoot, где будут счЄтчики только дл€ текущего узла
-    vector<HotSpotDataRoot*>*  firstRoot;
-    vector<unsigned int>*      firstRootSnumber;
-    vector<int>*               firstRootCounter;
+    vector<HotSpotData*>*      firstRoot;               // сформированный вектор (эталона) маршрута с информацией, загруженной из файлов *.hts
+    vector<unsigned int>*      firstRootSnumber;        // сформированный вектор (эталона) с индексами локаций в структуре HotSpotsCollection
+    vector<int>*               firstRootCounter;        // сформированный вектор (эталона) со счЄтчиками посещений локаций
+    vector<int>*               firstRootWptsPerVisit;   // сформированный вектор (эталона) среднего количества путевых точек на локацию маршрута
 
-    HotSpotDataRoot*           homeHS;             // перва€ локаци€ маршрута, она же последн€€
+    HotSpotData*               homeHS;                  // перва€ локаци€ маршрута, она же последн€€
 
-    vector<HotSpotDataRoot*>*  currentRoot;
-    vector<unsigned int>*      currentRootSnumber;
-    vector<int>*               currentRootCounter;
+    vector<HotSpotData*>*      currentRoot;             // сформированный вектор (текущий) маршрута с информацией, загруженной из файлов *.hts
+    vector<unsigned int>*      currentRootSnumber;      // сформированный вектор (текущий) с индексами локаций в структуре HotSpotsCollection
+    vector<int>*               currentRootCounter;      // сформированный вектор (текущий) со счЄтчиками посещений локаций
+    vector<int>*               currentRootWptsPerVisit; // сформированный вектор (текущий) среднего количества путевых точек на локацию маршрута
 
     unsigned int curRootIndex;
 

@@ -23,7 +23,8 @@ private:
     static RootsCollection* instance;             // указатель на singleton объект
 
     // эти две коллекции хранят данные о локациях маршрута. Последовательность данных в них синхронизированна
-    vector<RootDataShort>* RootsDataShort;        // набор маршрутов пользователей. Структура соответствует файлу allroots.roo todo а теперь это нужно???
+    //todo а теперь RootsDataShort нужен???
+    vector<RootDataShort>* RootsDataShort;        // набор маршрутов пользователей. Структура соответствует файлу allroots.roo
     vector<vector<HotSpotDataRoot>*>* RootsData;  // набор маршрутов пользователей. Структура - информация из файлов *.rot
 
     RootsCollection() {
@@ -56,10 +57,10 @@ public:
     */
     static RootsCollection* getInstance();
 
-//    vector<RootDataShort>* getRootsDataShort()        {return RootsDataShort;}    todo а теперь это нужно???
+    vector<RootDataShort>* getRootsDataShort()        {return RootsDataShort;}
     vector<vector<HotSpotDataRoot>*>* getRootsData()  {return RootsData;}
 
-//    RootDataShort*           getRootDataShortByNodeId(int nodeId) {return &(RootsDataShort->at(nodeId));}    todo а теперь это нужно???
+    RootDataShort*           getRootDataShortByNodeId(int nodeId) {return &(RootsDataShort->at(nodeId));}
     vector<HotSpotDataRoot>* getRootDataByNodeId(int nodeId)      {return RootsData->at(nodeId);}
 
     void printRootsDataShort();
