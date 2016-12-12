@@ -30,7 +30,6 @@ class RegularRootLATP : public LevyHotSpotsLATP
 
     double rootPersistence;
 
-    //todo либо всё вернуть назад и добавить совершенно отдельный vector с HotSpotDataRoot, где будут счётчики только для текущего узла
     vector<HotSpotData*>*      firstRoot;               // сформированный вектор (эталона) маршрута с информацией, загруженной из файлов *.hts
     vector<unsigned int>*      firstRootSnumber;        // сформированный вектор (эталона) с индексами локаций в структуре HotSpotsCollection
     vector<int>*               firstRootCounter;        // сформированный вектор (эталона) со счётчиками посещений локаций
@@ -43,7 +42,8 @@ class RegularRootLATP : public LevyHotSpotsLATP
     vector<int>*               currentRootCounter;      // сформированный вектор (текущий) со счётчиками посещений локаций
     vector<int>*               currentRootWptsPerVisit; // сформированный вектор (текущий) среднего количества путевых точек на локацию маршрута
 
-    unsigned int curRootIndex;
+    unsigned int curRootIndex;                          // индекс текущей локации в текущем маршруте
+    unsigned int currentHSWaypointNum;                  // количество оставшихся путевых точек в текущей локации
 
     bool      isLProbReady;
     double**  LocalProbMatrix;
@@ -52,6 +52,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
     virtual void handleMessage(cMessage * message);
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual bool findNextHotSpot();
+    virtual void setCurrentHSbordersWith(HotSpotData* hsi);
     virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound = false);
 
   public:

@@ -32,16 +32,6 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     trFileName = NULL;
 }
 
-void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi)
-{
-    currentHSMin.x = hsi->Xmin;    //std::cout<<currentHSMin.x<<"\t";
-    currentHSMin.y = hsi->Ymin;    //std::cout<<currentHSMin.y<<"\t";
-    currentHSMax.x = hsi->Xmax;    //std::cout<<currentHSMax.x<<"\t";
-    currentHSMax.y = hsi->Ymax;    //std::cout<<currentHSMax.y<<"\n";
-    currentHSCenter=(currentHSMin+currentHSMax)*0.5;
-    return;
-}
-
 
 void LevyHotSpotsLATP::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
@@ -90,7 +80,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
     // выбор случайной локации
     if (currentHSindex == -1) {
         currentHSindex=rand() % hsc->getHSData()->size();
-        setCurrentHSbordersWith( &(hsc->getHSData()->at(currentHSindex)) );
+        LevyHotSpotsLATP::setCurrentHSbordersWith( &(hsc->getHSData()->at(currentHSindex)) );
     }
 
     if (wpFileName == NULL && trFileName == NULL) {
@@ -103,9 +93,21 @@ void LevyHotSpotsLATP::initialize(int stage) {
     }
 }
 
+
+void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi)
+{
+    currentHSMin.x = hsi->Xmin;    //std::cout<<currentHSMin.x<<"\t";
+    currentHSMin.y = hsi->Ymin;    //std::cout<<currentHSMin.y<<"\t";
+    currentHSMax.x = hsi->Xmax;    //std::cout<<currentHSMax.x<<"\t";
+    currentHSMax.y = hsi->Ymax;    //std::cout<<currentHSMax.y<<"\n";
+    currentHSCenter=(currentHSMin+currentHSMax)*0.5;
+}
+
+
 int LevyHotSpotsLATP::getNodeID() {
     return NodeID;
 }
+
 
 void LevyHotSpotsLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
@@ -116,13 +118,16 @@ void LevyHotSpotsLATP::setInitialPosition() {
     ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
 }
 
+
 bool LevyHotSpotsLATP::isHotSpotEmpty() {
     return currentHSMin.x == currentHSMax.x || currentHSMin.y == currentHSMax.y;
 }
 
+
 void LevyHotSpotsLATP::finish() {
     saveStatistics();
 }
+
 
 void LevyHotSpotsLATP::setTargetPosition() {
     if (movementsFinished) {nextChange = -1; return;};
@@ -143,6 +148,7 @@ void LevyHotSpotsLATP::setTargetPosition() {
     }
     isPause = !isPause;
 }
+
 
 bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound) {
     while (true) {
@@ -252,6 +258,7 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
     hsc->getHSData()->at(currentHSindex).waypoints.push_back(h);
 }
 
+
 void LevyHotSpotsLATP::saveStatistics() {
     char *outDir = NamesAndDirs::getOutDir();
     char *wpsDir = NamesAndDirs::getWpsDir();
@@ -318,11 +325,13 @@ void LevyHotSpotsLATP::saveStatistics() {
     trFile.close();
 }
 
+
 bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
     if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) return true;
     //log();
     return false;
 }
+
 
 void LevyHotSpotsLATP::log() {  // Отладочная функция
     cout << "----------------------------- LOG --------------------------------" << endl;
