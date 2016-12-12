@@ -224,34 +224,56 @@ bool RegularRootLATP::findNextHotSpot()
 }
 
 
-bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange)
+bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound)
 {
-    bool flag=LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange);
-    if (flag) return true;   // идём по маршруту
-    else {                   // маршрут кончился, идём домой
-        currentHSindex=0;
-        LevyHotSpotsLATP::setCurrentHSbordersWith( homeHS );
+    ASSERT(firstRootWptsPerVisit->at(curRootIndex) >= 0);
+    cout << "currentHSindex = "<< currentHSindex << ", curRootIndex=" << curRootIndex
+            << ", firstRootWptsPerVisit->at(curRootIndex) = " << firstRootWptsPerVisit->at(curRootIndex) << endl;//todo
 
-        // проверяем, не дома ли мы уже
-        if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
-            currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
-
-            ASSERT(isRootFinished());
-            (check_and_cast<MobileHost*>(getParentModule()))->endRoute();
-            return false;
+    if (firstRootWptsPerVisit->at(curRootIndex) == 0) {
+        //если счЄтчик равен 0, то пора мен€ть локацию
+        if (LevyHotSpotsLATP::findNextHotSpotAndTargetPosition()) {
+            ASSERT(firstRootWptsPerVisit->at(curRootIndex) > 0);
+            // уменьшаем счЄтчик количества путевых точек
+            firstRootWptsPerVisit->at(curRootIndex) -= 1;
+            return true;
         }
 
-        // если нет - идём домой
-        targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
-        targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
-
-        distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
-        ASSERT(distance > 0);
-        speed = kForSpeed * pow(distance, 1 - roForSpeed);
-        travelTime = distance / speed;
-        nextChange = simTime() + travelTime;
+        //todo маршрут кончилс€
+    } else {
+        // идЄм по маршруту
+        bool nextPosFound=LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange, true);
+        // если счЄтчик нас пропустил дальше, то по любому должны найти путевую точку
+        ASSERT(nextPosFound);
+        // уменьшаем счЄтчик количества путевых точек
+        firstRootWptsPerVisit->at(curRootIndex) -= 1;
         return true;
     }
+
+    // маршрут кончилс€, идЄм домой
+    ASSERT(firstRootWptsPerVisit->at(curRootIndex) == 0);
+    currentHSindex=0;
+    LevyHotSpotsLATP::setCurrentHSbordersWith( homeHS );
+
+    // проверяем, не дома ли мы уже
+    if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
+        currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
+
+        ASSERT(isRootFinished());
+        (check_and_cast<MobileHost*>(getParentModule()))->endRoute();
+        return false;
+    }
+
+    // если нет - идём домой
+    targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
+    targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+
+    distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
+    ASSERT(distance > 0);
+    speed = kForSpeed * pow(distance, 1 - roForSpeed);
+    travelTime = distance / speed;
+    nextChange = simTime() + travelTime;
+    return true;
 }
 
 

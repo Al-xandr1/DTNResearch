@@ -44,10 +44,6 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     HotSpotsCollection* hsc;
     int currentHSindex;
 
-    // параметры для использования счётчиков количества путевых точек в локации
-    bool usedWPcounts;
-    unsigned int currentHSWaypointNum;
-
     HSDistanceMatrix* hsd;
 
     //statistics collection
@@ -67,7 +63,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     virtual void setInitialPosition();
 
     bool isHotSpotEmpty();
-    virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+    virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound = false);
     bool findNextHotSpotAndTargetPosition();
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
 

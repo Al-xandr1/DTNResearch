@@ -52,7 +52,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
     virtual void handleMessage(cMessage * message);
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual bool findNextHotSpot();
-    virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+    virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound = false);
 
   public:
     RegularRootLATP();

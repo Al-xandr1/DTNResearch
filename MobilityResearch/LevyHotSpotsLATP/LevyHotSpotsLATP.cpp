@@ -14,9 +14,6 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
 
     currentHSindex = -1;
 
-    usedWPcounts = false;
-    currentHSWaypointNum = 0;
-
     movementsFinished = false;
 
     angle = -1;
@@ -42,7 +39,6 @@ void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi)
     currentHSMax.x = hsi->Xmax;    //std::cout<<currentHSMax.x<<"\t";
     currentHSMax.y = hsi->Ymax;    //std::cout<<currentHSMax.y<<"\n";
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
-    currentHSWaypointNum = hsi->waypointNum;
     return;
 }
 
@@ -61,7 +57,6 @@ void LevyHotSpotsLATP::initialize(int stage) {
         constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
 
         NodeID = (int) par("NodeID");
-        usedWPcounts = par("usedWPcounts").boolValue();
 
         if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") && hasPar("powA")) {
 
@@ -149,15 +144,7 @@ void LevyHotSpotsLATP::setTargetPosition() {
     isPause = !isPause;
 }
 
-bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
-    ASSERT(!usedWPcounts || currentHSWaypointNum >=0);
-    cout << "currentHSindex = "<< currentHSindex << ", currentHSWaypointNum = " << currentHSWaypointNum << endl;//todo
-    if (usedWPcounts && currentHSWaypointNum == 0) {
-        //если счётчик равен 0, то пора менять локацию
-        if (findNextHotSpotAndTargetPosition()) return true;
-        else return false; // не нашли - останавливаемся
-    }
-
+bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound) {
     while (true) {
         // генерируем прыжок Леви как обычно
         angle = uniform(0, 2 * PI);
@@ -174,7 +161,7 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
         // если вышли за пределы локации
         if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) {
             if (isHotSpotEmpty()) { // если локация точечная
-                if (usedWPcounts) {
+                if (regenerateIfOutOfBound) {
                     // в этой ситуации (счётчик не нуль, а локация вырожденная - в такой обычно должна быть только одна точка)
                     // нужно выбрать снова ТУ ЖЕ позицию
                     targetPosition = lastPosition;
@@ -201,7 +188,7 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
             // проверяем, можем ли остаться в прямоугольнике текущей локации, если прыгать к дальнему углу прямоугольника
             if ( distance > (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
                 // не можем остаться
-                if (usedWPcounts) continue; // генерируем заново прыжок
+                if (regenerateIfOutOfBound) continue; // генерируем заново прыжок
                 else if (findNextHotSpotAndTargetPosition()) return true; // выбираем следующую локацию
                      else return false; // не нашли - останавливаемся
             }
@@ -214,8 +201,6 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
         break; //получили правильный targetPosition
     }
 
-    // уменьшаем счётчик количества путевых точек
-    if (usedWPcounts) currentHSWaypointNum--;
     return true;
 }
 
