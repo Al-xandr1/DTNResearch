@@ -13,8 +13,8 @@ RootsCollection* RootsCollection::getInstance()
 
 void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* rootsDir, char* filePatter)
 {
-//    ASSERT(!RootsDataShort);
-//    ASSERT(!RootsData);
+    ASSERT(!RootsDataShort);
+    ASSERT(!RootsData);
 
     RootsDataShort = new vector<RootDataShort>();
     RootsData = new vector<vector<HotSpotDataRoot>*>();
@@ -36,12 +36,25 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
             char* inputFileName = buildFullName(rootsDir, f.cFileName);
             ifstream* infile = new ifstream(inputFileName);
             vector<HotSpotDataRoot>* root = new vector<HotSpotDataRoot>;
+            char* lastRedHotSpotName = NULL;
             while (!infile->eof()) {
                 char hotSpotName[256];
                 double Xmin, Xmax, Ymin, Ymax;
                 double sumTime;
                 unsigned int waypointNum;
                 (*infile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> sumTime >> waypointNum;
+
+                if (lastRedHotSpotName) {
+                    //это значит наткнулись на дубль последней строки (или в общем случае вообще на дубль строки)
+                    bool nextIter = false;
+                    if (strcmp(lastRedHotSpotName, hotSpotName) == 0) nextIter = true;
+                    delete[] lastRedHotSpotName;
+                    lastRedHotSpotName = NULL;
+                    if (nextIter) continue;
+                }
+                lastRedHotSpotName = new char[256];
+                lastRedHotSpotName = strcpy(lastRedHotSpotName, hotSpotName);
+
                 root->push_back(HotSpotDataRoot(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum));
             }
             infile->close();
@@ -50,19 +63,27 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
             RootsData->push_back(root);
         }
         while(FindNextFile(h, &f));
+    } else cout << "Directory or files not found\n";
+
+    for (unsigned int i=1; i<RootsDataShort->size(); i++) {
+        ASSERT(RootsDataShort->at(i).length == RootsData->at(i)->size());
+        for (unsigned  int j=0; j<RootsDataShort->at(i).length; j++) {
+            ASSERT(strcmp(RootsDataShort->at(i).hotSpot[j], RootsData->at(i)->at(j).hotSpotName) == 0);
+        }
     }
-    else cout << "Directory or files not found\n";
 }
 
 
 void RootsCollection::printRootsDataShort()
 {
+    cout << "RootsCollection::printRootsDataShort RootsDataShort:" <<endl;
     for (unsigned int i=0; i<RootsDataShort->size(); i++) (*RootsDataShort)[i].print();
 }
 
 
 void RootsCollection::printRootsData()
 {
+    cout << "RootsCollection::printRootsDataShort RootsData:" <<endl;
     for(unsigned int i=0; i<RootsData->size(); i++) {
         cout << "Root " << i <<":" <<endl;
         for(unsigned int j=0; j<(*RootsData)[i]->size(); j++) (*RootsData)[i]->at(j).print();
