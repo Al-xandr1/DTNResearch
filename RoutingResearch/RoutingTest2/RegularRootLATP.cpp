@@ -73,7 +73,11 @@ void RegularRootLATP::printFirstRoot()
 {
     if( firstRoot != NULL && hsc != NULL)
         for(unsigned int i=0; i<firstRoot->size(); i++) {
-            std::cout << NodeID << " First Root: "<< (firstRoot->at(i))->hotSpotName << " Snum=" << firstRootSnumber->at(i) <<" repeat=" << firstRootCounter->at(i) << endl;
+            std::cout << NodeID
+                    << " First Root: " << (firstRoot->at(i))->hotSpotName
+                    << " Snum=" << firstRootSnumber->at(i)
+                    << " repeat=" << firstRootCounter->at(i)
+                    << " wptsPerRepeat=" << firstRootWptsPerVisit->at(i) <<  endl;
         }
 }
 
@@ -82,7 +86,11 @@ void RegularRootLATP::printCurrentRoot()
 {
     if( currentRoot != NULL && hsc != NULL)
         for(unsigned int i=0; i<currentRoot->size(); i++) {
-            std::cout << NodeID << " Current Root: "<< (currentRoot->at(i))->hotSpotName << " Snum=" << currentRootSnumber->at(i) <<" repeat=" << currentRootCounter->at(i) << endl;
+            std::cout << NodeID
+                    << " Current Root: " << (currentRoot->at(i))->hotSpotName
+                    << " Snum=" << currentRootSnumber->at(i)
+                    << " repeat=" << currentRootCounter->at(i)
+                    << " wptsPerRepeat=" << currentRootWptsPerVisit->at(i) << endl;
         }
 }
 
