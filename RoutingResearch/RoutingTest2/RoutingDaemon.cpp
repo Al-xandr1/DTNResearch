@@ -52,7 +52,7 @@ void RoutingDaemon::initialize() {
             break;
         }
         default:
-            ASSERT(FALSE); //unreacheable statement
+            ASSERT(false); //unreacheable statement
     }
 
     connectivityPerDay    = new vector<simtime_t**>();
@@ -137,7 +137,7 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
         default: {// неизвестное сообщение, выводим для отладки
             cout << "RoutingDaemon::handleMessage: msg->getKind() = " << msg->getKind() << endl;
             cout << "Sender: " << msg->getSenderModule()->getFullName() << endl;
-            ASSERT(false);
+            ASSERT(false); //unreacheable statement
             break;
         }
     }
