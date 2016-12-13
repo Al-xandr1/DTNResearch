@@ -87,6 +87,10 @@ struct HotSpotData {
          cout << "\t waypointNum = " << waypointNum << ", generatedWaypointNum = " << generatedWaypointNum << endl;
          cout << "\t hotSpotName = " << hotSpotName << endl << endl;
      }
+
+     bool isHotSpotEmpty() {
+         return Xmin == Xmax || Ymin == Ymax;
+     }
 };
 
 

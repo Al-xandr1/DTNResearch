@@ -30,17 +30,20 @@ class RegularRootLATP : public LevyHotSpotsLATP
 
     double rootPersistence;
 
-    vector<HotSpotData*>* firstRoot;
-    vector<unsigned int>*      firstRootSnumber;
-    vector<int>*               firstRootCounter;
+    vector<HotSpotData*>*      firstRoot;               // сформированный вектор (эталона) маршрута с информацией, загруженной из файлов *.hts
+    vector<unsigned int>*      firstRootSnumber;        // сформированный вектор (эталона) с индексами локаций в структуре HotSpotsCollection
+    vector<int>*               firstRootCounter;        // сформированный вектор (эталона) со счЄтчиками посещений локаций
+    vector<int>*               firstRootWptsPerVisit;   // сформированный вектор (эталона) среднего количества путевых точек на локацию маршрута
 
-    HotSpotData*          homeHS;             // перва€ локаци€ маршрута, она же последн€€
+    HotSpotData*               homeHS;                  // перва€ локаци€ маршрута, она же последн€€
 
-    vector<HotSpotData*>* currentRoot;
-    vector<unsigned int>*      currentRootSnumber;
-    vector<int>*               currentRootCounter;
+    vector<HotSpotData*>*      currentRoot;             // сформированный вектор (текущий) маршрута с информацией, загруженной из файлов *.hts
+    vector<unsigned int>*      currentRootSnumber;      // сформированный вектор (текущий) с индексами локаций в структуре HotSpotsCollection
+    vector<int>*               currentRootCounter;      // сформированный вектор (текущий) со счЄтчиками посещений локаций
+    vector<int>*               currentRootWptsPerVisit; // сформированный вектор (текущий) среднего количества путевых точек на локацию маршрута
 
-    unsigned int curRootIndex;
+    unsigned int curRootIndex;                          // индекс текущей локации в текущем маршруте
+    unsigned int currentHSWaypointNum;                  // количество оставшихс€ путевых точек в текущей локации
 
     bool      isLProbReady;
     double**  LocalProbMatrix;
@@ -49,7 +52,8 @@ class RegularRootLATP : public LevyHotSpotsLATP
     virtual void handleMessage(cMessage * message);
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual bool findNextHotSpot();
-    virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+    virtual void setCurrentHSbordersWith(HotSpotData* hsi);
+    virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound = false);
 
   public:
     RegularRootLATP();
