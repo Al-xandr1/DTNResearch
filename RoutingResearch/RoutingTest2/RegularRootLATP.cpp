@@ -238,9 +238,6 @@ bool RegularRootLATP::findNextHotSpot()
 bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound)
 {
     ASSERT(currentHSWaypointNum >= 0);
-    cout << "currentHSindex = "<< currentHSindex << ", curRootIndex=" << curRootIndex
-            << ", currentHSWaypointNum = " << currentHSWaypointNum << endl;//todo remove
-
     if (currentHSWaypointNum == 0) {
         //если счётчик равен 0, то пора менять локацию
         if (LevyHotSpotsLATP::findNextHotSpotAndTargetPosition()) {
