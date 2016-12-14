@@ -118,7 +118,8 @@ packages/
 
 
 #-----------------SPECIFIC----------------
-
+# GitEye 
+.project
 #Code::Block files 
 *.layout
 *.depend

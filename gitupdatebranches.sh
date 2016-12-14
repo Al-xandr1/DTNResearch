@@ -1,16 +1,12 @@
 git checkout master
 git pull
 
-git checkout hyster2
+git checkout prophet
 git pull
-git merge master
+git merge --no-ff master
 git push
 
-git checkout real_mobility
+git checkout experimetns
 git pull
-git merge master
+git merge --no-ff master
 git push
-
-git checkout experiments
-git pull
-git merge master
