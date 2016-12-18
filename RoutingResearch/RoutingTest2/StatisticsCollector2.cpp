@@ -129,7 +129,9 @@ void StatisticsCollector2::processRouteHistory() {
              const double day      = routeInfo[0];
              const double dayStart = routeInfo[1];
              const double dayEnd   = routeInfo[2];
+             const double savedDuration = routeInfo[3];
 
+             // для расчёта длительности дня используем начало и конец дня. savedDuration игнорируем
              double duration = dayEnd - dayStart;
              ASSERT(duration > 0);
              routeDurationHist->collect(duration);
