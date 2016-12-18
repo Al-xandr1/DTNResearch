@@ -71,27 +71,45 @@ void RegularRootLATP::loadFirstRoot()
 
 void RegularRootLATP::printFirstRoot()
 {
-    if( firstRoot != NULL && hsc != NULL)
-        for(unsigned int i=0; i<firstRoot->size(); i++) {
-            std::cout << NodeID
-                    << " First Root: " << (firstRoot->at(i))->hotSpotName
-                    << " Snum=" << firstRootSnumber->at(i)
-                    << " repeat=" << firstRootCounter->at(i)
-                    << " wptsPerRepeat=" << firstRootWptsPerVisit->at(i) <<  endl;
-        }
+    ASSERT(firstRoot != NULL && hsc != NULL);
+    int totalRepeats = 0,
+        totalWPTS    = 0;
+    for(unsigned int i=0; i<firstRoot->size(); i++) {
+        cout << NodeID
+                  << " First Root: " << (firstRoot->at(i))->hotSpotName
+                  << " Snum=" << firstRootSnumber->at(i)
+                  << " repeat=" << firstRootCounter->at(i)
+                  << " wptsPerRepeat=" << firstRootWptsPerVisit->at(i) <<  endl;
+        totalRepeats += firstRootCounter->at(i);
+        totalWPTS += firstRootCounter->at(i) * firstRootWptsPerVisit->at(i);
+    }
+    int originTotalWPTS = 0;
+    vector<HotSpotDataRoot>* root = rc->getRootDataByNodeId(NodeID);
+    for (unsigned int i=0; i<root->size(); i++) originTotalWPTS += root->at(i).waypointNum;
+    cout << NodeID << "\t\t\t\t totalRepeats=" << totalRepeats
+         << " totalWPTS=" << totalWPTS << " originTotalWPTS=" << originTotalWPTS << endl;
 }
 
 
 void RegularRootLATP::printCurrentRoot()
 {
-    if( currentRoot != NULL && hsc != NULL)
-        for(unsigned int i=0; i<currentRoot->size(); i++) {
-            std::cout << NodeID
-                    << " Current Root: " << (currentRoot->at(i))->hotSpotName
-                    << " Snum=" << currentRootSnumber->at(i)
-                    << " repeat=" << currentRootCounter->at(i)
-                    << " wptsPerRepeat=" << currentRootWptsPerVisit->at(i) << endl;
-        }
+    ASSERT(currentRoot != NULL && hsc != NULL);
+    int totalRepeats = 0,
+        totalWPTS    = 0;
+    for(unsigned int i=0; i<currentRoot->size(); i++) {
+        cout << NodeID
+                  << " Current Root: " << (currentRoot->at(i))->hotSpotName
+                  << " Snum=" << currentRootSnumber->at(i)
+                  << " repeat=" << currentRootCounter->at(i)
+                  << " wptsPerRepeat=" << currentRootWptsPerVisit->at(i) << endl;
+        totalRepeats += currentRootCounter->at(i);
+        totalWPTS += currentRootCounter->at(i) * currentRootWptsPerVisit->at(i);
+    }
+    int originTotalWPTS = 0;
+    vector<HotSpotDataRoot>* root = rc->getRootDataByNodeId(NodeID);
+    for (unsigned int i=0; i<root->size(); i++) originTotalWPTS += root->at(i).waypointNum;
+    cout << NodeID << "\t\t\t\t totalRepeats=" << totalRepeats
+         << " totalWPTS=" << totalWPTS << " originTotalWPTS=" << originTotalWPTS << endl;
 }
 
 
@@ -310,7 +328,7 @@ bool RegularRootLATP::isRootFinished() {
 
 void RegularRootLATP::makeNewRoot()
 {
-    cout << "Making new root for NodeID: " << NodeID << endl;
+    cout << endl << "Making new root for NodeID: " << NodeID << endl;
 
     if(currentRoot != NULL) {
         deleteLocalProbMatrix();
