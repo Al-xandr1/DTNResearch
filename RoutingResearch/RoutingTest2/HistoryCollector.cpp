@@ -94,7 +94,9 @@ void HistoryCollector::write(int nodeId, vector<RouteInfoForNode*>* routesForNod
     (*out) <<TAB<<"<NODE nodeId=\""<<nodeId<<"\">"<< endl;
     for (unsigned int i=0; i<routesForNode->size(); i++) {
         RouteInfoForNode* info = (*routesForNode)[i];
-        (*out) <<TAB<<TAB<<"<ROUTE>"<<info->day<<DLM<<info->startTimeRoute<<DLM<<info->endTimeRoute<<"</ROUTE>"<<endl;
+        double dayDuration = (info->endTimeRoute - info->startTimeRoute).dbl();
+        ASSERT(dayDuration >= 0);
+        (*out) <<TAB<<TAB<<"<ROUTE>"<<info->day<<DLM<<info->startTimeRoute<<DLM<<info->endTimeRoute<<DLM<<dayDuration<<"</ROUTE>"<<endl;
     }
     (*out) <<TAB<<"</NODE>"<< endl;
 }
