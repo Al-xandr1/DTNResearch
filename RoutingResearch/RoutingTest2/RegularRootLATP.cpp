@@ -404,25 +404,45 @@ void RegularRootLATP::makeNewRoot()
     ASSERT(sortReplace.size() == replaceCountForCheck);
 
     // добавл€ем нужное число новых локаций в маршрут
+    int remainingWPTS = 0;
+    unsigned int wpts = 0;
     for(unsigned int i=0; i<sortReplace.size(); i++) {
+       ASSERT(currentRootCounter->size() == currentRootWptsPerVisit->size());
        unsigned int hsNumber=sortReplace[i];
        HotSpotData* hs = &(hsc->getHSData()->at(hsNumber));
-       ASSERT(currentRootCounter->size() == currentRootWptsPerVisit->size());
+       // ¬ставл€ем сохраненые посещени€ в новый маршрут: если локаци€ "пуста€" то пишем 1, иначе сохранЄнное число
+       if (hs->isHotSpotEmpty()) {
+           wpts = 1;
+           // неизрасходованные локации сохран€ем
+           remainingWPTS += unusedWptsPerVisit->front() - 1;
+           ASSERT(remainingWPTS >= 0);
+       } else {
+           // неизрасходованные локации расходуем при первой возможности
+           wpts = unusedWptsPerVisit->front() + remainingWPTS;
+           remainingWPTS = 0;
+       }
+       // удалЄ€м использованный точки из "пам€ти"
+       unusedWptsPerVisit->erase(unusedWptsPerVisit->begin());
        if( hsNumber != currentRootSnumber->back() ) {
            currentRoot->push_back(hs);
            currentRootSnumber->push_back(hsNumber);
            currentRootCounter->push_back(1);
-           // ¬ставл€ем сохраненые посещени€ в новый маршрут: если локаци€ "пуста€" то пишем 1, иначе сохранЄнное число
-           currentRootWptsPerVisit->push_back(hs->isHotSpotEmpty() ? 1 : unusedWptsPerVisit->front()); // todo если пишем 1, то остальные пропадают - исправить
+           currentRootWptsPerVisit->push_back(wpts);
        } else {
            currentRootCounter->back()++;
-           // ¬ставл€ем сохраненые посещени€ в новый маршрут: если локаци€ "пуста€" то пишем 1, иначе сохранЄнное число
-           currentRootWptsPerVisit->back() += (hs->isHotSpotEmpty() ? 1 : unusedWptsPerVisit->front()); // todo если пишем 1, то остальные пропадают - исправить
+           currentRootWptsPerVisit->back() += wpts;
        }
-       // удалЄ€м использованный точки из "пам€ти"
-       unusedWptsPerVisit->erase(unusedWptsPerVisit->begin());
+       wpts = 0;
     }
     delete unusedWptsPerVisit;
+    if (remainingWPTS > 0) {
+        for (unsigned int i=currentRoot->size()-1; i>=0; i--)
+            if (!currentRoot->at(i)->isHotSpotEmpty()) {
+                currentRootWptsPerVisit->at(i) += remainingWPTS;
+                remainingWPTS = 0;
+                break;
+            }
+    }
 
     // for debug
     printFirstRoot();
