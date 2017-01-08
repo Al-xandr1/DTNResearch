@@ -10,6 +10,9 @@ RealMobility::RealMobility() {
 
     movementsFinished = false;
 
+    traces = NULL;
+    currentTrace = NULL;
+
     distance = -1;
     speed = -1;
     travelTime = 0;
@@ -25,9 +28,17 @@ void RealMobility::initialize(int stage) {
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
         NodeID = (int) par("NodeID");
+
+        lastPosition.x = 0;
+        lastPosition.y = 0;
+        lastPosition.z = 0;
     }
 
-    //todo инициализация коллекции трасс по NodeID
+    if (!traces) {
+        traces = TracesCollection::getInstance();
+        currentTrace = traces->getTraces()->at(NodeID);
+        ASSERT(currentTrace->size() > 0);
+    }
 
     if (wpFileName == NULL && trFileName == NULL) {
         wpFileName = new char[256];
@@ -43,9 +54,9 @@ void RealMobility::initialize(int stage) {
 void RealMobility::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
-    //todo выставить обе позиции в пурвую точку маршрута по NodeID
-    //lastPosition.x = ;
-    //lastPosition.y = ;
+    lastPosition.x = currentTrace->at(0).X;
+    lastPosition.y = currentTrace->at(0).Y;
+    lastPosition.z = 0;
 
     targetPosition = lastPosition;
 }
@@ -55,7 +66,7 @@ void RealMobility::setTargetPosition() {
     if (movementsFinished) {nextChange = -1; return;};
     step++;
     if (isPause) {
-        waitTime = (simtime_t) 10;//pause->get_Levi_rv(); //todo использование трассы точнее времени между точками
+        waitTime = (simtime_t) 1;//pause->get_Levi_rv(); //todo использование трассы точнее времени между точками
         ASSERT(waitTime > 0);
         nextChange = simTime() + waitTime;
     } else {
@@ -70,16 +81,27 @@ void RealMobility::setTargetPosition() {
 
 // Генерирует следующую позицию в зависимости от того, включено использование горячих точек или нет
 bool RealMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
-    //todo targetPosition = берём из трассы;
-    //todo nextChange = берём из трассы;
+    //есть  step ==  1, 3, 5, 7, 9...
+    unsigned int index = (step / 2) + 1;
+    //нужно index == 1, 2, 3, 4, 5...currentTrace->size()-1
+    ASSERT(0 < index);
+    if (index >= currentTrace->size()) return false; //маршрут кончился
+
+    simtime_t previousNaxtChange = nextChange;
+    nextChange = currentTrace->at(index).T;
+    targetPosition.x = currentTrace->at(index).X;
+    targetPosition.y = currentTrace->at(index).Y;
 
     distance = lastPosition.distance(targetPosition);
-    //todo travelTime = расчитываем по по новой и старой точкам
-    speed = distance / travelTime;
-    ASSERT(speed>0);
+    ASSERT(distance >= 0);
 
-    if (false) return false;//todo если конец трассы, то...
-    else return true;
+    travelTime = nextChange - previousNaxtChange;
+    ASSERT(travelTime > 0);
+
+    speed = distance / travelTime;
+    ASSERT(speed >= 0);
+
+    return true;
 }
 
 

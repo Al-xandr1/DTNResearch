@@ -7,9 +7,29 @@
 using namespace std;
 
 /**
+ * ѕредставл€ет точку исходного маршрута.
+ */
+struct TracePoint {
+    double T, X, Y;     // врем€ и координаты зафиксированной точки
+    char* traceName;    // им€ трассы, которой принадлежит данна€ точка
+
+    TracePoint(double t, double x, double y, char* traceName) {
+        this->T = t;
+        this->X = x;
+        this->Y = y;
+        this->traceName = traceName;
+    }
+
+    void print() {
+        cout << "T=" << T << " X=" << X << " Y=" << Y << " traceName=" << traceName << endl;
+    }
+};
+
+
+/**
  * ѕредставл€ет путевую точку.
  */
-struct Waypoint{
+struct Waypoint {
     double X, Y, Tb, Te; // координаты и врем€ входа в точку и выхода из неЄ
     char* traceName;     // им€ трассы, которой принадлежит данна€ точка
 

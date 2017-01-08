@@ -8,6 +8,7 @@
 #include <string>
 #include "math.h"
 #include "DevelopmentHelper.h"
+#include "TracesCollection.h"
 
 
 class RealMobility : public LineSegmentsMobilityBase
@@ -23,6 +24,9 @@ class RealMobility : public LineSegmentsMobilityBase
     simtime_t travelTime;
 
     bool movementsFinished;    // показывает окончил ли пользователь движение или нет
+
+    TracesCollection* traces;
+    vector<TracePoint>* currentTrace;
 
     //statistics collection
     char *wpFileName;
