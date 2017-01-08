@@ -68,7 +68,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
     virtual void setCurrentHSbordersWith(HotSpotData* hsi);
 
-    virtual void finish();
+    virtual void finish()        {saveStatistics();};
 
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
     void saveStatistics();
@@ -78,7 +78,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 
   public:
     LevyHotSpotsLATP();
-    int getNodeID();
+    int getNodeID()              {return this->NodeID;};
 
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};
     Coord getConstraintAreaMax() {return this->constraintAreaMax;};
