@@ -120,11 +120,6 @@ void SelfSimLATP::handleMessage(cMessage * message)
         }
 }
 
-int SelfSimLATP::getNodeID()
-{
-    return NodeID;
-}
-
 void SelfSimLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
@@ -133,10 +128,6 @@ void SelfSimLATP::setInitialPosition() {
     lastPosition.y = waypts[currentWpt].y;
     targetPosition = lastPosition;
     cout << "Initial position: point #" << currentWpt << " x="<< lastPosition.x <<" y=" << lastPosition.y <<endl;
-}
-
-void SelfSimLATP::finish() {
-    saveStatistics();
 }
 
 void SelfSimLATP::setTargetPosition() {

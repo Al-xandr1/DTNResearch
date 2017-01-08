@@ -41,6 +41,7 @@ class RealMobility : public LineSegmentsMobilityBase
     virtual int numInitStages() const { return 3; }
     virtual void initialize(int stage);
     virtual void setTargetPosition();
+    virtual void handleMessage(cMessage * message);
     virtual void setInitialPosition();
     bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
     virtual void finish()        {saveStatistics();};

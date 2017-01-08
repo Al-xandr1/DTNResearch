@@ -51,6 +51,17 @@ void RealMobility::initialize(int stage) {
 }
 
 
+void RealMobility::handleMessage(cMessage * message)
+{
+    if (message->isSelfMessage())
+        MobilityBase::handleMessage(message);
+    else
+        switch (message->getKind()) {
+            //todo Заглушка. Делать окончание и начало дня как для RegularRootLATP::handleMessage ИЛИ НЕТ! т.е. тут просто заглушка
+        }
+}
+
+
 void RealMobility::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
