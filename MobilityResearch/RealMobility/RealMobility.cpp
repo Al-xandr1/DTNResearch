@@ -72,9 +72,13 @@ void RealMobility::setInitialPosition() {
     targetPosition = lastPosition;
 }
 
-
+#define ROUTE_ENDED          10 // сообщение об окончании маршрута
 void RealMobility::setTargetPosition() {
-    if (movementsFinished) {nextChange = -1; return;};
+    if (movementsFinished) {
+        sendDirect(new cMessage("End of route", ROUTE_ENDED), getParentModule()->gate("in"));
+        nextChange = -1;
+        return;
+    };
     step++;
     if (isPause) {
         waitTime = (simtime_t) 1;//pause->get_Levi_rv(); //todo использование трассы точнее времени между точками
@@ -84,7 +88,11 @@ void RealMobility::setTargetPosition() {
         collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
         movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
-        if (movementsFinished) {nextChange = -1; return;};
+        if (movementsFinished) {
+            sendDirect(new cMessage("End of route", ROUTE_ENDED), getParentModule()->gate("in"));
+            nextChange = -1;
+            return;
+        };
     }
     isPause = !isPause;
 }
