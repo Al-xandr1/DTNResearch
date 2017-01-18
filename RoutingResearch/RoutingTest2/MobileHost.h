@@ -7,8 +7,8 @@
 #include <RoutingDaemon.h>
 #include "RegularRootLATP.h"
 #include "SelfSimLATP.h"
-#include <Messages.h>
 #include <HistoryCollector.h>
+#include <Messages.h>
 
 using namespace std;
 

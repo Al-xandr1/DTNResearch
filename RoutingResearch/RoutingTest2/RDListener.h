@@ -10,6 +10,7 @@
 #include "RoutingDaemon.h"
 #include <LevyHotSpotsLATP.h>
 #include "SelfSimLATP.h"
+#include "RealMobility.h"
 #include <MobileHost.h>
 #include "DevelopmentHelper.h"
 

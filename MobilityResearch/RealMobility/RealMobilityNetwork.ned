@@ -8,6 +8,6 @@ network RealMobilityNetwork
         host[numHosts]: RealMobilityHost {
             parameters:
                 @display("p=300,300;r=,,#707070");
-                indexOfNode = index;
+                NodeID_ = index;
         }
 }

@@ -67,7 +67,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
     if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
 
     if (!hsc) {
-        // загрузка данных о докациях
+        // загрузка данных о локациях
         hsc = HotSpotsCollection::getInstance();
         double minX, maxX, minY, maxY;
         hsc->getTotalSize(minX, maxX, minY, maxY);
@@ -104,11 +104,6 @@ void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi)
 }
 
 
-int LevyHotSpotsLATP::getNodeID() {
-    return NodeID;
-}
-
-
 void LevyHotSpotsLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
     
@@ -121,11 +116,6 @@ void LevyHotSpotsLATP::setInitialPosition() {
 
 bool LevyHotSpotsLATP::isHotSpotEmpty() {
     return currentHSMin.x == currentHSMax.x || currentHSMin.y == currentHSMax.y;
-}
-
-
-void LevyHotSpotsLATP::finish() {
-    saveStatistics();
 }
 
 

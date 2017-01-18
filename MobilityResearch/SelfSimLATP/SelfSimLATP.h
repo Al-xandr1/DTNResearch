@@ -78,14 +78,14 @@ class SelfSimLATP : public LineSegmentsMobilityBase
     bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
 
-    virtual void finish();
+    virtual void finish()        {saveStatistics();};
 
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
     void saveStatistics();
 
   public:
     SelfSimLATP();
-    int getNodeID();
+    int getNodeID()              {return NodeID;};
 
     Coord getLastPosition()      {return this->lastPosition;};
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};

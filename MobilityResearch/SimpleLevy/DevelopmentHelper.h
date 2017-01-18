@@ -13,6 +13,7 @@ using namespace std;
 
 #define DEF_TR_DIR     (char*)"./Traces"              //Директория по умолчанию для всeй информации о трассах
 #define DEF_HS_DIR     (char*)"./Traces/hotspotfiles" //Директория по умолчанию для "локаций"
+#define DEF_TRS_DIR    (char*)"./Traces/tracefiles"   //Директория по умолчанию для исходных трасс
 #define DEF_WP_DIR     (char*)"./Traces/waypointfiles"//Директория по умолчанию для "путевых точек"
 #define DEF_RT_DIR     (char*)"./Traces/rootfiles"    //Директория по умолчанию для "маршрутов"
 
@@ -34,6 +35,7 @@ using namespace std;
 #define WAYPOINTS_TYPE (char*)".wpt"
 
 // шаблон файлов
+#define TRACE_PATTERN  (char*)"*.txt"
 #define ROOT_PATTERT   (char*)"*.rot"
 
 
