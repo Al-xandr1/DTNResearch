@@ -44,6 +44,8 @@ private:
     static ofstream* routeHistoryFile;    // файл с информацией о пройденных маршрутах узлов
     static RoutingDaemon* rd;
 
+    static unsigned int createdPackets;
+    static unsigned int deliveredPackets;
     // for route history: 1 dimension - nodeId, 2 - routes
     static vector<vector<RouteInfoForNode*>*>* routeHistory;
 
@@ -51,8 +53,7 @@ public:
     static void initialize(RoutingDaemon* rd);
     static void finish();
 
-    static void collectDeliveredPacket(Packet* packet);
-    static void collectRemovedPacket(Packet* packet);
+    static void collectPacket(Packet* packet);
     static void collectICT(simtime_t ict);
 
     static void insertRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute);
