@@ -18,8 +18,13 @@ void StatisticsCalculator::initialize()
     durationMatrixTwo = loadMatrix(routeHistoryTwo);
     print(durationMatrixTwo, par("routeHistoryTwoFileName").stringValue());
 
-    double deviation = norm(durationMatrixOne, durationMatrixTwo);
-    cout << "Standart norm deviation = " << deviation << endl;
+    vector<double>* deviations = norm(durationMatrixOne, durationMatrixTwo);
+
+    cout << "Standart norm deviation vector = (" << endl;
+    for (unsigned int day=0; day<deviations->size(); day++) {
+        cout << deviations->at(day) << ", " << endl;
+    }
+    cout << ")" << endl;
 }
 
 //todo обобщить в методом из processRouteHistory()
@@ -67,15 +72,28 @@ vector<vector<double>*>* StatisticsCalculator::loadMatrix(cXMLElement *routeHist
 }
 
 
-double StatisticsCalculator::norm(vector<vector<double>*>* matrixOne, vector<vector<double>*>* matrixTwo)
+vector<double>* StatisticsCalculator::norm(vector<vector<double>*>* matrixOne, vector<vector<double>*>* matrixTwo)
 {
+    //нужно для проверки, что у матриц одинаковые размеры
     ASSERT(matrixOne->size() == matrixTwo->size());
+    ASSERT(matrixOne->size() > 0);
     for (unsigned int i=0; i<matrixOne->size(); i++) {
         ASSERT(matrixOne->at(i)->size() == matrixTwo->at(i)->size());
     }
+    vector<double>* norm = new vector<double>();
 
-    //todo реализовать "рассчитывающую меру их схожести: например, усреднённое СКО по количеству элементов в векторе длительностей"
-    return 0;
+    for (unsigned int day=0; day<matrixOne->at(0)->size(); day++) {
+        double normComponent = 0;
+        for (unsigned int nodeId=0; nodeId<matrixOne->size(); nodeId++) {
+            double duration1 = matrixOne->at(nodeId)->at(day);
+            double duration2 = matrixTwo->at(nodeId)->at(day);
+            normComponent += ((duration1-duration2) * (duration1-duration2));
+        }
+        cout << "day=" << day << ", normComponent=" << normComponent << ", matrixOne->at(0)->size()=" << matrixOne->at(0)->size() << endl;
+        norm->push_back(sqrt(normComponent) / matrixOne->size()); // нормируем на число узлов
+    }
+
+    return norm;
 }
 
 

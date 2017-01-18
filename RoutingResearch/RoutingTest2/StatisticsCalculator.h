@@ -32,7 +32,7 @@ protected:
      * Загружает матрицы длительностей всех файлов.
      */
     vector<vector<double>*>* loadMatrix(cXMLElement *routeHistory);
-    double norm(vector<vector<double>*>* matrixOne, vector<vector<double>*>* matrixTwo);
+    vector<double>* norm(vector<vector<double>*>* matrixOne, vector<vector<double>*>* matrixTwo);
     void print(vector<vector<double>*>* matrix, const char* name);
 
 public:
