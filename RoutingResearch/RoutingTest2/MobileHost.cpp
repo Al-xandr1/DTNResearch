@@ -63,6 +63,12 @@ void MobileHost::handleMessage(cMessage *msg)
            break;
        }
 
+       case ROUTE_ENDED: { // Сообщение посылается от мобильности RealMobility
+           endRoute();
+           delete msg;
+           break;
+       }
+
        default: {
            ASSERT(false);   //unreachable statement
            break;

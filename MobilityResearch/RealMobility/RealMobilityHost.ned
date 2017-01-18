@@ -6,11 +6,12 @@ module RealMobilityHost
         @node();
         @display("i=device/pocketpc_s");
         
-        int indexOfNode = default(0);
+        int NodeID_ = default(0);
         
     submodules:
         mobility: RealMobility {
             parameters: 
-            	fileSuffix = indexOfNode;
+                @display("is=s;p=72,44");
+            	NodeID = NodeID_; 
         }
 }

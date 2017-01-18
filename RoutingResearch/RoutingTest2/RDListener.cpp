@@ -25,7 +25,10 @@ void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
         SelfSimLATP* src2 = dynamic_cast<SelfSimLATP*>(source);
         if (src2) NodeId = src2->getNodeID();
 
-//        ASSERT(checkReceivedData());
+        RealMobility* src3 = dynamic_cast<RealMobility*>(source);
+        if (src3) NodeId = src3->getNodeID();
+
+        //ASSERT(checkReceivedData());
         if (processReceivedData()) {
             rd->connectionsChanged();
         }
