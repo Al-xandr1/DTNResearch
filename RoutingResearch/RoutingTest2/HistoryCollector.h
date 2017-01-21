@@ -9,15 +9,15 @@
 #include "DevelopmentHelper.h"
 
 // Коды сообытий, происходящими с сообщениями
-#define CREATED_EVENT        "CRT"    // событие создания пакета в системе
-#define REGISTERED_EVENT     "RGS"    // событие регистрации пакета на узле (например, в результате получения или после создания)
-#define BEFORE_SEND_EVENT    "BFS"    // событие перед отправкой события на какой-либо узел
-#define REMOVED_EVENT        "RMV"    // событие удаления пакета из системы БЕЗ доставки до получателя
-#define DELIVERED_EVENT      "DLV"    // событие о доставке сообщения и его последующем удалении
+#define CREATED_EVENT        (char*) "CRT"    // событие создания пакета в системе
+#define REGISTERED_EVENT     (char*) "RGS"    // событие регистрации пакета на узле (например, в результате получения или после создания)
+#define BEFORE_SEND_EVENT    (char*) "BFS"    // событие перед отправкой события на какой-либо узел
+#define REMOVED_EVENT        (char*) "RMV"    // событие удаления пакета из системы БЕЗ доставки до получателя
+#define DELIVERED_EVENT      (char*) "DLV"    // событие о доставке сообщения и его последующем удалении
 
 // Для xml текста
-#define DLM                  "  "     // DELIMETER - разделитель значений в xml тексе
-#define TAB                  "\t"     // TAB - табуляция для отсутпа в xml тексе
+#define DLM                  (char*) "  "     // DELIMETER - разделитель значений в xml тексе
+#define TAB                  (char*) "\t"     // TAB - табуляция для отсутпа в xml тексе
 
 
 class RoutingDaemon;

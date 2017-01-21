@@ -80,12 +80,12 @@ void HistoryCollector::insertRouteInfo(int nodeId, unsigned int day, simtime_t s
     }
 }
 
-void HistoryCollector::insertRowCreated(Packet* packet, int nodeId, Coord position)     {insertRow(packet, (char*) CREATED_EVENT,     nodeId, position);
+void HistoryCollector::insertRowCreated(Packet* packet, int nodeId, Coord position)     {insertRow(packet, CREATED_EVENT,     nodeId, position);
                                                                                             createdPackets++; ASSERT(deliveredPackets <= createdPackets);}
-void HistoryCollector::insertRowRegistered(Packet* packet, int nodeId, Coord position)  {insertRow(packet, (char*) REGISTERED_EVENT,  nodeId, position);}
-void HistoryCollector::insertRowBeforeSend(Packet* packet, int nodeId, Coord position)  {insertRow(packet, (char*) BEFORE_SEND_EVENT, nodeId, position);}
-void HistoryCollector::insertRowRemoved(Packet* packet, int nodeId, Coord position)     {insertRow(packet, (char*) REMOVED_EVENT,     nodeId, position);}
-void HistoryCollector::insertRowDelivered(Packet* packet, int nodeId, Coord position)   {insertRow(packet, (char*) DELIVERED_EVENT,   nodeId, position);
+void HistoryCollector::insertRowRegistered(Packet* packet, int nodeId, Coord position)  {insertRow(packet, REGISTERED_EVENT,  nodeId, position);}
+void HistoryCollector::insertRowBeforeSend(Packet* packet, int nodeId, Coord position)  {insertRow(packet, BEFORE_SEND_EVENT, nodeId, position);}
+void HistoryCollector::insertRowRemoved(Packet* packet, int nodeId, Coord position)     {insertRow(packet, REMOVED_EVENT,     nodeId, position);}
+void HistoryCollector::insertRowDelivered(Packet* packet, int nodeId, Coord position)   {insertRow(packet, DELIVERED_EVENT,   nodeId, position);
                                                                                             deliveredPackets++; ASSERT(deliveredPackets <= createdPackets);}
 
 void HistoryCollector::printHistory(Packet* packet) {write(packet, &cout);}
@@ -120,18 +120,27 @@ void HistoryCollector::collectPacket(ofstream* out, Packet* packet) {ASSERT(out)
 
 void HistoryCollector::write(Packet* packet, ostream* out) {
     if (rd && rd->canCollectStatistics()) {
-        (*out) <<TAB<<"<PACKET>" << endl;
-        (*out) <<TAB<<TAB<<"<SUMMARY>"<<packet->getSourceId()<<DLM<<packet->getDestinationId()
-               <<DLM<<packet->getCreationTime()<<DLM<<packet->getReceivedTime()<<"</SUMMARY>"<<endl;
-        (*out) <<TAB<<TAB<<"<HISTORY>"<<endl;
+        double threshold = rd->getCountOfDays() * rd->getDayDuration();
+        if (packet->getCreationTime() >= threshold) {
+            (*out) <<TAB<<"<PACKET>" << endl;
+            (*out) <<TAB<<TAB<<"<SUMMARY>"<<packet->getSourceId()<<DLM<<packet->getDestinationId()
+                   <<DLM<<packet->getCreationTime()<<DLM<<packet->getReceivedTime()<<"</SUMMARY>"<<endl;
+            (*out) <<TAB<<TAB<<"<HISTORY>"<<endl;
 
-        for(unsigned int i=0; i<packet->IDhistory.size(); i++)
-            (*out) <<TAB<<TAB<<TAB<<"<"<<packet->eventHistory[i]<<">"<<packet->IDhistory[i]<<DLM<<packet->timeHistory[i]
-                   <<DLM<<packet->xCoordinates[i]<<DLM<<packet->yCoordinates[i]<<DLM<<packet->heuristicHistory[i]
-                   <<"</"<<packet->eventHistory[i]<<">"<<endl;
+            for(unsigned int i=0; i<packet->IDhistory.size(); i++) {
+                if (i==0) ASSERT(strcmp(packet->eventHistory[0], CREATED_EVENT) == 0); //проверить, что учитываемый пакет имеет событие о создании
+                (*out) <<TAB<<TAB<<TAB<<"<"<<packet->eventHistory[i]<<">"<<packet->IDhistory[i]<<DLM<<packet->timeHistory[i]
+                       <<DLM<<packet->xCoordinates[i]<<DLM<<packet->yCoordinates[i]<<DLM<<packet->heuristicHistory[i]
+                       <<"</"<<packet->eventHistory[i]<<">"<<endl;
+            }
 
-        (*out) <<TAB<<TAB<<"</HISTORY>"<<endl;
-        (*out) <<TAB<<"</PACKET>"<<endl;
+            (*out) <<TAB<<TAB<<"</HISTORY>"<<endl;
+            (*out) <<TAB<<"</PACKET>"<<endl;
+        } else {
+            //проверить, что учитываемый пакет имеет событие о создании
+            if (packet->eventHistory.size()>0) ASSERT(strcmp(packet->eventHistory[0], CREATED_EVENT) != 0);
+        }
+
     }
 }
 
