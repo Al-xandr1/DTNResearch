@@ -17,7 +17,6 @@
 #include "RootsCollection.h"
 #include "LevyHotSpotsLATP.h"
 #include "MobileHost.h"
-
 #include "Messages.h"
 
 using namespace std;

@@ -6,6 +6,7 @@
 		<project>inet</project>
 		<project>LevyHotSpotsLATP</project>
 		<project>LevyHotSpotsRandom</project>
+		<project>RealMobility</project>
 		<project>SelfSimLATP</project>
 		<project>SimpleLevy</project>
 	</projects>

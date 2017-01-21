@@ -9,15 +9,15 @@
 #include "DevelopmentHelper.h"
 
 //  оды сообытий, происход€щими с сообщени€ми
-#define CREATED_EVENT        "CRT"    // событие создани€ пакета в системе
-#define REGISTERED_EVENT     "RGS"    // событие регистрации пакета на узле (например, в результате получени€ или после создани€)
-#define BEFORE_SEND_EVENT    "BFS"    // событие перед отправкой событи€ на какой-либо узел
-#define REMOVED_EVENT        "RMV"    // событие удалени€ пакета из системы Ѕ≈« доставки до получател€
-#define DELIVERED_EVENT      "DLV"    // событие о доставке сообщени€ и его последующем удалении
+#define CREATED_EVENT        (char*) "CRT"    // событие создани€ пакета в системе
+#define REGISTERED_EVENT     (char*) "RGS"    // событие регистрации пакета на узле (например, в результате получени€ или после создани€)
+#define BEFORE_SEND_EVENT    (char*) "BFS"    // событие перед отправкой событи€ на какой-либо узел
+#define REMOVED_EVENT        (char*) "RMV"    // событие удалени€ пакета из системы Ѕ≈« доставки до получател€
+#define DELIVERED_EVENT      (char*) "DLV"    // событие о доставке сообщени€ и его последующем удалении
 
 // ƒл€ xml текста
-#define DLM                  "  "     // DELIMETER - разделитель значений в xml тексе
-#define TAB                  "\t"     // TAB - табул€ци€ дл€ отсутпа в xml тексе
+#define DLM                  (char*) "  "     // DELIMETER - разделитель значений в xml тексе
+#define TAB                  (char*) "\t"     // TAB - табул€ци€ дл€ отсутпа в xml тексе
 
 
 class RoutingDaemon;
@@ -44,6 +44,8 @@ private:
     static ofstream* routeHistoryFile;    // файл с информацией о пройденных маршрутах узлов
     static RoutingDaemon* rd;
 
+    static unsigned int createdPackets;
+    static unsigned int deliveredPackets;
     // for route history: 1 dimension - nodeId, 2 - routes
     static vector<vector<RouteInfoForNode*>*>* routeHistory;
 
@@ -51,8 +53,7 @@ public:
     static void initialize(RoutingDaemon* rd);
     static void finish();
 
-    static void collectDeliveredPacket(Packet* packet);
-    static void collectRemovedPacket(Packet* packet);
+    static void collectPacket(Packet* packet);
     static void collectICT(simtime_t ict);
 
     static void insertRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute);
