@@ -105,7 +105,7 @@ void HistoryCollector::write(int nodeId, vector<RouteInfoForNode*>* routesForNod
 }
 
 void HistoryCollector::insertRow(Packet* packet, char* event, int nodeId, Coord position) {
-    if (rd && rd->canCollectStatistics()) {     //todo из-за порогоа событие о создании не сохраняется, но о доставке сохраняется
+    if (rd && rd->canCollectStatistics()) {
         packet->eventHistory.push_back(event);
         packet->IDhistory.push_back(nodeId);
         packet->timeHistory.push_back(simTime());
@@ -120,7 +120,7 @@ void HistoryCollector::collectPacket(ofstream* out, Packet* packet) {/*ASSERT(ou
 
 void HistoryCollector::write(Packet* packet, ostream* out) {
     if (rd && rd->canCollectStatistics()) {
-        double threshold = rd->getCountOfDays() * rd->getDayDuration();
+        double threshold = rd->getUseCODForStat() ? (rd->getCountOfDays() * rd->getDayDuration()) : 0;
         if (packet->getCreationTime() >= threshold) {
             (*out) <<TAB<<"<PACKET>" << endl;
             (*out) <<TAB<<TAB<<"<SUMMARY>"<<packet->getSourceId()<<DLM<<packet->getDestinationId()
@@ -137,10 +137,9 @@ void HistoryCollector::write(Packet* packet, ostream* out) {
             (*out) <<TAB<<TAB<<"</HISTORY>"<<endl;
             (*out) <<TAB<<"</PACKET>"<<endl;
         } else {
-            //проверить, что учитываемый пакет имеет событие о создании
+            //проверить, что учитываемый пакет НЕ имеет событие о создании
             if (packet->eventHistory.size()>0) ASSERT(strcmp(packet->eventHistory[0], CREATED_EVENT) != 0);
         }
-
     }
 }
 
