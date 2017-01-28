@@ -2,7 +2,7 @@ network StatisticsCollectorNetwork
 {
     submodules:
         collector:  StatisticsCollector2;
-        calculator: StatisticsCalculator;
+//        calculator: StatisticsCalculator;
 }
 
 simple StatisticsCollector2
