@@ -381,14 +381,17 @@ void RegularRootLATP::makeNewRoot()
     }
     delete cur;
 //    ASSERT(possibleReplace.size() == (hsc->getHSData()->size() - currentRootSnumber->size()));
+//    ASSERT(possibleReplace.size() != 0);
 
     // генерируем нужное число случайных номеров новых локаций
     // из тех, что остались в possibleReplace в отсортированном по возрастанию виде
     vector<int> sortReplace;
     unsigned int ri = rand() % possibleReplace.size();
-    sortReplace.push_back(possibleReplace[ri]);
-    unsigned int replaceCountForCheck = replaceCount;
-    replaceCount--;
+    const unsigned int replaceCountForCheck = replaceCount;
+    if (replaceCount > 0) {
+        sortReplace.push_back(possibleReplace[ri]);
+        replaceCount--;
+    }
     while( replaceCount > 0) {
         unsigned int i;
         ri = rand() % possibleReplace.size();
