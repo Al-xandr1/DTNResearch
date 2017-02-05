@@ -14,7 +14,7 @@ private:
     cXMLElement *ictHistoryDoc;     // заргуженный xml документ с историей ICT
     cXMLElement *routeHistoryDoc;   // заргуженный xml документ с историей о маршрутах узлов
 
-    unsigned int createdPackes;
+    unsigned int createdPackets;
     unsigned int deliveredPackets;
 
     cDoubleHistogram* lifeTimePDF;

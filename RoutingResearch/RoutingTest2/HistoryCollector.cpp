@@ -3,6 +3,8 @@
 ofstream* HistoryCollector::packetsHistoryFile = NULL;   // файл с информацией о всех пакетах
 ofstream* HistoryCollector::ictHistoryFile = NULL;       // файл с информацией о времени взаимодействия узлов
 ofstream* HistoryCollector::routeHistoryFile = NULL;     // файл с информацией о времени взаимодействия узлов
+unsigned int HistoryCollector::createdPackets = 0;
+unsigned int HistoryCollector::deliveredPackets = 0;
 RoutingDaemon* HistoryCollector::rd = NULL;
 vector<vector<RouteInfoForNode*>*>* HistoryCollector::routeHistory = NULL;
 
@@ -65,9 +67,8 @@ void HistoryCollector::finish() {
     routeHistoryFile = NULL;
 }
 
-void HistoryCollector::collectDeliveredPacket(Packet* packet)       {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
-void HistoryCollector::collectRemovedPacket(Packet* packet)         {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
-void HistoryCollector::collectICT(simtime_t ict)                    {ASSERT(ictHistoryFile); ASSERT(ict>=0); if (ict>0) write(ict, ictHistoryFile);}
+void HistoryCollector::collectPacket(Packet* packet)       {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
+void HistoryCollector::collectICT(simtime_t ict)           {ASSERT(ictHistoryFile); ASSERT(ict>=0); if (ict>0) write(ict, ictHistoryFile);}
 
 void HistoryCollector::insertRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute) {
     if (rd && rd->canCollectStatistics()) {
@@ -79,11 +80,13 @@ void HistoryCollector::insertRouteInfo(int nodeId, unsigned int day, simtime_t s
     }
 }
 
-void HistoryCollector::insertRowCreated(Packet* packet, int nodeId, Coord position)     {insertRow(packet, (char*) CREATED_EVENT,     nodeId, position);}
-void HistoryCollector::insertRowRegistered(Packet* packet, int nodeId, Coord position)  {insertRow(packet, (char*) REGISTERED_EVENT,  nodeId, position);}
-void HistoryCollector::insertRowBeforeSend(Packet* packet, int nodeId, Coord position)  {insertRow(packet, (char*) BEFORE_SEND_EVENT, nodeId, position);}
-void HistoryCollector::insertRowRemoved(Packet* packet, int nodeId, Coord position)     {insertRow(packet, (char*) REMOVED_EVENT,     nodeId, position);}
-void HistoryCollector::insertRowDelivered(Packet* packet, int nodeId, Coord position)   {insertRow(packet, (char*) DELIVERED_EVENT,   nodeId, position);}
+void HistoryCollector::insertRowCreated(Packet* packet, int nodeId, Coord position)     {insertRow(packet, CREATED_EVENT,     nodeId, position);
+                                                                                            createdPackets++; ASSERT(deliveredPackets <= createdPackets);}
+void HistoryCollector::insertRowRegistered(Packet* packet, int nodeId, Coord position)  {insertRow(packet, REGISTERED_EVENT,  nodeId, position);}
+void HistoryCollector::insertRowBeforeSend(Packet* packet, int nodeId, Coord position)  {insertRow(packet, BEFORE_SEND_EVENT, nodeId, position);}
+void HistoryCollector::insertRowRemoved(Packet* packet, int nodeId, Coord position)     {insertRow(packet, REMOVED_EVENT,     nodeId, position);}
+void HistoryCollector::insertRowDelivered(Packet* packet, int nodeId, Coord position)   {insertRow(packet, DELIVERED_EVENT,   nodeId, position);
+                                                                                            deliveredPackets++; ASSERT(deliveredPackets <= createdPackets);}
 
 void HistoryCollector::printHistory(Packet* packet) {write(packet, &cout);}
 
@@ -117,18 +120,26 @@ void HistoryCollector::collectPacket(ofstream* out, Packet* packet) {ASSERT(out)
 
 void HistoryCollector::write(Packet* packet, ostream* out) {
     if (rd && rd->canCollectStatistics()) {
-        (*out) <<TAB<<"<PACKET>" << endl;
-        (*out) <<TAB<<TAB<<"<SUMMARY>"<<packet->getSourceId()<<DLM<<packet->getDestinationId()
-               <<DLM<<packet->getCreationTime()<<DLM<<packet->getReceivedTime()<<"</SUMMARY>"<<endl;
-        (*out) <<TAB<<TAB<<"<HISTORY>"<<endl;
+        double threshold = rd->getUseCODForStat() ? (rd->getCountOfDays() * rd->getDayDuration()) : 0;
+        if (packet->getCreationTime() >= threshold) {
+            (*out) <<TAB<<"<PACKET>" << endl;
+            (*out) <<TAB<<TAB<<"<SUMMARY>"<<packet->getSourceId()<<DLM<<packet->getDestinationId()
+                   <<DLM<<packet->getCreationTime()<<DLM<<packet->getReceivedTime()<<"</SUMMARY>"<<endl;
+            (*out) <<TAB<<TAB<<"<HISTORY>"<<endl;
 
-        for(unsigned int i=0; i<packet->IDhistory.size(); i++)
-            (*out) <<TAB<<TAB<<TAB<<"<"<<packet->eventHistory[i]<<">"<<packet->IDhistory[i]<<DLM<<packet->timeHistory[i]
-                   <<DLM<<packet->xCoordinates[i]<<DLM<<packet->yCoordinates[i]<<DLM<<packet->heuristicHistory[i]
-                   <<"</"<<packet->eventHistory[i]<<">"<<endl;
+            for(unsigned int i=0; i<packet->IDhistory.size(); i++) {
+                if (i==0) ASSERT(strcmp(packet->eventHistory[0], CREATED_EVENT) == 0); //проверить, что учитываемый пакет имеет событие о создании
+                (*out) <<TAB<<TAB<<TAB<<"<"<<packet->eventHistory[i]<<">"<<packet->IDhistory[i]<<DLM<<packet->timeHistory[i]
+                       <<DLM<<packet->xCoordinates[i]<<DLM<<packet->yCoordinates[i]<<DLM<<packet->heuristicHistory[i]
+                       <<"</"<<packet->eventHistory[i]<<">"<<endl;
+            }
 
-        (*out) <<TAB<<TAB<<"</HISTORY>"<<endl;
-        (*out) <<TAB<<"</PACKET>"<<endl;
+            (*out) <<TAB<<TAB<<"</HISTORY>"<<endl;
+            (*out) <<TAB<<"</PACKET>"<<endl;
+        } else {
+            //проверить, что учитываемый пакет НЕ имеет событие о создании
+            if (packet->eventHistory.size()>0) ASSERT(strcmp(packet->eventHistory[0], CREATED_EVENT) != 0);
+        }
     }
 }
 

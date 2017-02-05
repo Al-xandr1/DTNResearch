@@ -159,7 +159,7 @@ function privateDrawHistograms(filenames, tag, xlable)
         legenda = [ legenda ; ('CCDF from  ' + filenames(i)) ];
         xmlDelete(doc);
     end
-    if (SHOW_LEGEND == 1) then hl=legend(legenda); end
+    if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
     prepareGraphic("CCDF for "+ tag, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
 endfunction
 

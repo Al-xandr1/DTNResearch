@@ -13,7 +13,7 @@ void StatisticsCollector2::initialize()
     ictHistoryDoc = par("ictHistoryDoc");
     routeHistoryDoc = par("routeHistoryDoc");
 
-    createdPackes = 0;
+    createdPackets = 0;
     deliveredPackets = 0;
 
     lifeTimePDF = new cDoubleHistogram("LIFE-TIME-HISTOGRAM", 300);
@@ -65,7 +65,8 @@ void StatisticsCollector2::processPacketHistory() {
 
             if (strcmp(eventName, CREATED_EVENT) == 0) {
                 ASSERT(!created);   //т.е. данное событие для пакета встречается только один раз
-                createdPackes++;
+                createdPackets++;
+                ASSERT(deliveredPackets <= createdPackets);
                 created = true;     //т.е. данное событие для пакета уже учли
 
             } else if (strcmp(eventName, REGISTERED_EVENT) == 0) {
@@ -83,6 +84,8 @@ void StatisticsCollector2::processPacketHistory() {
                 ASSERT(!removed && !delivered);
                 delivered = true;
                 deliveredPackets++;
+                if(deliveredPackets > createdPackets) cout<<"deliveredPackets="<<deliveredPackets<<", createdPackets="<<createdPackets<<endl;
+                ASSERT(deliveredPackets <= createdPackets);
 
                 // время жизни учитываем только у доставленных
                 lifeTimePDF->collect(receivedTime - creationTime);
@@ -206,7 +209,9 @@ void StatisticsCollector2::finish() {
     out << "<?xml version=\'1.0' ?>" << endl << endl;
     out << "<STATISTICS>" << endl;
 
-    double deliveredPercentage = (1.0 * deliveredPackets) / (1.0 * createdPackes) * 100;
+    ASSERT(deliveredPackets <= createdPackets);
+    double deliveredPercentage = (100.0 * deliveredPackets) / (1.0 * createdPackets);
+    ASSERT(deliveredPercentage <= 100);
     out << "    <DELIVERED-PACKETS> " << deliveredPercentage << " </DELIVERED-PACKETS>" << endl << endl;
 
 

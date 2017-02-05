@@ -82,7 +82,7 @@ void MobileHost::finish()
     for(vector<Packet*>::iterator it = packetsForSending->begin(); it != packetsForSending->end(); it++) {
         Packet* packet = (*it);
         HistoryCollector::insertRowRemoved(packet, nodeId, getMobility()->getCurrentPosition());
-        HistoryCollector::collectRemovedPacket(packet);
+        HistoryCollector::collectPacket(packet);
         //todo made erasing & packet deletion
     }
 
@@ -181,7 +181,7 @@ void MobileHost::destroyPacket(Packet* packet)
 
     packet->setReceivedTime(simTime());
     HistoryCollector::insertRowDelivered(packet, nodeId, getMobility()->getCurrentPosition());
-    HistoryCollector::collectDeliveredPacket(packet);
+    HistoryCollector::collectPacket(packet);
     delete packet;
 }
 
