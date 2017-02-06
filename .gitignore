@@ -131,6 +131,7 @@ packages/
 *.vec
 .last-copts
 .nedfolders
+.metadata/
 
 
 hotspotfiles/
