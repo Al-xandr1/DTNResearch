@@ -41,6 +41,22 @@ public:
     static vector<Request*>*    requests;
     static RoutingDaemon*       instance;
 
+    // PROPHET data -----------------------------------------------------------
+    static double**    P_prophet;
+    static simtime_t*  U_prophet;
+    static unsigned**  C_prophet;
+    // PROPHET parameters -----------------------------------------------------
+    static double P_encounter_max;
+    static double P_encounter_first;
+    static double P_first_threshold;
+    static double alpha_prophet;
+    static double beta_prophet;
+    static double gamma_prophet;
+    static double delta_prophet;
+    static double I_typ;
+    static int several;
+    // ------------------------------------------------------------------------
+
 public:
     RoutingDaemon() {
         routingHeuristics = NULL;
@@ -76,6 +92,15 @@ public:
     simtime_t getLostConnectionTime( int nodeId1, int nodeId2 );
     simtime_t getStartConnectionTime( int nodeId1, int nodeId2 );
     bool      isConnected( int nodeId1, int nodeId2 );
+
+    // PROPHET methods ------------------------------------------------------------------
+    void PROPHET_connection_starts(int node1, int node2);
+    void PROPHET_connection_ends(int node1, int node2);
+    void PROPHET_timer_processing();
+    void PROPHET_aging_P(int node1, int node2, simtime_t lastUpdate);
+    void PROPHET_growing_P(int node1, int node2, simtime_t lastContact);
+    double PROPHET_transitivity_P(int node1, int node2, int node3);
+    // ----------------------------------------------------------------------------------
 
     //-------------- for debug ---------------
     void log();

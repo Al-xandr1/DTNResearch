@@ -8,6 +8,7 @@
 #define TH_HEURISTIC    (char*)"TwoHopsHeuristic"
 #define LET_HEURISTIC   (char*)"LETHeuristic"
 #define MFV_HEURISTIC   (char*)"MoreFrequentVisibleHeuristic"
+#define PROPHET         (char*)"PROPHET_Heuristic"
 
 using namespace std;
 
@@ -78,6 +79,15 @@ public:
     MoreFrequentVisibleHeuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic(MFV_HEURISTIC, rd, settings) {};
     virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting);
 };
+
+// PROPHET -------------------------------------------------------------------------------
+class PROPHET_Heuristic : public RoutingHeuristic {
+public:
+    PROPHET_Heuristic(RoutingDaemon* rd, RoutingSettings* settings) : RoutingHeuristic(PROPHET, rd, settings) {};
+    virtual bool canProcess(Request* request, vector<int>* neighbors, int& nodeForRouting);
+
+};
+// ----------------------------------------------------------------------------------------
 
 #endif // ROUTING_HEURISTIC_H_INCLUDED
 
