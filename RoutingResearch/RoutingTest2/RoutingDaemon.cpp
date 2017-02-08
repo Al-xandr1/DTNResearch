@@ -32,6 +32,7 @@ int         RoutingDaemon::several            = 5;
 #define ALL         0   // 0 - нет ограничений (все эвристики) - LET_Threshold работает
 #define LET_ONLY    1   // 1 - использовать только LET - LET_Threshold отключается (равен "бесконечности)
 #define MFV_ONLY    2   // 2 - использоват только MFV - LET_Threshold не имеет смысла, не используется
+#define PROPHET     3   // 3 - использовать PROPHET
 
 
 void RoutingDaemon::initialize() {
@@ -65,6 +66,10 @@ void RoutingDaemon::initialize() {
         case ALL: {
             routingHeuristics->push_back(new LETHeuristic(this, settings));
             routingHeuristics->push_back(new MoreFrequentVisibleHeuristic(this, settings));
+            break;
+        }
+        case PROPHET: {
+            routingHeuristics->push_back(new PROPHET_Heuristic(this, settings));
             break;
         }
         default:
