@@ -1,3 +1,5 @@
+Link to download this original project: http://crawdad.org/yonsei/lifemap/20120103/
+
 The dataset is collected by Yonsei University.
 We deployed our mobility monitoring system, named LifeMap, to collect mobility data over two months in Seoul, Korea.
 
