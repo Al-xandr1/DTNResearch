@@ -19,232 +19,236 @@ import java.sql.SQLException;
 
 /**
  * Describes the state of Wifi access point.
- * 
+ *
  * @author Chon John (john@mobed.yonsei.ac.kr)
- * @since 1.5
  * @version 1.5
+ * @since 1.5
  */
 public class WifiInfo implements Cloneable, Comparable<WifiInfo> {
-	private String BSSID;
-	private String SSID;
-	private long sampleCount;
-	private float signal;
-	private float signalDeviation;
-	private String open;
-	private String time;
-	
-	private long id;
-	private long nodeId;
-	private boolean dirty;
+    private String BSSID;
+    private String SSID;
+    private long sampleCount;
+    private float signal;
+    private float signalDeviation;
+    private String open;
+    private String time;
 
-	/**
-	 * Constructs a new WifiInfo. 
-	 * By default, signal, sampleCount are 0; BSSID, SSID, open are null.
-	 */
-	public WifiInfo() {
-		this.clear();
-	}
+    private long id;
+    private long nodeId;
+    private boolean dirty;
 
-	/**
-	 * Clear the contents.
-	 */
-	public void clear() {
-		BSSID = null;
-		SSID = null;
-		signal = 0;
-		signalDeviation = 0;
-		sampleCount = 0;
-		open = null;
-		time = null;
-		id = 0;
-		nodeId = 0;
-		dirty = false;
-	}
+    /**
+     * Constructs a new WifiInfo.
+     * By default, signal, sampleCount are 0; BSSID, SSID, open are null.
+     */
+    public WifiInfo() {
+        this.clear();
+    }
 
-	/**
-	 * Returns sampling count of this access point.
-	 */
-	public long getSampleCount() {
-		return sampleCount;
-	}
+    /**
+     * Clear the contents.
+     */
+    public void clear() {
+        BSSID = null;
+        SSID = null;
+        signal = 0;
+        signalDeviation = 0;
+        sampleCount = 0;
+        open = null;
+        time = null;
+        id = 0;
+        nodeId = 0;
+        dirty = false;
+    }
 
-	/**
-	 * Sets sampling count of this access point.
-	 */
-	public void setSampleCount(long sampleCount) {
-		this.sampleCount = sampleCount;
-	}
+    /**
+     * Returns sampling count of this access point.
+     */
+    public long getSampleCount() {
+        return sampleCount;
+    }
 
-	/**
-	 * Returns the basic service set identifier (BSSID) of this access point.
-	 * 
-	 * @return the BSSID, in the form of a six-byte MAC address:
-	 *         XX:XX:XX:XX:XX:XX
-	 */
-	public String getBSSID() {
-		return BSSID;
-	}
+    /**
+     * Sets sampling count of this access point.
+     */
+    public void setSampleCount(long sampleCount) {
+        this.sampleCount = sampleCount;
+    }
 
-	/**
-	 * Sets the basic service set identifier (BSSID) of this access point.
-	 * 
-	 * @param bssid
-	 *            the BSSID, in the form of a six-byte MAC address:
-	 *            XX:XX:XX:XX:XX:XX
-	 */
-	public void setBSSID(String bssid) {
-		BSSID = bssid;
-	}
+    /**
+     * Returns the basic service set identifier (BSSID) of this access point.
+     *
+     * @return the BSSID, in the form of a six-byte MAC address:
+     * XX:XX:XX:XX:XX:XX
+     */
+    public String getBSSID() {
+        return BSSID;
+    }
 
-	/**
-	 * Returns the service set identifier (SSID) of this access point.
-	 */
-	public String getSSID() {
-		return SSID;
-	}
+    /**
+     * Sets the basic service set identifier (BSSID) of this access point.
+     *
+     * @param bssid the BSSID, in the form of a six-byte MAC address:
+     *              XX:XX:XX:XX:XX:XX
+     */
+    public void setBSSID(String bssid) {
+        BSSID = bssid;
+    }
 
-	/**
-	 * Sets the service set identifier (SSID) of this access point.
-	 */
-	public void setSSID(String ssid) {
-		ssid.replaceAll(",", ".");
-		SSID = ssid;
-	}
+    /**
+     * Returns the service set identifier (SSID) of this access point.
+     */
+    public String getSSID() {
+        return SSID;
+    }
 
-	/**
-	 * Returns the received signal strength indicator of this access point.
-	 */
-	public float getSignal() {
-		return signal;
-	}
+    /**
+     * Sets the service set identifier (SSID) of this access point.
+     */
+    public void setSSID(String ssid) {
+        ssid.replaceAll(",", ".");
+        SSID = ssid;
+    }
 
-	/**
-	 * Sets the received signal strength indicator of this access point.
-	 */
-	public void setSignal(float signal) {
-		this.signal = signal;
-	}
+    /**
+     * Returns the received signal strength indicator of this access point.
+     */
+    public float getSignal() {
+        return signal;
+    }
 
-	/**
-	 * Returns the authentication, key management, and encryption schemes
-	 * supported by the access point.
-	 */
-	public String getOpen() {
-		return open;
-	}
+    /**
+     * Sets the received signal strength indicator of this access point.
+     */
+    public void setSignal(float signal) {
+        this.signal = signal;
+    }
 
-	/**
-	 * Sets the authentication, key management, and encryption schemes supported
-	 * by the access point.
-	 */
-	public void setOpen(String open) {
-		this.open = open;
-	}
+    /**
+     * Returns the authentication, key management, and encryption schemes
+     * supported by the access point.
+     */
+    public String getOpen() {
+        return open;
+    }
 
-	
-	public long getId() {
-		return id;
-	}
+    /**
+     * Sets the authentication, key management, and encryption schemes supported
+     * by the access point.
+     */
+    public void setOpen(String open) {
+        this.open = open;
+    }
 
-	public void setId(long id) {
-		this.id = id;
-	}
 
-	public boolean isDirty() {
-		return dirty;
-	}
+    public long getId() {
+        return id;
+    }
 
-	public void setDirty(boolean dirty) {
-		this.dirty = dirty;
-	}
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public float getSignalDeviation() {
-		return signalDeviation;
-	}
+    public boolean isDirty() {
+        return dirty;
+    }
 
-	public void setSignalDeviation(float signalDeviation) {
-		this.signalDeviation = signalDeviation;
-	}
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
+    }
 
-	public String getTime() {
-		return time;
-	}
-	public void setTime(String time) {
-		this.time = time;
-	}
-	
-	public long getNodeId() {
-		return nodeId;
-	}
+    public float getSignalDeviation() {
+        return signalDeviation;
+    }
 
-	public void setNodeId(long nodeId) {
-		this.nodeId = nodeId;
-	}
+    public void setSignalDeviation(float signalDeviation) {
+        this.signalDeviation = signalDeviation;
+    }
 
-	public String toString() {
-		String s = "";
-		
-		s += id + " " + SSID + "(" + BSSID + ") " + String.format("%.1f", signal) + "/" + String.format("%.1f", signalDeviation) + " of " + sampleCount + " at " + time + "\n";
-		
-		return s;
-	}
-	public void merge(WifiInfo w) {
-		float wSignal = w.getSignal();
-		long wCount = w.getSampleCount();
-		float wDeviation = w.getSignalDeviation();
-		float mSignal = (wSignal * wCount + signal * sampleCount) / (wCount + sampleCount);
-		float mSignalSquare = wCount * (wDeviation * wDeviation + wSignal * wSignal);
-		float _mSignalSquare = sampleCount * (signalDeviation * signalDeviation + signal * signal);
-		float mSignalDeviation = (float)Math.sqrt((mSignalSquare + _mSignalSquare) / (wCount + sampleCount) - mSignal * mSignal);
+    public String getTime() {
+        return time;
+    }
 
-		signal = mSignal;
-		signalDeviation = mSignalDeviation;
-		sampleCount += wCount;
-		
-		if(time == null && w.getTime() != null)
-			time = w.getTime();
-		else if(time != null && w.getTime() != null && time.compareTo(w.getTime()) < 0)
-			time = w.getTime();
-	}
-	public Object clone() {
-		WifiInfo o = null;
-		try {
-			o = (WifiInfo)super.clone();
-			o.BSSID = BSSID;
-			o.SSID = SSID;
-			o.sampleCount = sampleCount;
-			o.signal = signal;
-			o.signalDeviation = signalDeviation;
-			o.open = open;
-			o.time = time;
-			o.id = id;
-			o.dirty = dirty;
-		} catch (CloneNotSupportedException e) {
-			e.printStackTrace();
-		}
+    public void setTime(String time) {
+        this.time = time;
+    }
 
-		return o;
-	}
-	@Override
-	public boolean equals(Object obj) {
-		return this.BSSID.equals(((WifiInfo)obj).BSSID);
-	}
-	public void set(ResultSet cs) throws SQLException {
-		id = cs.getLong(cs.findColumn(LifeMapDatabase.AP_KEY_ID));
-		nodeId = cs.getLong(cs.findColumn(LifeMapDatabase.AP_KEY_NODE_ID));
-		BSSID = cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_BSSID));
-		if(cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_SSID)) != null)
-			SSID = cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_SSID));
-		if(cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_OPEN)) != null)
-			open = cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_OPEN));
-		signal = cs.getFloat(cs.findColumn(LifeMapDatabase.AP_KEY_SIGNAL));
-		signalDeviation = cs.getFloat(cs.findColumn(LifeMapDatabase.AP_KEY_SIGNAL_DEVIATION));
-		sampleCount = cs.getInt(cs.findColumn(LifeMapDatabase.AP_KEY_SAMPLE_COUNT));
-		time = cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_TIME));
-	}
+    public long getNodeId() {
+        return nodeId;
+    }
 
-	@Override
-	public int compareTo(WifiInfo another) {
-		return this.BSSID.compareTo(another.BSSID);
-	}
+    public void setNodeId(long nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public String toString() {
+        String s = "";
+
+        s += id + " " + SSID + "(" + BSSID + ") " + String.format("%.1f", signal) + "/" + String.format("%.1f", signalDeviation) + " of " + sampleCount + " at " + time + "\n";
+
+        return s;
+    }
+
+    public void merge(WifiInfo w) {
+        float wSignal = w.getSignal();
+        long wCount = w.getSampleCount();
+        float wDeviation = w.getSignalDeviation();
+        float mSignal = (wSignal * wCount + signal * sampleCount) / (wCount + sampleCount);
+        float mSignalSquare = wCount * (wDeviation * wDeviation + wSignal * wSignal);
+        float _mSignalSquare = sampleCount * (signalDeviation * signalDeviation + signal * signal);
+        float mSignalDeviation = (float) Math.sqrt((mSignalSquare + _mSignalSquare) / (wCount + sampleCount) - mSignal * mSignal);
+
+        signal = mSignal;
+        signalDeviation = mSignalDeviation;
+        sampleCount += wCount;
+
+        if (time == null && w.getTime() != null)
+            time = w.getTime();
+        else if (time != null && w.getTime() != null && time.compareTo(w.getTime()) < 0)
+            time = w.getTime();
+    }
+
+    public Object clone() {
+        WifiInfo o = null;
+        try {
+            o = (WifiInfo) super.clone();
+            o.BSSID = BSSID;
+            o.SSID = SSID;
+            o.sampleCount = sampleCount;
+            o.signal = signal;
+            o.signalDeviation = signalDeviation;
+            o.open = open;
+            o.time = time;
+            o.id = id;
+            o.dirty = dirty;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        return o;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this.BSSID.equals(((WifiInfo) obj).BSSID);
+    }
+
+    public void set(ResultSet cs) throws SQLException {
+        id = cs.getLong(cs.findColumn(LifeMapDatabase.AP_KEY_ID));
+        nodeId = cs.getLong(cs.findColumn(LifeMapDatabase.AP_KEY_NODE_ID));
+        BSSID = cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_BSSID));
+        if (cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_SSID)) != null)
+            SSID = cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_SSID));
+        if (cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_OPEN)) != null)
+            open = cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_OPEN));
+        signal = cs.getFloat(cs.findColumn(LifeMapDatabase.AP_KEY_SIGNAL));
+        signalDeviation = cs.getFloat(cs.findColumn(LifeMapDatabase.AP_KEY_SIGNAL_DEVIATION));
+        sampleCount = cs.getInt(cs.findColumn(LifeMapDatabase.AP_KEY_SAMPLE_COUNT));
+        time = cs.getString(cs.findColumn(LifeMapDatabase.AP_KEY_TIME));
+    }
+
+    @Override
+    public int compareTo(WifiInfo another) {
+        return this.BSSID.compareTo(another.BSSID);
+    }
 }
