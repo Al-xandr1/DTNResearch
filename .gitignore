@@ -120,6 +120,7 @@ packages/
 *.ipr
 *.iws
 *.eml
+*.iml
 
 #-----------------SPECIFIC----------------
 # GitEye 
