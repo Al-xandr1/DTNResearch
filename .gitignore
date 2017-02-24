@@ -116,6 +116,10 @@ packages/
 #Test files
 *.testsettings
 
+#————————IDEA————————
+*.ipr
+*.iws
+*.eml
 
 #-----------------SPECIFIC----------------
 # GitEye 
