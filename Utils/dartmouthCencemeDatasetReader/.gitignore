@@ -9,5 +9,7 @@
 *.iws
 *.eml
 
-# Specific for LifeMap_DBManager project
+# Specific for dartmouthCencemeDatasetReader project
 #example_code/LifeMap_GS1.db
+data/*.txt
+tracefiles/
