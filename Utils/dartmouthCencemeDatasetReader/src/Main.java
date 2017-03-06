@@ -12,12 +12,7 @@ import static java.lang.System.exit;
  */
 public class Main {
 
-    //todo бить каждого пользователя по дням!
-    //todo временная шкала для каждого пользователя для каждого дня начинается с 00:00:00 этого дня
-
-
     //region Constants
-    public static final boolean OUTPUT = false;
     public static final boolean DIVIDE_BY_PEACE = true;
 
     public static final String DB_FOLDER_NAME = "data";
@@ -118,17 +113,26 @@ public class Main {
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fullInputFileName))) {
 
             int day = 1;
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fullOutputFileName.replaceAll("\\.txt", "_day_" + day + ".txt")));
+            String fileName;
+            //если "делитель" включён, то нужно имя заменить на другок
+            if (DIVIDE_BY_PEACE) fileName = fullOutputFileName.replaceAll("\\.txt", "_day_" + day + ".txt");
+            else fileName = fullOutputFileName;
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName));
             boolean newDay;
             while ((line = bufferedReader.readLine()) != null) {
                 newDay = processLine(bufferedWriter, line);
-                if (newDay) {
+                if (DIVIDE_BY_PEACE && newDay) {
                     // закрываем файл текущего дня и создаём новый
                     bufferedWriter.flush();
                     bufferedWriter.close();
                     day++;
                     bufferedWriter = new BufferedWriter(new FileWriter(fullOutputFileName.replaceAll("\\.txt", "_day_" + day + ".txt")));
                     //обрабатываем текущую запись ещё раз
+                    newDay = processLine(bufferedWriter, line);
+                    assert !newDay;
+
+                } else if (!DIVIDE_BY_PEACE && newDay) {
+                    //если "делитель" отключён, то нужно текущую строчку обрпботать ещё раз
                     newDay = processLine(bufferedWriter, line);
                     assert !newDay;
                 }
@@ -161,7 +165,6 @@ public class Main {
 
             switch (tag) {
                 case GPS: {
-                    if (OUTPUT) System.out.println(line);
                     processGPS(bufferedWriter, timestampDate, data);
                     break;
                 }
@@ -170,12 +173,10 @@ public class Main {
                     break;
                 }
                 case GPS_SKIPPED: {
-                    if (OUTPUT) System.out.println(line);
                     processGPSSkipped(bufferedWriter, timestampDate, data);
                     break;
                 }
                 case ACT: {
-                    if (OUTPUT) System.out.println(line);
                     processACT(data);
                     break;
                 }
@@ -185,7 +186,7 @@ public class Main {
             }
         } else {
             //todo Сделать весь набор известных исключений! для проверки
-            if (OUTPUT) System.out.println(line);
+            System.out.println(line);
         }
 
         return false; // обработан старый день
@@ -234,7 +235,8 @@ public class Main {
             return false; // ничего не записано в файл
         }
 
-        //todo определить временные точки для каждой позиции? ИЛИ это несколько измерений одной точки?
+        //todo определить временные точки для каждой позиции? ИЛИ это несколько измерений одной точки и нужно усреднить?
+
         boolean anyWrote = false;
         String[] samples = data.split("\\*");
         for (String sample : samples) {
@@ -323,30 +325,38 @@ public class Main {
         lastWroteLongitude = longitude;
 
         // todo сделать перевод из ГЕОКООРДИНАТ в ДЕКАРТОВЫ координаты. Точка отсчёта должна быть одна!!!
-        String str = toRelativeTime(lastWroteTimestamp) + DLM + lastWroteLatitude + DLM + lastWroteLongitude + NEW_LINE;
+
+        String relativeTime;
+        if (DIVIDE_BY_PEACE) {
+            // если "делитель" включён, то используем startDateOfCurrentDay как точку отсчёта
+            relativeTime = toRelativeTime(startDateOfCurrentDay, lastWroteTimestamp);
+        } else {
+            if (firstTimeStampPerTrace == null) firstTimeStampPerTrace = timestamp;
+            // если "делитель" отключён, то используем firstTimeStampPerTrace как точку отсчёта
+            relativeTime = toRelativeTime(firstTimeStampPerTrace, lastWroteTimestamp);
+        }
+        String str = relativeTime + DLM + lastWroteLatitude + DLM + lastWroteLongitude + NEW_LINE;
         bufferedWriter.write(str);
     }
 
     /**
      * Производим перевод из абсолютного времени в миллисекундах с 1970 года
-     * в относительное время в секундах, относительно начала ТЕКУЩЕГО дня.
+     * в относительное время в секундах
      *
-     * @param timestamp абсолютное временя в миллисекундах с 1970 года
+     * @param startingPoint точка отсчёта
+     * @param timestamp     абсолютное временя в миллисекундах с 1970 года
      * @return время в секундах относительно начала текущего дня
      */
-    private static String toRelativeTime(Date timestamp) {
-        if (firstTimeStampPerTrace == null) {
-            firstTimeStampPerTrace = timestamp;
-        }
-        assert firstTimeStampPerTrace != null && firstTimeStampPerTrace.getTime() > 0;
+    private static String toRelativeTime(Date startingPoint, Date timestamp) {
+        assert startingPoint != null && startingPoint.getTime() > 0;
 
-        //todo сделать относительно текущго дня!!!
-        final long relativeTimestamp = timestamp.getTime() - firstTimeStampPerTrace.getTime();
-        assert relativeTimestamp >= 0 : "Some value less then firstTimeStampPerTrace: " + firstTimeStampPerTrace + ", " + timestamp.getTime();
+        final long relativeTimestamp = timestamp.getTime() - startingPoint.getTime();
+        assert relativeTimestamp >= 0
+                : "Some value less then firstTimeStampPerTrace: " + startingPoint + ", " + timestamp.getTime();
 
         if (lastWroteTimestamp != null) {
             // проверка, что очередная временная отметка больше или равна предыдущей
-            assert (lastWroteTimestamp.getTime() - firstTimeStampPerTrace.getTime()) <= relativeTimestamp;
+            assert (lastWroteTimestamp.getTime() - startingPoint.getTime()) <= relativeTimestamp;
         }
 
         final double seconds = (1.0 * relativeTimestamp) / 1000.0;
