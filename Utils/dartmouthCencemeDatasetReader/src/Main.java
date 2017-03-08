@@ -1,7 +1,10 @@
+import com.google.common.collect.ImmutableList;
+
 import java.io.*;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,56 +16,68 @@ import static java.lang.System.exit;
 public class Main {
 
     //region Constants
-    public static final boolean DIVIDE_BY_PEACE = true;
+    static final boolean DIVIDE_BY_PEACE = false;
 
-    public static final String DB_FOLDER_NAME = "data";
-    public static final String TRACES_FOLDER_NAME = "tracefiles";
+    static final String DB_FOLDER_NAME = "data";
+    static final String TRACES_FOLDER_NAME = "tracefiles";
 
-    public static final Pattern DB_FILES_PATTERN = Pattern.compile("(?<CLEARNAME>CenceMeLiteLog\\d{1,2})\\.txt");
-    public static final String CLEARNAME = "CLEARNAME";
-    public static final String TRACE_FILE_SUFFIX = "_trace.txt";
-    public static final String SEPARATOR = System.getProperty("file.separator");
+    static final Pattern DB_FILES_PATTERN = Pattern.compile("(?<CLEARNAME>CenceMeLiteLog\\d{1,2})\\.txt");
+    static final String CLEARNAME = "CLEARNAME";
+    static final String TRACE_FILE_SUFFIX = "_trace.txt";
+    static final String SEPARATOR = System.getProperty("file.separator");
 
-    public static final String DLM = "\t";
-    public static final String NEW_LINE = "\n";
-    public static final Pattern PATTERN = Pattern.compile("(?<TIMESTAMP>\\d*) DATA \\((?<NUMBER>\\d){0,3}\\) - (?<TAG>GPS|ACT|GPS-Skipped|ACC): (?<DATA>.*)");
-    public static final String TEST_GPS_LINE = "1216830985473 DATA (0) - GPS: 168.7,4342.38016,7217.17455,4.9,3.6*168.3,4342.38246,7217.16246,5.0,4.3*168.6,4342.3832,7217.16708,5.0,0.0*168.8,4342.38357,7217.17294,5.0,0.0*169.1,4342.38409,7217.17614,3.5,6.4*172.4,4342.38646,7217.17606,4.4,4.8*";
-    public static final String TEST_ACT_LINE = "1216830974754 DATA (0) - ACT: 1216830959582,1216830973695,5";
+    static final String DLM = "\t";
+    static final String NEW_LINE = "\n";
+    static final Pattern PATTERN = Pattern.compile("(?<TIMESTAMP>\\d*) DATA \\((?<NUMBER>\\d){0,3}\\) - (?<TAG>GPS|ACT|GPS-Skipped|ACC): (?<DATA>.*)");
+    static final String TEST_GPS_LINE = "1216830985473 DATA (0) - GPS: 168.7,4342.38016,7217.17455,4.9,3.6*168.3,4342.38246,7217.16246,5.0,4.3*168.6,4342.3832,7217.16708,5.0,0.0*168.8,4342.38357,7217.17294,5.0,0.0*169.1,4342.38409,7217.17614,3.5,6.4*172.4,4342.38646,7217.17606,4.4,4.8*";
+    static final String TEST_ACT_LINE = "1216830974754 DATA (0) - ACT: 1216830959582,1216830973695,5";
+
+    static final List<Pattern> LEGAL_EXCULDES = ImmutableList.<Pattern>builder()
+            .add(Pattern.compile("-*"))
+            .add(Pattern.compile("-* (NEXT LOG) -*"))
+            .add(Pattern.compile("\\d* INFO \\(\\d\\) - CenceMeLite: (Configuration|CONFIG):( \\d{1,3} \\*)*.*"))
+            .add(Pattern.compile("\\d* WARNING \\(\\d\\) - LocalAccSens: Error while reading input stream \\(read -1 bytes\\): null"))
+            .add(Pattern.compile("\\d* WARNING \\(\\d\\) - LocalAccSens: Couldn't connect to local accelerometer sensor socket:\\/\\/(\\d{1,3}.){3}\\d:\\d{4}: .*"))
+            .add(Pattern.compile("\\d* ERROR \\(\\d\\) - (CenceMeLite|ConfigurationReader|CenceMe):.*"))
+            .add(Pattern.compile("System error"))
+            .add(Pattern.compile("Error del sistema"))
+            .build();
+
 
     // blocks of a line
-    public static final String TIMESTAMPE = "TIMESTAMP";
-    public static final String NUMBER = "NUMBER";
-    public static final String TAG = "TAG";
-    public static final String DATA = "DATA";
+    static final String TIMESTAMPE = "TIMESTAMP";
+    static final String NUMBER = "NUMBER";
+    static final String TAG = "TAG";
+    static final String DATA = "DATA";
 
     // tag's values
-    public static final String ACT = "ACT"; // данные о текущем состоянии
-    public static final String ACC = "ACC"; // данные акселерометра
-    public static final String GPS_SKIPPED = "GPS-Skipped"; // GPS данные отсутствуют (пользователь бездействует более 15 минут)
-    public static final String GPS = "GPS"; // gps данные
+    static final String ACT = "ACT"; // данные о текущем состоянии
+    static final String ACC = "ACC"; // данные акселерометра
+    static final String GPS_SKIPPED = "GPS-Skipped"; // GPS данные отсутствуют (пользователь бездействует более 15 минут)
+    static final String GPS = "GPS"; // gps данные
 
     // indexes of data in GPS samples
-    public static final int ALTITUDE_INDEX = 0;
-    public static final int LATITUDE_INDEX = 1;
-    public static final int LONGITUDE_INDEX = 2;
-    public static final int HDOP_INDEX = 3;
-    public static final int SPEED_INDEX = 4;
+    static final int ALTITUDE_INDEX = 0;
+    static final int LATITUDE_INDEX = 1;
+    static final int LONGITUDE_INDEX = 2;
+    static final int HDOP_INDEX = 3;
+    static final int SPEED_INDEX = 4;
 
-    public static final String GPS_SKIPPED_VALUE = "user sitting";
+    static final String GPS_SKIPPED_VALUE = "user sitting";
 
     // indexes of activity data
-    public static final int ACT_ACC_SAMPLING_START_INDEX = 0;
-    public static final int ACT_ACC_SAMPLING_END_INDEX = 1;
-    public static final int ACT_FACT_INDEX = 2;
+    static final int ACT_ACC_SAMPLING_START_INDEX = 0;
+    static final int ACT_ACC_SAMPLING_END_INDEX = 1;
+    static final int ACT_FACT_INDEX = 2;
     //endregion
 
 
     //region Fields
-    private static Date startDateOfCurrentDay = null;
-    private static Date firstTimeStampPerTrace = null;
-    private static Date lastWroteTimestamp = null;
-    private static String lastWroteLatitude = null;
-    private static String lastWroteLongitude = null;
+    static Date startDateOfCurrentDay = null;
+    static Date firstTimeStampPerTrace = null;
+    static Date lastWroteTimestamp = null;
+    static String lastWroteLatitude = null;
+    static String lastWroteLongitude = null;
     //endregion
 
 
@@ -185,8 +200,10 @@ public class Main {
                 }
             }
         } else {
-            //todo Сделать весь набор известных исключений! для проверки
-            System.out.println(line);
+            // это нужно для контроля того, что все данные в наборе известного формата
+            if (!LEGAL_EXCULDES.stream().anyMatch(pattern -> pattern.matcher(line).matches())) {
+                System.out.println(">>> " + line);
+            }
         }
 
         return false; // обработан старый день
