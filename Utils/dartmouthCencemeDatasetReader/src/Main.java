@@ -16,7 +16,7 @@ import static java.lang.System.exit;
 public class Main {
 
     //region Constants
-    static final boolean DIVIDE_BY_PEACE = false;
+    static final boolean DIVIDE_BY_DAYS = false;
 
     static final String DB_FOLDER_NAME = "data";
     static final String TRACES_FOLDER_NAME = "tracefiles";
@@ -130,13 +130,13 @@ public class Main {
             int day = 1;
             String fileName;
             //если "делитель" включён, то нужно имя заменить на другок
-            if (DIVIDE_BY_PEACE) fileName = fullOutputFileName.replaceAll("\\.txt", "_day_" + day + ".txt");
+            if (DIVIDE_BY_DAYS) fileName = fullOutputFileName.replaceAll("\\.txt", "_day_" + day + ".txt");
             else fileName = fullOutputFileName;
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName));
             boolean newDay;
             while ((line = bufferedReader.readLine()) != null) {
                 newDay = processLine(bufferedWriter, line);
-                if (DIVIDE_BY_PEACE && newDay) {
+                if (DIVIDE_BY_DAYS && newDay) {
                     // закрываем файл текущего дня и создаём новый
                     bufferedWriter.flush();
                     bufferedWriter.close();
@@ -146,7 +146,7 @@ public class Main {
                     newDay = processLine(bufferedWriter, line);
                     assert !newDay;
 
-                } else if (!DIVIDE_BY_PEACE && newDay) {
+                } else if (!DIVIDE_BY_DAYS && newDay) {
                     //если "делитель" отключён, то нужно текущую строчку обрпботать ещё раз
                     newDay = processLine(bufferedWriter, line);
                     assert !newDay;
@@ -252,34 +252,46 @@ public class Main {
             return false; // ничего не записано в файл
         }
 
-        //todo определить временные точки для каждой позиции? ИЛИ это несколько измерений одной точки и нужно усреднить?
-
-        boolean anyWrote = false;
         String[] samples = data.split("\\*");
+        String sample = average(samples);
+
+        String[] components = sample.split(",");
+        String altitude = components[ALTITUDE_INDEX];
+        String latitude = components[LATITUDE_INDEX];
+        String longitude = components[LONGITUDE_INDEX];
+        String hDop = components[HDOP_INDEX];
+        String speed = components[SPEED_INDEX];
+        assert !altitude.isEmpty() && !latitude.isEmpty() && !longitude.isEmpty() && !hDop.isEmpty() && !speed.isEmpty();
+
+        write(bufferedWriter, timestamp, latitude, longitude);
+
+        return true; // что-то записано в файл (true) или нет (false)
+    }
+
+    private static String average(String[] samples) {
+        double avAlt = 0;
+        double avLat = 0;
+        double avLong = 0;
+        double avHdop = 0;
+        double avSpeed = 0;
+        final double n = samples.length;
         for (String sample : samples) {
             String[] components = sample.split(",");
             try {
-                String altitude = components[ALTITUDE_INDEX];
-                String latitude = components[LATITUDE_INDEX];
-                String longitude = components[LONGITUDE_INDEX];
-                String hDop = components[HDOP_INDEX];
-                String speed = components[SPEED_INDEX];
-                assert !altitude.isEmpty() && !latitude.isEmpty() && !longitude.isEmpty() && !hDop.isEmpty() && !speed.isEmpty();
-
-                write(bufferedWriter, timestamp, latitude, longitude);
-                anyWrote = true;
+                avAlt += Double.parseDouble(components[ALTITUDE_INDEX]);
+                avLat += Double.parseDouble(components[LATITUDE_INDEX]);
+                avLong += Double.parseDouble(components[LONGITUDE_INDEX]);
+                avHdop += Double.parseDouble(components[HDOP_INDEX]);
+                avSpeed += Double.parseDouble(components[SPEED_INDEX]);
             } catch (Exception ex) {
-                // for debug
                 ex.printStackTrace();
-                System.err.println("DEBUG data: '" + data + "'");
-                System.err.println("DEBUG samples: '" + Arrays.toString(samples) + "'");
                 System.err.println("DEBUG samples: '" + Arrays.toString(samples) + "'");
                 System.err.println("DEBUG sample: '" + sample + "'");
                 System.err.println("DEBUG components: '" + Arrays.toString(components) + "'");
                 throw ex;
             }
         }
-        return anyWrote; // что-то записано в файл (true) или нет (false)
+        return (avAlt / n) + "," + (avLat / n) + "," + (avLong / n) + "," + (avHdop / n) + "," + (avSpeed / n);
     }
 
     /**
@@ -344,7 +356,7 @@ public class Main {
         // todo сделать перевод из ГЕОКООРДИНАТ в ДЕКАРТОВЫ координаты. Точка отсчёта должна быть одна!!!
 
         String relativeTime;
-        if (DIVIDE_BY_PEACE) {
+        if (DIVIDE_BY_DAYS) {
             // если "делитель" включён, то используем startDateOfCurrentDay как точку отсчёта
             relativeTime = toRelativeTime(startDateOfCurrentDay, lastWroteTimestamp);
         } else {
@@ -352,7 +364,7 @@ public class Main {
             // если "делитель" отключён, то используем firstTimeStampPerTrace как точку отсчёта
             relativeTime = toRelativeTime(firstTimeStampPerTrace, lastWroteTimestamp);
         }
-        String str = relativeTime + DLM + lastWroteLatitude + DLM + lastWroteLongitude + NEW_LINE;
+        String str = relativeTime + DLM + fix(lastWroteLatitude) + DLM + fix(lastWroteLongitude) + NEW_LINE;
         bufferedWriter.write(str);
     }
 
@@ -380,6 +392,11 @@ public class Main {
         assert seconds >= 0;
 
         return Double.toString(seconds);
+    }
+
+    private static String fix(String coordinate) {
+        final double coord = Double.parseDouble(coordinate);
+        return Double.toString(coord / 100.0);
     }
 
     private static long parseTimestamp(String timestamp) {
