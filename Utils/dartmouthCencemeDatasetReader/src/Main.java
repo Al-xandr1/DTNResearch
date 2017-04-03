@@ -16,7 +16,7 @@ import static java.lang.System.exit;
 public class Main {
 
     //region Constants
-    static final boolean DIVIDE_BY_DAYS = false;
+    static final boolean DIVIDE_BY_DAYS = true;
 
     static final String DB_FOLDER_NAME = "data";
     static final String TRACES_FOLDER_NAME = "tracefiles";
@@ -120,6 +120,7 @@ public class Main {
 
             // сбрасываем начальное абсолютное время для новой трассы
             firstTimeStampPerTrace = null;
+            startDateOfCurrentDay = null;
         }
     }
 
@@ -332,6 +333,7 @@ public class Main {
         return false; // ничего не записано в файл
     }
 
+    private static final int EARTH_RADIUS = 6371;
     /**
      * Формуруем итоговую строку в нужном формате
      *
@@ -353,7 +355,19 @@ public class Main {
         lastWroteLatitude = latitude;
         lastWroteLongitude = longitude;
 
-        // todo сделать перевод из ГЕОКООРДИНАТ в ДЕКАРТОВЫ координаты. Точка отсчёта должна быть одна!!!
+        // division by 100.0 for casting to decimal format of coordinate
+        double lat = Double.parseDouble(lastWroteLatitude) / 100.0;
+        double lon = Double.parseDouble(lastWroteLongitude) / 100.0;
+        assert lat >= 0;
+        assert lon >= 0;
+
+        // convert to radian
+        lat = lat * Math.PI / 180;
+        lon = lon * Math.PI / 180;
+
+        double x = EARTH_RADIUS * Math.sin(lat) * Math.cos(lon);
+        double y = EARTH_RADIUS * Math.sin(lat) * Math.sin(lon);
+        //double z = EARTH_RADIUS * Math.cos(lat);
 
         String relativeTime;
         if (DIVIDE_BY_DAYS) {
@@ -364,7 +378,7 @@ public class Main {
             // если "делитель" отключён, то используем firstTimeStampPerTrace как точку отсчёта
             relativeTime = toRelativeTime(firstTimeStampPerTrace, lastWroteTimestamp);
         }
-        String str = relativeTime + DLM + fix(lastWroteLatitude) + DLM + fix(lastWroteLongitude) + NEW_LINE;
+        String str = relativeTime + DLM + x + DLM + y + NEW_LINE;
         bufferedWriter.write(str);
     }
 
@@ -392,11 +406,6 @@ public class Main {
         assert seconds >= 0;
 
         return Double.toString(seconds);
-    }
-
-    private static String fix(String coordinate) {
-        final double coord = Double.parseDouble(coordinate);
-        return Double.toString(coord / 100.0);
     }
 
     private static long parseTimestamp(String timestamp) {
