@@ -139,7 +139,8 @@ public class Main {
                     bufferedWriter.flush();
                     bufferedWriter.close();
                     day++;
-                    bufferedWriter = new BufferedWriter(new FileWriter(fullOutputFileName.replaceAll("\\.txt", "_day_" + day + ".txt")));
+                    bufferedWriter = new BufferedWriter(new FileWriter(fullOutputFileName.replaceAll("\\.txt",
+                            "_day_" + day + ".txt")));
                     //обрабатываем текущую запись ещё раз
                     newDay = processLine(bufferedWriter, line);
                     assert !newDay;
@@ -259,7 +260,8 @@ public class Main {
         String longitude = components[LONGITUDE_INDEX];
         String hDop = components[HDOP_INDEX];
         String speed = components[SPEED_INDEX];
-        assert !altitude.isEmpty() && !latitude.isEmpty() && !longitude.isEmpty() && !hDop.isEmpty() && !speed.isEmpty();
+        assert !altitude.isEmpty() && !latitude.isEmpty() && !longitude.isEmpty() && !hDop.isEmpty() &&
+                !speed.isEmpty();
 
         write(bufferedWriter, timestamp, latitude, longitude);
 
@@ -359,13 +361,9 @@ public class Main {
         assert lat >= 0;
         assert lon >= 0;
 
-        // convert to radian
-        lat = lat * Math.PI / 180;
-        lon = lon * Math.PI / 180;
-
-        double x = EARTH_RADIUS * Math.sin(lat) * Math.cos(lon);
-        double y = EARTH_RADIUS * Math.sin(lat) * Math.sin(lon);
-        //double z = EARTH_RADIUS * Math.cos(lat);
+        LatLong2DegreesConverter.Deg2UTM deg2UTM = new LatLong2DegreesConverter.Deg2UTM(lat, lon);
+        double x = deg2UTM.getEasting();
+        double y = deg2UTM.getNorthing();
 
         String relativeTime;
         if (DIVIDE_BY_DAYS) {
