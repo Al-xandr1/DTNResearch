@@ -1,10 +1,5 @@
-import com.google.common.collect.ImmutableList;
-
 import java.io.*;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,16 +27,18 @@ public class Main {
     static final String TEST_GPS_LINE = "1216830985473 DATA (0) - GPS: 168.7,4342.38016,7217.17455,4.9,3.6*168.3,4342.38246,7217.16246,5.0,4.3*168.6,4342.3832,7217.16708,5.0,0.0*168.8,4342.38357,7217.17294,5.0,0.0*169.1,4342.38409,7217.17614,3.5,6.4*172.4,4342.38646,7217.17606,4.4,4.8*";
     static final String TEST_ACT_LINE = "1216830974754 DATA (0) - ACT: 1216830959582,1216830973695,5";
 
-    static final List<Pattern> LEGAL_EXCULDES = ImmutableList.<Pattern>builder()
-            .add(Pattern.compile("-*"))
-            .add(Pattern.compile("-* (NEXT LOG) -*"))
-            .add(Pattern.compile("\\d* INFO \\(\\d\\) - CenceMeLite: (Configuration|CONFIG):( \\d{1,3} \\*)*.*"))
-            .add(Pattern.compile("\\d* WARNING \\(\\d\\) - LocalAccSens: Error while reading input stream \\(read -1 bytes\\): null"))
-            .add(Pattern.compile("\\d* WARNING \\(\\d\\) - LocalAccSens: Couldn't connect to local accelerometer sensor socket:\\/\\/(\\d{1,3}.){3}\\d:\\d{4}: .*"))
-            .add(Pattern.compile("\\d* ERROR \\(\\d\\) - (CenceMeLite|ConfigurationReader|CenceMe):.*"))
-            .add(Pattern.compile("System error"))
-            .add(Pattern.compile("Error del sistema"))
-            .build();
+    static final List<Pattern> LEGAL_EXCLUDES = new ArrayList<Pattern>() {
+        {
+            add(Pattern.compile("-*"));
+            add(Pattern.compile("-* (NEXT LOG) -*"));
+            add(Pattern.compile("\\d* INFO \\(\\d\\) - CenceMeLite: (Configuration|CONFIG):( \\d{1,3} \\*)*.*"));
+            add(Pattern.compile("\\d* WARNING \\(\\d\\) - LocalAccSens: Error while reading input stream \\(read -1 bytes\\): null"));
+            add(Pattern.compile("\\d* WARNING \\(\\d\\) - LocalAccSens: Couldn't connect to local accelerometer sensor socket:\\/\\/(\\d{1,3}.){3}\\d:\\d{4}: .*"));
+            add(Pattern.compile("\\d* ERROR \\(\\d\\) - (CenceMeLite|ConfigurationReader|CenceMe):.*"));
+            add(Pattern.compile("System error"));
+            add(Pattern.compile("Error del sistema"));
+        }
+    };
 
 
     // blocks of a line
@@ -202,7 +199,7 @@ public class Main {
             }
         } else {
             // это нужно для контроля того, что все данные в наборе известного формата
-            if (!LEGAL_EXCULDES.stream().anyMatch(pattern -> pattern.matcher(line).matches())) {
+            if (!LEGAL_EXCLUDES.stream().anyMatch(pattern -> pattern.matcher(line).matches())) {
                 System.out.println(">>> " + line);
             }
         }
@@ -334,6 +331,7 @@ public class Main {
     }
 
     private static final int EARTH_RADIUS = 6371;
+
     /**
      * Формуруем итоговую строку в нужном формате
      *
