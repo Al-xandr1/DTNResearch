@@ -21,8 +21,7 @@ public class Main {
     static final String TRACE_FILE_SUFFIX = "_trace.txt";
     static final String SEPARATOR = System.getProperty("file.separator");
 
-    static final String DLM = "\t";
-    static final String NEW_LINE = "\n";
+    static final String DLM = "\t ";
     static final Pattern PATTERN = Pattern.compile("(?<TIMESTAMP>\\d*) DATA \\((?<NUMBER>\\d){0,3}\\) - (?<TAG>GPS|ACT|GPS-Skipped|ACC): (?<DATA>.*)");
     static final String TEST_GPS_LINE = "1216830985473 DATA (0) - GPS: 168.7,4342.38016,7217.17455,4.9,3.6*168.3,4342.38246,7217.16246,5.0,4.3*168.6,4342.3832,7217.16708,5.0,0.0*168.8,4342.38357,7217.17294,5.0,0.0*169.1,4342.38409,7217.17614,3.5,6.4*172.4,4342.38646,7217.17606,4.4,4.8*";
     static final String TEST_ACT_LINE = "1216830974754 DATA (0) - ACT: 1216830959582,1216830973695,5";
@@ -130,29 +129,29 @@ public class Main {
             //если "делитель" включён, то нужно имя заменить на другок
             if (DIVIDE_BY_DAYS) fileName = fullOutputFileName.replaceAll("\\.txt", "_day_" + day + ".txt");
             else fileName = fullOutputFileName;
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+            PrintWriter printWriter = new PrintWriter(new FileWriter(fileName));
             boolean newDay;
             while ((line = bufferedReader.readLine()) != null) {
-                newDay = processLine(bufferedWriter, line);
+                newDay = processLine(printWriter, line);
                 if (DIVIDE_BY_DAYS && newDay) {
                     // закрываем файл текущего дня и создаём новый
-                    bufferedWriter.flush();
-                    bufferedWriter.close();
+                    printWriter.flush();
+                    printWriter.close();
                     day++;
-                    bufferedWriter = new BufferedWriter(new FileWriter(fullOutputFileName.replaceAll("\\.txt",
+                    printWriter = new PrintWriter(new FileWriter(fullOutputFileName.replaceAll("\\.txt",
                             "_day_" + day + ".txt")));
                     //обрабатываем текущую запись ещё раз
-                    newDay = processLine(bufferedWriter, line);
+                    newDay = processLine(printWriter, line);
                     assert !newDay;
 
                 } else if (!DIVIDE_BY_DAYS && newDay) {
                     //если "делитель" отключён, то нужно текущую строчку обрпботать ещё раз
-                    newDay = processLine(bufferedWriter, line);
+                    newDay = processLine(printWriter, line);
                     assert !newDay;
                 }
             }
-            bufferedWriter.flush();
-            bufferedWriter.close();
+            printWriter.flush();
+            printWriter.close();
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -163,7 +162,7 @@ public class Main {
         }
     }
 
-    private static boolean processLine(BufferedWriter bufferedWriter, String line) throws Exception {
+    private static boolean processLine(PrintWriter printWriter, String line) throws Exception {
         Matcher matcher = PATTERN.matcher(line);
 
         if (matcher.find()) {
@@ -179,7 +178,7 @@ public class Main {
 
             switch (tag) {
                 case GPS: {
-                    processGPS(bufferedWriter, timestampDate, data);
+                    processGPS(printWriter, timestampDate, data);
                     break;
                 }
                 case ACC: {
@@ -187,7 +186,7 @@ public class Main {
                     break;
                 }
                 case GPS_SKIPPED: {
-                    processGPSSkipped(bufferedWriter, timestampDate, data);
+                    processGPSSkipped(printWriter, timestampDate, data);
                     break;
                 }
                 case ACT: {
@@ -244,7 +243,7 @@ public class Main {
     /**
      * @return признак того, произошла ли запись в файл или нет
      */
-    private static boolean processGPS(BufferedWriter bufferedWriter, Date timestamp, String data) throws IOException {
+    private static boolean processGPS(PrintWriter printWriter, Date timestamp, String data) throws IOException {
         final String trimmedData = data.trim();
         if (trimmedData.isEmpty()) {
             // Точек в исходном файле для текущей строчки нет. Игнориуем и ищем следующие точки!
@@ -263,7 +262,7 @@ public class Main {
         assert !altitude.isEmpty() && !latitude.isEmpty() && !longitude.isEmpty() && !hDop.isEmpty() &&
                 !speed.isEmpty();
 
-        write(bufferedWriter, timestamp, latitude, longitude);
+        write(printWriter, timestamp, latitude, longitude);
 
         return true; // что-то записано в файл (true) или нет (false)
     }
@@ -307,11 +306,11 @@ public class Main {
     /**
      * @return признак того, произошла ли запись в файл или нет
      */
-    private static boolean processGPSSkipped(BufferedWriter bufferedWriter, Date timestamp, String gpsSkippedData) throws IOException {
+    private static boolean processGPSSkipped(PrintWriter printWriter, Date timestamp, String gpsSkippedData) throws IOException {
         assert gpsSkippedData.contains(GPS_SKIPPED_VALUE);
         // записать в файл последнюю актуальную позицию с новым временем
         if (lastWroteLatitude != null && lastWroteLongitude != null) {
-            write(bufferedWriter, timestamp, lastWroteLatitude, lastWroteLongitude);
+            write(printWriter, timestamp, lastWroteLatitude, lastWroteLongitude);
             return true; // запись в файл произошла
         }
 
@@ -337,14 +336,14 @@ public class Main {
     /**
      * Формуруем итоговую строку в нужном формате
      *
-     * @param bufferedWriter выходной файл
+     * @param printWriter выходной файл
      * @param timestamp      время местоположения
      * @param latitude       широта
      * @param longitude      долгота
      * @throws IOException
      */
-    private static void write(BufferedWriter bufferedWriter, Date timestamp, String latitude, String longitude) throws IOException {
-        assert bufferedWriter != null;
+    private static void write(PrintWriter printWriter, Date timestamp, String latitude, String longitude) throws IOException {
+        assert printWriter != null;
         assert timestamp != null;
         assert latitude != null;
         assert !latitude.isEmpty();
@@ -374,8 +373,8 @@ public class Main {
             // если "делитель" отключён, то используем firstTimeStampPerTrace как точку отсчёта
             relativeTime = toRelativeTime(firstTimeStampPerTrace, lastWroteTimestamp);
         }
-        String str = relativeTime + DLM + x + DLM + y + NEW_LINE;
-        bufferedWriter.write(str);
+        String str = "  " + relativeTime + DLM + x + DLM + y + DLM;
+        printWriter.println(str);
     }
 
     /**
