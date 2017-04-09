@@ -1,3 +1,6 @@
+import uk.me.jstott.jcoord.LatLng;
+import uk.me.jstott.jcoord.UTMRef;
+
 import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -355,14 +358,15 @@ public class Main {
         lastWroteLongitude = longitude;
 
         // division by 100.0 for casting to decimal format of coordinate
-        double lat = Double.parseDouble(lastWroteLatitude) / 100.0;
-        double lon = Double.parseDouble(lastWroteLongitude) / 100.0;
+        final double lat = Double.parseDouble(lastWroteLatitude) / 100.0;
+        final double lon = Double.parseDouble(lastWroteLongitude) / 100.0;
         assert lat >= 0;
         assert lon >= 0;
 
-        LatLong2DegreesConverter.Deg2UTM deg2UTM = new LatLong2DegreesConverter.Deg2UTM(lat, lon);
-        double x = deg2UTM.getEasting();
-        double y = deg2UTM.getNorthing();
+        final UTMRef coords = new LatLng(lat, lon).toUTMRef();
+
+        final double x = coords.getEasting();
+        final double y = coords.getNorthing();
 
         String relativeTime;
         if (DIVIDE_BY_DAYS) {
