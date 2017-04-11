@@ -121,6 +121,18 @@ public class Main {
             firstTimeStampPerTrace = null;
             startDateOfCurrentDay = null;
         }
+
+        System.out.println("maxX = " + maxX);
+        System.out.println("minX = " + minX);
+        System.out.println("maxY = " + maxY);
+        System.out.println("minY = " + minY);
+
+        System.out.println("countX = " + countX);
+        System.out.println("countY = " + countY);
+        System.out.println("sumX = " + avX);
+        System.out.println("sumY = " + avY);
+        System.out.println("averageX = " + avX / countX);
+        System.out.println("averageY = " + avY / countY);
     }
 
     private static void processFile(String fullInputFileName, String fullOutputFileName) throws Exception {
@@ -340,9 +352,9 @@ public class Main {
      * Формуруем итоговую строку в нужном формате
      *
      * @param printWriter выходной файл
-     * @param timestamp      время местоположения
-     * @param latitude       широта
-     * @param longitude      долгота
+     * @param timestamp   время местоположения
+     * @param latitude    широта
+     * @param longitude   долгота
      * @throws IOException
      */
     private static void write(PrintWriter printWriter, Date timestamp, String latitude, String longitude) throws IOException {
@@ -368,6 +380,15 @@ public class Main {
         final double x = coords.getEasting();
         final double y = coords.getNorthing();
 
+        maxX = Math.max(maxX, x);
+        minX = Math.min(minX, x);
+        maxY = Math.max(maxY, y);
+        minY = Math.min(minY, y);
+        avX += x;
+        countX++;
+        avY += y;
+        countY++;
+
         String relativeTime;
         if (DIVIDE_BY_DAYS) {
             // если "делитель" включён, то используем startDateOfCurrentDay как точку отсчёта
@@ -380,6 +401,15 @@ public class Main {
         String str = "  " + relativeTime + DLM + x + DLM + y + DLM;
         printWriter.println(str);
     }
+
+    private static double maxX = Double.MIN_VALUE;
+    private static double minX = Double.MAX_VALUE;
+    private static double maxY = Double.MIN_VALUE;
+    private static double minY = Double.MAX_VALUE;
+    private static double avX = 0;
+    private static long countX = 0;
+    private static double avY = 0;
+    private static long countY = 0;
 
     /**
      * Производим перевод из абсолютного времени в миллисекундах с 1970 года
