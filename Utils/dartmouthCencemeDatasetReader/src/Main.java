@@ -133,6 +133,8 @@ public class Main {
         System.out.println("sumY = " + avY);
         System.out.println("averageX = " + avX / countX);
         System.out.println("averageY = " + avY / countY);
+        System.out.println("middleX = " + (maxX + minX) / 2);
+        System.out.println("middleY = " + (maxY + minY) / 2);
     }
 
     private static void processFile(String fullInputFileName, String fullOutputFileName) throws Exception {
@@ -398,9 +400,17 @@ public class Main {
             // если "делитель" отключён, то используем firstTimeStampPerTrace как точку отсчёта
             relativeTime = toRelativeTime(firstTimeStampPerTrace, lastWroteTimestamp);
         }
-        String str = "  " + relativeTime + DLM + x + DLM + y + DLM;
+        final double fixedX = x - MIDDLE_X;
+        final double fixedY = y - MIDDLE_Y;
+        String str = "  " + relativeTime + DLM + fixedX + DLM + fixedY + DLM;
         printWriter.println(str);
     }
+
+    /**
+     * MIDDLE_X & MIDDLE_Y взяты из данных в качестве точки отсчёта
+     */
+    public static final double MIDDLE_X = 483786;
+    public static final double MIDDLE_Y = 4463456;
 
     private static double maxX = Double.MIN_VALUE;
     private static double minX = Double.MAX_VALUE;
