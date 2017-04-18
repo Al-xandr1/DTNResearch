@@ -59,8 +59,8 @@ void SimpleLevyMobility::initialize(int stage) {
         } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
     }
 
-    if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, aciJ);
-    if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
+    if (jump  == NULL) jump  = new LeviJumpOLD(ciJ, aliJ, aciJ);
+    if (pause == NULL) pause = new LeviPauseOLD(ciP, aliP, aciP);
 
 
 

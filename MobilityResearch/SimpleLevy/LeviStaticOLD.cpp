@@ -1,34 +1,34 @@
-#include "LeviStatic.h"
+#include "LeviStaticOLD.h"
 
-bool LeviJump::isTableReady = false;
+bool LeviJumpOLD::isTableReady = false;
 
-double LeviJump::c = 1;
-double LeviJump::alpha = 1;
-double LeviJump::accuracy = 0.001;
+double LeviJumpOLD::c = 1;
+double LeviJumpOLD::alpha = 1;
+double LeviJumpOLD::accuracy = 0.001;
 
-double LeviJump::xinv[100];
-double LeviJump::Finv[100];
-int LeviJump::imax;
-double LeviJump::Fmax;
-double LeviJump::step;
-double LeviJump::lim;
+double LeviJumpOLD::xinv[100];
+double LeviJumpOLD::Finv[100];
+int LeviJumpOLD::imax;
+double LeviJumpOLD::Fmax;
+double LeviJumpOLD::step;
+double LeviJumpOLD::lim;
 
-bool LeviPause::isTableReady = false;
+bool LeviPauseOLD::isTableReady = false;
 
-double LeviPause::c = 1;
-double LeviPause::alpha = 1;
-double LeviPause::accuracy = 0.001;
+double LeviPauseOLD::c = 1;
+double LeviPauseOLD::alpha = 1;
+double LeviPauseOLD::accuracy = 0.001;
 
-double LeviPause::xinv[100];
-double LeviPause::Finv[100];
-int LeviPause::imax;
-double LeviPause::Fmax;
-double LeviPause::step;
-double LeviPause::lim;
+double LeviPauseOLD::xinv[100];
+double LeviPauseOLD::Finv[100];
+int LeviPauseOLD::imax;
+double LeviPauseOLD::Fmax;
+double LeviPauseOLD::step;
+double LeviPauseOLD::lim;
 
 // -----------------------------------------------------------------
 
-double LeviJump::integralF(double x) {
+double LeviJumpOLD::integralF(double x) {
     double h, hh, t;
     h = 0;
     for (t = -lim + step / 2; t < lim; t += step) {
@@ -38,7 +38,7 @@ double LeviJump::integralF(double x) {
     return h;
 }
 
-double LeviJump::distFun(double x) {
+double LeviJumpOLD::distFun(double x) {
     double s1, s2;
 
 // ajusting partition
@@ -60,7 +60,7 @@ double LeviJump::distFun(double x) {
     return 0.5 + s1 / 2 / PI;
 }
 
-LeviJump::LeviJump(double ci, double ali, double aci) {
+LeviJumpOLD::LeviJumpOLD(double ci, double ali, double aci) {
     if (!isTableReady) {
         c = ci;
         alpha = ali;
@@ -86,7 +86,7 @@ LeviJump::LeviJump(double ci, double ali, double aci) {
     }
 }
 
-double LeviJump::get_Levi_rv() {
+double LeviJumpOLD::get_Levi_rv() {
     int i;
     double rnd, h;
     // do
@@ -104,7 +104,7 @@ double LeviJump::get_Levi_rv() {
 
 // -------------------------------------------------------------------
 
-double LeviPause::integralF(double x) {
+double LeviPauseOLD::integralF(double x) {
     double h, hh, t;
     h = 0;
     for (t = -lim + step / 2; t < lim; t += step) {
@@ -114,7 +114,7 @@ double LeviPause::integralF(double x) {
     return h;
 }
 
-double LeviPause::distFun(double x) {
+double LeviPauseOLD::distFun(double x) {
     double s1, s2;
 
 // ajusting partition
@@ -136,7 +136,7 @@ double LeviPause::distFun(double x) {
     return 0.5 + s1 / 2 / PI;
 }
 
-LeviPause::LeviPause(double ci, double ali, double aci) {
+LeviPauseOLD::LeviPauseOLD(double ci, double ali, double aci) {
     if (!isTableReady) {
         c = ci;
         alpha = ali;
@@ -162,7 +162,7 @@ LeviPause::LeviPause(double ci, double ali, double aci) {
     }
 }
 
-double LeviPause::get_Levi_rv() {
+double LeviPauseOLD::get_Levi_rv() {
     int i;
     double rnd, h;
     // do

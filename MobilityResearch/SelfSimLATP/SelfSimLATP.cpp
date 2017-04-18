@@ -64,7 +64,7 @@ void SelfSimLATP::initialize(int stage) {
         } else { cout << "It is necessary to specify ALL parameters"; exit(-112);}
     }
 
-    if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
+    if (pause == NULL) pause = new LeviPauseOLD(ciP, aliP, aciP);
 
     if (!hsc) {
         // загрузка данных о докациях

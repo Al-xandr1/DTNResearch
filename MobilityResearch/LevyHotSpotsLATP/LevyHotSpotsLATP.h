@@ -12,7 +12,7 @@
 #include "LineSegmentsMobilityBase.h"
 
 #include "DevelopmentHelper.h"
-#include "LeviStatic.h"
+#include "LeviStaticOLD.h"
 #include "HotSpotsCollection.h"
 
 class LevyHotSpotsLATP : public LineSegmentsMobilityBase
@@ -23,8 +23,8 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     bool isPause;
     long step;
 
-    LeviJump  *jump;
-    LeviPause *pause;
+    LeviJumpOLD  *jump;
+    LeviPauseOLD *pause;
     double kForSpeed;
     double roForSpeed;
 

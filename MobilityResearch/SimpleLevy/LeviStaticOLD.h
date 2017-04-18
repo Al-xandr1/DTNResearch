@@ -5,7 +5,7 @@
 #include <math.h>
 
 // Levi distribution
-class LeviJump
+class LeviJumpOLD
 {
 public:
   static bool isTableReady;
@@ -22,14 +22,14 @@ public:
   double distFun(double x);
 
   // constructor with inverse function calculations
-  LeviJump(double ci, double ali, double aci);
+  LeviJumpOLD(double ci, double ali, double aci);
 
   // methods for r.v. generation
   double get_Levi_rv();
 };
 
 
-class LeviPause
+class LeviPauseOLD
 {
 public:
   static bool isTableReady;
@@ -46,7 +46,7 @@ public:
   double distFun(double x);
 
   // constructor with inverse function calculations
-  LeviPause(double ci, double ali, double aci);
+  LeviPauseOLD(double ci, double ali, double aci);
 
   // methods for r.v. generation
   double get_Levi_rv();

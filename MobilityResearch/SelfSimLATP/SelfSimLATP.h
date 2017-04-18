@@ -9,7 +9,7 @@
 #include "INETDefs.h"
 #include "LineSegmentsMobilityBase.h"
 
-#include "LeviStatic.h"
+#include "LeviStaticOLD.h"
 #include "HotSpotsCollection.h"
 #include "RootsCollection.h"
 #include "SelfSimMap.h"
@@ -27,7 +27,7 @@ class SelfSimLATP : public LineSegmentsMobilityBase
     double kForSpeed;
     double roForSpeed;
 
-    LeviPause *pause;
+    LeviPauseOLD *pause;
 
     double powAforHS;
     double powAforWP;
