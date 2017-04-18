@@ -16,7 +16,6 @@
 *.dmg
 *.gz
 *.iso
-*.jar
 *.rar
 *.tar
 *.zip
@@ -115,7 +114,6 @@ packages/
 
 #Test files
 *.testsettings
-
 
 #-----------------SPECIFIC----------------
 # GitEye 
