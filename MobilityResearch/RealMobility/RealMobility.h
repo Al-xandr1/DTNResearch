@@ -3,7 +3,7 @@
 
 #include "INETDefs.h"
 #include "LineSegmentsMobilityBase.h"
-#include "LeviStaticOLD.h"
+#include "LeviStatic.h"
 #include <fstream>
 #include <string>
 #include "math.h"

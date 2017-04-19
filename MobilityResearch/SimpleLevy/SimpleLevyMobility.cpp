@@ -32,7 +32,7 @@ SimpleLevyMobility::SimpleLevyMobility() {
 void SimpleLevyMobility::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
-    double ciJ,aliJ,aciJ, ciP,aliP,aciP;
+    double ciJ,aliJ,deltaXJ,joinJ, ciP,aliP,deltaXP,joinP;
 
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
@@ -44,23 +44,26 @@ void SimpleLevyMobility::initialize(int stage) {
 
         NodeID = (int) par("NodeID");
 
-        if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") && hasPar("powA")) {
+        if (hasPar("ciJ") && hasPar("aliJ") && hasPar("deltaXJ") && hasPar("joinJ")
+                && hasPar("ciP") && hasPar("aliP") && hasPar("deltaXP") && hasPar("joinP")) {
 
             ciJ  = par("ciJ").doubleValue();
             aliJ = par("aliJ").doubleValue();
-            aciJ = par("aciJ").doubleValue();
+            deltaXJ = par("deltaXJ").doubleValue();
+            joinJ = par("joinJ").doubleValue();
 
             ciP  = par("ciP").doubleValue();
             aliP = par("aliP").doubleValue();
-            aciP = par("aciP").doubleValue();
+            deltaXP = par("deltaXP").doubleValue();
+            joinP = par("joinP").doubleValue();
 
             powA = par("powA").doubleValue();
 
         } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
     }
 
-    if (jump  == NULL) jump  = new LeviJumpOLD(ciJ, aliJ, aciJ);
-    if (pause == NULL) pause = new LeviPauseOLD(ciP, aliP, aciP);
+    if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, deltaXJ, joinJ);
+    if (pause == NULL) pause = new LeviPause(ciP, aliP, deltaXP, joinP);
 
 
 

@@ -11,11 +11,13 @@ simple SimpleLevyMobility extends MovingMobilityBase
  
  		double ciJ  = default(1);       // scale coeff (c) in Levy LENGTH disttibution - 10 in external research paper
     	double aliJ = default(1);       // power magnitude (alpha) in Levy LENGTH distribution - 0.5, 1.0, 1.5 in external research paper
-     	double aciJ = default(0.001);   // accurancy for Levy LENGTH distribution 
+     	double deltaXJ = default(1);    // size of grid 
+ 		double joinJ = default(4);      // merge of grids' cells factor 
  
     	double ciP  = default(1);       // scale coeff (c) in Levy PAUSE disttibution - 1 in external research paper
     	double aliP = default(1);       // power magnitude (alpha) in Levy PAUSE distribution - 0.5 in external research paper
-    	double aciP = default(0.001);	// accurancy for Levy PAUSE distribution 
+     	double deltaXP = default(1);    // size of grid 
+ 		double joinP = default(4);      // merge of grids' cells factor 
     	
     	string specification = default("SimpleLevy"); // concrete specification for Levy mobility 
     												  // available values = SimpleLevy | LevyHotSpotsRandom | LevyHotSpotsLATPCenterLogic | LevyHotSpotsLATP | LevyHotSpotsLATPPathCounts 

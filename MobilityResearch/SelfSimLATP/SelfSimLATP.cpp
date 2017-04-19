@@ -40,7 +40,7 @@ SelfSimLATP::SelfSimLATP() {
 void SelfSimLATP::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
-    double ciP,aliP,aciP;
+    double ciP,aliP,deltaXP,joinP;
 
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
@@ -52,11 +52,12 @@ void SelfSimLATP::initialize(int stage) {
 
         NodeID = (int) par("NodeID");
 
-        if (hasPar("powAforHS") && hasPar("powAforWP") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") ) {
+        if (hasPar("powAforHS") && hasPar("powAforWP") && hasPar("ciP") && hasPar("aliP") && hasPar("deltaXP") && hasPar("joinP")) {
 
             ciP  = par("ciP").doubleValue();
             aliP = par("aliP").doubleValue();
-            aciP = par("aciP").doubleValue();
+            deltaXP = par("deltaXP").doubleValue();
+            joinP = par("joinP").doubleValue();
 
             powAforHS = par("powAforHS").doubleValue();
             powAforWP = par("powAforWP").doubleValue();
@@ -64,7 +65,7 @@ void SelfSimLATP::initialize(int stage) {
         } else { cout << "It is necessary to specify ALL parameters"; exit(-112);}
     }
 
-    if (pause == NULL) pause = new LeviPauseOLD(ciP, aliP, aciP);
+    if (pause == NULL) pause = new LeviPause(ciP, aliP, deltaXP, joinP);
 
     if (!hsc) {
         // загрузка данных о докациях
