@@ -17,10 +17,10 @@ void StatisticsCollector2::initialize()
     deliveredPackets = 0;
 
     lifeTimePDF = new cDoubleHistogram("LIFE-TIME-HISTOGRAM", 300);
-    lifeTimePDF->setRangeAutoUpper(0.0, 1000, 1.3);
+    lifeTimePDF->setRange(0.0, 81000);
 
     ictPDF = new cDoubleHistogram("ICT-HISTOGRAM", 300);
-    ictPDF->setRangeAutoUpper(0.0, 300, 1.3);
+    ictPDF->setRange(0.0, 45000);
 
     commonRoutesDurationPDF = NULL;
 
@@ -181,14 +181,14 @@ void StatisticsCollector2::write(cDoubleHistogram* hist, ofstream* out, int leve
     for (int i = 0; i < hist->getNumCells(); i++) {
         double val = 0;
         for (int j = 0; j <= i; j++) val += hist->getCellPDF(j);
-        (*out) << val << "  ";
+        (*out) << val*hist->getCellSize() << "  ";
     }
     (*out) << endl << prefix << "    </CDF-VALS> " << endl;
     (*out) << prefix << "    <CCDF-VALS> " << endl;
     for (int i = 0; i < hist->getNumCells(); i++) {
         double val = 0;
         for (int j = i+1; j < hist->getNumCells(); j++) val += hist->getCellPDF(j);
-        (*out) << val << "  ";
+        (*out) << val*hist->getCellSize() << "  ";
     }
     (*out) << endl << prefix << "    </CCDF-VALS> " << endl;
     (*out) << prefix << "</"<<hist->getName()<<"> " << endl;
@@ -235,14 +235,14 @@ void StatisticsCollector2::finish() {
     for (int i = 0; i < lifeTimePDF->getNumCells(); i++) {
         double val = 0;
         for (int j = 0; j <= i; j++) val += lifeTimePDF->getCellPDF(j);
-        out << val << "  ";
+        out << val*lifeTimePDF->getCellSize() << "  ";
     }
     out << endl << "        </CDF-VALS> " << endl;
     out << "        <CCDF-VALS> " << endl;
     for (int i = 0; i < lifeTimePDF->getNumCells(); i++) {
         double val = 0;
         for (int j = i+1; j < lifeTimePDF->getNumCells(); j++) val += lifeTimePDF->getCellPDF(j);
-        out << val << "  ";
+        out << val*lifeTimePDF->getCellSize() << "  ";
     }
     out << endl << "        </CCDF-VALS> " << endl;
     out << "    </LIFE-TIME-HISTOGRAM> " << endl << endl;
@@ -269,18 +269,17 @@ void StatisticsCollector2::finish() {
     for (int i = 0; i < ictPDF->getNumCells(); i++) {
         double val = 0;
         for (int j = 0; j <= i; j++) val += ictPDF->getCellPDF(j);
-        out << val << "  ";
+        out << val*ictPDF->getCellSize() << "  ";
     }
     out << endl << "        </CDF-VALS> " << endl;
     out << "        <CCDF-VALS> " << endl;
     for (int i = 0; i < ictPDF->getNumCells(); i++) {
         double val = 0;
         for (int j = i+1; j < ictPDF->getNumCells(); j++) val += ictPDF->getCellPDF(j);
-        out << val << "  ";
+        out << val*ictPDF->getCellSize() << "  ";
     }
     out << endl << "        </CCDF-VALS> " << endl;
     out << "    </ICT-HISTOGRAM> " << endl << endl;
-
 
     write(commonRoutesDurationPDF, &out, 1);
     out << endl;
