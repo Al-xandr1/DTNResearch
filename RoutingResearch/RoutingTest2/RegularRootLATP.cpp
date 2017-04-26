@@ -311,13 +311,13 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
 
 
 bool RegularRootLATP::isRootFinished() {
-    ASSERT(currentRoot->size() > 1);
+    ASSERT(currentRoot->size() > 0);
     ASSERT(homeHS == currentRoot->at(0));
     bool finished = true;
     for (unsigned int i=1; i<currentRootCounter->size(); i++) {
         finished &= (currentRootCounter->at(i) == 0);
     }
-    if (finished) {
+    if (!finished) {
         cout<<"NodeId="<<NodeID<<", size="<<currentRoot->size()<<": ";
         for (unsigned int i=0; i<currentRootCounter->size(); i++) cout<<currentRootCounter->at(i)<<", ";
         cout << endl;

@@ -30,7 +30,7 @@ void MobileHost::handleMessage(cMessage *msg)
            if ( msg->isSelfMessage() ) {
               Packet* packet = createPacket();
               registerPacket(packet);
-              scheduleAt(simTime() + timeslot * exponential(1/lambda), msg);
+              if (lambda>0) scheduleAt(simTime() + timeslot * exponential(1/lambda), msg);
            } else {
                ASSERT(false); //unreachable statement
            };
