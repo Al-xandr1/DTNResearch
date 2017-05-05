@@ -92,22 +92,47 @@ void PersistanceCalculator::CalculatePersistance(int etalonRootNum)
     vector<int>* etalonRoot = roots.at(etalonRootNum);
     coefPers = 0.0;
     for(unsigned int i=0; i<roots.size(); i++)
-        if (i != etalonRootNum)
-            coefPers += CoefficientOfSimilarity(etalonRoot, roots.at(i));
+        if (i != etalonRootNum) {
+            double k = CoefficientOfSimilarity(etalonRoot, roots.at(i));
+            cout<<"K("<<etalonRootNum<<","<<i<<")="<<k<<endl;
+            coefPers += k;
+        }
 
     coefPers = coefPers / (L-1);
 }
+
+#define MY_MAX(a, b) ((a>b)?a:b)
 
 double PersistanceCalculator::CoefficientOfSimilarity(vector<int>* root1, vector<int>* root2)
 {
     if(root1->size() != root2->size()) exit(-222);
 
-    double sum=0, root1Sum=0, root2Sum=0, k=0;
-    for(unsigned int i=0; i<root1->size(); i++) {sum += abs(root1->at(i) - root2->at(i));}
-    for(unsigned int i=0; i<root1->size(); i++) {root1Sum += root1->at(i);}
-    for(unsigned int i=0; i<root2->size(); i++) {root2Sum += root2->at(i);}
+    double sumDiff=0, sumOfMaxComponetns=0, k=0;
+    for(unsigned int i=0; i<root1->size(); i++) {sumDiff += abs(root1->at(i) - root2->at(i));}
+    for(unsigned int i=0; i<root1->size(); i++) {sumOfMaxComponetns += MY_MAX(root1->at(i), root2->at(i));}
 
-    k=sum/max(root1Sum, root2Sum);
+    k = 1 - sumDiff / sumOfMaxComponetns;
+
+    if (k > 1) {
+        cout<<"sumDiff="<<sumDiff<<endl;
+        cout<<"sumOfMaxComponetns="<<sumOfMaxComponetns<<endl;
+        cout<<"sumDiff / sumOfMaxComponetns="<<(sumDiff/sumOfMaxComponetns)<<endl;
+        cout<<endl;
+        cout<<"root1: "<<endl;
+        for(unsigned int i=0; i<root1->size(); i++) {
+            cout<<root1->at(i)<<", ";
+            if ((i+1)%35 == 0 ) cout<<endl;
+        }
+        cout<<endl;
+        cout<<"root2: "<<endl;
+        for(unsigned int i=0; i<root2->size(); i++) {
+            cout<<root2->at(i)<<", ";
+            if ((i+1)%35 == 0 ) cout<<endl;
+        }
+        cout<<endl;
+
+        exit(-333);
+    };
     return k;
 }
 
@@ -118,12 +143,12 @@ void PersistanceCalculator::SaveResults()
     file.close();
 
     cout<<endl;
-    for(unsigned int i=0; i<roots.size(); i++) {
-        cout<<"root "<<i<<": ";
-        for(unsigned int j=0; j<roots.at(i)->size(); j++)
-        cout<<roots.at(i)->at(j)<<", ";
-        cout<<endl;
-    }
+    //for(unsigned int i=0; i<roots.size(); i++) {
+    //    cout<<"root "<<i<<": ";
+    //    for(unsigned int j=0; j<roots.at(i)->size(); j++)
+    //    cout<<roots.at(i)->at(j)<<", ";
+    //    cout<<endl;
+    //}
     cout<<"coefPers="<<coefPers<<endl;
 }
 
@@ -153,6 +178,6 @@ int main(int argc, char** argv)
     calc.CalculatePersistance(0);//первый маршрут считается эталонным!
     calc.SaveResults();
 
-    cout << "Hello world!" << endl;
+    cout << endl<< "Hello world!" << endl;
     return 0;
 }
