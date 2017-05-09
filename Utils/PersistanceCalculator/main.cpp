@@ -30,6 +30,7 @@ public:
     double CalculatePersistance(int etalonRootNum);
     double CalculatePersistance(vector<int>* etalonRoot, char* rootName);
     double CoefficientOfSimilarity(vector<int>* root1, vector<int>* root2);
+    vector<int>* GetMassCenter();
     void CalcAllAndSave();
 };
 
@@ -152,6 +153,26 @@ double PersistanceCalculator::CoefficientOfSimilarity(vector<int>* root1, vector
 }
 
 /**
+    Расчёт центра масс с многомерном пространстве, размерности spotNames.size()
+    и векторами roots. Пространство натуральных чисел!!!
+*/
+vector<int>* PersistanceCalculator::GetMassCenter()
+{
+    vector<int>* massCenter = new vector<int>();
+    for (unsigned int i=0; i<roots.at(0)->size(); i++) {
+        double component = 0.0;
+        for (unsigned int j=0; j<roots.size(); j++) {
+            vector<int>* root = roots.at(j);
+            component += root->at(i);
+        }
+        component /= (1.0 * roots.size());
+        massCenter->push_back(int(component + 0.5));
+    }
+
+    return massCenter;
+}
+
+/**
     Расчёт коэффициентов персистентности относительно всех маршрутов
     и сохранение результатов
 */
@@ -163,19 +184,27 @@ void PersistanceCalculator::CalcAllAndSave()
     for (unsigned int i=0; i<roots.size(); i++) {
         double coef = CalculatePersistance(i);
         file<<i<<"\t"<<coef<<endl;
-        cout<<"\t"<<i<<"  "<<coef<<endl<<endl;
+        cout<<"\t"<<i<<"\t"<<coef<<endl<<endl;
     }
+    vector<int>* massCenter = GetMassCenter();
+    double coef = CalculatePersistance(massCenter, "massCenter");
+    file<<"massCenter"<<"\t"<<coef<<endl;
+    cout<<"\t"<<"massCenter"<<"\t"<<coef<<endl<<endl;
+
     file.close();
-
     cout<<endl;
-    // for debug
-    //for(unsigned int i=0; i<roots.size(); i++) {
-    //    cout<<"root "<<i<<": ";
-    //    for(unsigned int j=0; j<roots.at(i)->size(); j++)
-    //    cout<<roots.at(i)->at(j)<<", ";
-    //    cout<<endl;
-    //}
 
+    // for debug
+    for(unsigned int i=0; i<roots.size(); i++) {
+        cout<<"root "<<i<<": ";
+        for(unsigned int j=0; j<roots.at(i)->size(); j++)
+        cout<<roots.at(i)->at(j)<<", ";
+        cout<<endl;
+    }
+    cout<<"massCenter: ";
+    for(unsigned int j=0; j<massCenter->size(); j++)
+    cout<<massCenter->at(j)<<", ";
+    cout<<endl;
 }
 
 int main(int argc, char** argv)
