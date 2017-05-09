@@ -22,15 +22,15 @@ class PersistanceCalculator{
 protected:
     vector<char*> spotNames;
     vector<vector<int>*> roots;
-    double coefPers;
 
 public:
     PersistanceCalculator(char* SpotDir, char* RootDi);
    ~PersistanceCalculator();
 
-    void CalculatePersistance(int etalonRootNum);
+    double CalculatePersistance(int etalonRootNum);
+    double CalculatePersistance(vector<int>* etalonRoot, char* rootName);
     double CoefficientOfSimilarity(vector<int>* root1, vector<int>* root2);
-    void SaveResults();
+    void CalcAllAndSave();
 };
 
 PersistanceCalculator::PersistanceCalculator(char* SpotDir, char* RootDir)
@@ -74,8 +74,6 @@ PersistanceCalculator::PersistanceCalculator(char* SpotDir, char* RootDir)
             rfile->close();
         } while(FindNextFile(h2, &f2));
     }
-
-    coefPers = 0.0;
 }
 
 PersistanceCalculator::~PersistanceCalculator()
@@ -84,21 +82,38 @@ PersistanceCalculator::~PersistanceCalculator()
     for(unsigned int i=0; i<roots.size(); i++) delete roots.at(i);
 }
 
-void PersistanceCalculator::CalculatePersistance(int etalonRootNum)
+/**
+    Расчёт коэффициента персистентности относительно какого либо маршрута из первоначального набора
+*/
+double PersistanceCalculator::CalculatePersistance(int etalonRootNum)
 {
     if (etalonRootNum<0 && etalonRootNum>=roots.size()) exit(-111);
 
-    double L=roots.size();
     vector<int>* etalonRoot = roots.at(etalonRootNum);
-    coefPers = 0.0;
+    double coef = 0.0;
     for(unsigned int i=0; i<roots.size(); i++)
         if (i != etalonRootNum) {
             double k = CoefficientOfSimilarity(etalonRoot, roots.at(i));
             cout<<"K("<<etalonRootNum<<","<<i<<")="<<k<<endl;
-            coefPers += k;
+            coef += k;
         }
 
-    coefPers = coefPers / (L-1);
+    return coef / (roots.size()-1); // roots.size() = L
+}
+
+/**
+    Расчёт коэффициента персистентности относительно маршрута НЕ из первоначального набора
+*/
+double PersistanceCalculator::CalculatePersistance(vector<int>* etalonRoot, char* rootName)
+{
+    double coef = 0.0;
+    for(unsigned int i=0; i<roots.size(); i++) {
+        double k = CoefficientOfSimilarity(etalonRoot, roots.at(i));
+        cout<<"K("<<rootName<<","<<i<<")="<<k<<endl;
+        coef += k;
+    }
+
+    return coef / (roots.size()-1); // roots.size() = L
 }
 
 #define MY_MAX(a, b) ((a>b)?a:b)
@@ -113,7 +128,7 @@ double PersistanceCalculator::CoefficientOfSimilarity(vector<int>* root1, vector
 
     k = 1 - sumDiff / sumOfMaxComponetns;
 
-    if (k > 1) {
+    if (k > 1) { // for debug
         cout<<"sumDiff="<<sumDiff<<endl;
         cout<<"sumOfMaxComponetns="<<sumOfMaxComponetns<<endl;
         cout<<"sumDiff / sumOfMaxComponetns="<<(sumDiff/sumOfMaxComponetns)<<endl;
@@ -136,22 +151,32 @@ double PersistanceCalculator::CoefficientOfSimilarity(vector<int>* root1, vector
     return k;
 }
 
-void PersistanceCalculator::SaveResults()
+/**
+    Расчёт коэффициентов персистентности относительно всех маршрутов
+    и сохранение результатов
+*/
+void PersistanceCalculator::CalcAllAndSave()
 {
     ofstream file("persistance.pst");
-    file<<coefPers;
+    cout<<"Coefficients: "<<endl;
+
+    for (unsigned int i=0; i<roots.size(); i++) {
+        double coef = CalculatePersistance(i);
+        file<<i<<"\t"<<coef<<endl;
+        cout<<"\t"<<i<<"  "<<coef<<endl<<endl;
+    }
     file.close();
 
     cout<<endl;
+    // for debug
     //for(unsigned int i=0; i<roots.size(); i++) {
     //    cout<<"root "<<i<<": ";
     //    for(unsigned int j=0; j<roots.at(i)->size(); j++)
     //    cout<<roots.at(i)->at(j)<<", ";
     //    cout<<endl;
     //}
-    cout<<"coefPers="<<coefPers<<endl;
-}
 
+}
 
 int main(int argc, char** argv)
 {
@@ -175,8 +200,7 @@ int main(int argc, char** argv)
     }
 
     PersistanceCalculator calc(hotspotFilesDir, rootFilesDir);
-    calc.CalculatePersistance(0);//первый маршрут считается эталонным!
-    calc.SaveResults();
+    calc.CalcAllAndSave();
 
     cout << endl<< "Hello world!" << endl;
     return 0;
