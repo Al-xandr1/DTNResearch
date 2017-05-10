@@ -181,30 +181,42 @@ void PersistanceCalculator::CalcAllAndSave()
     ofstream file("persistance.pst");
     cout<<"Coefficients: "<<endl;
 
+    double averagePersistance = 0.0;
     for (unsigned int i=0; i<roots.size(); i++) {
-        double coef = CalculatePersistance(i);
-        file<<i<<"\t"<<coef<<endl;
-        cout<<"\t"<<i<<"\t"<<coef<<endl<<endl;
+        double persistance = CalculatePersistance(i);
+        file<<i<<"\t"<<persistance<<endl;
+        cout<<"\t"<<i<<"\t"<<persistance<<endl<<endl;
+        averagePersistance += persistance;
     }
-    vector<int>* massCenter = GetMassCenter();
-    double coef = CalculatePersistance(massCenter, "massCenter");
-    file<<"massCenter"<<"\t"<<coef<<endl;
-    cout<<"\t"<<"massCenter"<<"\t"<<coef<<endl<<endl;
 
+    averagePersistance /= roots.size();
+    file<<"averagePersis"<<"\t"<<averagePersistance<<endl;
+    cout<<"averagePersis"<<"\t"<<averagePersistance<<endl<<endl;
+
+    vector<int>* massCenter = GetMassCenter();
+    double persistance = CalculatePersistance(massCenter, "massCenter");
+    file<<"massCenter"<<"\t"<<persistance<<endl;
+    cout<<"\t"<<"massCenter"<<"\t"<<persistance<<endl<<endl;
+    file<<"massCenterVector"<<"\t";
+    cout<<"massCenterVector"<<"\t";
+    for (unsigned int i=0; i<massCenter->size(); i++) {
+        file<<massCenter->at(i)<<" ";
+        cout<<massCenter->at(i)<<" ";
+    }
     file.close();
-    cout<<endl;
+    cout<<endl<<endl<<endl;
 
     // for debug
-    for(unsigned int i=0; i<roots.size(); i++) {
-        cout<<"root "<<i<<": ";
-        for(unsigned int j=0; j<roots.at(i)->size(); j++)
-        cout<<roots.at(i)->at(j)<<", ";
-        cout<<endl;
-    }
-    cout<<"massCenter: ";
-    for(unsigned int j=0; j<massCenter->size(); j++)
-    cout<<massCenter->at(j)<<", ";
-    cout<<endl;
+    //for(unsigned int i=0; i<roots.size(); i++) {
+    //    cout<<"root "<<i<<": ";
+    //    for(unsigned int j=0; j<roots.at(i)->size(); j++)
+    //    cout<<roots.at(i)->at(j)<<", ";
+    //    cout<<endl;
+    //}
+    //cout<<"massCenter: ";
+    //for(unsigned int j=0; j<massCenter->size(); j++)
+    //cout<<massCenter->at(j)<<", ";
+    //cout<<endl;
 }
 
 int main(int argc, char** argv)
