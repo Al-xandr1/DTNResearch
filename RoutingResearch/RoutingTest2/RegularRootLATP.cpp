@@ -14,6 +14,7 @@ RegularRootLATP::RegularRootLATP()
 
     homeHS = NULL;
     currentHSWaypointNum = 0;
+    useWaypointCounter = true;
 
     currentRoot        = NULL;
     currentRootSnumber = NULL;
@@ -175,6 +176,8 @@ void RegularRootLATP::initialize(int stage) {
     }
 
     if (!LocalProbMatrix) makeLocalProbMatrix(powA);
+
+    useWaypointCounter = getParentModule()->par("useWaypointCounter").boolValue();
 }
 
 
@@ -263,28 +266,40 @@ bool RegularRootLATP::findNextHotSpot()
 
 bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound)
 {
-    ASSERT(currentHSWaypointNum >= 0);
-    if (currentHSWaypointNum == 0) {
-        //если счётчик равен 0, то пора менять локацию
-        if (LevyHotSpotsLATP::findNextHotSpotAndTargetPosition()) {
-            ASSERT(currentHSWaypointNum > 0);
+    if (useWaypointCounter) {
+        // используем счётчки
+        ASSERT(currentHSWaypointNum >= 0);
+        if (currentHSWaypointNum != 0) {
+            // если счётчик ещё не равен 0, то идём по маршруту
+            bool nextPosFound=LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange, true);
+            // если счётчик нас пропустил дальше, то по любому должны найти путевую точку
+            ASSERT(nextPosFound);
             // уменьшаем счётчик количества путевых точек
             currentHSWaypointNum -= 1;
             return true;
         }
 
+        ASSERT(currentHSWaypointNum == 0);
+        //если счётчик равен 0, то пора менять локацию
+        if (LevyHotSpotsLATP::findNextHotSpotAndTargetPosition()) {
+            // ...смогли поменять локацию
+            ASSERT(currentHSWaypointNum > 0);
+            // уменьшаем счётчик количества путевых точек, т.к. только что выбрали путевую точку
+            currentHSWaypointNum -= 1;
+            return true;
+        }
+
     } else {
-        // идём по маршруту
-        bool nextPosFound=LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange, true);
-        // если счётчик нас пропустил дальше, то по любому должны найти путевую точку
-        ASSERT(nextPosFound);
-        // уменьшаем счётчик количества путевых точек
-        currentHSWaypointNum -= 1;
-        return true;
+        // если не используем счётчик, то генерируем через базовую реализацию
+        if (LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange)) {
+            // ... и если находим точку, заканчиваем метод.
+            return true;
+        }
+        // если не находим точку (и локацию, поиск которой происходит внутри метода), то завершаем маршрут
     }
 
     // маршрут кончился, идём домой
-//    ASSERT(currentHSWaypointNum == 0);
+    //if (useWaypointCounter) ASSERT(currentHSWaypointNum == 0);
     currentHSindex=0;
     RegularRootLATP::setCurrentHSbordersWith( homeHS );
 
