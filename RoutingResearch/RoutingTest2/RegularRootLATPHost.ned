@@ -16,6 +16,8 @@ module RegularRootLATPHost
     	
     	double rootPersistence = default(0.5); // Coefficient of persistence for locations. 
     							 		       // Available values [0, 1]
+    							 		       
+    	bool useWaypointCounter = default(true); // флаг, показывающий нужно использовать счётчик путевых точек на локацию или нет 					 		     
     
     gates:
         input in @directIn;

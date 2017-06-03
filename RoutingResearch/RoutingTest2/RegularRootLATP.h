@@ -43,6 +43,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
 
     unsigned int curRootIndex;                          // индекс текущей локации в текущем маршруте
     unsigned int currentHSWaypointNum;                  // количество оставшихся путевых точек в текущей локации
+    bool useWaypointCounter;                            // флаг, показывающий нужно использовать счётчик путевых точек на локацию или нет
 
     bool      isLProbReady;
     double**  LocalProbMatrix;
