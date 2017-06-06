@@ -1,0 +1,21 @@
+apply plugin: "java"
+apply plugin: "groovy"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
+    compile files('libs/jcoord-1.0.jar')
+}
+
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'java'
+            srcDirs 'groovy'
+        }
+    }
+}

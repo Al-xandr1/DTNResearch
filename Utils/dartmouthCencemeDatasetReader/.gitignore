@@ -13,3 +13,5 @@
 #example_code/LifeMap_GS1.db
 data/*.txt
 tracefiles/
+
+gradle-app.setting
