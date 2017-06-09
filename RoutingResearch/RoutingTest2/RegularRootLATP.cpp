@@ -16,6 +16,7 @@ RegularRootLATP::RegularRootLATP()
     currentHSWaypointNum = 0;
     useWaypointCounter = true;
 
+    curRootIndex       = -1;
     currentRoot        = NULL;
     currentRootSnumber = NULL;
     currentRootCounter = NULL;
@@ -223,11 +224,14 @@ void RegularRootLATP::setTargetPosition() {
 
 bool RegularRootLATP::findNextHotSpot()
 {
-    if (currentRootCounter->at(curRootIndex) > 0) (*currentRootCounter)[curRootIndex]-=1;  // покидая локацию, уменьшаем её счётчик посещений
+    if (currentRootCounter->at(curRootIndex) > 0)
+        (*currentRootCounter)[curRootIndex]-=1;  // покидая локацию, уменьшаем её счётчик посещений
 
     unsigned int hh=0, ii;                               // находим сумму всех счётчиков посещений на маршруте,
     for(unsigned int i=0; i<currentRoot->size(); i++)    // чтобы определить, когда конец маршрута
-        if (currentRootCounter->at(i) > 0) { ii=i; hh+=currentRootCounter->at(i); }
+        if (currentRootCounter->at(i) > 0) {
+            ii=i; hh+=currentRootCounter->at(i);
+        }
 
     if( hh == 0 ) return false;                          // маршрут кончился
     if( hh == currentRootCounter->at(ii) ) {             // осталась одна локация (может быть, с несколькими посещениями)
@@ -308,7 +312,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
         currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
 
         ASSERT(isRootFinished());
-        (check_and_cast<MobileHost*>(getParentModule()))->endRoute();
+        (check_and_cast<MobileHost*>(getParentModule()))->ensureEndRoute();
         return false;
     }
 
