@@ -150,7 +150,8 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
         Coord delta(distance * cos(angle), distance * sin(angle), 0);
         deltaVector = delta;
         travelTime = distance / speed;
-        targetPosition = lastPosition + delta;
+        const Coord remTargetPosition = targetPosition;  // сохраняем старое значение
+        targetPosition = lastPosition + delta;           // записываем новое значение
 //        ASSERT(targetPosition.x != lastPosition.x);
         nextChange = simTime() + travelTime;
 
@@ -164,7 +165,10 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
                     break;
 
                 } else if (findNextHotSpotAndTargetPosition()) return true; // выбираем следующую локацию
-                       else return false; // не нашли - останавливаемся
+                       else {// не нашли - останавливаемся и откатываем targetPosition на первоначальное значение
+                           targetPosition = remTargetPosition;
+                           return false;
+                       }
             }
 
             // для ускорения вычислений определяем вспомогательные переменные
@@ -186,7 +190,10 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
                 // не можем остаться
                 if (regenerateIfOutOfBound) continue; // генерируем заново прыжок
                 else if (findNextHotSpotAndTargetPosition()) return true; // выбираем следующую локацию
-                     else return false; // не нашли - останавливаемся
+                     else {// не нашли - останавливаемся и откатываем targetPosition на первоначальное значение
+                         targetPosition = remTargetPosition;
+                         return false;
+                     }
             }
 
             // можем остаться - прыгаем
