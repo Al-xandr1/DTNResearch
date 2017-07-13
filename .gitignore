@@ -115,6 +115,11 @@ packages/
 #Test files
 *.testsettings
 
+#CLion
+cmake-build-debug/
+.idea/
+CMakeLists.txt
+
 #-----------------SPECIFIC----------------
 # GitEye 
 .project
@@ -154,3 +159,4 @@ ictHistory.xml
 routeHistory.xml
 routeHistory_another.xml
 persistance.pst
+input/
