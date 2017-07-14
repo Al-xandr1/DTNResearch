@@ -4,8 +4,10 @@
 #include <string.h>
 #include <windows.h>
 #include <math.h>
+#include "boost/multiprecision/float128.hpp"
 
 using namespace std;
+using namespace boost::multiprecision;
 
 class SelfSimCalculator {
 protected:
