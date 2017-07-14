@@ -131,13 +131,16 @@ void SelfSimCalculator::calculateVariances()
 {
     int lvl;
     long int index, hsize;
-    double MX2, MX;
+    //double MX2, MX;
+    float128 MX2, MX;
 
     for(lvl=0, hsize=1, index=0; lvl<levels; lvl++) {
         MX2=0; MX=0;
-        for(long int i=0; i<hsize; i++) { MX2+=pointsInArea[index+i]*pointsInArea[index+i]; MX+=pointsInArea[index+i]; }
+        //for(long int i=0; i<hsize; i++) { MX2+=pointsInArea[index+i]*pointsInArea[index+i]; MX+=pointsInArea[index+i]; }
+        for(long int i=0; i<hsize; i++) { MX2+= float128(pointsInArea[index+i])*pointsInArea[index+i]; MX+=pointsInArea[index+i];}
         // variance[lvl]=MX2/hsize-(MX/hsize)*(MX/hsize);
-        variance[lvl]=MX2*hsize/(MX*MX)-1;
+        //variance[lvl]=MX2*hsize/(MX*MX)-1;
+        variance[lvl]=double( MX2*hsize/(MX*MX))-1;
         cout<<lvl<<"\t"<<variance[lvl]<<endl;
         index+=hsize; hsize*=4;
     }
