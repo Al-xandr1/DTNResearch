@@ -32,6 +32,7 @@ public:
     double CoefficientOfSimilarity(vector<int>* root1, vector<int>* root2);
     vector<int>* GetMassCenter();
     void CalcAllAndSave();
+    void GenerateRotFile(char* RootDir);
 };
 
 PersistanceCalculator::PersistanceCalculator(char* SpotDir, char* RootDir)
@@ -218,7 +219,42 @@ void PersistanceCalculator::CalcAllAndSave()
     //cout<<massCenter->at(j)<<", ";
     //cout<<endl;
 }
-
+/**
+   формирование файла *.rot со средним маршрутом
+*/
+void PersistanceCalculator::GenerateRotFile(char* RootDir)
+{
+char RootNamePattern[256];
+buildFullName(RootNamePattern, RootDir, "*.rot");
+WIN32_FIND_DATA f0;
+HANDLE h = FindFirstFile(RootNamePattern, &f0);
+char* sname0=new char[256];
+char* sname01=new char[256];
+strcpy(sname0, f0.cFileName);
+int i=0;
+while (*(sname0+i)!='_')
+{
+    *(sname01+i)=*(sname0+i);
+    i++;
+}
+strcat(sname01,"_average_");
+char str[80];
+vector<int>* massCenter = GetMassCenter();
+double persistance = CalculatePersistance(massCenter, "massCenter");
+sprintf(str,"%f",persistance); //конвертация double в char
+strcat(sname01,str);
+strcat(sname01,".rot");
+ofstream file(sname01);
+for (unsigned int i=0; i<massCenter->size(); i++)
+        file<<massCenter->at(i)<<" ";
+file.close();
+/* debug
+for(i=0;i<256;i++)
+{
+    cout<<sname01[i];
+}
+*/
+}
 int main(int argc, char** argv)
 {
     char* rootFilesDir;        //full path name of root files directory
@@ -242,7 +278,7 @@ int main(int argc, char** argv)
 
     PersistanceCalculator calc(hotspotFilesDir, rootFilesDir);
     calc.CalcAllAndSave();
-
+    calc.GenerateRotFile(rootFilesDir);
     cout << endl<< "Hello world!" << endl;
     return 0;
 }
