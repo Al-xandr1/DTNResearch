@@ -115,6 +115,11 @@ packages/
 #Test files
 *.testsettings
 
+#CLion
+cmake-build-debug/
+.idea/
+CMakeLists.txt
+
 #-----------------SPECIFIC----------------
 # GitEye 
 .project
