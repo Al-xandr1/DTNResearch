@@ -32,7 +32,7 @@ public:
     double CoefficientOfSimilarity(vector<int>* root1, vector<int>* root2);
     vector<int>* GetMassCenter();
     void CalcAllAndSave();
-    void GenerateRotFile(char* RootDir);
+    void GenerateRotFile(char* RootDir,char* SpotDir);
 };
 
 PersistanceCalculator::PersistanceCalculator(char* SpotDir, char* RootDir)
@@ -222,38 +222,50 @@ void PersistanceCalculator::CalcAllAndSave()
 /**
    формирование файла *.rot со средним маршрутом
 */
-void PersistanceCalculator::GenerateRotFile(char* RootDir)
+void PersistanceCalculator::GenerateRotFile(char* RootDir,char* SpotDir)
 {
-char RootNamePattern[256];
-buildFullName(RootNamePattern, RootDir, "*.rot");
-WIN32_FIND_DATA f0;
-HANDLE h = FindFirstFile(RootNamePattern, &f0);
-char* sname0=new char[256];
-char* sname01=new char[256];
-strcpy(sname0, f0.cFileName);
-int i=0;
-while (*(sname0+i)!='_')
-{
-    *(sname01+i)=*(sname0+i);
-    i++;
-}
-strcat(sname01,"_average_");
-char str[80];
-vector<int>* massCenter = GetMassCenter();
-double persistance = CalculatePersistance(massCenter, "massCenter");
-sprintf(str,"%f",persistance); //конвертация double в char
-strcat(sname01,str);
-strcat(sname01,".rot");
-ofstream file(sname01);
-for (unsigned int i=0; i<massCenter->size(); i++)
-        file<<massCenter->at(i)<<" ";
-file.close();
-/* debug
-for(i=0;i<256;i++)
-{
-    cout<<sname01[i];
-}
-*/
+    char RootNamePattern[256];
+    char SpotNamePattern[256];
+    buildFullName(RootNamePattern, RootDir, "*.rot");
+    WIN32_FIND_DATA f0;
+    HANDLE h = FindFirstFile(RootNamePattern, &f0);
+    char* sname0=new char[256];
+    char* sname01=new char[256];
+    strcpy(sname0, f0.cFileName);
+    int i=0;
+    while (*(sname0+i)!='_')
+        {
+            *(sname01+i)=*(sname0+i);
+            i++;
+        }
+    strcat(sname01,"_average_");
+    char str[80];
+    char hotstr[80];
+    char buff[50];
+    vector<int>* massCenter = GetMassCenter();
+    double persistance = CalculatePersistance(massCenter, "massCenter");
+    sprintf(str,"%f",persistance); //конвертация double в char
+    strcat(sname01,str);
+    strcat(sname01,".rot");
+    ofstream file(sname01);
+    for (unsigned int i=0; i<massCenter->size(); i++)
+        {
+            if (massCenter->at(i)>0)
+                {
+                    sprintf(hotstr,"hotSpot%i.hts",i+1);
+                    buildFullName(SpotNamePattern, SpotDir, hotstr);
+                    ifstream fin(SpotNamePattern);
+                    file << hotstr << " ";
+                    for (int j=0;j<4;j++)
+                        {
+                            fin >> buff;
+                            file << buff << " ";
+                        }
+                    file << massCenter->at(i) << endl;
+                    fin.close();
+                }
+        }
+    file.close();
 }
 int main(int argc, char** argv)
 {
@@ -278,7 +290,7 @@ int main(int argc, char** argv)
 
     PersistanceCalculator calc(hotspotFilesDir, rootFilesDir);
     calc.CalcAllAndSave();
-    calc.GenerateRotFile(rootFilesDir);
+    calc.GenerateRotFile(rootFilesDir,hotspotFilesDir);
     cout << endl<< "Hello world!" << endl;
     return 0;
 }
