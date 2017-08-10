@@ -252,18 +252,23 @@ void PersistanceCalculator::GenerateRotFile(char* RootDir,char* SpotDir)
         {
             if (massCenter->at(i)>0)
                 {
-                    sprintf(hotstr,"hotSpot%i.hts",i+1);
-                    buildFullName(SpotNamePattern, SpotDir, hotstr);
-                    ifstream fin(SpotNamePattern);
-                    file << hotstr << " ";
-                    for (int j=0;j<4;j++)
+                    for (int k=0; k<massCenter->at(i); k++)
                         {
-                            fin >> buff;
-                            file << buff << " ";
+                            sprintf(hotstr,"hotSpot%i.hts",i+1);
+                            buildFullName(SpotNamePattern, SpotDir, hotstr);
+                            ifstream fin(SpotNamePattern);
+                            file << hotstr << " ";
+                            for (int j=0;j<4;j++)
+                                {
+                                    fin >> buff;
+                                    file << buff << " ";
+                                }
+                            file << -1 << " " << -1 << endl;
+                            fin.close();
                         }
-                    file << massCenter->at(i) << endl;
-                    fin.close();
                 }
+            else
+                continue;
         }
     file.close();
 }
