@@ -1,4 +1,4 @@
-#include <TracesCollection.h>
+#include "TracesCollection.h"
 
 
 TracesCollection* TracesCollection::instance = NULL;   // указатель на singleton объект

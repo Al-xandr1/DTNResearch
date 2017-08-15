@@ -350,6 +350,14 @@ void RegularRootLATP::makeNewRoot()
     cout << endl << "Making new root for NodeID: " << NodeID << endl;
 
     if(currentRoot != NULL) {
+        // —охран€ем дл€ статистики ранее сгенерированный маршрут в RootsCollection.
+        int previousDay = RoutingDaemon::instance->getCurrentDay()-1;
+        ASSERT(previousDay >= 1);
+
+        // TODO не факт, что весь сохран€емый маршрут был пройден!!! может не тут сохран€ть? или не весь маршрут?
+        RootsCollection::getInstance()-> collectRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, previousDay);
+
+        // удал€ем старый маршрут
         deleteLocalProbMatrix();
         delete currentRoot;
         delete currentRootSnumber;
@@ -357,6 +365,7 @@ void RegularRootLATP::makeNewRoot()
         delete currentRootWptsPerVisit;
     }
 
+    // создаЄм новый маршрут копиру€ эталонный
     currentRoot        = new vector<HotSpotData*>(*firstRoot);
     currentRootSnumber = new vector<unsigned int>(*firstRootSnumber);
     currentRootCounter = new vector<int>(*firstRootCounter);
@@ -367,7 +376,7 @@ void RegularRootLATP::makeNewRoot()
     for (unsigned int i=0; i<firstRoot->size(); i++) ii+=firstRootCounter->at(i);
     int replaceCount = ii - round( ii * rootPersistence);
     ASSERT(0 <= replaceCount && replaceCount <= ii);
-    // уменьшаем счётчики посещений у заданного числа случайных локаций на маршруте.
+    // уменьшаем счЄтчики посещений у заданного числа случайных локаций на маршруте.
     // у первой локации (домашней), счётчик нулём не делаем.
     int rem, remCount=replaceCount;
     while( remCount > 0 ) {

@@ -99,6 +99,30 @@ struct HotSpotData {
         this->generatedWaypointNum = 0;
      }
 
+    HotSpotData(const HotSpotData& anotherData) {
+        this->hotSpotName = new char[256];
+        this->hotSpotName = strcpy(this->hotSpotName, anotherData.hotSpotName);
+        this->Xmin = anotherData.Xmin;
+        this->Xmax = anotherData.Xmax;
+        this->Ymin = anotherData.Ymin;
+        this->Ymax = anotherData.Ymax;
+        this->Xcenter = anotherData.Xcenter;
+        this->Ycenter = anotherData.Ycenter;
+        this->sumTime = anotherData.sumTime;
+        this->waypointNum = anotherData.waypointNum;
+        this->counter = anotherData.counter;
+        this->generatedSumTime = anotherData.generatedSumTime;
+        this->generatedWaypointNum = anotherData.generatedWaypointNum;
+        this->waypoints = anotherData.waypoints;
+    }
+
+    ~HotSpotData() {
+        if (hotSpotName) {
+            delete[] hotSpotName;
+            hotSpotName = NULL;
+        }
+    }
+
      void print() {
          cout << "\t Xmin = " << Xmin << ", Xmax = " << Xmax << endl;
          cout << "\t Ymin = " << Ymin << ", Ymax = " << Ymax << endl;

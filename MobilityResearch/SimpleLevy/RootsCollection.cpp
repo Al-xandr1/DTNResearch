@@ -65,11 +65,45 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
         while(FindNextFile(h, &f));
     } else cout << "Directory or files not found\n";
 
+    // проверка согласованности структур RootsDataShort & RootsData
     for (unsigned int i=1; i<RootsDataShort->size(); i++) {
         ASSERT(RootsDataShort->at(i).length == RootsData->at(i)->size());
         for (unsigned  int j=0; j<RootsDataShort->at(i).length; j++) {
             ASSERT(strcmp(RootsDataShort->at(i).hotSpot[j], RootsData->at(i)->at(j).hotSpotName) == 0);
         }
+    }
+
+    // инициализация структуры для хранения генерируемых маршрутов для каждого узла
+    generatedRootsData = new vector<vector<vector<HotSpotDataRoot*> *> *>();
+    for (unsigned int i=0; i<RootsData->size(); i++) {
+        generatedRootsData->push_back(new vector<vector<HotSpotDataRoot*>*>());
+    }
+}
+
+
+void RootsCollection::collectRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day)
+{
+    ASSERT(generatedRootsData);
+    ASSERT(root->size() == rootSnumber->size() && root->size() == rootCounter->size());
+    ASSERT(0 <= nodeId && nodeId < generatedRootsData->size());
+    // отсчёт дней в системе ведётся с 1
+    ASSERT(1 <= day);
+
+    vector<HotSpotDataRoot*>* rootForHistory = new vector<HotSpotDataRoot*>();
+    for (unsigned int i=0; i<root->size(); i++) {
+        HotSpotDataRoot* data = new HotSpotDataRoot(*(root->at(i)));
+        // проставляем актуальную кратность
+        data->counter = rootCounter->at(i);
+        rootForHistory->push_back(data);
+    }
+
+    //получаем маршруты указанного узла по всем прошедшим дням
+    vector<vector<HotSpotDataRoot*>*>* rootsByDays = generatedRootsData->at(nodeId);
+    if ((day-1) == rootsByDays->size()) {
+        rootsByDays->push_back(rootForHistory);
+    } else {
+        cout << "Wrong day: nodeId = " << nodeId << ", day = " << day << ", rootsByDays->size() = " << rootsByDays->size() << endl;
+        ASSERT(FALSE);
     }
 }
 
@@ -88,4 +122,9 @@ void RootsCollection::printRootsData()
         cout << "Root " << i <<":" <<endl;
         for(unsigned int j=0; j<(*RootsData)[i]->size(); j++) (*RootsData)[i]->at(j).print();
     }
+}
+
+void RootsCollection::saveGeneratedRootsData()
+{
+    //todo сделать сохранение сгенерированных маршрутов в папку outTrace\rootfiles
 }
