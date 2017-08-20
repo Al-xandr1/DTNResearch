@@ -355,7 +355,7 @@ void RegularRootLATP::makeNewRoot()
         ASSERT(previousDay >= 1);
 
         // TODO не факт, что весь сохраняемый маршрут был пройден!!! может не тут сохранять? или не весь маршрут?
-        RootsCollection::getInstance()-> collectRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, previousDay);
+        RootsCollection::getInstance()->collectRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, previousDay);
 
         // удаляем старый маршрут
         deleteLocalProbMatrix();

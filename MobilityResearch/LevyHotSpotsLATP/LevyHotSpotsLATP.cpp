@@ -257,11 +257,12 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
 
 
 void LevyHotSpotsLATP::saveStatistics() {
-    char *outDir = NamesAndDirs::getOutDir();
-    char *wpsDir = NamesAndDirs::getWpsDir();
-    char *trsDir = NamesAndDirs::getTrsDir();
-    char *hsDir  = NamesAndDirs::getHsDir();
-    char *locs   = NamesAndDirs::getLocFile();
+    const char *outDir = NamesAndDirs::getOutDir();
+    const char *wpsDir = NamesAndDirs::getOutWpsDir();
+    const char *trsDir = NamesAndDirs::getOutTrsDir();
+    const char *hsDir  = NamesAndDirs::getOutHsDir();
+    const char *rtDir  = NamesAndDirs::getOutRtDir();
+    const char *locs   = NamesAndDirs::getOutLocFile();
 
     if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---
@@ -277,9 +278,14 @@ void LevyHotSpotsLATP::saveStatistics() {
         if (CreateDirectory(hsDir, NULL)) cout << "create output directory: " << hsDir << endl;
         else cout << "error create output directory: " << hsDir << endl;
 
+        if (CreateDirectory(rtDir, NULL)) cout << "create output directory: " << rtDir << endl;
+        else cout << "error create output directory: " << rtDir << endl;
+
+
         // --- Write HotSpots ---
+        //todo перенести в HotSpotCollections
         for (unsigned int i = 0; i < hsc->getHSData()->size(); i++) {
-            char* fullNameHS = buildFullName(hsDir, hsc->getHSData()->at(i).hotSpotName);
+            const char* fullNameHS = buildFullName(hsDir, hsc->getHSData()->at(i).hotSpotName);
             ofstream* hsFile = new ofstream(fullNameHS);
             (*hsFile) << hsc->getHSData()->at(i).Xmin << "\t" << hsc->getHSData()->at(i).Xmax << endl;
             (*hsFile) << hsc->getHSData()->at(i).Ymin << "\t" << hsc->getHSData()->at(i).Ymax << endl;
@@ -294,7 +300,41 @@ void LevyHotSpotsLATP::saveStatistics() {
             delete hsFile;
         }
 
+
+        // --- Write Roots for every node & every day ---
+        //todo перенести в RootsCollection
+        vector<RootDataShort> *rootsDataShort = RootsCollection::getInstance()->getRootsDataShort();
+        vector<vector<vector<HotSpotDataRoot*>*>*> *generatedRootsData = RootsCollection::getInstance()->getGeneratedRootsData();
+        ASSERT(rootsDataShort->size() == generatedRootsData->size());
+        for (unsigned int i=0; i<generatedRootsData->size(); i++) {
+            vector<vector<HotSpotDataRoot*>*>* rootsPerNode = generatedRootsData->at(i);
+
+            for (unsigned int j=0; j<rootsPerNode->size(); j++) {
+                string filename((char*)"Gen_");
+                char buff[20];
+                sprintf(buff, "day_%i_", j+1);
+                string tmp2(buff);
+                filename += tmp2;
+                filename += extractSimpleName(rootsDataShort->at(i).RootName);
+                ofstream* rtFile = new ofstream(buildFullName(rtDir, filename.c_str()));
+                vector<HotSpotDataRoot*>* dailyRoot = rootsPerNode->at(j);
+                for (unsigned int k=0; k<dailyRoot->size(); k++) {
+                    HotSpotData* hs = dailyRoot->at(k);
+                    //todo проверить генерацию маршрутов (из-за учёта кратности появилось много "нулевых" маршрутов)
+                    for (unsigned int count=0; count<hs->counter; count++) {
+                        //todo вместо hs->sumTime & hs->waypointNum писать сгененированные значения???
+                        (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                                  << "\t" << -1 << "\t" << -1 << endl;
+                    }
+                }
+                rtFile->close();
+            }
+            cout << "\t Root per node " << i << " is collected!";
+        }
+
+
         // --- Write Locations ---
+        //todo перенести в HotSpotCollections
         ofstream lcfile(locs);
         for(unsigned int i = 0; i < hsc->getHSData()->size(); i++) {
             lcfile << hsc->getHSData()->at(i).hotSpotName << "\t"<< hsc->getHSData()->at(i).generatedSumTime << "\t" << "\t";
@@ -304,6 +344,7 @@ void LevyHotSpotsLATP::saveStatistics() {
         }
         lcfile.close();
     }
+
 
     //--- Write points ---
     ofstream wpFile(buildFullName(wpsDir, wpFileName));
@@ -317,7 +358,6 @@ void LevyHotSpotsLATP::saveStatistics() {
         wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
         trFile << inTime << "\t" << x << "\t" << y << endl;
     }
-
     wpFile.close();
     trFile.close();
 }

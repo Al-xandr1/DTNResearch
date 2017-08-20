@@ -1,46 +1,50 @@
 #include "DevelopmentHelper.h"
 
 
-char* NamesAndDirs::getOutDir() {
+const char *NamesAndDirs::getOutDir() {
     return OUT_DIR;
 }
 
-char* NamesAndDirs::getWpsDir() {
-    char *wpsDir = buildFullName(OUT_DIR, WPS_DIR);
+const char *NamesAndDirs::getOutWpsDir() {
+    const char *wpsDir = buildFullName(OUT_DIR, WPS_DIR);
     return wpsDir;
 }
 
-char* NamesAndDirs::getTrsDir() {
-    char *trsDir = buildFullName(OUT_DIR, TRS_DIR);
+const char *NamesAndDirs::getOutTrsDir() {
+    const char *trsDir = buildFullName(OUT_DIR, TRS_DIR);
     return trsDir;
 }
 
-char* NamesAndDirs::getHsDir() {
-    char *hsDir = buildFullName(OUT_DIR, HS_DIR);
+const char *NamesAndDirs::getOutHsDir() {
+    const char *hsDir = buildFullName(OUT_DIR, HS_DIR);
     return hsDir;
 }
 
-char* NamesAndDirs::getLocFile() {
-    char *locFile = buildFullName(OUT_DIR, LOC_FILE);
+const char *NamesAndDirs::getOutRtDir() {
+    const char *hsDir = buildFullName(OUT_DIR, RT_DIR);
+    return hsDir;
+}
+
+const char *NamesAndDirs::getOutLocFile() {
+    const char *locFile = buildFullName(OUT_DIR, LOC_FILE);
     return locFile;
 }
 
-char* NamesAndDirs::getSptCntFile() {
-    char *sptCntFile = buildFullName(OUT_DIR, SPC_FILE);
+const char *NamesAndDirs::getOutSptCntFile() {
+    const char *sptCntFile = buildFullName(OUT_DIR, SPC_FILE);
     return sptCntFile;
 }
 
 
-
-char* buildFullName(char* dir, char* fileName) {
-    char* buffer = new char[256];
+const char *buildFullName(const char *dir, const char *fileName) {
+    char *buffer = new char[256];
     strcpy(buffer, dir);
     strcat(buffer, "/");
     return strcat(buffer, fileName);
 }
 
-char* createFileName(char* buffer, int numberOfExperiment,
-        const char* rawName, int index, const char* fileType) {
+char *createFileName(char *buffer, int numberOfExperiment,
+                     const char *rawName, int index, const char *fileType) {
 
     ostringstream prefix, postfix;
     char *result;
@@ -49,7 +53,7 @@ char* createFileName(char* buffer, int numberOfExperiment,
         prefix << numberOfExperiment;
 
         result = strcat(strcat(strcpy(buffer, prefix.str().c_str()), "_"),
-                rawName);
+                        rawName);
     } else {
         result = strcpy(buffer, rawName);
     }
@@ -79,8 +83,13 @@ int countMaxValue(list<int> queueSizePoints) {
 
 double getLength(double x1, double y1, double x2, double y2) {
     return sqrt((x1 - x2) * (x1 - x2)
-              + (y1 - y2) * (y1 - y2));
+                + (y1 - y2) * (y1 - y2));
 }
 
+string extractSimpleName(char *fullName) {
+    string fullNameStr(fullName);
+    std::size_t found = fullNameStr.find_last_of((char*) "/");
+    return fullNameStr.substr(found+1);
+}
 
 

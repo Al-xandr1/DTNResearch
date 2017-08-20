@@ -29,7 +29,7 @@ public:
 
     SelfSimMapGenerator(double xmin, double xmax, double ymin, double ymax, int lvl);
     ~SelfSimMapGenerator();
-    void MakeSelfSimSet(char* varfile, int waypoints);
+    void MakeSelfSimSet(const char* varfile, int waypoints);
     void PutPointsInArea(int lvl, long int index, double xmin, double xmax, double ymin, double ymax);
     void PutSetOnMap();
 };

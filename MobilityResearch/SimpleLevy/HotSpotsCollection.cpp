@@ -18,7 +18,7 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, char* spotcountfile)
 
     double Xmin, Xmax, Ymin, Ymax;
 
-    char* spotInfoFileName = buildFullName(TracesDir, LOC_FILE);
+    const char* spotInfoFileName = buildFullName(TracesDir, LOC_FILE);
     ifstream* spotInfoFile = new ifstream(spotInfoFileName);
     if (!spotInfoFile) { cout << " No spotInfoFile file: " << spotInfoFileName << endl;  exit(104); }
 
@@ -37,7 +37,7 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, char* spotcountfile)
         }
     }
 
-    char* spotCountFileName = buildFullName(TracesDir, spotcountfile);
+    const char* spotCountFileName = buildFullName(TracesDir, spotcountfile);
     ifstream* spotCountFile = new ifstream(spotCountFileName);
     if (!spotCountFile) { cout << " No spotCountFile file: " << spotCountFileName << endl; exit(104); }
 

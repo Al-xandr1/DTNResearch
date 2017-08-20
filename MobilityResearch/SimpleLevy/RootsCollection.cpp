@@ -27,13 +27,13 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
     }
     RootsDataShort->pop_back();
 
-    char* rootFileNamePattern = buildFullName(rootsDir, filePatter);
+    const char* rootFileNamePattern = buildFullName(rootsDir, filePatter);
 
     WIN32_FIND_DATA f;
     HANDLE h = FindFirstFile(rootFileNamePattern, &f);
     if(h != INVALID_HANDLE_VALUE) {
         do {
-            char* inputFileName = buildFullName(rootsDir, f.cFileName);
+            const char* inputFileName = buildFullName(rootsDir, f.cFileName);
             ifstream* infile = new ifstream(inputFileName);
             vector<HotSpotDataRoot>* root = new vector<HotSpotDataRoot>;
             char* lastRedHotSpotName = NULL;
@@ -65,19 +65,21 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
         while(FindNextFile(h, &f));
     } else cout << "Directory or files not found\n";
 
-    // проверка согласованности структур RootsDataShort & RootsData
+    // инициализация структуры для хранения генерируемых маршрутов для каждого узла
+    generatedRootsData = new vector<vector<vector<HotSpotDataRoot*> *> *>();
+    for (unsigned int i=0; i<RootsData->size(); i++) {
+        generatedRootsData->push_back(new vector<vector<HotSpotDataRoot*>*>());
+    }
+
+    // проверка согласованности структур RootsDataShort & RootsData & generatedRootsData
     for (unsigned int i=1; i<RootsDataShort->size(); i++) {
         ASSERT(RootsDataShort->at(i).length == RootsData->at(i)->size());
         for (unsigned  int j=0; j<RootsDataShort->at(i).length; j++) {
             ASSERT(strcmp(RootsDataShort->at(i).hotSpot[j], RootsData->at(i)->at(j).hotSpotName) == 0);
         }
     }
-
-    // инициализация структуры для хранения генерируемых маршрутов для каждого узла
-    generatedRootsData = new vector<vector<vector<HotSpotDataRoot*> *> *>();
-    for (unsigned int i=0; i<RootsData->size(); i++) {
-        generatedRootsData->push_back(new vector<vector<HotSpotDataRoot*>*>());
-    }
+    ASSERT(RootsDataShort->size() == RootsData->size());
+    ASSERT(RootsDataShort->size() == generatedRootsData->size());
 }
 
 
@@ -122,9 +124,4 @@ void RootsCollection::printRootsData()
         cout << "Root " << i <<":" <<endl;
         for(unsigned int j=0; j<(*RootsData)[i]->size(); j++) (*RootsData)[i]->at(j).print();
     }
-}
-
-void RootsCollection::saveGeneratedRootsData()
-{
-    //todo сделать сохранение сгенерированных маршрутов в папку outTrace\rootfiles
 }

@@ -23,7 +23,6 @@ private:
     static RootsCollection *instance;              // указатель на singleton объект
 
     // эти две коллекции хранят данные о локациях маршрута. Последовательность данных в них синхронизированна
-    //todo а теперь RootsDataShort нужен???
     vector<RootDataShort> *RootsDataShort;         // набор маршрутов пользователей. Структура соответствует файлу allroots.roo
     vector<vector<HotSpotDataRoot> *> *RootsData;  // набор маршрутов пользователей. Структура - информация из файлов *.rot
 
@@ -92,6 +91,10 @@ public:
 
     vector<HotSpotDataRoot> *getRootDataByNodeId(int nodeId) { return RootsData->at(nodeId); }
 
+    vector<vector<vector<HotSpotDataRoot*>*>*> *getGeneratedRootsData() {return generatedRootsData;}
+
+    vector<vector<HotSpotDataRoot*>*> *getGeneratedRootsDataByNodeId(int nodeId) {return generatedRootsData->at(nodeId);}
+
     /**
      * Сохраняет указанный машрут для указанного пользователя в конкретный указанный день.
      * По описанию из RegularRootLATP.h:
@@ -107,8 +110,6 @@ public:
     void printRootsDataShort();
 
     void printRootsData();
-
-    void saveGeneratedRootsData();
 };
 
 #endif /* ROOTSCOLLECTION_H_ */

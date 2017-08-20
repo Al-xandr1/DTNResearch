@@ -21,6 +21,7 @@ using namespace std;
 #define WPS_DIR        (char*)"waypointfiles"         // директория для сохранения сгенерированных путевых точек
 #define TRS_DIR        (char*)"tracefiles"            // директория для сохранения сгенерированных трасс
 #define HS_DIR         (char*)"hotspotfiles"          // директория для сохранения выходной информации о локациях
+#define RT_DIR         (char*)"rootfiles"             // директория для сохранения выходной информации о пройденных маршрутах
 #define LOC_FILE       (char*)"locations.loc"         // имя файла с локациями
 #define SPC_FILE       (char*)"spotcount.cnt"         // имя файла с количеством посещенией
 #define ALLROOTS_FILE  (char*)"allroots.roo"          // имя файла
@@ -42,19 +43,35 @@ using namespace std;
 class NamesAndDirs {
 
 public:
-    static char* getOutDir();
-    static char* getWpsDir();
-    static char* getTrsDir();
-    static char* getHsDir();
-    static char* getLocFile();
-    static char* getSptCntFile();
+    static const char *getOutDir();
+
+    static const char *getOutWpsDir();
+
+    static const char *getOutTrsDir();
+
+    static const char *getOutHsDir();
+
+    static const char *getOutRtDir();
+
+    static const char *getOutLocFile();
+
+    static const char *getOutSptCntFile();
 };
 
 
-char* buildFullName(char* dir, char* fileName);
-char* createFileName(char* buffer, int numberOfExperiment,
-                     const char* rawName, int index, const char* fileType);
+const char *buildFullName(const char *dir, const char *fileName);
+
+char *createFileName(char *buffer, int numberOfExperiment,
+                     const char *rawName, int index, const char *fileType);
+
 int countMaxValue(list<int> queueSizePoints);
+
 double getLength(double x1, double y1, double x2, double y2);
+
+/**
+ * Извлекает простое имя файла из полного пути к нему.
+ * Например получает  KAIST_30sec_002.txt.wpt.rot  из  ./rootfiles/KAIST_30sec_002.txt.wpt.rot
+ */
+string extractSimpleName(char* fullName);
 
 #endif // DEVELOPMENTHELPER_H_INCLUDED
