@@ -42,8 +42,8 @@ private:
         this->RootsData = NULL;
         this->generatedRootsData = NULL;
         this->readRootsData(DEF_TR_DIR, ALLROOTS_FILE, DEF_RT_DIR, ROOT_PATTERT);
-        this->printRootsDataShort();
         this->printRootsData();
+        this->printRootsDataShort();
     }
 
     ~RootsCollection() {

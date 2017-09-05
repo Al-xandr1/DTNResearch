@@ -156,6 +156,8 @@ void RegularRootLATP::initialize(int stage) {
     if (!rc) rc = RootsCollection::getInstance();
 
     if (rootPersistence == -1)
+        // при инициализации выставл€ем значение по умолчанию дл€ узал.
+        // ƒалее попробуем прочитать индивидуальное значение из названи€ файла со средним маршрутом
         rootPersistence = getParentModule()->par("rootPersistence").doubleValue();
 
     if (!firstRoot) loadFirstRoot();

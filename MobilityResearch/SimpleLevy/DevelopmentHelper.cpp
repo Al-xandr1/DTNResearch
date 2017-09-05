@@ -35,7 +35,6 @@ const char *NamesAndDirs::getOutSptCntFile() {
     return sptCntFile;
 }
 
-
 const char *buildFullName(const char *dir, const char *fileName) {
     char *buffer = new char[256];
     strcpy(buffer, dir);
@@ -86,10 +85,35 @@ double getLength(double x1, double y1, double x2, double y2) {
                 + (y1 - y2) * (y1 - y2));
 }
 
-string extractSimpleName(char *fullName) {
+string extractSimpleName(const char *fullName) {
     string fullNameStr(fullName);
     std::size_t found = fullNameStr.find_last_of((char*) "/");
     return fullNameStr.substr(found+1);
 }
 
+double* extractDoubleParameter(const char* fileName, const char* parameter) {
+    const char* value = extractParameter(fileName, parameter);
+    if (value == NULL) {
+        return NULL;
+    }
+    return new double(std::stod(value));
+}
+
+const char* extractParameter(const char* fileName, const char* parameter) {
+    string fileNameStr(fileName);
+    string parameterStr(parameter);
+
+    std::size_t found = fileNameStr.find(parameterStr);
+    if (found == std::string::npos) {
+        return NULL;
+    }
+    std::size_t start = found + parameterStr.length();
+    ASSERT(fileNameStr.at(start) == '=');
+
+    std::size_t end = start + 1;
+    while ((fileNameStr.at(end)) != '_' && end < (fileNameStr.length()-1)) end++;
+    ASSERT(end < fileNameStr.length());
+
+    return fileNameStr.substr(start+1, end-start-1).c_str();
+}
 

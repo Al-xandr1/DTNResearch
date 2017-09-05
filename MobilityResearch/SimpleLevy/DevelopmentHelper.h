@@ -30,6 +30,7 @@ using namespace std;
 #define ICT_HIST       (char*)"ictHistory.xml"        // имя файла для сохранения истории ICT
 #define RT_HIST        (char*)"routeHistory.xml"      // имя файла для сохранения истории о пройденных маршрутах узлами
 #define STAT_FILE      (char*)"statistics.xml"        // имя файла для сохранения статистики
+#define PERSISTENCE    (char*)"persistence"           // имя параметра с коэффициентом персистентности в имени файла маршрута *.rot
 
 // формат файлов
 #define TRACE_TYPE     (char*)".txt"
@@ -72,6 +73,23 @@ double getLength(double x1, double y1, double x2, double y2);
  * Извлекает простое имя файла из полного пути к нему.
  * Например получает  KAIST_30sec_002.txt.wpt.rot  из  ./rootfiles/KAIST_30sec_002.txt.wpt.rot
  */
-string extractSimpleName(char* fullName);
+string extractSimpleName(const char* fullName);
+
+/**
+ * Извлекает значение параметра из строки (имени файла).
+ * Извлекает параметр методом extractParameter и преобразует в число.
+ *
+ * @return  Возвращает указтель на число, так как если такого параметра нет,
+ *          то нужно это обработать - в таком случае возвращается NULL:
+ */
+double* extractDoubleParameter(const char* fileName, const char* parameter);
+
+/**
+ * Извлекает значение параметра из строки (имени файла).
+ * Имя параметра передаётся в качестве входного аргумента функции.
+ * Наличие параметра определяется по вхождении имени параметра в имя файла.
+ * Значение параметра находиться после указанного имени параметра между знаками = и _
+ */
+const char* extractParameter(const char* fileName, const char* parameter);
 
 #endif // DEVELOPMENTHELPER_H_INCLUDED

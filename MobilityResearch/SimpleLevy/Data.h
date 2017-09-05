@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "DevelopmentHelper.h"
 
 using namespace std;
 
@@ -48,23 +49,35 @@ struct Waypoint {
 
 
 /*
- * Краткая информация о маршруте для конкретного пользователся (строчка из файла allroots.roo)
+ * Краткая информация о маршруте для конкретного пользователся
+ * Соответствов строчке из файла allroots.roo плюс коэффициент персистентности,
+ * который может быть указан в имени файла (используется в сгенерированных средних маршрутах)
  */
 struct RootDataShort {
     char RootName[256];     // имя маршрута - соответствует файлу *.rot
     int length;             // длина маршрута
     char** hotSpot;         // последовательность локаций маршрута
 
+    double* persistence;    /* коэффициент персистентности, соответствующий конкретному маршруту
+                             * Берётся из имени файла маршрута, если есть
+                             * Используется указатель, что отделить ситуацию,
+                             * когда коэф. не указан от ситуации указания произвольного числа
+                             */
+
     RootDataShort(string rootinfo) {
         istringstream info(rootinfo);
         info>>RootName>>length;
         hotSpot = new char*[length];
         for(int i=0; i<length; i++ ){ hotSpot[i]=new char[16]; info>>hotSpot[i]; }
+        persistence = extractDoubleParameter(RootName, PERSISTENCE);
+        //если коэффициент персистентности есть, то он должен быть больше нуля
+        if (persistence != NULL) ASSERT(*(persistence) > 0);
     }
 
     void print() {
         cout << "RootName:" << RootName << "\t" << length << " Hot Spots:" << endl;
-        for(int i=0; i<length; i++ ) cout<<hotSpot[i]<<endl;
+        for(int i=0; i<length; i++ ) cout << hotSpot[i] << endl;
+        if (persistence != NULL) cout << "persistence = " << (*(persistence)) << endl;
     }
 };
 

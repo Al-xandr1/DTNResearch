@@ -11,28 +11,23 @@ RootsCollection* RootsCollection::getInstance()
 }
 
 
-void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* rootsDir, char* filePatter)
+void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* rootsDir, char* filePattern)
 {
-    ASSERT(!RootsDataShort);
+    // Инициализация структуры RootsData на основании набора файлов *.rot из rootfiles
+    cout << "Initializing of RootsData..." << endl;
     ASSERT(!RootsData);
-
-    RootsDataShort = new vector<RootDataShort>();
     RootsData = new vector<vector<HotSpotDataRoot>*>();
 
-    ifstream rfile(buildFullName(TracesDir, allRootsFile));
-    while(!rfile.eof()) {
-        string rootinfo;
-        getline(rfile, rootinfo);
-        RootsDataShort->push_back(RootDataShort(rootinfo));
-    }
-    RootsDataShort->pop_back();
-
-    const char* rootFileNamePattern = buildFullName(rootsDir, filePatter);
-
+    const char* rootFileNamePattern = buildFullName(rootsDir, filePattern);
     WIN32_FIND_DATA f;
     HANDLE h = FindFirstFile(rootFileNamePattern, &f);
     if(h != INVALID_HANDLE_VALUE) {
         do {
+            double* persistence = extractDoubleParameter(f.cFileName, PERSISTENCE);
+            //если коэффициент персистентности есть, то он должен быть больше нуля
+            if (persistence != NULL) ASSERT(*(persistence) > 0);
+            //todo  куда его??
+
             const char* inputFileName = buildFullName(rootsDir, f.cFileName);
             ifstream* infile = new ifstream(inputFileName);
             vector<HotSpotDataRoot>* root = new vector<HotSpotDataRoot>;
@@ -64,22 +59,45 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
         }
         while(FindNextFile(h, &f));
     } else cout << "Directory or files not found\n";
+    cout << "RootsData is initialized." << endl;
 
-    // инициализация структуры для хранения генерируемых маршрутов для каждого узла
+
+    // Инициализация структуры RootsDataShort на основании файла allroots.roo (если он есть) ИЛИ на основе RootsData (если файла нет)
+    cout << "Initializing of RootsDataShort..." << endl;
+    //todo проверка доступности allroots.roo и различные варианты создания
+    ASSERT(!RootsDataShort);
+    RootsDataShort = new vector<RootDataShort>();
+    ifstream rfile(buildFullName(TracesDir, allRootsFile));
+    while(!rfile.eof()) {
+        string rootinfo;
+        getline(rfile, rootinfo);
+        RootsDataShort->push_back(RootDataShort(rootinfo));
+    }
+    RootsDataShort->pop_back(); // удаляем дубль в конце
+    cout << "RootsDataShort is initialized." << endl;
+
+
+    // Инициализация структуры generatedRootsData для хранения генерируемых маршрутов для каждого узла по дням
+    cout << "Initializing of generatedRootsData..." << endl;
+    ASSERT(!generatedRootsData);
     generatedRootsData = new vector<vector<vector<HotSpotDataRoot*> *> *>();
     for (unsigned int i=0; i<RootsData->size(); i++) {
         generatedRootsData->push_back(new vector<vector<HotSpotDataRoot*>*>());
     }
+    cout << "generatedRootsData is initialized." << endl;
 
-    // проверка согласованности структур RootsDataShort & RootsData & generatedRootsData
+
+    // Проверка согласованности структур RootsDataShort & RootsData & generatedRootsData
+    cout << "Checking of consistency..." << endl;
+    ASSERT(RootsDataShort->size() == RootsData->size());
+    ASSERT(RootsDataShort->size() == generatedRootsData->size());
     for (unsigned int i=1; i<RootsDataShort->size(); i++) {
         ASSERT(RootsDataShort->at(i).length == RootsData->at(i)->size());
         for (unsigned  int j=0; j<RootsDataShort->at(i).length; j++) {
             ASSERT(strcmp(RootsDataShort->at(i).hotSpot[j], RootsData->at(i)->at(j).hotSpotName) == 0);
         }
     }
-    ASSERT(RootsDataShort->size() == RootsData->size());
-    ASSERT(RootsDataShort->size() == generatedRootsData->size());
+    cout << "Consistency is checked." << endl;
 }
 
 
