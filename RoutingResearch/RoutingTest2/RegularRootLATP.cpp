@@ -39,7 +39,7 @@ void RegularRootLATP::loadFirstRoot()
     vector<HotSpotDataRoot>* root = rc->getRootDataByNodeId(NodeID);
     // получение индекса в полной коллекции локаций
     h = hsc->findHotSpotbyName(root->at(0).hotSpotName, Snum);
-    ASSERT(h != NULL && Snum != -1);
+    ASSERT(h != NULL && Snum != -1); // если падает - возможно данные в hotspotfiles/ & rootfiles/ не согласованы
     firstRoot->push_back(h);
     firstRootSnumber->push_back(Snum);
     firstRootCounter->push_back(1);
@@ -67,7 +67,13 @@ void RegularRootLATP::loadFirstRoot()
 
     // загрузка домашней локации
     homeHS = firstRoot->at(0);
-    // printFirstRoot();
+
+    RootDataShort *rootDataShort = rc->getRootDataShortByNodeId(NodeID);
+    ASSERT(rootDataShort);
+    // проставляем индивидуальное значение коэффициента персистентности, если оно есть
+    if (rootDataShort->persistence) rootPersistence = *(rootDataShort->persistence);
+
+    printFirstRoot();
 }
 
 
@@ -90,6 +96,7 @@ void RegularRootLATP::printFirstRoot()
     for (unsigned int i=0; i<root->size(); i++) originTotalWPTS += root->at(i).waypointNum;
     cout << NodeID << "\t\t\t\t totalRepeats=" << totalRepeats
          << " totalWPTS=" << totalWPTS << " originTotalWPTS=" << originTotalWPTS << endl;
+    cout << "\t\t\t\t rootPersistence = " << rootPersistence << endl;
 }
 
 
