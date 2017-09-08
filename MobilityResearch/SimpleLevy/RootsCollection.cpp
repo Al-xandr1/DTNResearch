@@ -34,6 +34,7 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
                 double sumTime;
                 unsigned int waypointNum;
                 (*infile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> sumTime >> waypointNum;
+                ASSERT(sumTime >= 0 && waypointNum >= 0);
 
                 if (lastRedHotSpotName) {
                     //это значит наткнулись на дубль последней строки (или в общем случае вообще на дубль строки)
@@ -76,7 +77,7 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
         // Генерируем RootsDataShort на основе RootsData
         ASSERT(rootFileNames->size() == RootsData->size());
         for (unsigned int i = 0; i < RootsData->size(); i++) {
-            string rootinfo = rootFileNames->at(i);                     // записываем имя файла
+            string rootinfo = rootFileNames->at(i);             // записываем имя файла
             rootinfo += string("\t");
             vector<HotSpotDataRoot> *root = RootsData->at(i);
             rootinfo += std::to_string(root->size());           // записываем длину маршрута
