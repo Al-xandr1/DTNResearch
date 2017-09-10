@@ -319,12 +319,11 @@ void LevyHotSpotsLATP::saveStatistics() {
                 ofstream* rtFile = new ofstream(buildFullName(rtDir, filename.c_str()));
                 vector<HotSpotDataRoot*>* dailyRoot = rootsPerNode->at(j);
                 for (unsigned int k=0; k<dailyRoot->size(); k++) {
-                    HotSpotData* hs = dailyRoot->at(k);
+                    HotSpotDataRoot* hs = dailyRoot->at(k);
                     //todo проверить генерацию маршрутов (из-за учёта кратности появилось много "нулевых" маршрутов)
-                    for (unsigned int count=0; count<hs->counter; count++) {
-                        //todo вместо hs->sumTime & hs->waypointNum писать сгененированные значения???
+                    for (unsigned int count = 0; count < hs->counter; count++) {
                         (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                                  << "\t" << -1 << "\t" << -1 << endl;
+                                  << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
                     }
                 }
                 rtFile->close();

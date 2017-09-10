@@ -97,6 +97,15 @@ struct HotSpotData {
     unsigned int generatedWaypointNum; // количество путевых точек в локации при моделиронии
     vector<Waypoint> waypoints;        // сгенерированные путевые точки
 
+    HotSpotData() :
+        hotSpotName(NULL),
+        Xmin(0), Xmax(0), Ymin(0), Ymax(0), Xcenter(0), Ycenter(0),
+        sumTime(0),
+        waypointNum(0),
+        counter(0),
+        generatedSumTime(0),
+        generatedWaypointNum(0) {}
+
     HotSpotData(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, unsigned int waypointNum) {
         strcpy(this->hotSpotName = new char[256], hotSpotName);
         this->Xmin = Xmin;
@@ -112,20 +121,18 @@ struct HotSpotData {
         this->generatedWaypointNum = 0;
      }
 
-    HotSpotData(const HotSpotData& anotherData) {
+    HotSpotData(const HotSpotData& anotherData) :
+        Xmin(anotherData.Xmin), Xmax(anotherData.Xmax),
+        Ymin(anotherData.Ymin), Ymax(anotherData.Ymax),
+        Xcenter(anotherData.Xcenter), Ycenter(anotherData.Ycenter),
+        sumTime(anotherData.sumTime),
+        waypointNum(anotherData.waypointNum),
+        counter(anotherData.counter),
+        generatedSumTime(anotherData.generatedSumTime),
+        generatedWaypointNum(anotherData.generatedWaypointNum)
+    {
         this->hotSpotName = new char[256];
         this->hotSpotName = strcpy(this->hotSpotName, anotherData.hotSpotName);
-        this->Xmin = anotherData.Xmin;
-        this->Xmax = anotherData.Xmax;
-        this->Ymin = anotherData.Ymin;
-        this->Ymax = anotherData.Ymax;
-        this->Xcenter = anotherData.Xcenter;
-        this->Ycenter = anotherData.Ycenter;
-        this->sumTime = anotherData.sumTime;
-        this->waypointNum = anotherData.waypointNum;
-        this->counter = anotherData.counter;
-        this->generatedSumTime = anotherData.generatedSumTime;
-        this->generatedWaypointNum = anotherData.generatedWaypointNum;
         this->waypoints = anotherData.waypoints;
     }
 

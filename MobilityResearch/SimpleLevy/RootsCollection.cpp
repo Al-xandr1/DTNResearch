@@ -127,7 +127,16 @@ void RootsCollection::collectRoot(vector<HotSpotData*>* root, vector<unsigned in
 
     vector<HotSpotDataRoot*>* rootForHistory = new vector<HotSpotDataRoot*>();
     for (unsigned int i=0; i<root->size(); i++) {
-        HotSpotDataRoot* data = new HotSpotDataRoot(*(root->at(i)));
+        HotSpotDataRoot* data = new HotSpotDataRoot();
+        data->hotSpotName = new char[256];
+        data->hotSpotName = strcpy(data->hotSpotName, root->at(i)->hotSpotName);
+        data->Xmin = root->at(i)->Xmin;
+        data->Xmax = root->at(i)->Xmax;
+        data->Ymin = root->at(i)->Ymin;
+        data->Ymax = root->at(i)->Ymax;
+        //todo сделать запись фактических значений времени пребывания в локации и кот-ва путевых точек в локации (для узла в рамках одного маршрута)
+        data->sumTime = -1;
+        data->waypointNum = -1;
         // проставляем актуальную кратность
         data->counter = rootCounter->at(i);
         rootForHistory->push_back(data);
@@ -136,6 +145,7 @@ void RootsCollection::collectRoot(vector<HotSpotData*>* root, vector<unsigned in
     //получаем маршруты указанного узла по всем прошедшим дням
     vector<vector<HotSpotDataRoot*>*>* rootsByDays = generatedRootsData->at(nodeId);
     if ((day-1) == rootsByDays->size()) {
+        //проверяем, что записали все предыдущие дни
         rootsByDays->push_back(rootForHistory);
     } else {
         cout << "Wrong day: nodeId = " << nodeId << ", day = " << day << ", rootsByDays->size() = " << rootsByDays->size() << endl;
