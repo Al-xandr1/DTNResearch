@@ -40,11 +40,13 @@ protected:
     int Xsize, Ysize;
     vector<Waypoint> **clusterWaypoint;
 
+    bool skipEmptyHotSpots; // параметр, показывающий пропускать пустые локации или нет
+
     int NumOfHotSpots;
     vector<Location> Locs;
 
 public:
-    HotSpotFinder(char *boundFile, double delta, double r);
+    HotSpotFinder(char *boundFile, bool skipEmptyHotSpots, double delta, double r);
 
     void LoadWaypointsFromDir(char *waypointDir);
 
@@ -59,11 +61,12 @@ public:
     void makeAllSpots(char *hotSpotFilesDir);
 };
 
-HotSpotFinder::HotSpotFinder(char *boundFile, double delta = 70, double r = 100) {
+HotSpotFinder::HotSpotFinder(char *boundFile, bool skipEmptyHotSpots = false, double delta = 70, double r = 100) {
     Delta = delta;
     R2 = r * r;
 
     NumOfHotSpots = 0;
+    this->skipEmptyHotSpots = skipEmptyHotSpots;
 
     ifstream *bf = new ifstream(boundFile);
     if (bf == NULL) {
@@ -206,6 +209,9 @@ void HotSpotFinder::makeAllSpots(char *hotSpotFilesDir) {
                 kq.erase(kq.begin() + j);
             } else j++;
         }
+        if (skipEmptyHotSpots && (HotSpot.Xmax == HotSpot.Xmin || HotSpot.Ymax == HotSpot.Ymin)) {
+            continue;
+        }
         NumOfHotSpots++;
         cout << "Cluster number " << NumOfHotSpots << endl;
         printHotSpot(HotSpot);
@@ -286,7 +292,7 @@ int main(int argc, char **argv) {
             break;
     }
 
-    HotSpotFinder HSFinder("bounds.bnd");
+    HotSpotFinder HSFinder("bounds.bnd", true);
 
     HSFinder.LoadWaypointsFromDir(wayPointFilesDir);
 
