@@ -183,6 +183,10 @@ void RegularRootLATP::initialize(int stage) {
         ASSERT(currentRootSnumber->at(curRootIndex) == currentHSindex);
 
         //printCurrentRoot();
+        // Сохраняем для статистики сгенерированный маршрут для первого дня в RootsCollection.
+        const int currentDay = RoutingDaemon::instance->getCurrentDay();
+        ASSERT(currentDay == 0);
+        RootsCollection::getInstance()->collectRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, currentDay+1);
     }
 
     if (!LocalProbMatrix) makeLocalProbMatrix(powA);
@@ -356,16 +360,11 @@ bool RegularRootLATP::isRootFinished() {
 
 void RegularRootLATP::makeNewRoot()
 {
-    cout << endl << "Making new root for NodeID: " << NodeID << endl;
+    const int currentDay = RoutingDaemon::instance->getCurrentDay();
+    ASSERT(currentDay >= 2); // Начинается создание новых маршрутов со второго дня
+    cout << endl << "Making new root for NodeID: " << NodeID << " at day: " << currentDay << endl;
 
     if(currentRoot != NULL) {
-        // Сохраняем для статистики ранее сгенерированный маршрут в RootsCollection.
-        int previousDay = RoutingDaemon::instance->getCurrentDay()-1;
-        ASSERT(previousDay >= 1);
-
-        // TODO не факт, что весь сохраняемый маршрут был пройден!!! может не тут сохранять? или не весь маршрут?
-        RootsCollection::getInstance()->collectRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, previousDay);
-
         // удаляем старый маршрут
         deleteLocalProbMatrix();
         delete currentRoot;
@@ -506,4 +505,8 @@ void RegularRootLATP::makeNewRoot()
 
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+
+    // Сохраняем для статистики сгенерированный маршрут для текущего дня в RootsCollection.
+    // Сохранение тут происходит со второго дня. Первый день сохраняется сразу после создания в initialize
+    RootsCollection::getInstance()->collectRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, currentDay);
 }
