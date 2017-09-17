@@ -20,8 +20,13 @@ const char *NamesAndDirs::getOutHsDir() {
     return hsDir;
 }
 
-const char *NamesAndDirs::getOutRtDir() {
-    const char *hsDir = buildFullName(OUT_DIR, RT_DIR);
+const char *NamesAndDirs::getOutTheoryRtDir() {
+    const char *hsDir = buildFullName(OUT_DIR, TH_RT_DIR);
+    return hsDir;
+}
+
+const char *NamesAndDirs::getOutActualRtDir() {
+    const char *hsDir = buildFullName(OUT_DIR, AC_RT_DIR);
     return hsDir;
 }
 

@@ -35,12 +35,14 @@ private:
      * Т.е. индекс по строкам в матрице - номер узла
      *      индекс по столбцам в матрице - номер дня
      */
-    vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData;
+    vector<vector<vector<HotSpotDataRoot*> *> *> *generatedTheoryRootsData; // для хранение СГЕНЕРИРОВАННЫХ, НО НЕ ПРОЙДЕННЫХ маршрутов
+    vector<vector<vector<HotSpotDataRoot*> *> *> *generatedActualRootsData; // для хранение ФАКТИЧЕСКИ ПРОЙДЕННЫХ маршрутов
 
     RootsCollection() {
         this->RootsDataShort = NULL;
         this->RootsData = NULL;
-        this->generatedRootsData = NULL;
+        this->generatedTheoryRootsData = NULL;
+        this->generatedActualRootsData = NULL;
         this->readRootsData(DEF_TR_DIR, ALLROOTS_FILE, DEF_RT_DIR, ROOT_PATTERT);
         this->printRootsData();
         this->printRootsDataShort();
@@ -58,9 +60,9 @@ private:
             delete RootsData;
             RootsData = NULL;
         }
-        if (generatedRootsData) {
-            for (unsigned int i=0; i<generatedRootsData->size(); i++) {
-                vector<vector<HotSpotDataRoot*>*>* rootsPerNode = generatedRootsData->at(i);
+        if (generatedTheoryRootsData) {
+            for (unsigned int i=0; i<generatedTheoryRootsData->size(); i++) {
+                vector<vector<HotSpotDataRoot*>*>* rootsPerNode = generatedTheoryRootsData->at(i);
                 for (unsigned int j=0; j<rootsPerNode->size(); j++) {
                     vector<HotSpotDataRoot*>* dailyRoot = rootsPerNode->at(j);
                     for (unsigned int k=0; k<dailyRoot->size(); k++) {
@@ -70,8 +72,23 @@ private:
                 }
                 delete rootsPerNode;
             }
-            delete generatedRootsData;
-            generatedRootsData = NULL;
+            delete generatedTheoryRootsData;
+            generatedTheoryRootsData = NULL;
+        }
+        if (generatedActualRootsData) {
+            for (unsigned int i=0; i<generatedActualRootsData->size(); i++) {
+                vector<vector<HotSpotDataRoot*>*>* rootsPerNode = generatedActualRootsData->at(i);
+                for (unsigned int j=0; j<rootsPerNode->size(); j++) {
+                    vector<HotSpotDataRoot*>* dailyRoot = rootsPerNode->at(j);
+                    for (unsigned int k=0; k<dailyRoot->size(); k++) {
+                        delete dailyRoot->at(k);
+                    }
+                    delete dailyRoot;
+                }
+                delete rootsPerNode;
+            }
+            delete generatedActualRootsData;
+            generatedActualRootsData = NULL;
         }
     }
 
@@ -91,12 +108,30 @@ public:
 
     vector<HotSpotDataRoot> *getRootDataByNodeId(int nodeId) { return RootsData->at(nodeId); }
 
-    vector<vector<vector<HotSpotDataRoot*>*>*> *getGeneratedRootsData() {return generatedRootsData;}
+    vector<vector<vector<HotSpotDataRoot*>*>*> *getGeneratedTheoryRootsData() {return generatedTheoryRootsData;}
 
-    vector<vector<HotSpotDataRoot*>*> *getGeneratedRootsDataByNodeId(int nodeId) {return generatedRootsData->at(nodeId);}
+    vector<vector<vector<HotSpotDataRoot*>*>*> *getGeneratedActualRootsData() {return generatedActualRootsData;}
 
     /**
+     * Сохраняет указанный машрут в качестве СФОРМИРОВАННОГО, НО НЕ ПРОЙДЕННОГО для указанного пользователя в конкретный указанный день.
+     */
+    void collectTheoryRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day);
+
+    /**
+     * Сохраняет указанный машрут в качестве ФАКТИЧЕСКИ ПРОЙДЕННОГО для указанного пользователя в конкретный указанный день.
+     */
+    void collectActualRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day);
+
+    void printRootsDataShort();
+
+    void printRootsData();
+
+private:
+    /**
      * Сохраняет указанный машрут для указанного пользователя в конкретный указанный день.
+     * generatedRootsData - это структура, в которую предполагается проводить сохранение.
+     * На текущий момент возможно две структуры: для фактически пройденных маршрутов и для сформированных, но не пройденных.
+     *
      * По описанию из RegularRootLATP.h:
      *     vector<HotSpotData*>*      currentRoot;         - сформированный вектор (текущий) маршрута с информацией, загруженной из файлов *.hts
      *     vector<unsigned int>*      currentRootSnumber;  - сформированный вектор (текущий) с индексами локаций в структуре HotSpotsCollection
@@ -105,11 +140,12 @@ public:
      *     unsigned int               day                  - номер дня, для которого сохраняется маршрут.
      *                                                       Дни нумеруются с 1, но структуре generatedRootsData они хранятся начиная с 0.
      */
-    void collectRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day);
-
-    void printRootsDataShort();
-
-    void printRootsData();
+    void static collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData,
+                            vector<HotSpotData*>* root,
+                            vector<unsigned int>* rootSnumber,
+                            vector<int>* rootCounter,
+                            unsigned int nodeId,
+                            unsigned int day);
 };
 
 #endif /* ROOTSCOLLECTION_H_ */

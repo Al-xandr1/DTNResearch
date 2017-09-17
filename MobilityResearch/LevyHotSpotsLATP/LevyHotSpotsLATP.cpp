@@ -257,12 +257,13 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
 
 
 void LevyHotSpotsLATP::saveStatistics() {
-    const char *outDir = NamesAndDirs::getOutDir();
-    const char *wpsDir = NamesAndDirs::getOutWpsDir();
-    const char *trsDir = NamesAndDirs::getOutTrsDir();
-    const char *hsDir  = NamesAndDirs::getOutHsDir();
-    const char *rtDir  = NamesAndDirs::getOutRtDir();
-    const char *locs   = NamesAndDirs::getOutLocFile();
+    const char *outDir  = NamesAndDirs::getOutDir();
+    const char *wpsDir  = NamesAndDirs::getOutWpsDir();
+    const char *trsDir  = NamesAndDirs::getOutTrsDir();
+    const char *hsDir   = NamesAndDirs::getOutHsDir();
+    const char *thRtDir = NamesAndDirs::getOutTheoryRtDir();
+    const char *acRtDir = NamesAndDirs::getOutActualRtDir();
+    const char *locs    = NamesAndDirs::getOutLocFile();
 
     if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---
@@ -278,8 +279,11 @@ void LevyHotSpotsLATP::saveStatistics() {
         if (CreateDirectory(hsDir, NULL)) cout << "create output directory: " << hsDir << endl;
         else cout << "error create output directory: " << hsDir << endl;
 
-        if (CreateDirectory(rtDir, NULL)) cout << "create output directory: " << rtDir << endl;
-        else cout << "error create output directory: " << rtDir << endl;
+        if (CreateDirectory(thRtDir, NULL)) cout << "create output directory: " << thRtDir << endl;
+        else cout << "error create output directory: " << thRtDir << endl;
+
+        if (CreateDirectory(acRtDir, NULL)) cout << "create output directory: " << acRtDir << endl;
+        else cout << "error create output directory: " << acRtDir << endl;
 
 
         // --- Write HotSpots ---
@@ -303,24 +307,25 @@ void LevyHotSpotsLATP::saveStatistics() {
 
         // --- Write Roots for every node & every day ---
         //todo перенести в RootsCollection
+        //todo сделать одни кастомизируемый метод для записи generatedTheoryRootsData & generatedActualRootsData
         vector<RootDataShort> *rootsDataShort = RootsCollection::getInstance()->getRootsDataShort();
-        vector<vector<vector<HotSpotDataRoot*>*>*> *generatedRootsData = RootsCollection::getInstance()->getGeneratedRootsData();
-        ASSERT(rootsDataShort->size() == generatedRootsData->size());
-        for (unsigned int i=0; i<generatedRootsData->size(); i++) {
-            vector<vector<HotSpotDataRoot*>*>* rootsPerNode = generatedRootsData->at(i);
+        vector<vector<vector<HotSpotDataRoot*>*>*> *generatedTheoryRootsData = RootsCollection::getInstance()->getGeneratedTheoryRootsData();
+        vector<vector<vector<HotSpotDataRoot*>*>*> *generatedActualRootsData = RootsCollection::getInstance()->getGeneratedActualRootsData();
+        ASSERT(rootsDataShort->size() == generatedTheoryRootsData->size() && rootsDataShort->size() == generatedActualRootsData->size());
+        for (unsigned int i=0; i<generatedTheoryRootsData->size(); i++) {
 
-            for (unsigned int j=0; j<rootsPerNode->size(); j++) {
+            vector<vector<HotSpotDataRoot*>*>* theoryRootsPerNode = generatedTheoryRootsData->at(i);
+            for (unsigned int j=0; j<theoryRootsPerNode->size(); j++) {
                 string filename((char*)"Gen_");
                 char buff[20];
                 sprintf(buff, "day_%i_", j+1);
                 string tmp2(buff);
                 filename += tmp2;
                 filename += extractSimpleName(rootsDataShort->at(i).RootName);
-                ofstream* rtFile = new ofstream(buildFullName(rtDir, filename.c_str()));
-                vector<HotSpotDataRoot*>* dailyRoot = rootsPerNode->at(j);
+                ofstream* rtFile = new ofstream(buildFullName(thRtDir, filename.c_str()));
+                vector<HotSpotDataRoot*>* dailyRoot = theoryRootsPerNode->at(j);
                 for (unsigned int k=0; k<dailyRoot->size(); k++) {
                     HotSpotDataRoot* hs = dailyRoot->at(k);
-                    //todo проверить генерацию маршрутов (из-за учёта кратности появилось много "нулевых" маршрутов)
                     for (unsigned int count = 0; count < hs->counter; count++) {
                         (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
                                   << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
@@ -328,7 +333,28 @@ void LevyHotSpotsLATP::saveStatistics() {
                 }
                 rtFile->close();
             }
-            cout << "\t Root per node " << i << " is collected!";
+            cout << "\t Theory roots per node " << i << " are collected!";
+
+            vector<vector<HotSpotDataRoot*>*>* actualRootsPerNode = generatedActualRootsData->at(i);
+            for (unsigned int j=0; j<actualRootsPerNode->size(); j++) {
+                string filename((char*)"Gen_");
+                char buff[20];
+                sprintf(buff, "day_%i_", j+1);
+                string tmp2(buff);
+                filename += tmp2;
+                filename += extractSimpleName(rootsDataShort->at(i).RootName);
+                ofstream* rtFile = new ofstream(buildFullName(acRtDir, filename.c_str()));
+                vector<HotSpotDataRoot*>* dailyRoot = actualRootsPerNode->at(j);
+                for (unsigned int k=0; k<dailyRoot->size(); k++) {
+                    HotSpotDataRoot* hs = dailyRoot->at(k);
+                    for (unsigned int count = 0; count < hs->counter; count++) {
+                        (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                                  << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
+                    }
+                }
+                rtFile->close();
+            }
+            cout << "\t Actual roots per node " << i << " are collected!";
         }
 
 

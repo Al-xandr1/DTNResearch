@@ -21,7 +21,8 @@ using namespace std;
 #define WPS_DIR        (char*)"waypointfiles"         // директория для сохранения сгенерированных путевых точек
 #define TRS_DIR        (char*)"tracefiles"            // директория для сохранения сгенерированных трасс
 #define HS_DIR         (char*)"hotspotfiles"          // директория для сохранения выходной информации о локациях
-#define RT_DIR         (char*)"rootfiles"             // директория для сохранения выходной информации о пройденных маршрутах
+#define TH_RT_DIR      (char*)"rootfiles_theory"      // директория для сохранения выходной информации о сгенерированных маршрутах (ТЕОРЕТИЧЕСКИХ, не пройденных)
+#define AC_RT_DIR      (char*)"rootfiles_actual"      // директория для сохранения выходной информации о пройденных маршрутах (ФАКТИЧЕСКИХ, пройденных)
 #define LOC_FILE       (char*)"locations.loc"         // имя файла с локациями
 #define SPC_FILE       (char*)"spotcount.cnt"         // имя файла с количеством посещенией
 #define ALLROOTS_FILE  (char*)"allroots.roo"          // имя файла
@@ -52,7 +53,9 @@ public:
 
     static const char *getOutHsDir();
 
-    static const char *getOutRtDir();
+    static const char *getOutTheoryRtDir();
+
+    static const char *getOutActualRtDir();
 
     static const char *getOutLocFile();
 

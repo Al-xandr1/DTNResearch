@@ -90,8 +90,8 @@ struct HotSpotData {
     char* hotSpotName;                                  // (READ-ONLY) имя локации
     double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;    // (READ-ONLY) границы и центр локации
     double sumTime;                                     // (READ-ONLY) время нахождения в локации
-    unsigned int waypointNum;                           // (READ-ONLY) количество путевых точек в локации
-    unsigned int counter;                               // (READ-ONLY) количество посещений локации
+    int waypointNum;                                    // (READ-ONLY) количество путевых точек в локации
+    int counter;                                        // (READ-ONLY) количество посещений локации
 
     double generatedSumTime;           // время нахождения в локации при моделировании
     unsigned int generatedWaypointNum; // количество путевых точек в локации при моделиронии
@@ -106,7 +106,7 @@ struct HotSpotData {
         generatedSumTime(0),
         generatedWaypointNum(0) {}
 
-    HotSpotData(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, unsigned int waypointNum) {
+    HotSpotData(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, int waypointNum) {
         strcpy(this->hotSpotName = new char[256], hotSpotName);
         this->Xmin = Xmin;
         this->Xmax = Xmax;

@@ -94,19 +94,21 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
 
 
     // »нициализаци€ структуры generatedRootsData дл€ хранени€ генерируемых маршрутов дл€ каждого узла по дн€м
-    cout << "Initializing of generatedRootsData..." << endl;
-    ASSERT(!generatedRootsData);
-    generatedRootsData = new vector<vector<vector<HotSpotDataRoot*> *> *>();
+    cout << "Initializing of generatedTheoryRootsData & generatedActualRootsData..." << endl;
+    ASSERT(!generatedTheoryRootsData && !generatedActualRootsData);
+    generatedTheoryRootsData = new vector<vector<vector<HotSpotDataRoot*> *> *>();
+    generatedActualRootsData = new vector<vector<vector<HotSpotDataRoot*> *> *>();
     for (unsigned int i=0; i<RootsData->size(); i++) {
-        generatedRootsData->push_back(new vector<vector<HotSpotDataRoot*>*>());
+        generatedTheoryRootsData->push_back(new vector<vector<HotSpotDataRoot*>*>());
+        generatedActualRootsData->push_back(new vector<vector<HotSpotDataRoot*>*>());
     }
-    cout << "generatedRootsData is initialized." << endl;
+    cout << "generatedTheoryRootsData & generatedActualRootsData are initialized." << endl;
 
 
-    // ѕроверка согласованности структур RootsDataShort & RootsData & generatedRootsData
+    // ѕроверка согласованности структур RootsDataShort & RootsData & generatedTheoryRootsData & generatedActualRootsData
     cout << "Checking of consistency..." << endl;
     ASSERT(RootsDataShort->size() == RootsData->size()); // если падает - данные в allroots.roo & rootfiles/ не согласованы
-    ASSERT(RootsDataShort->size() == generatedRootsData->size());
+    ASSERT(RootsDataShort->size() == generatedTheoryRootsData->size() && RootsDataShort->size() == generatedActualRootsData->size());
     for (unsigned int i=1; i<RootsDataShort->size(); i++) {
         ASSERT(RootsDataShort->at(i).length == RootsData->at(i)->size());
         for (unsigned  int j=0; j<RootsDataShort->at(i).length; j++) {
@@ -116,8 +118,20 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
     cout << "Consistency is checked." << endl;
 }
 
+void RootsCollection::collectTheoryRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day) {
+    collectRoot(generatedTheoryRootsData, root, rootSnumber, rootCounter, nodeId, day);
+}
 
-void RootsCollection::collectRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day)
+void RootsCollection::collectActualRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day) {
+    collectRoot(generatedActualRootsData, root, rootSnumber, rootCounter, nodeId, day);
+}
+
+void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData,
+                                  vector<HotSpotData*>* root,
+                                  vector<unsigned int>* rootSnumber,
+                                  vector<int>* rootCounter,
+                                  unsigned int nodeId,
+                                  unsigned int day)
 {
     ASSERT(generatedRootsData);
     ASSERT(root->size() == rootSnumber->size() && root->size() == rootCounter->size());
