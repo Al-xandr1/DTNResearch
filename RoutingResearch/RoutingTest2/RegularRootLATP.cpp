@@ -181,9 +181,9 @@ void RegularRootLATP::initialize(int stage) {
 
         // начальная локация - это первая локация текущего маршрута
         curRootIndex=0;
+        currentHSindex = currentRootSnumber->at(curRootIndex);
+        ASSERT(homeHS == currentRoot->at(curRootIndex));
         RegularRootLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
-        hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex); // todo remove. Made currentHSindex=currentRootSnumber->at(curRootIndex)
-        ASSERT(currentRootSnumber->at(curRootIndex) == currentHSindex);
 
         //printCurrentRoot();
 
@@ -254,9 +254,9 @@ bool RegularRootLATP::findNextHotSpot()
     if( hh == currentRootCounter->at(ii) ) {             // осталась одна локация (может быть, с несколькими посещениями)
         curRootIndex = ii;
         (*currentRootCounter)[curRootIndex]=1;           // если посещений несколько, заменяем одним
+        currentHSindex = currentRootSnumber->at(curRootIndex);
         RegularRootLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
-        hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex); // todo remove. Made currentHSindex=currentRootSnumber->at(curRootIndex)
-        ASSERT(currentRootSnumber->at(curRootIndex) == currentHSindex);
+
         return true;
     }
 
@@ -277,9 +277,8 @@ bool RegularRootLATP::findNextHotSpot()
         if(rn <= pr) { curRootIndex=i; break; }
     }
     ASSERT(rn <= pr);
+    currentHSindex = currentRootSnumber->at(curRootIndex);
     RegularRootLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
-    hsc->findHotSpotbyName( (currentRoot->at(curRootIndex))->hotSpotName, currentHSindex); // todo remove. Made currentHSindex=currentRootSnumber->at(curRootIndex)
-    ASSERT(currentRootSnumber->at(curRootIndex) == currentHSindex);
     //    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
     return true;
 }
@@ -513,11 +512,9 @@ void RegularRootLATP::makeNewRoot()
 
     // начальная локация - это первая локация текущего маршрута - она же домашн€€
     curRootIndex=0;
+    currentHSindex = currentRootSnumber->at(curRootIndex);
     ASSERT(homeHS == currentRoot->at(curRootIndex));
     RegularRootLATP::setCurrentHSbordersWith(homeHS);
-    HotSpotData* hsi = hsc->findHotSpotbyName(homeHS->hotSpotName, currentHSindex); // todo remove. Made currentHSindex=currentRootSnumber->at(curRootIndex)
-    ASSERT(hsi);
-    ASSERT(currentRootSnumber->at(curRootIndex) == currentHSindex);
 
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);

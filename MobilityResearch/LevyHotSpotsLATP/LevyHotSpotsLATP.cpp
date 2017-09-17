@@ -316,11 +316,8 @@ void LevyHotSpotsLATP::saveStatistics() {
 
             vector<vector<HotSpotDataRoot*>*>* theoryRootsPerNode = generatedTheoryRootsData->at(i);
             for (unsigned int j=0; j<theoryRootsPerNode->size(); j++) {
-                string filename((char*)"Gen_");
-                char buff[20];
-                sprintf(buff, "day_%i_", j+1);
-                string tmp2(buff);
-                filename += tmp2;
+                string filename("Gen_");
+                filename += string(buildIntParameter("day", j+1));
                 filename += extractSimpleName(rootsDataShort->at(i).RootName);
                 ofstream* rtFile = new ofstream(buildFullName(thRtDir, filename.c_str()));
                 vector<HotSpotDataRoot*>* dailyRoot = theoryRootsPerNode->at(j);
@@ -337,11 +334,8 @@ void LevyHotSpotsLATP::saveStatistics() {
 
             vector<vector<HotSpotDataRoot*>*>* actualRootsPerNode = generatedActualRootsData->at(i);
             for (unsigned int j=0; j<actualRootsPerNode->size(); j++) {
-                string filename((char*)"Gen_");
-                char buff[20];
-                sprintf(buff, "day_%i_", j+1);
-                string tmp2(buff);
-                filename += tmp2;
+                string filename("Gen_");
+                filename += string(buildIntParameter("day", j+1));
                 filename += extractSimpleName(rootsDataShort->at(i).RootName);
                 ofstream* rtFile = new ofstream(buildFullName(acRtDir, filename.c_str()));
                 vector<HotSpotDataRoot*>* dailyRoot = actualRootsPerNode->at(j);

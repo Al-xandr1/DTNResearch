@@ -79,6 +79,16 @@ double getLength(double x1, double y1, double x2, double y2);
 string extractSimpleName(const char* fullName);
 
 /**
+ * Формирует параметр в строке с целочисленным значением (имени файла).
+ */
+const char* buildIntParameter(const char* name, int value);
+
+/**
+ * Формирует параметр в строке (имени файла).
+ */
+const char* buildParameter(const char* name, const char* value);
+
+/**
  * Извлекает значение параметра из строки (имени файла).
  * Извлекает параметр методом extractParameter и преобразует в число.
  *
