@@ -96,6 +96,18 @@ string extractSimpleName(const char *fullName) {
     return fullNameStr.substr(found+1);
 }
 
+const char* buildIntParameter(const char* name, int value) {
+    return buildParameter(name, std::to_string(value).c_str());
+}
+
+const char* buildParameter(const char* name, const char* value) {
+    string parameter(name);
+    parameter += string("=");
+    parameter += string(value);
+    parameter += string("_");
+    return parameter.c_str();
+}
+
 double* extractDoubleParameter(const char* fileName, const char* parameter) {
     const char* value = extractParameter(fileName, parameter);
     if (value == NULL) {
