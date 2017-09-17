@@ -9,7 +9,7 @@
 #include "LineSegmentsMobilityBase.h"
 #include "DevelopmentHelper.h"
 
-#include "LeviStatic.h"
+#include "LeviStaticOLD.h"
 
 // определ€ет конкретную спецификацию мобильности
 enum LeviMobilitySubtype { SimpleLevy = 0,              // простой Ћеви, без использовани€ кластеров.
@@ -35,8 +35,8 @@ class SimpleLevyMobility : public LineSegmentsMobilityBase
     bool isPause;
     long step;
 
-    LeviJump  *jump;
-    LeviPause *pause;
+    LeviJumpOLD  *jump;
+    LeviPauseOLD *pause;
     double kForSpeed;
     double roForSpeed;
 

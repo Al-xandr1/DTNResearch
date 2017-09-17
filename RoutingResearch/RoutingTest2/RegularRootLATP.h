@@ -12,7 +12,7 @@
 #include "LineSegmentsMobilityBase.h"
 #include "cmessage.h"
 #include "DevelopmentHelper.h"
-#include "LeviStatic.h"
+#include "LeviStaticOLD.h"
 #include "HotSpotsCollection.h"
 #include "RootsCollection.h"
 #include "LevyHotSpotsLATP.h"

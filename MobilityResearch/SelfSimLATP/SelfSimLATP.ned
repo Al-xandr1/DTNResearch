@@ -18,8 +18,7 @@ simple SelfSimLATP extends MovingMobilityBase
  
         double ciP  = default(1);       // scale coeff (c) in Levy PAUSE disttibution - 1 in external research paper
     	double aliP = default(1);       // power magnitude (alpha) in Levy PAUSE distribution - 0.5 in external research paper
-     	double deltaXP = default(1);    // size of grid 
- 		double joinP = default(4);      // merge of grids' cells factor 
+    	double aciP = default(0.001);	// accurancy for Levy PAUSE distribution 
  
         double powAforHS = default(2);		// is a fixed floating number constant within 0 to infinity - power for distance between HS
         double powAforWP = default(2);		// is a fixed floating number constant within 0 to infinity - power for distance between WP
