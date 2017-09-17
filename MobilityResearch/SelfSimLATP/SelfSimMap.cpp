@@ -71,7 +71,7 @@ SelfSimMapGenerator::~SelfSimMapGenerator()
 }
 
 
-void SelfSimMapGenerator::MakeSelfSimSet(char* varfile, int waypoints)
+void SelfSimMapGenerator::MakeSelfSimSet(const char* varfile, int waypoints)
 {
     int lvl, ii, j;
     long int index, hsize;

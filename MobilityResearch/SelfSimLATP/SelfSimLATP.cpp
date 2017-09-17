@@ -408,9 +408,9 @@ void SelfSimLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double 
 
 
 void SelfSimLATP::saveStatistics() {
-    char *outDir = NamesAndDirs::getOutDir();
-    char *wpsDir = NamesAndDirs::getWpsDir();
-    char *trsDir = NamesAndDirs::getTrsDir();
+    const char *outDir = NamesAndDirs::getOutDir();
+    const char *wpsDir = NamesAndDirs::getOutWpsDir();
+    const char *trsDir = NamesAndDirs::getOutTrsDir();
 
     if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---
@@ -426,8 +426,8 @@ void SelfSimLATP::saveStatistics() {
 
     //--- Write points ---
     if (outTimes.size() > 0) {
-        char *wpName = buildFullName(wpsDir, wpFileName);
-        char *trName = buildFullName(trsDir, trFileName);
+        const char *wpName = buildFullName(wpsDir, wpFileName);
+        const char *trName = buildFullName(trsDir, trFileName);
         cout << "wpName = " << wpName << endl;
         cout << "trName = " << trName << endl << endl;
 

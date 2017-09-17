@@ -13,6 +13,7 @@
 
 #include "DevelopmentHelper.h"
 #include "LeviStatic.h"
+#include "RootsCollection.h"
 #include "HotSpotsCollection.h"
 
 class LevyHotSpotsLATP : public LineSegmentsMobilityBase

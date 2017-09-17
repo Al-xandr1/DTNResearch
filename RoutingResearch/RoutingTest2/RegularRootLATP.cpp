@@ -21,6 +21,8 @@ RegularRootLATP::RegularRootLATP()
     currentRootSnumber = NULL;
     currentRootCounter = NULL;
 
+    currentRootCounterSAVED = NULL;
+
     isLProbReady = false;
     LocalProbMatrix = NULL;
 }
@@ -39,7 +41,7 @@ void RegularRootLATP::loadFirstRoot()
     vector<HotSpotDataRoot>* root = rc->getRootDataByNodeId(NodeID);
     // получение индекса в полной коллекции локаций
     h = hsc->findHotSpotbyName(root->at(0).hotSpotName, Snum);
-    ASSERT(h != NULL && Snum != -1);
+    ASSERT(h != NULL && Snum != -1); // если падает - возможно данные в hotspotfiles/ & rootfiles/ не согласованы
     firstRoot->push_back(h);
     firstRootSnumber->push_back(Snum);
     firstRootCounter->push_back(1);
@@ -67,7 +69,13 @@ void RegularRootLATP::loadFirstRoot()
 
     // загрузка домашней локации
     homeHS = firstRoot->at(0);
-    // printFirstRoot();
+
+    RootDataShort *rootDataShort = rc->getRootDataShortByNodeId(NodeID);
+    ASSERT(rootDataShort);
+    // проставл€ем индивидуальное значение коэффициента персистентности, если оно есть
+    if (rootDataShort->persistence) rootPersistence = *(rootDataShort->persistence);
+
+    printFirstRoot();
 }
 
 
@@ -90,6 +98,7 @@ void RegularRootLATP::printFirstRoot()
     for (unsigned int i=0; i<root->size(); i++) originTotalWPTS += root->at(i).waypointNum;
     cout << NodeID << "\t\t\t\t totalRepeats=" << totalRepeats
          << " totalWPTS=" << totalWPTS << " originTotalWPTS=" << originTotalWPTS << endl;
+    cout << "\t\t\t\t rootPersistence = " << rootPersistence << endl;
 }
 
 
@@ -156,6 +165,8 @@ void RegularRootLATP::initialize(int stage) {
     if (!rc) rc = RootsCollection::getInstance();
 
     if (rootPersistence == -1)
+        // при инициализации выставл€ем значение по умолчанию дл€ узал.
+        // ƒалее попробуем прочитать индивидуальное значение из названи€ файла со средним маршрутом
         rootPersistence = getParentModule()->par("rootPersistence").doubleValue();
 
     if (!firstRoot) loadFirstRoot();
@@ -166,6 +177,7 @@ void RegularRootLATP::initialize(int stage) {
         currentRootSnumber = new vector<unsigned int>(*firstRootSnumber);
         currentRootCounter = new vector<int>(*firstRootCounter);
         currentRootWptsPerVisit = new vector<int>(*firstRootWptsPerVisit);
+        currentRootCounterSAVED = new vector<int>(*currentRootCounter);
 
         // начальная локация - это первая локация текущего маршрута
         curRootIndex=0;
@@ -174,6 +186,11 @@ void RegularRootLATP::initialize(int stage) {
         ASSERT(currentRootSnumber->at(curRootIndex) == currentHSindex);
 
         //printCurrentRoot();
+
+        // —охран€ем дл€ статистики сгенерированный маршрут дл€ первого дн€ в RootsCollection.
+        const int currentDay = RoutingDaemon::instance->getCurrentDay();
+        ASSERT(currentDay == 0);
+        RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, currentDay+1);
     }
 
     if (!LocalProbMatrix) makeLocalProbMatrix(powA);
@@ -347,16 +364,32 @@ bool RegularRootLATP::isRootFinished() {
 
 void RegularRootLATP::makeNewRoot()
 {
-    cout << endl << "Making new root for NodeID: " << NodeID << endl;
+    const int currentDay = RoutingDaemon::instance->getCurrentDay();
+    ASSERT(currentDay >= 2); // Ќачинаетс€ создание новых маршрутов со второго дн€
+    cout << endl << "Making new root for NodeID: " << NodeID << " at day: " << currentDay << endl;
 
     if(currentRoot != NULL) {
+        /* —охран€ем дл€ статистики сгенерированный маршрут, который реально был пройден (маршрут от предыдущего дн€).
+           —охранение тут происходит со второго дн€. ѕервый день сохран€етс€ сразу после создани€ в initialize.
+         */
+        for(unsigned int i = 0; i < currentRootCounterSAVED->size(); i++) {
+            // вычисл€ем фактически пройденный маршрут как actualCurrentRootCounter = currentRootCounterSAVED - currentRootCounter
+            (*currentRootCounterSAVED)[i] -= (*currentRootCounter)[i];
+            ASSERT((*currentRootCounterSAVED)[i] >= 0);
+        }
+        RootsCollection::getInstance()->collectActualRoot(currentRoot, currentRootSnumber, currentRootCounterSAVED, NodeID, currentDay - 1);
+        cout << endl << "Saved old root for NodeID: " << NodeID << " at previous day: " << (currentDay - 1) << endl;
+
+        // удал€ем старый маршрут
         deleteLocalProbMatrix();
         delete currentRoot;
         delete currentRootSnumber;
         delete currentRootCounter;
         delete currentRootWptsPerVisit;
+        delete currentRootCounterSAVED;
     }
 
+    // создаЄм новый маршрут копиру€ эталонный
     currentRoot        = new vector<HotSpotData*>(*firstRoot);
     currentRootSnumber = new vector<unsigned int>(*firstRootSnumber);
     currentRootCounter = new vector<int>(*firstRootCounter);
@@ -367,7 +400,7 @@ void RegularRootLATP::makeNewRoot()
     for (unsigned int i=0; i<firstRoot->size(); i++) ii+=firstRootCounter->at(i);
     int replaceCount = ii - round( ii * rootPersistence);
     ASSERT(0 <= replaceCount && replaceCount <= ii);
-    // уменьшаем счётчики посещений у заданного числа случайных локаций на маршруте.
+    // уменьшаем счЄтчики посещений у заданного числа случайных локаций на маршруте.
     // у первой локации (домашней), счётчик нулём не делаем.
     int rem, remCount=replaceCount;
     while( remCount > 0 ) {
@@ -488,4 +521,11 @@ void RegularRootLATP::makeNewRoot()
 
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+
+    /* —охран€ем дл€ статистики сгенерированный маршрут дл€ текущего дн€ в RootsCollection.
+       —охранение тут происходит со второго дн€. ѕервый день сохран€етс€ сразу после создани€ в initialize.
+       “ут сохран€етс€ только что созданный маршут, по которому ещЄ не ходили.
+     */
+    RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, currentDay);
+    currentRootCounterSAVED = new vector<int>(*currentRootCounter);
 }

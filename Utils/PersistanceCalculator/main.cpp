@@ -5,37 +5,47 @@
 
 using namespace std;
 
-char *buildFullName(char *buffer, char *dir, char *fileName) {
+struct HotSpot {
+    HotSpot(long counter, long double sumTime, long long int totalPoints)
+            : counter(counter), sumTime(sumTime), totalPoints(totalPoints) {}
+
+    long counter;           // кратность данной локации в рамках текущего маршрута
+    long double sumTime;    // общая сумма времене, проведённая в локации в рамках данного маршрута
+    long long totalPoints;  // общее количество путевых точек сделанных в данной локации в рамках данного маршрута
+};
+
+
+char *buildFullName(char *buffer, char *dir, const char *fileName) {
     strcpy(buffer, dir);
     strcat(buffer, "/");
     return strcat(buffer, fileName);
 }
 
 
-class PersistanceCalculator {
+class PersistenceCalculator {
 protected:
-    vector<char *> spotNames;
-    vector<vector<int> *> roots;
+    vector<char *> spotNames;            // все локации (имена соответствующих файлов)
+    vector<vector<HotSpot *> *> roots;   // все маршруты, состоящие из наборов HotSpot
 
 public:
-    PersistanceCalculator(char *SpotDir, char *RootDi);
+    PersistenceCalculator(char *SpotDir, char *RootDi);
 
-    ~PersistanceCalculator();
+    ~PersistenceCalculator();
 
-    double CalculatePersistance(int etalonRootNum);
+    double CalculatePersistence(unsigned int etalonRootNum);
 
-    double CalculatePersistance(vector<int> *etalonRoot, char *rootName);
+    double CalculatePersistence(vector<HotSpot *> *etalonRoot, char *rootName);
 
-    double CoefficientOfSimilarity(vector<int> *root1, vector<int> *root2);
+    double CoefficientOfSimilarity(vector<HotSpot *> *root1, vector<HotSpot *> *root2);
 
-    vector<int> *GetMassCenter();
+    vector<HotSpot *> *GetMassCenter();
 
     void CalcAllAndSave();
 
     void GenerateRotFile(char *RootDir, char *SpotDir);
 };
 
-PersistanceCalculator::PersistanceCalculator(char *SpotDir, char *RootDir) {
+PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
     //загружаем локации
     char SpotNamePattern[256];
     buildFullName(SpotNamePattern, SpotDir, "*.hts");
@@ -55,24 +65,26 @@ PersistanceCalculator::PersistanceCalculator(char *SpotDir, char *RootDir) {
     buildFullName(RootNamePattern, RootDir, "*.rot");
 
     char spot[256];
-    double time = 0;
-    int points = 0;
-    double Xmin, Xmax, Ymin, Ymax;
+    long double time = 0;
+    long long points = 0;
+    long double Xmin, Xmax, Ymin, Ymax;
 
     WIN32_FIND_DATA f2;
     HANDLE h2 = FindFirstFile(RootNamePattern, &f2);
     if (h2 != INVALID_HANDLE_VALUE) {
         do {
             char *name = new char[256];
-            buildFullName(name, RootDir, f2.cFileName);
+            name = buildFullName(name, RootDir, f2.cFileName);
             ifstream *rfile = new ifstream(name);
-            vector<int> *root = new vector<int>();
-            for (unsigned int i = 0; i < spotNames.size(); i++) root->push_back(0);
+            vector<HotSpot *> *root = new vector<HotSpot *>();
+            for (unsigned int i = 0; i < spotNames.size(); i++) root->push_back(new HotSpot(0, 0, 0));
             while (!rfile->eof()) {
                 (*rfile) >> spot >> Xmin >> Xmax >> Ymin >> Ymax >> time >> points;
                 for (unsigned int i = 0; i < spotNames.size(); i++)
                     if (strcmp(spotNames[i], spot) == 0) {
-                        root->at(i)++;
+                        root->at(i)->counter++;
+                        root->at(i)->sumTime += time;
+                        root->at(i)->totalPoints += points;
                         break;
                     }
             }
@@ -82,18 +94,22 @@ PersistanceCalculator::PersistanceCalculator(char *SpotDir, char *RootDir) {
     }
 }
 
-PersistanceCalculator::~PersistanceCalculator() {
+PersistenceCalculator::~PersistenceCalculator() {
     for (unsigned int i = 0; i < spotNames.size(); i++) delete[] spotNames[i];
-    for (unsigned int i = 0; i < roots.size(); i++) delete roots.at(i);
+    for (unsigned int i = 0; i < roots.size(); i++) {
+        vector<HotSpot *> *root = roots.at(i);
+        for (unsigned int j = 0; j < root->size(); j++) delete root->at(j);
+        delete root;
+    }
 }
 
 /**
     Расчёт коэффициента персистентности относительно какого либо маршрута из первоначального набора
 */
-double PersistanceCalculator::CalculatePersistance(int etalonRootNum) {
+double PersistenceCalculator::CalculatePersistence(unsigned int etalonRootNum) {
     if (etalonRootNum < 0 && etalonRootNum >= roots.size()) exit(-111);
 
-    vector<int> *etalonRoot = roots.at(etalonRootNum);
+    vector<HotSpot *> *etalonRoot = roots.at(etalonRootNum);
     double coef = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++)
         if (i != etalonRootNum) {
@@ -108,7 +124,7 @@ double PersistanceCalculator::CalculatePersistance(int etalonRootNum) {
 /**
     Расчёт коэффициента персистентности относительно маршрута НЕ из первоначального набора
 */
-double PersistanceCalculator::CalculatePersistance(vector<int> *etalonRoot, char *rootName) {
+double PersistenceCalculator::CalculatePersistence(vector<HotSpot *> *etalonRoot, char *rootName) {
     double coef = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
         double k = CoefficientOfSimilarity(etalonRoot, roots.at(i));
@@ -121,12 +137,16 @@ double PersistanceCalculator::CalculatePersistance(vector<int> *etalonRoot, char
 
 #define MY_MAX(a, b) ((a>b)?a:b)
 
-double PersistanceCalculator::CoefficientOfSimilarity(vector<int> *root1, vector<int> *root2) {
+double PersistenceCalculator::CoefficientOfSimilarity(vector<HotSpot *> *root1, vector<HotSpot *> *root2) {
     if (root1->size() != root2->size()) exit(-222);
 
     double sumDiff = 0, sumOfMaxComponetns = 0, k = 0;
-    for (unsigned int i = 0; i < root1->size(); i++) { sumDiff += abs(root1->at(i) - root2->at(i)); }
-    for (unsigned int i = 0; i < root1->size(); i++) { sumOfMaxComponetns += MY_MAX(root1->at(i), root2->at(i)); }
+    for (unsigned int i = 0; i < root1->size(); i++) {
+        sumDiff += abs(root1->at(i)->counter - root2->at(i)->counter);
+    }
+    for (unsigned int i = 0; i < root1->size(); i++) {
+        sumOfMaxComponetns += MY_MAX(root1->at(i)->counter, root2->at(i)->counter);
+    }
 
     k = 1 - sumDiff / sumOfMaxComponetns;
 
@@ -137,13 +157,13 @@ double PersistanceCalculator::CoefficientOfSimilarity(vector<int> *root1, vector
         cout << endl;
         cout << "root1: " << endl;
         for (unsigned int i = 0; i < root1->size(); i++) {
-            cout << root1->at(i) << ", ";
+            cout << root1->at(i)->counter << ", ";
             if ((i + 1) % 35 == 0) cout << endl;
         }
         cout << endl;
         cout << "root2: " << endl;
         for (unsigned int i = 0; i < root2->size(); i++) {
-            cout << root2->at(i) << ", ";
+            cout << root2->at(i)->counter << ", ";
             if ((i + 1) % 35 == 0) cout << endl;
         }
         cout << endl;
@@ -157,16 +177,24 @@ double PersistanceCalculator::CoefficientOfSimilarity(vector<int> *root1, vector
     Расчёт центра масс с многомерном пространстве, размерности spotNames.size()
     и векторами roots. Пространство натуральных чисел!!!
 */
-vector<int> *PersistanceCalculator::GetMassCenter() {
-    vector<int> *massCenter = new vector<int>();
+vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
+    vector<HotSpot *> *massCenter = new vector<HotSpot *>();
     for (unsigned int i = 0; i < roots.at(0)->size(); i++) {
-        double component = 0.0;
+        long double averageCounter = 0.0;
+        long double averageSumTime = 0.0;
+        long double averageTotalPoints = 0;
         for (unsigned int j = 0; j < roots.size(); j++) {
-            vector<int> *root = roots.at(j);
-            component += root->at(i);
+            vector<HotSpot *> *root = roots.at(j);
+            averageCounter += root->at(i)->counter;
+            averageSumTime += root->at(i)->sumTime;
+            averageTotalPoints += root->at(i)->totalPoints;
         }
-        component /= (1.0 * roots.size());
-        massCenter->push_back(int(component + 0.5));
+        averageCounter /= (1.0 * roots.size());
+        averageSumTime /= (1.0 * roots.size());
+        averageTotalPoints /= (1.0 * roots.size());
+        if (averageCounter < 0 || averageSumTime < 0 || averageTotalPoints < 0) exit(-321);
+
+        massCenter->push_back(new HotSpot(long(averageCounter + 0.5), averageSumTime, long(averageTotalPoints + 0.5)));
     }
 
     return massCenter;
@@ -176,31 +204,31 @@ vector<int> *PersistanceCalculator::GetMassCenter() {
     Расчёт коэффициентов персистентности относительно всех маршрутов
     и сохранение результатов
 */
-void PersistanceCalculator::CalcAllAndSave() {
-    ofstream file("persistance.pst");
+void PersistenceCalculator::CalcAllAndSave() {
+    ofstream file("persistence.pst");
     cout << "Coefficients: " << endl;
 
-    double averagePersistance = 0.0;
+    double averagePersistence = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
-        double persistance = CalculatePersistance(i);
-        file << i << "\t" << persistance << endl;
-        cout << "\t" << i << "\t" << persistance << endl << endl;
-        averagePersistance += persistance;
+        double persistence = CalculatePersistence(i);
+        file << i << "\t" << persistence << endl;
+        cout << "\t" << i << "\t" << persistence << endl << endl;
+        averagePersistence += persistence;
     }
 
-    averagePersistance /= roots.size();
-    file << "averagePersis" << "\t" << averagePersistance << endl;
-    cout << "averagePersis" << "\t" << averagePersistance << endl << endl;
+    averagePersistence /= roots.size();
+    file << "averagePersis" << "\t" << averagePersistence << endl;
+    cout << "averagePersis" << "\t" << averagePersistence << endl << endl;
 
-    vector<int> *massCenter = GetMassCenter();
-    double persistance = CalculatePersistance(massCenter, "massCenter");
-    file << "massCenter" << "\t" << persistance << endl;
-    cout << "\t" << "massCenter" << "\t" << persistance << endl << endl;
+    vector<HotSpot *> *massCenter = GetMassCenter();
+    double persistence = CalculatePersistence(massCenter, "massCenter");
+    file << "massCenter" << "\t" << persistence << endl;
+    cout << "\t" << "massCenter" << "\t" << persistence << endl << endl;
     file << "massCenterVector" << "\t";
     cout << "massCenterVector" << "\t";
     for (unsigned int i = 0; i < massCenter->size(); i++) {
-        file << massCenter->at(i) << " ";
-        cout << massCenter->at(i) << " ";
+        file << massCenter->at(i)->counter << " ";
+        cout << massCenter->at(i)->counter << " ";
     }
     file.close();
     cout << endl << endl << endl;
@@ -221,7 +249,7 @@ void PersistanceCalculator::CalcAllAndSave() {
 /**
    формирование файла *.rot со средним маршрутом
 */
-void PersistanceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
+void PersistenceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
     char RootNamePattern[256];
     char SpotNamePattern[256];
     buildFullName(RootNamePattern, RootDir, "*.rot");
@@ -235,32 +263,28 @@ void PersistanceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
         *(sname01 + i) = *(sname0 + i);
         i++;
     }
-    strcat(sname01, "_average_");
+    strcat(sname01, "_persistence=");
     char str[80];
-    char hotstr[80];
     char buff[50];
-    vector<int> *massCenter = GetMassCenter();
-    double persistance = CalculatePersistance(massCenter, "massCenter");
-    sprintf(str, "%f", persistance); //конвертация double в char
+    vector<HotSpot *> *massCenter = GetMassCenter();
+    double persistence = CalculatePersistence(massCenter, "massCenter");
+    sprintf(str, "%f", persistence); //конвертация double в char
     strcat(sname01, str);
-    strcat(sname01, ".rot");
+    strcat(sname01, "_.rot");
     ofstream file(sname01);
     for (unsigned int i = 0; i < massCenter->size(); i++) {
-        if (massCenter->at(i) > 0) {
-            for (int k = 0; k < massCenter->at(i); k++) {
-                sprintf(hotstr, "hotSpot%i.hts", i + 1);
-                buildFullName(SpotNamePattern, SpotDir, hotstr);
-                ifstream fin(SpotNamePattern);
-                file << hotstr << " ";
-                for (int j = 0; j < 4; j++) {
-                    fin >> buff;
-                    file << buff << " ";
-                }
-                file << -1 << " " << -1 << endl;
-                fin.close();
+        for (unsigned int k = 0; k < massCenter->at(i)->counter; k++) {
+            buildFullName(SpotNamePattern, SpotDir, spotNames[i]);
+            ifstream fin(SpotNamePattern);
+            file << spotNames[i] << " ";
+            for (int j = 0; j < 4; j++) {
+                fin >> buff;
+                file << buff << " ";
             }
-        } else
-            continue;
+            file << (massCenter->at(i)->sumTime / massCenter->at(i)->counter)
+                 << " " << (massCenter->at(i)->totalPoints / massCenter->at(i)->counter) << endl;
+            fin.close();
+        }
     }
     file.close();
 }
@@ -284,7 +308,7 @@ int main(int argc, char **argv) {
             break;
     }
 
-    PersistanceCalculator calc(hotspotFilesDir, rootFilesDir);
+    PersistenceCalculator calc(hotspotFilesDir, rootFilesDir);
     calc.CalcAllAndSave();
     calc.GenerateRotFile(rootFilesDir, hotspotFilesDir);
     cout << endl << "Hello world!" << endl;

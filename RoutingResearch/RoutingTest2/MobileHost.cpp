@@ -103,7 +103,7 @@ void MobileHost::startRoute()
     ASSERT(rd->getCurrentDay() >= 1);
 
     RegularRootLATP* regularMobility = getRegularRootLATPMobility();
-    //для первого дня маршрут построен при инициализации мобильности
+    // для первого дня маршрут построен при инициализации мобильности
     if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
     // используется для "пинка" для мобильности, чтобы снова начать ходить
     sendDirect(new cMessage("Start mobility", MOBILITY_START), getSubmodule("mobility")->gate("in"));
