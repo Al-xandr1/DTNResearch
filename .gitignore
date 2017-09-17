@@ -141,6 +141,8 @@ hotspotfiles/
 tracefiles/
 waypointfiles/
 rootfiles/
+rootfiles_actual/
+rootfiles_theory/
 bounds.bnd
 locations.loc
 length.hst

@@ -184,9 +184,9 @@ void SimpleLevyMobility::collectStatistics(simtime_t inTime, simtime_t outTime, 
 }
 
 void SimpleLevyMobility::saveStatistics() {
-    char *outDir = NamesAndDirs::getOutDir();
-    char *wpsDir = NamesAndDirs::getWpsDir();
-    char *trsDir = NamesAndDirs::getTrsDir();
+    const char *outDir = NamesAndDirs::getOutDir();
+    const char *wpsDir = NamesAndDirs::getOutWpsDir();
+    const char *trsDir = NamesAndDirs::getOutTrsDir();
 
     if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---

@@ -1,4 +1,4 @@
-#include <TracesCollection.h>
+#include "TracesCollection.h"
 
 
 TracesCollection* TracesCollection::instance = NULL;   // указатель на singleton объект
@@ -16,7 +16,7 @@ void TracesCollection::readTraces(char* TracesDir, char* filePatter)
     ASSERT(!traces);
 
     traces = new vector<vector<TracePoint>*>();
-    char* traceFileNamePattern = buildFullName(TracesDir, filePatter);
+    const char* traceFileNamePattern = buildFullName(TracesDir, filePatter);
 
     WIN32_FIND_DATA f;
     HANDLE h = FindFirstFile(traceFileNamePattern, &f);
@@ -24,7 +24,7 @@ void TracesCollection::readTraces(char* TracesDir, char* filePatter)
         do {
             char* traceName = new char[256];
             traceName = strcpy(traceName, f.cFileName);
-            char* inputFileName = buildFullName(TracesDir, traceName);
+            const char* inputFileName = buildFullName(TracesDir, traceName);
             ifstream* infile = new ifstream(inputFileName);
             vector<TracePoint>* trace = new vector<TracePoint>();
             double lastRedT = -1;

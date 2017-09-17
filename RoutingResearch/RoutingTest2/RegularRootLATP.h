@@ -40,6 +40,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
     vector<unsigned int>*      currentRootSnumber;      // сформированный вектор (текущий) с индексами локаций в структуре HotSpotsCollection
     vector<int>*               currentRootCounter;      // сформированный вектор (текущий) со счётчиками посещений локаций
     vector<int>*               currentRootWptsPerVisit; // сформированный вектор (текущий) среднего количества путевых точек на локацию маршрута
+    vector<int>*               currentRootCounterSAVED; // после каждого создания маршрута сюда сохраняется currentRootCounter для дальнейшего вычисления фактически пройденного
 
     unsigned int curRootIndex;                          // индекс текущей локации в текущем маршруте
     unsigned int currentHSWaypointNum;                  // количество оставшихся путевых точек в текущей локации
