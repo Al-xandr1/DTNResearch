@@ -40,7 +40,7 @@ SelfSimLATP::SelfSimLATP() {
 void SelfSimLATP::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
-    double ciP,aliP,aciP;
+    double ciP,aliP,deltaXP,joinP;
 
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
@@ -52,11 +52,12 @@ void SelfSimLATP::initialize(int stage) {
 
         NodeID = (int) par("NodeID");
 
-        if (hasPar("powAforHS") && hasPar("powAforWP") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") ) {
+        if (hasPar("powAforHS") && hasPar("powAforWP") && hasPar("ciP") && hasPar("aliP") && hasPar("deltaXP") && hasPar("joinP")) {
 
             ciP  = par("ciP").doubleValue();
             aliP = par("aliP").doubleValue();
-            aciP = par("aciP").doubleValue();
+            deltaXP = par("deltaXP").doubleValue();
+            joinP = par("joinP").doubleValue();
 
             powAforHS = par("powAforHS").doubleValue();
             powAforWP = par("powAforWP").doubleValue();
@@ -64,7 +65,7 @@ void SelfSimLATP::initialize(int stage) {
         } else { cout << "It is necessary to specify ALL parameters"; exit(-112);}
     }
 
-    if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
+    if (pause == NULL) pause = new LeviPause(ciP, aliP, deltaXP, joinP);
 
     if (!hsc) {
         // загрузка данных о докациях
@@ -408,9 +409,9 @@ void SelfSimLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double 
 
 
 void SelfSimLATP::saveStatistics() {
-    char *outDir = NamesAndDirs::getOutDir();
-    char *wpsDir = NamesAndDirs::getWpsDir();
-    char *trsDir = NamesAndDirs::getTrsDir();
+    const char *outDir = NamesAndDirs::getOutDir();
+    const char *wpsDir = NamesAndDirs::getOutWpsDir();
+    const char *trsDir = NamesAndDirs::getOutTrsDir();
 
     if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---
@@ -426,8 +427,8 @@ void SelfSimLATP::saveStatistics() {
 
     //--- Write points ---
     if (outTimes.size() > 0) {
-        char *wpName = buildFullName(wpsDir, wpFileName);
-        char *trName = buildFullName(trsDir, trFileName);
+        const char *wpName = buildFullName(wpsDir, wpFileName);
+        const char *trName = buildFullName(trsDir, trFileName);
         cout << "wpName = " << wpName << endl;
         cout << "trName = " << trName << endl << endl;
 

@@ -9,8 +9,8 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     step = 0;
     jump = NULL;
     pause = NULL;
-    kForSpeed = 1;
-    roForSpeed = 0;
+    kForSpeed =  31.1457;
+    roForSpeed = 0.504349;
 
     currentHSindex = -1;
 
@@ -36,7 +36,7 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
 void LevyHotSpotsLATP::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
-    double ciJ,aliJ,aciJ, ciP,aliP,aciP;
+    double ciJ,aliJ,deltaXJ,joinJ, ciP,aliP,deltaXP,joinP;
 
     if (stage == 0) {
         stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
@@ -48,23 +48,26 @@ void LevyHotSpotsLATP::initialize(int stage) {
 
         NodeID = (int) par("NodeID");
 
-        if (hasPar("ciJ") && hasPar("aliJ") && hasPar("aciJ") && hasPar("ciP") && hasPar("aliP") && hasPar("aciP") && hasPar("powA")) {
+        if (hasPar("ciJ") && hasPar("aliJ") && hasPar("deltaXJ") && hasPar("joinJ")
+                && hasPar("ciP") && hasPar("aliP") && hasPar("deltaXP") && hasPar("joinP")) {
 
            ciJ  = par("ciJ").doubleValue();
            aliJ = par("aliJ").doubleValue();
-           aciJ = par("aciJ").doubleValue();
+           deltaXJ = par("deltaXJ").doubleValue();
+           joinJ = par("joinJ").doubleValue();
 
            ciP  = par("ciP").doubleValue();
            aliP = par("aliP").doubleValue();
-           aciP = par("aciP").doubleValue();
+           deltaXP = par("deltaXP").doubleValue();
+           joinP = par("joinP").doubleValue();
 
            powA = par("powA").doubleValue();
 
         } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
     }
 
-    if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, aciJ);
-    if (pause == NULL) pause = new LeviPause(ciP, aliP, aciP);
+    if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, deltaXJ, joinJ);
+    if (pause == NULL) pause = new LeviPause(ciP, aliP, deltaXP, joinP);
 
     if (!hsc) {
         // загрузка данных о локациях
@@ -257,11 +260,13 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
 
 
 void LevyHotSpotsLATP::saveStatistics() {
-    char *outDir = NamesAndDirs::getOutDir();
-    char *wpsDir = NamesAndDirs::getWpsDir();
-    char *trsDir = NamesAndDirs::getTrsDir();
-    char *hsDir  = NamesAndDirs::getHsDir();
-    char *locs   = NamesAndDirs::getLocFile();
+    const char *outDir  = NamesAndDirs::getOutDir();
+    const char *wpsDir  = NamesAndDirs::getOutWpsDir();
+    const char *trsDir  = NamesAndDirs::getOutTrsDir();
+    const char *hsDir   = NamesAndDirs::getOutHsDir();
+    const char *thRtDir = NamesAndDirs::getOutTheoryRtDir();
+    const char *acRtDir = NamesAndDirs::getOutActualRtDir();
+    const char *locs    = NamesAndDirs::getOutLocFile();
 
     if (NodeID == 0 ) {//чтобы записывал только один узел
         //--- Create output directories ---
@@ -277,9 +282,17 @@ void LevyHotSpotsLATP::saveStatistics() {
         if (CreateDirectory(hsDir, NULL)) cout << "create output directory: " << hsDir << endl;
         else cout << "error create output directory: " << hsDir << endl;
 
+        if (CreateDirectory(thRtDir, NULL)) cout << "create output directory: " << thRtDir << endl;
+        else cout << "error create output directory: " << thRtDir << endl;
+
+        if (CreateDirectory(acRtDir, NULL)) cout << "create output directory: " << acRtDir << endl;
+        else cout << "error create output directory: " << acRtDir << endl;
+
+
         // --- Write HotSpots ---
+        //todo перенести в HotSpotCollections
         for (unsigned int i = 0; i < hsc->getHSData()->size(); i++) {
-            char* fullNameHS = buildFullName(hsDir, hsc->getHSData()->at(i).hotSpotName);
+            const char* fullNameHS = buildFullName(hsDir, hsc->getHSData()->at(i).hotSpotName);
             ofstream* hsFile = new ofstream(fullNameHS);
             (*hsFile) << hsc->getHSData()->at(i).Xmin << "\t" << hsc->getHSData()->at(i).Xmax << endl;
             (*hsFile) << hsc->getHSData()->at(i).Ymin << "\t" << hsc->getHSData()->at(i).Ymax << endl;
@@ -294,7 +307,56 @@ void LevyHotSpotsLATP::saveStatistics() {
             delete hsFile;
         }
 
+
+        // --- Write Roots for every node & every day ---
+        //todo перенести в RootsCollection
+        //todo сделать одни кастомизируемый метод для записи generatedTheoryRootsData & generatedActualRootsData
+        vector<RootDataShort> *rootsDataShort = RootsCollection::getInstance()->getRootsDataShort();
+        vector<vector<vector<HotSpotDataRoot*>*>*> *generatedTheoryRootsData = RootsCollection::getInstance()->getGeneratedTheoryRootsData();
+        vector<vector<vector<HotSpotDataRoot*>*>*> *generatedActualRootsData = RootsCollection::getInstance()->getGeneratedActualRootsData();
+        ASSERT(rootsDataShort->size() == generatedTheoryRootsData->size() && rootsDataShort->size() == generatedActualRootsData->size());
+        for (unsigned int i=0; i<generatedTheoryRootsData->size(); i++) {
+
+            vector<vector<HotSpotDataRoot*>*>* theoryRootsPerNode = generatedTheoryRootsData->at(i);
+            for (unsigned int j=0; j<theoryRootsPerNode->size(); j++) {
+                string filename("Gen_");
+                filename += string(buildIntParameter("day", j+1));
+                filename += extractSimpleName(rootsDataShort->at(i).RootName);
+                ofstream* rtFile = new ofstream(buildFullName(thRtDir, filename.c_str()));
+                vector<HotSpotDataRoot*>* dailyRoot = theoryRootsPerNode->at(j);
+                for (unsigned int k=0; k<dailyRoot->size(); k++) {
+                    HotSpotDataRoot* hs = dailyRoot->at(k);
+                    for (unsigned int count = 0; count < hs->counter; count++) {
+                        (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                                  << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
+                    }
+                }
+                rtFile->close();
+            }
+            cout << "\t Theory roots per node " << i << " are collected!";
+
+            vector<vector<HotSpotDataRoot*>*>* actualRootsPerNode = generatedActualRootsData->at(i);
+            for (unsigned int j=0; j<actualRootsPerNode->size(); j++) {
+                string filename("Gen_");
+                filename += string(buildIntParameter("day", j+1));
+                filename += extractSimpleName(rootsDataShort->at(i).RootName);
+                ofstream* rtFile = new ofstream(buildFullName(acRtDir, filename.c_str()));
+                vector<HotSpotDataRoot*>* dailyRoot = actualRootsPerNode->at(j);
+                for (unsigned int k=0; k<dailyRoot->size(); k++) {
+                    HotSpotDataRoot* hs = dailyRoot->at(k);
+                    for (unsigned int count = 0; count < hs->counter; count++) {
+                        (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                                  << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
+                    }
+                }
+                rtFile->close();
+            }
+            cout << "\t Actual roots per node " << i << " are collected!";
+        }
+
+
         // --- Write Locations ---
+        //todo перенести в HotSpotCollections
         ofstream lcfile(locs);
         for(unsigned int i = 0; i < hsc->getHSData()->size(); i++) {
             lcfile << hsc->getHSData()->at(i).hotSpotName << "\t"<< hsc->getHSData()->at(i).generatedSumTime << "\t" << "\t";
@@ -304,6 +366,7 @@ void LevyHotSpotsLATP::saveStatistics() {
         }
         lcfile.close();
     }
+
 
     //--- Write points ---
     ofstream wpFile(buildFullName(wpsDir, wpFileName));
@@ -317,7 +380,6 @@ void LevyHotSpotsLATP::saveStatistics() {
         wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
         trFile << inTime << "\t" << x << "\t" << y << endl;
     }
-
     wpFile.close();
     trFile.close();
 }
