@@ -5,10 +5,14 @@
 
 using namespace std;
 
-struct HotSpot {
-    HotSpot(long counter, long double sumTime, long long int totalPoints)
-            : counter(counter), sumTime(sumTime), totalPoints(totalPoints) {}
+#define ASSERT(trueVal, errorCode) if(!(trueVal)){exit(errorCode);}
+#define ASSERT2(trueVal, errorCode, meesage) if(!(trueVal)){cout<<meesage<<endl;exit(errorCode);}
 
+struct HotSpot {
+    HotSpot(bool isHome, long counter, long double sumTime, long long int totalPoints)
+            : isHome(isHome), counter(counter), sumTime(sumTime), totalPoints(totalPoints) {}
+
+    bool isHome;            // флаг того, что текущая локация ДОМАШНЯЯ
     long counter;           // кратность данной локации в рамках текущего маршрута
     long double sumTime;    // общая сумма времене, проведённая в локации в рамках данного маршрута
     long long totalPoints;  // общее количество путевых точек сделанных в данной локации в рамках данного маршрута
@@ -77,16 +81,25 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
             name = buildFullName(name, RootDir, f2.cFileName);
             ifstream *rfile = new ifstream(name);
             vector<HotSpot *> *root = new vector<HotSpot *>();
-            for (unsigned int i = 0; i < spotNames.size(); i++) root->push_back(new HotSpot(0, 0, 0));
+            for (unsigned int i = 0; i < spotNames.size(); i++) root->push_back(new HotSpot(false, 0, 0, 0));
+            bool foundHome = false;
             while (!rfile->eof()) {
                 (*rfile) >> spot >> Xmin >> Xmax >> Ymin >> Ymax >> time >> points;
+                bool foundSpot = false;
                 for (unsigned int i = 0; i < spotNames.size(); i++)
                     if (strcmp(spotNames[i], spot) == 0) {
+                        // первая строка в файле - это домашняя локация - ОДНО её посещение исключается из расчётов
+                        if (!foundHome) {
+                            root->at(i)->isHome = true;
+                            foundHome = true;
+                        };
                         root->at(i)->counter++;
                         root->at(i)->sumTime += time;
                         root->at(i)->totalPoints += points;
+                        foundSpot = true;
                         break;
                     }
+                ASSERT2(foundSpot || (string(spot).size() == 0), -1234, string("spot ='") + string(spot) + string("'"));
             }
             roots.push_back(root);
             rfile->close();
@@ -107,7 +120,7 @@ PersistenceCalculator::~PersistenceCalculator() {
     Расчёт коэффициента персистентности относительно какого либо маршрута из первоначального набора
 */
 double PersistenceCalculator::CalculatePersistence(unsigned int etalonRootNum) {
-    if (etalonRootNum < 0 && etalonRootNum >= roots.size()) exit(-111);
+    if (etalonRootNum < 0 && etalonRootNum >= roots.size()) exit(-110);
 
     vector<HotSpot *> *etalonRoot = roots.at(etalonRootNum);
     double coef = 0.0;
@@ -140,20 +153,36 @@ double PersistenceCalculator::CalculatePersistence(vector<HotSpot *> *etalonRoot
 double PersistenceCalculator::CoefficientOfSimilarity(vector<HotSpot *> *root1, vector<HotSpot *> *root2) {
     if (root1->size() != root2->size()) exit(-222);
 
-    double sumDiff = 0, sumOfMaxComponetns = 0, k = 0;
+    double sumDiff = 0, sumOfMaxComponents = 0, k = 0;
+    bool homeFoundInFirst = false;
+    bool homeFoundInSecond = false;
     for (unsigned int i = 0; i < root1->size(); i++) {
-        sumDiff += abs(root1->at(i)->counter - root2->at(i)->counter);
-    }
-    for (unsigned int i = 0; i < root1->size(); i++) {
-        sumOfMaxComponetns += MY_MAX(root1->at(i)->counter, root2->at(i)->counter);
+        long counter1 = root1->at(i)->counter;
+        if (root1->at(i)->isHome) {
+            ASSERT(!homeFoundInFirst, -111);
+            counter1--;
+            homeFoundInFirst = true;
+        }
+        ASSERT(counter1 >= 0, -112);
+
+        long counter2 = root2->at(i)->counter;
+        if (root2->at(i)->isHome) {
+            ASSERT(!homeFoundInSecond, -113);
+            counter2--;
+            homeFoundInSecond = true;
+        }
+        ASSERT(counter2 >= 0, -114);
+
+        sumDiff += abs(counter1 - counter2);
+        sumOfMaxComponents += MY_MAX(counter1, counter2);
     }
 
-    k = 1 - sumDiff / sumOfMaxComponetns;
+    k = 1 - sumDiff / sumOfMaxComponents;
 
     if (k > 1) { // for debug
         cout << "sumDiff=" << sumDiff << endl;
-        cout << "sumOfMaxComponetns=" << sumOfMaxComponetns << endl;
-        cout << "sumDiff / sumOfMaxComponetns=" << (sumDiff / sumOfMaxComponetns) << endl;
+        cout << "sumOfMaxComponents=" << sumOfMaxComponents << endl;
+        cout << "sumDiff / sumOfMaxComponents=" << (sumDiff / sumOfMaxComponents) << endl;
         cout << endl;
         cout << "root1: " << endl;
         for (unsigned int i = 0; i < root1->size(); i++) {
@@ -194,7 +223,9 @@ vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
         averageTotalPoints /= (1.0 * roots.size());
         if (averageCounter < 0 || averageSumTime < 0 || averageTotalPoints < 0) exit(-321);
 
-        massCenter->push_back(new HotSpot(long(averageCounter + 0.5), averageSumTime, long(averageTotalPoints + 0.5)));
+        //TODO проставлять акуальную домашнюю локацию.... КАК ЕЁ ОПРЕДЕЛИТЬ??? Сейчас первая локация с НЕНУЛЕВОЙ кратностью становиться домашней
+        massCenter->push_back(
+                new HotSpot(false, long(averageCounter + 0.5), averageSumTime, long(averageTotalPoints + 0.5)));
     }
 
     return massCenter;
@@ -255,23 +286,22 @@ void PersistenceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
     buildFullName(RootNamePattern, RootDir, "*.rot");
     WIN32_FIND_DATA f0;
     HANDLE h = FindFirstFile(RootNamePattern, &f0);
-    char *sname0 = new char[256];
-    char *sname01 = new char[256];
-    strcpy(sname0, f0.cFileName);
-    int i = 0;
-    while (*(sname0 + i) != '_') {
-        *(sname01 + i) = *(sname0 + i);
-        i++;
-    }
-    strcat(sname01, "_persistence=");
-    char str[80];
-    char buff[50];
+
+    string fileName(f0.cFileName);
+    std::size_t found = fileName.find("_");
+    ASSERT(found != std::string::npos, -115);
+    string targetName = fileName.substr(0, found);
+    targetName += string("_persistence=");
+
     vector<HotSpot *> *massCenter = GetMassCenter();
     double persistence = CalculatePersistence(massCenter, "massCenter");
-    sprintf(str, "%f", persistence); //конвертация double в char
-    strcat(sname01, str);
-    strcat(sname01, "_.rot");
-    ofstream file(sname01);
+
+    string persistenceStr = to_string(persistence).c_str(); //конвертация double в char
+    targetName += string(persistenceStr);
+    targetName += string("_.rot");
+
+    char buff[50];
+    ofstream file(targetName);
     for (unsigned int i = 0; i < massCenter->size(); i++) {
         for (unsigned int k = 0; k < massCenter->at(i)->counter; k++) {
             buildFullName(SpotNamePattern, SpotDir, spotNames[i]);

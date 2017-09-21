@@ -367,6 +367,7 @@ void RegularRootLATP::makeNewRoot()
     ASSERT(currentDay >= 2); // Ќачинаетс€ создание новых маршрутов со второго дн€
     cout << endl << "Making new root for NodeID: " << NodeID << " at day: " << currentDay << endl;
 
+
     if(currentRoot != NULL) {
         /* —охран€ем дл€ статистики сгенерированный маршрут, который реально был пройден (маршрут от предыдущего дн€).
            —охранение тут происходит со второго дн€. ѕервый день сохран€етс€ сразу после создани€ в initialize.
@@ -388,6 +389,7 @@ void RegularRootLATP::makeNewRoot()
         delete currentRootCounterSAVED;
     }
 
+
     // создаЄм новый маршрут копиру€ эталонный
     currentRoot        = new vector<HotSpotData*>(*firstRoot);
     currentRootSnumber = new vector<unsigned int>(*firstRootSnumber);
@@ -395,10 +397,14 @@ void RegularRootLATP::makeNewRoot()
     currentRootWptsPerVisit = new vector<int>(*firstRootWptsPerVisit);
     vector<int>* unusedWptsPerVisit = new vector<int>();
 
-    unsigned int ii=0;
-    for (unsigned int i=0; i<firstRoot->size(); i++) ii+=firstRootCounter->at(i);
-    int replaceCount = ii - round( ii * rootPersistence);
-    ASSERT(0 <= replaceCount && replaceCount <= ii);
+
+    unsigned int totalCount=0;
+    for (unsigned int i=0; i<firstRoot->size(); i++) totalCount+=firstRootCounter->at(i);
+    ASSERT(firstRootCounter->at(0) >= 1);   // как минимум одно посещение данной локации должно существовать
+    ASSERT(totalCount >= 1);                // общее количество состоит, как минимум, из посещени€ домашней локации
+    totalCount--;                           // резервируем одно посещение дл€ домашней локации
+    int replaceCount = totalCount - round( totalCount * rootPersistence);
+    ASSERT(0 <= replaceCount && replaceCount <= totalCount);
     // уменьшаем счЄтчики посещений у заданного числа случайных локаций на маршруте.
     // у первой локации (домашней), счётчик нулём не делаем.
     int rem, remCount=replaceCount;
@@ -417,6 +423,7 @@ void RegularRootLATP::makeNewRoot()
     ASSERT(currentRootCounter->at(0) >= 1);
     ASSERT(unusedWptsPerVisit->size() == replaceCount);
 
+
     // инициализируем набор возможных локаций всеми возможными номерами локаций в порядке возрастания
     vector<int> possibleReplace;
     for(unsigned int i=0; i< hsc->getHSData()->size(); i++) possibleReplace.push_back(i);
@@ -433,6 +440,7 @@ void RegularRootLATP::makeNewRoot()
     delete cur;
     ASSERT(possibleReplace.size() == (hsc->getHSData()->size() - currentRootSnumber->size()));
     ASSERT(possibleReplace.size() != 0);
+
 
     // генерируем нужное число случайных номеров новых локаций
     // из тех, что остались в possibleReplace в отсортированном по возрастанию виде
@@ -456,6 +464,7 @@ void RegularRootLATP::makeNewRoot()
         replaceCount--;
     }
     ASSERT(sortReplace.size() == replaceCountForCheck);
+
 
     // добавл€ем нужное число новых локаций в маршрут
     int remainingWPTS = 0;
@@ -498,6 +507,7 @@ void RegularRootLATP::makeNewRoot()
             }
     }
 
+
     // for debug
     printFirstRoot();
     printCurrentRoot();
@@ -508,16 +518,16 @@ void RegularRootLATP::makeNewRoot()
     // все структуры одинаковы по размеру
     ASSERT((currentRoot->size() == currentRootSnumber->size()) && (currentRoot->size() == currentRootCounter->size()));
 
-    makeLocalProbMatrix(powA);
 
+    makeLocalProbMatrix(powA);
     // начальная локация - это первая локация текущего маршрута - она же домашн€€
     curRootIndex=0;
     currentHSindex = currentRootSnumber->at(curRootIndex);
     ASSERT(homeHS == currentRoot->at(curRootIndex));
     RegularRootLATP::setCurrentHSbordersWith(homeHS);
-
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+
 
     /* —охран€ем дл€ статистики сгенерированный маршрут дл€ текущего дн€ в RootsCollection.
        —охранение тут происходит со второго дн€. ѕервый день сохран€етс€ сразу после создани€ в initialize.
