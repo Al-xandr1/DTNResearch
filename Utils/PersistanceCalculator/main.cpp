@@ -221,7 +221,7 @@ vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
         averageCounter /= (1.0 * roots.size());
         averageSumTime /= (1.0 * roots.size());
         averageTotalPoints /= (1.0 * roots.size());
-        if (averageCounter < 0 || averageSumTime < 0 || averageTotalPoints < 0) exit(-321);
+        ASSERT(averageCounter >= 0 && averageSumTime >= 0 && averageTotalPoints >= 0, -321);
 
         //TODO проставлять акуальную домашнюю локацию.... КАК ЕЁ ОПРЕДЕЛИТЬ??? Сейчас первая локация с НЕНУЛЕВОЙ кратностью становиться домашней
         massCenter->push_back(
