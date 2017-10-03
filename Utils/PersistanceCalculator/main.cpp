@@ -5,8 +5,8 @@
 
 using namespace std;
 
-#define ASSERT(trueVal, errorCode) if(!(trueVal)){exit(errorCode);}
-#define ASSERT2(trueVal, errorCode, meesage) if(!(trueVal)){cout<<meesage<<endl;exit(errorCode);}
+#define ASSERT_1(trueVal, errorCode) if(!(trueVal)){exit(errorCode);}
+#define ASSERT_2(trueVal, errorCode, meesage) if(!(trueVal)){cout<<meesage<<endl;exit(errorCode);}
 
 struct HotSpot {
     HotSpot(bool isHome, long counter, long double sumTime, long long int totalPoints)
@@ -99,7 +99,8 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
                         foundSpot = true;
                         break;
                     }
-                ASSERT2(foundSpot || (string(spot).size() == 0), -1234, string("spot ='") + string(spot) + string("'"));
+                ASSERT_2(foundSpot || (string(spot).size() == 0), -1234,
+                         string("spot ='") + string(spot) + string("'"));
             }
             roots.push_back(root);
             rfile->close();
@@ -120,7 +121,7 @@ PersistenceCalculator::~PersistenceCalculator() {
     Расчёт коэффициента персистентности относительно какого либо маршрута из первоначального набора
 */
 double PersistenceCalculator::CalculatePersistence(unsigned int etalonRootNum) {
-    if (etalonRootNum < 0 && etalonRootNum >= roots.size()) exit(-110);
+    ASSERT_1(etalonRootNum >= 0 && etalonRootNum < roots.size(), -110);
 
     vector<HotSpot *> *etalonRoot = roots.at(etalonRootNum);
     double coef = 0.0;
@@ -151,7 +152,7 @@ double PersistenceCalculator::CalculatePersistence(vector<HotSpot *> *etalonRoot
 #define MY_MAX(a, b) ((a>b)?a:b)
 
 double PersistenceCalculator::CoefficientOfSimilarity(vector<HotSpot *> *root1, vector<HotSpot *> *root2) {
-    if (root1->size() != root2->size()) exit(-222);
+    ASSERT_1(root1->size() == root2->size(), -222);
 
     double sumDiff = 0, sumOfMaxComponents = 0, k = 0;
     bool homeFoundInFirst = false;
@@ -159,19 +160,19 @@ double PersistenceCalculator::CoefficientOfSimilarity(vector<HotSpot *> *root1, 
     for (unsigned int i = 0; i < root1->size(); i++) {
         long counter1 = root1->at(i)->counter;
         if (root1->at(i)->isHome) {
-            ASSERT(!homeFoundInFirst, -111);
+            ASSERT_1(!homeFoundInFirst, -111);
             counter1--;
             homeFoundInFirst = true;
         }
-        ASSERT(counter1 >= 0, -112);
+        ASSERT_1(counter1 >= 0, -112);
 
         long counter2 = root2->at(i)->counter;
         if (root2->at(i)->isHome) {
-            ASSERT(!homeFoundInSecond, -113);
+            ASSERT_1(!homeFoundInSecond, -113);
             counter2--;
             homeFoundInSecond = true;
         }
-        ASSERT(counter2 >= 0, -114);
+        ASSERT_1(counter2 >= 0, -114);
 
         sumDiff += abs(counter1 - counter2);
         sumOfMaxComponents += MY_MAX(counter1, counter2);
@@ -197,7 +198,7 @@ double PersistenceCalculator::CoefficientOfSimilarity(vector<HotSpot *> *root1, 
         }
         cout << endl;
 
-        exit(-333);
+        ASSERT_1(false, -333);
     };
     return k;
 }
@@ -221,7 +222,7 @@ vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
         averageCounter /= (1.0 * roots.size());
         averageSumTime /= (1.0 * roots.size());
         averageTotalPoints /= (1.0 * roots.size());
-        ASSERT(averageCounter >= 0 && averageSumTime >= 0 && averageTotalPoints >= 0, -321);
+        ASSERT_1(averageCounter >= 0 && averageSumTime >= 0 && averageTotalPoints >= 0, -321);
 
         //TODO проставлять акуальную домашнюю локацию.... КАК ЕЁ ОПРЕДЕЛИТЬ??? Сейчас первая локация с НЕНУЛЕВОЙ кратностью становиться домашней
         massCenter->push_back(
@@ -289,7 +290,7 @@ void PersistenceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
 
     string fileName(f0.cFileName);
     std::size_t found = fileName.find("_");
-    ASSERT(found != std::string::npos, -115);
+    ASSERT_1(found != std::string::npos, -115);
     string targetName = fileName.substr(0, found);
     targetName += string("_persistence=");
 
