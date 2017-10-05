@@ -44,9 +44,17 @@ public:
 
     vector<HotSpot *> *GetMassCenter();
 
-    void CalcAllAndSave();
+    vector<int> *getSummarizedIndicatorVector();
+
+    vector<int> *getIndicationVector(vector<HotSpot *> *root);
+
+    vector<int> *getRootsDimensionsHistogram();
+
+    vector<int> *getSummarizedRoot();
 
     void GenerateRotFile(char *RootDir, char *SpotDir);
+
+    void save();
 };
 
 PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
@@ -233,52 +241,6 @@ vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
 }
 
 /**
-    Расчёт коэффициентов персистентности относительно всех маршрутов
-    и сохранение результатов
-*/
-void PersistenceCalculator::CalcAllAndSave() {
-    ofstream file("persistence.pst");
-    cout << "Coefficients: " << endl;
-
-    double averagePersistence = 0.0;
-    for (unsigned int i = 0; i < roots.size(); i++) {
-        double persistence = CalculatePersistence(i);
-        file << i << "\t" << persistence << endl;
-        cout << "\t" << i << "\t" << persistence << endl << endl;
-        averagePersistence += persistence;
-    }
-
-    averagePersistence /= roots.size();
-    file << "averagePersis" << "\t" << averagePersistence << endl;
-    cout << "averagePersis" << "\t" << averagePersistence << endl << endl;
-
-    vector<HotSpot *> *massCenter = GetMassCenter();
-    double persistence = CalculatePersistence(massCenter, "massCenter");
-    file << "massCenter" << "\t" << persistence << endl;
-    cout << "\t" << "massCenter" << "\t" << persistence << endl << endl;
-    file << "massCenterVector" << "\t";
-    cout << "massCenterVector" << "\t";
-    for (unsigned int i = 0; i < massCenter->size(); i++) {
-        file << massCenter->at(i)->counter << " ";
-        cout << massCenter->at(i)->counter << " ";
-    }
-    file.close();
-    cout << endl << endl << endl;
-
-    // for debug
-    //for(unsigned int i=0; i<roots.size(); i++) {
-    //    cout<<"root "<<i<<": ";
-    //    for(unsigned int j=0; j<roots.at(i)->size(); j++)
-    //    cout<<roots.at(i)->at(j)<<", ";
-    //    cout<<endl;
-    //}
-    //cout<<"massCenter: ";
-    //for(unsigned int j=0; j<massCenter->size(); j++)
-    //cout<<massCenter->at(j)<<", ";
-    //cout<<endl;
-}
-
-/**
    формирование файла *.rot со средним маршрутом
 */
 void PersistenceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
@@ -320,6 +282,173 @@ void PersistenceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
     file.close();
 }
 
+/**
+ * Суммируем индикаторные вектора от всех дневных маршрутов и получаем гистограмму частоты появления локации за весь горизонт анализа.
+ * Т.е. в результате каждый компонент будет равен количеству дней, в которые пользователь хотя бы раз заходил в локацию.
+ */
+vector<int> *PersistenceCalculator::getSummarizedIndicatorVector() {
+    vector<int> *summarizedIndicatorVector = new vector<int>(spotNames.size());
+    for (unsigned int i = 0; i < summarizedIndicatorVector->size(); i++) summarizedIndicatorVector->at(i) = 0;
+
+    for (unsigned int i = 0; i < roots.size(); i++) {
+        vector<int> *indicatorVector = getIndicationVector(roots.at(i));
+        ASSERT_1(summarizedIndicatorVector->size() == indicatorVector->size(), -4321);
+        for (unsigned int j = 0; j < indicatorVector->size(); j++) {
+            int indicator = indicatorVector->at(j);
+            ASSERT_1(indicator == 0 || indicator == 1, -4432);
+            summarizedIndicatorVector->at(j) += indicator;
+        }
+        delete indicatorVector;
+    }
+
+    return summarizedIndicatorVector;
+}
+
+/**
+ * Метод получает гистограмму размерности маршрутов
+ * (или, иначе, гистограмму весов векторов в многомерном пространстве маршрутов)
+ */
+vector<int> *PersistenceCalculator::getRootsDimensionsHistogram() {
+    vector<int> *dimensionsHistogram = new vector<int>(spotNames.size() + 1);
+    // +1 в размере т.к. веса векторов изменяются от 0 по spotNames.size()
+    for (unsigned int i = 0; i < dimensionsHistogram->size(); i++) dimensionsHistogram->at(i) = 0;
+
+    for (unsigned int i = 0; i < roots.size(); i++) {
+        vector<int> *indicatorVector = getIndicationVector(roots.at(i));
+        ASSERT_1(dimensionsHistogram->size() == (indicatorVector->size() + 1), -4322);
+        int weight = 0;
+        for (unsigned int j = 0; j < indicatorVector->size(); j++) {
+            int indicator = indicatorVector->at(j);
+            ASSERT_1(indicator == 0 || indicator == 1, -4433);
+            weight += indicator;
+        }
+        ASSERT_1(weight >= 0 && weight <= spotNames.size(), -4434);
+        dimensionsHistogram->at(weight)++;
+
+        delete indicatorVector;
+    }
+
+    return dimensionsHistogram;
+}
+
+/**
+ * Из вектора маршрута получаем вектор индикаторных компонент (со значением 0 и 1),
+ * показывающих посещалась ли данная локация в соответствующий день.
+ *
+ * @param root - маршрут, для которого нужно получить данный вектор
+ */
+vector<int> *PersistenceCalculator::getIndicationVector(vector<HotSpot *> *root) {
+    vector<int> *indicatorVector = new vector<int>(root->size());
+    for (unsigned int i = 0; i < indicatorVector->size(); i++) {
+        ASSERT_1(root->at(i), -3211);
+        indicatorVector->at(i) = root->at(i)->counter != 0 ? 1 : 0;
+    }
+    return indicatorVector;
+}
+
+
+/**
+ * Метод получает гистограмму размерности маршрутов
+ * (или, иначе, гистограмму весов векторов в многомерном пространстве маршрутов)
+ */
+vector<int> *PersistenceCalculator::getSummarizedRoot() {
+    vector<int> *summarizedRoot = new vector<int>(spotNames.size());
+    for (unsigned int i = 0; i < summarizedRoot->size(); i++) summarizedRoot->at(i) = 0;
+
+    for (unsigned int i = 0; i < roots.size(); i++) {
+        vector<HotSpot *> *root = roots.at(i);
+        ASSERT_1(summarizedRoot->size() == root->size(), -4332);
+        for (unsigned int j = 0; j < root->size(); j++) {
+            HotSpot *hotSpot = root->at(j);
+            ASSERT_1(hotSpot->counter >= 0, -4432);
+            summarizedRoot->at(j) += hotSpot->counter;
+        }
+    }
+
+    return summarizedRoot;
+}
+
+
+/**
+ * Медот сохраняет в xml файл статистичесике данные.
+ */
+void PersistenceCalculator::save() {
+    ofstream out("roots_persistence_statistics.pst");
+    out << "<?xml version=\'1.0' ?>" << endl << endl;
+    out << "<ROOT-STATISTICS>" << endl;
+
+    //region PERSISTENCE
+    out << "    <PERSISTENCE>" << endl;
+
+    out << "        <COEFFICIENTS>" << endl;
+    double averagePersistence = 0.0;
+    for (unsigned int i = 0; i < roots.size(); i++) {
+        double persistence;
+        out << "            <COEF> " << i << "\t" << (persistence = CalculatePersistence(i)) << " </COEF>" << endl;
+        averagePersistence += persistence;
+    }
+    out << "        </COEFFICIENTS>" << endl;
+
+    out << "        <AVERAGE-PERSISTENCE> " << (averagePersistence /= roots.size()) << " </AVERAGE-PERSISTENCE>"
+        << endl;
+
+    out << "        <MASS-CENTER> " << endl;
+    vector<HotSpot *> *massCenter = GetMassCenter();
+    out << "            <COEF> " << CalculatePersistence(massCenter, "massCenter") << " </COEF>" << endl;
+    out << "            <VALS> " << endl;
+    for (unsigned int i = 0; i < massCenter->size(); i++) {
+        out << massCenter->at(i)->counter << "  ";
+    }
+    out << endl << "            </VALS> ";
+    out << endl << "        </MASS-CENTER> ";
+
+    // for debug
+    //for(unsigned int i=0; i<roots.size(); i++) {
+    //    cout<<"root "<<i<<": ";
+    //    for(unsigned int j=0; j<roots.at(i)->size(); j++)
+    //    cout<<roots.at(i)->at(j)<<", ";
+    //    cout<<endl;
+    //}
+    //cout<<"massCenter: ";
+    //for(unsigned int j=0; j<massCenter->size(); j++)
+    //cout<<massCenter->at(j)<<", ";
+    //cout<<endl;
+    out << endl << "    </PERSISTENCE>" << endl;
+    //endregion
+
+
+    //region SUMMARIZED INDICATOR VECTOR (HISTOGRAM)
+    vector<int> *average = getSummarizedIndicatorVector();
+    out << "    <SUMMARIZED-INDICATOR-VECTOR>" << endl;
+    out << "        <VALS> " << endl;
+    for (unsigned int i = 0; i < average->size(); i++) out << average->at(i) << "  ";
+    out << endl << "        </VALS> " << endl;
+    out << "    </SUMMARIZED-INDICATOR-VECTOR>" << endl;
+    //endregion
+
+
+    //region ROOTS DIMENSIONS HISTOGRAM
+    vector<int> *dimensionsHistogram = getRootsDimensionsHistogram();
+    out << "    <ROOTS-DIMENSION-HISTOGRAM>" << endl;
+    out << "        <VALS> " << endl;
+    for (unsigned int i = 0; i < dimensionsHistogram->size(); i++) out << dimensionsHistogram->at(i) << "  ";
+    out << endl << "        </VALS> " << endl;
+    out << "    </ROOTS-DIMENSION-HISTOGRAM>" << endl;
+    //endregion
+
+
+    //region SUMMARIZED ROOT
+    vector<int> *summarizedRoot = getSummarizedRoot();
+    out << "    <SUMMARIZED-ROOT>" << endl;
+    out << "        <VALS> " << endl;
+    for (unsigned int i = 0; i < summarizedRoot->size(); i++) out << summarizedRoot->at(i) << "  ";
+    out << endl << "        </VALS> " << endl;
+    out << "    </SUMMARIZED-ROOT>" << endl;
+    //endregion
+
+    out << "</ROOT-STATISTICS>" << endl;
+}
+
 int main(int argc, char **argv) {
     char *rootFilesDir;        //full path name of root files directory
     char *hotspotFilesDir;     //full path name of hot spot files directory
@@ -340,8 +469,12 @@ int main(int argc, char **argv) {
     }
 
     PersistenceCalculator calc(hotspotFilesDir, rootFilesDir);
-    calc.CalcAllAndSave();
+
+    calc.save();
+    cout << endl << "Persistence & PDFs are made!" << endl;
+
     calc.GenerateRotFile(rootFilesDir, hotspotFilesDir);
-    cout << endl << "Hello world!" << endl;
+    cout << endl << "rot file with average root is generated!!" << endl;
+
     return 0;
 }
