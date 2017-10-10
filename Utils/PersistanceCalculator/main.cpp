@@ -346,10 +346,8 @@ vector<int> *PersistenceCalculator::getIndicationVector(vector<HotSpot *> *root)
     return indicatorVector;
 }
 
-
 /**
- * Метод получает гистограмму размерности маршрутов
- * (или, иначе, гистограмму весов векторов в многомерном пространстве маршрутов)
+ * Метод получает просуммированный вектор от всех маршрутов
  */
 vector<int> *PersistenceCalculator::getSummarizedRoot() {
     vector<int> *summarizedRoot = new vector<int>(spotNames.size());

@@ -11,6 +11,7 @@
 
 using namespace std;
 
+// Имена директорий и файлов
 #define DEF_TR_DIR     (char*)"./Traces"              //Директория по умолчанию для всeй информации о трассах
 #define DEF_HS_DIR     (char*)"./Traces/hotspotfiles" //Директория по умолчанию для "локаций"
 #define DEF_TRS_DIR    (char*)"./Traces/tracefiles"   //Директория по умолчанию для исходных трасс
@@ -31,13 +32,16 @@ using namespace std;
 #define ICT_HIST       (char*)"ictHistory.xml"        // имя файла для сохранения истории ICT
 #define RT_HIST        (char*)"routeHistory.xml"      // имя файла для сохранения истории о пройденных маршрутах узлами
 #define STAT_FILE      (char*)"statistics.xml"        // имя файла для сохранения статистики
+#define RT_PST_ST      (char*)"roots_persistence_statistics.pst"  // имя файла с данными о персистентности и статистике маршрутов
+
+// Константы
 #define PERSISTENCE    (char*)"persistence"           // имя параметра с коэффициентом персистентности в имени файла маршрута *.rot
 
-// формат файлов
+// Формат файлов
 #define TRACE_TYPE     (char*)".txt"
 #define WAYPOINTS_TYPE (char*)".wpt"
 
-// шаблон файлов
+// Шаблон файлов
 #define TRACE_PATTERN  (char*)"*.txt"
 #define ROOT_PATTERT   (char*)"*.rot"
 

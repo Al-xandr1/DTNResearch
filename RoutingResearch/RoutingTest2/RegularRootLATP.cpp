@@ -5,6 +5,7 @@ Define_Module(RegularRootLATP);
 RegularRootLATP::RegularRootLATP()
 {
     rc = NULL;
+    rootStatistics = NULL;
 
     rootPersistence = -1;
 
@@ -164,10 +165,13 @@ void RegularRootLATP::initialize(int stage) {
     // загрузка данных об эталонных маршрутах
     if (!rc) rc = RootsCollection::getInstance();
 
+    if (!rootStatistics) rootStatistics =
+            check_and_cast<RootsPersistenceAndStatistics*>(getParentModule()->getParentModule()->getSubmodule("rootsStatistics"));
+
     if (rootPersistence == -1)
-        // при инициализации выставляем значение по умолчанию для узал.
+        // при инициализации выставляем значение по умолчанию для узла.
         // Далее попробуем прочитать индивидуальное значение из названия файла со средним маршрутом
-        rootPersistence = getParentModule()->par("rootPersistence").doubleValue();
+        rootPersistence = rootStatistics->getPersistenceFromMassCenter();
 
     if (!firstRoot) loadFirstRoot();
 
