@@ -109,4 +109,9 @@ double* extractDoubleParameter(const char* fileName, const char* parameter);
  */
 const char* extractParameter(const char* fileName, const char* parameter);
 
+/**
+ * Получение суммы элементов вектора
+ */
+double getSum(vector<double>* vector);
+
 #endif // DEVELOPMENTHELPER_H_INCLUDED

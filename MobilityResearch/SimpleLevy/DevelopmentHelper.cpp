@@ -134,3 +134,9 @@ const char* extractParameter(const char* fileName, const char* parameter) {
     return fileNameStr.substr(start+1, end-start-1).c_str();
 }
 
+double getSum(vector<double>* vector) {
+    double sum = 0;
+    for(unsigned int i=0; i < vector->size(); i++) sum += vector->at(i);
+    return sum;
+}
+

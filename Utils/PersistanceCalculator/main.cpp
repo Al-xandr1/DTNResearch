@@ -415,16 +415,6 @@ void PersistenceCalculator::save() {
     //endregion
 
 
-    //region SUMMARIZED INDICATOR VECTOR (HISTOGRAM)
-    vector<int> *average = getSummarizedIndicatorVector();
-    out << "    <SUMMARIZED-INDICATOR-VECTOR>" << endl;
-    out << "        <VALS> " << endl;
-    for (unsigned int i = 0; i < average->size(); i++) out << average->at(i) << "  ";
-    out << endl << "        </VALS> " << endl;
-    out << "    </SUMMARIZED-INDICATOR-VECTOR>" << endl;
-    //endregion
-
-
     //region ROOTS DIMENSIONS HISTOGRAM
     vector<int> *dimensionsHistogram = getRootsDimensionsHistogram();
     out << "    <ROOTS-DIMENSION-HISTOGRAM>" << endl;
@@ -432,6 +422,16 @@ void PersistenceCalculator::save() {
     for (unsigned int i = 0; i < dimensionsHistogram->size(); i++) out << dimensionsHistogram->at(i) << "  ";
     out << endl << "        </VALS> " << endl;
     out << "    </ROOTS-DIMENSION-HISTOGRAM>" << endl;
+    //endregion
+
+
+    //region SUMMARIZED INDICATOR VECTOR (HISTOGRAM)
+    vector<int> *average = getSummarizedIndicatorVector();
+    out << "    <SUMMARIZED-INDICATOR-VECTOR>" << endl;
+    out << "        <VALS> " << endl;
+    for (unsigned int i = 0; i < average->size(); i++) out << average->at(i) << "  ";
+    out << endl << "        </VALS> " << endl;
+    out << "    </SUMMARIZED-INDICATOR-VECTOR>" << endl;
     //endregion
 
 
