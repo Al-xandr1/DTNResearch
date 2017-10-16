@@ -19,6 +19,7 @@
 #include "MobileHost.h"
 #include "Messages.h"
 #include "RootsPersistenceAndStatistics.h"
+#include "GenerationRootsStrategy.h"
 
 using namespace std;
 
@@ -27,10 +28,9 @@ class RegularRootLATP : public LevyHotSpotsLATP
   protected:
 
     RootsCollection* rc;
-
     RootsPersistenceAndStatistics* rootStatistics;      // ссылка на модуль с общей персистентностью и статистикой
-
     double rootPersistence;                             // коэффициент персистентности, для мобильности КОНКРЕТНОГО узла
+    GenerationRootsStrategy* rootGenerator;             // генератор новых маршрутов (сейчас ЛИБО по персистентности, ЛИБО по статистикам
 
     vector<HotSpotData*>*      firstRoot;               // сформированный вектор (эталона) маршрута с информацией, загруженной из файлов *.hts
     vector<unsigned int>*      firstRootSnumber;        // сформированный вектор (эталона) с индексами локаций в структуре HotSpotsCollection

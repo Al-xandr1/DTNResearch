@@ -4,11 +4,8 @@ Define_Module(RootsPersistenceAndStatistics);
 
 void RootsPersistenceAndStatistics::initialize() {
     ASSERT(persistenceFromMassCenter == -1);
-    ASSERT(!rootsDimensionHistogram);
     ASSERT(!rootsDimensionHistogramPDF);
-    ASSERT(!summarizedIndicatorVector);
     ASSERT(!summarizedIndicatorVectorPDF);
-    ASSERT(!summarizedRoot);
     ASSERT(!summarizedRootPDF);
 
 
@@ -20,19 +17,21 @@ void RootsPersistenceAndStatistics::initialize() {
     cXMLElement* coef = massCenter->getChildrenByTagName("COEF").at(0);
     persistenceFromMassCenter = atof(coef->getNodeValue());
 
-
+    vector<int>* rootsDimensionHistogram = NULL;
     loadData(rootStatistics, "ROOTS-DIMENSION-HISTOGRAM", "VALS", rootsDimensionHistogram, rootsDimensionHistogramPDF);
     ASSERT(rootsDimensionHistogram);
     ASSERT(rootsDimensionHistogramPDF);
     double rootsDimensionHistogramPDFSum = getSum(rootsDimensionHistogramPDF);
 //    ASSERT(rootsDimensionHistogramPDFSum == 1.0);
 
+    vector<int>* summarizedIndicatorVector = NULL;
     loadData(rootStatistics, "SUMMARIZED-INDICATOR-VECTOR", "VALS", summarizedIndicatorVector, summarizedIndicatorVectorPDF);
     ASSERT(summarizedIndicatorVector);
     ASSERT(summarizedIndicatorVectorPDF);
     double summarizedIndicatorVectorPDFSum = getSum(summarizedIndicatorVectorPDF);
 //    ASSERT(summarizedIndicatorVectorPDFSum == 1.0);
 
+    vector<int>* summarizedRoot = NULL;
     loadData(rootStatistics, "SUMMARIZED-ROOT", "VALS", summarizedRoot, summarizedRootPDF);
     ASSERT(summarizedRoot);
     ASSERT(summarizedRootPDF);
@@ -40,12 +39,15 @@ void RootsPersistenceAndStatistics::initialize() {
 //    ASSERT(summarizedRootPDFSum == 1.0);
 
     cout << "persistenceFromMassCenter: " << persistenceFromMassCenter << endl << endl;
+
     print("rootsDimensionHistogram", rootsDimensionHistogram);
     print("rootsDimensionHistogramPDF", rootsDimensionHistogramPDF);
     cout << "rootsDimensionHistogramPDFSum=" << rootsDimensionHistogramPDFSum << endl << endl;
+
     print("summarizedIndicatorVector", summarizedIndicatorVector);
     print("summarizedIndicatorVectorPDF", summarizedIndicatorVectorPDF);
     cout << "summarizedIndicatorVectorPDFSum=" << summarizedIndicatorVectorPDFSum << endl << endl;
+
     print("summarizedRoot", summarizedRoot);
     print("summarizedRootPDF", summarizedRootPDF);
     cout << "summarizedRootPDFSum=" << summarizedRootPDFSum << endl << endl;
@@ -64,7 +66,7 @@ void RootsPersistenceAndStatistics::loadData(cXMLElement *root, const char* hist
 }
 
 void RootsPersistenceAndStatistics::print(const char* histogramName, vector<int>*& histogram) {
-    if (rootsDimensionHistogram) {
+    if (histogram) {
         cout << histogramName << ": " << endl;
         for (unsigned int i = 0; i < histogram->size(); i++) {
             cout << histogram->at(i) << "  ";
@@ -76,7 +78,7 @@ void RootsPersistenceAndStatistics::print(const char* histogramName, vector<int>
 }
 
 void RootsPersistenceAndStatistics::print(const char* histogramName, vector<double>*& histogram) {
-    if (rootsDimensionHistogram) {
+    if (histogram) {
         cout << histogramName << ": " << endl;
         for (unsigned int i = 0; i < histogram->size(); i++) {
             cout << histogram->at(i) << "  ";
@@ -87,19 +89,3 @@ void RootsPersistenceAndStatistics::print(const char* histogramName, vector<doub
     cout << endl << endl;
 }
 
-//todo реализовать медоты получения случайных чисел
-
-int RootsPersistenceAndStatistics::generateRootDimension() {
-    //todo по закону распределения получить СВ (через rand и функцию распределения)
-    return 0;
-}
-
-int RootsPersistenceAndStatistics::generateHotSpotIndex() {
-    //todo по закону распределения получить СВ (через rand и функцию распределения)
-    return 0;
-}
-
-int RootsPersistenceAndStatistics::generateIndexFromSummarizedRoot() {
-    //todo по закону распределения получить СВ (через rand и функцию распределения)
-    return 0;
-}
