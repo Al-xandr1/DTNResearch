@@ -7,6 +7,7 @@
 #include <list>
 #include <sstream>
 #include <string>
+#include "stlutils.h"
 #include <omnetpp.h>
 
 using namespace std;
@@ -112,6 +113,36 @@ const char* extractParameter(const char* fileName, const char* parameter);
 /**
  * Получение суммы элементов вектора
  */
-double getSum(vector<double>* vector);
+template<typename T>
+inline T getSum(const std::vector<T>& vector) {
+    T sum = 0;
+    for(unsigned int i=0; i < vector.size(); i++) sum += vector.at(i);
+    return sum;
+}
+
+/**
+ * trim from start
+ */
+inline std::string &ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
+}
+
+/**
+ *  trim from end
+ */
+inline std::string &rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
+
+/**
+ *  trim from both ends
+ */
+inline std::string &fullTrim(std::string &s) {
+    return ltrim(rtrim(s));
+}
 
 #endif // DEVELOPMENTHELPER_H_INCLUDED

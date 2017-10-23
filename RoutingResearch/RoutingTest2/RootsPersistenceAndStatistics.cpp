@@ -6,9 +6,10 @@ void RootsPersistenceAndStatistics::initialize() {
     ASSERT(persistenceFromMassCenter == -1);
     ASSERT(!rootsDimensionHistogramPDF);
     ASSERT(!summarizedIndicatorVectorPDF);
-    ASSERT(!summarizedRootPDF);
+    ASSERT(!averageCounterVector);
+    ASSERT(!hotSpots);
 
-
+    // „тение данных из файла
     cXMLElement *rootStatistics = par("rootsPersistenceAndStatistics");
 
 
@@ -21,23 +22,21 @@ void RootsPersistenceAndStatistics::initialize() {
     loadData(rootStatistics, "ROOTS-DIMENSION-HISTOGRAM", "VALS", rootsDimensionHistogram, rootsDimensionHistogramPDF);
     ASSERT(rootsDimensionHistogram);
     ASSERT(rootsDimensionHistogramPDF);
-    double rootsDimensionHistogramPDFSum = getSum(rootsDimensionHistogramPDF);
-//    ASSERT(rootsDimensionHistogramPDFSum == 1.0);
+    double rootsDimensionHistogramPDFSum = getSum(*rootsDimensionHistogramPDF);
 
     vector<int>* summarizedIndicatorVector = NULL;
     loadData(rootStatistics, "SUMMARIZED-INDICATOR-VECTOR", "VALS", summarizedIndicatorVector, summarizedIndicatorVectorPDF);
     ASSERT(summarizedIndicatorVector);
     ASSERT(summarizedIndicatorVectorPDF);
-    double summarizedIndicatorVectorPDFSum = getSum(summarizedIndicatorVectorPDF);
-//    ASSERT(summarizedIndicatorVectorPDFSum == 1.0);
+    double summarizedIndicatorVectorPDFSum = getSum(*summarizedIndicatorVectorPDF);
 
-    vector<int>* summarizedRoot = NULL;
-    loadData(rootStatistics, "SUMMARIZED-ROOT", "VALS", summarizedRoot, summarizedRootPDF);
-    ASSERT(summarizedRoot);
-    ASSERT(summarizedRootPDF);
-    double summarizedRootPDFSum = getSum(summarizedRootPDF);
-//    ASSERT(summarizedRootPDFSum == 1.0);
+    loadData(rootStatistics, "AVERAGE-COUNTER-VECTOR", "VALS", averageCounterVector);
+    ASSERT(averageCounterVector);
 
+    loadData(rootStatistics, "HOT-SPOTS", "VALS", hotSpots);
+    ASSERT(hotSpots);
+
+    // ¬ывод на экран и проверка
     cout << "persistenceFromMassCenter: " << persistenceFromMassCenter << endl << endl;
 
     print("rootsDimensionHistogram", rootsDimensionHistogram);
@@ -48,9 +47,19 @@ void RootsPersistenceAndStatistics::initialize() {
     print("summarizedIndicatorVectorPDF", summarizedIndicatorVectorPDF);
     cout << "summarizedIndicatorVectorPDFSum=" << summarizedIndicatorVectorPDFSum << endl << endl;
 
-    print("summarizedRoot", summarizedRoot);
-    print("summarizedRootPDF", summarizedRootPDF);
-    cout << "summarizedRootPDFSum=" << summarizedRootPDFSum << endl << endl;
+    print("averageCounterVector", averageCounterVector);
+
+    print("hotSpots", hotSpots);
+
+    cout << "hotSpots->size() = " << hotSpots->size() << endl;
+    cout << "rootsDimensionHistogramPDF->size() = " << rootsDimensionHistogramPDF->size() << endl;
+    cout << "summarizedIndicatorVectorPDF->size() = " << summarizedIndicatorVectorPDF->size() << endl;
+    cout << "averageCounterVector->size() = " << averageCounterVector->size() << endl << endl;
+
+    // провер€ем согласованность размеров всех структур
+    ASSERT((hotSpots->size() + 1) == rootsDimensionHistogramPDF->size()); // в rootsDimensionHistogramPDF на одно значение больше (из-за размерности 0)
+    ASSERT(hotSpots->size() == summarizedIndicatorVectorPDF->size());
+    ASSERT(hotSpots->size() == averageCounterVector->size());
 }
 
 void RootsPersistenceAndStatistics::loadData(cXMLElement *root, const char* histTag, const char* valsTag, vector<int>*& histogram, vector<double>*& histogramPDF) {
@@ -59,33 +68,51 @@ void RootsPersistenceAndStatistics::loadData(cXMLElement *root, const char* hist
     cStringTokenizer histogramTok(histogramVals->getNodeValue());
     histogram = new vector<int>(histogramTok.asIntVector());
 
-    histogramPDF = new vector<double>(histogram->size());
     double histogramSum = 0;
     for (unsigned int i = 0; i < histogram->size(); i++) histogramSum += histogram->at(i);
+    histogramPDF = new vector<double>(histogram->size());
     for (unsigned int i = 0; i < histogramPDF->size(); i++) histogramPDF->at(i) = (1.0 * histogram->at(i)) / histogramSum;
 }
 
-void RootsPersistenceAndStatistics::print(const char* histogramName, vector<int>*& histogram) {
-    if (histogram) {
-        cout << histogramName << ": " << endl;
-        for (unsigned int i = 0; i < histogram->size(); i++) {
-            cout << histogram->at(i) << "  ";
-        }
-    } else {
-        cout << histogramName << ": null" << endl;
-    }
-    cout << endl << endl;
+void RootsPersistenceAndStatistics::loadData(cXMLElement *root, const char* vecTag, const char* valsTag, vector<double>*& vec) {
+    cXMLElement* vecXml = root->getChildrenByTagName(vecTag).at(0);
+    cXMLElement* vecVals = vecXml->getChildrenByTagName(valsTag).at(0);
+    cStringTokenizer vecTok(vecVals->getNodeValue());
+    vec = new vector<double>(vecTok.asDoubleVector());
 }
 
-void RootsPersistenceAndStatistics::print(const char* histogramName, vector<double>*& histogram) {
-    if (histogram) {
-        cout << histogramName << ": " << endl;
-        for (unsigned int i = 0; i < histogram->size(); i++) {
-            cout << histogram->at(i) << "  ";
+void RootsPersistenceAndStatistics::loadData(cXMLElement *root, const char* vecTag, const char* valsTag, vector<const char*>*& hotSpots) {
+    cXMLElement* vecXml = root->getChildrenByTagName(vecTag).at(0);
+    cXMLElement* vecVals = vecXml->getChildrenByTagName(valsTag).at(0);
+    string tmp(vecVals->getNodeValue());
+
+    // обрезаем символ перехода на новую строку в начале
+    tmp = tmp.substr(1, tmp.size());
+
+    cStringTokenizer vecTok(tmp.c_str());
+    vecTok.setDelimiter("  ");
+
+    hotSpots = new vector<const char*>();
+    vector<string> hotSpotNamesVec = vecTok.asVector();
+    for (unsigned int i = 0; i < hotSpotNamesVec.size(); i++) {
+        string hotSpotNameStr = hotSpotNamesVec.at(i);
+        if (!hotSpotNameStr.empty() && hotSpotNameStr.compare("\n") != 0) {
+            const char* str = hotSpotNameStr.c_str();
+
+            char* newStr = new char[256];
+            newStr = strcpy(newStr, str);
+            hotSpots->push_back(newStr);
         }
-    } else {
-        cout << histogramName << ": null" << endl;
     }
-    cout << endl << endl;
 }
 
+unsigned int RootsPersistenceAndStatistics::findHotSpotIndexByName(const char* hotSpotName) {
+    int index = -1;
+    for(unsigned int i = 0; i < hotSpots->size(); i++)
+        if (strcmp(hotSpots->at(i), hotSpotName) == 0) {
+            index = i;
+            break;
+        }
+    ASSERT(index != -1); //об€зательно должны найти! »наче это неконсистентные данные
+    return index;
+}

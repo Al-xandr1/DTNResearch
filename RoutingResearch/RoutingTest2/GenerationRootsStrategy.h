@@ -4,6 +4,7 @@
 #include <vector>
 #include "Data.h"
 #include "HotSpotsCollection.h"
+#include "DevelopmentHelper.h"
 #include "RootsPersistenceAndStatistics.h"
 
 
@@ -38,8 +39,8 @@ public:
  */
 class GenerationRootsByPersistenceStrategy : public GenerationRootsStrategy {
 private:
-    double rootPersistence;     // фиксированный коэффициент персистентности (проставляеся из мобильности)
-    HotSpotsCollection* hsc;    // указатель на коллекция локаций (ТОЛЬКО ДЛЯ ЧТЕНИЯ) (проставляеся из мобильности)
+    double rootPersistence;     // фиксированный коэффициент персистентности (проставляется из мобильности)
+    HotSpotsCollection* hsc;    // указатель на коллекция локаций (ТОЛЬКО ДЛЯ ЧТЕНИЯ) (проставляется из мобильности)
 
 public:
     GenerationRootsByPersistenceStrategy(double rootPersistence, HotSpotsCollection* hsc) : GenerationRootsStrategy() {
@@ -68,17 +69,25 @@ public:
  */
 class GenerationRootsByStatisticsStrategy : public GenerationRootsStrategy {
 
-    /** Ссылка на модуль с общей персистентностью и статистикой ТОЛЬКО ДЛЯ ЧТЕНИЯ) (проставляеся из мобильности)
+    /** Указатель на модуль с общей персистентностью и статистикой ТОЛЬКО ДЛЯ ЧТЕНИЯ) (проставляется из мобильности)
      */
     RootsPersistenceAndStatistics* rootStatistics;
+    /**
+     * Указатель на коллекцию локаций (ТОЛЬКО ДЛЯ ЧТЕНИЯ) (проставляется из мобильности)
+     */
+    HotSpotsCollection* hsc;
+    // ВАЖНО: Последовательность локаций в RootsPersistenceAndStatistics расходится с последовательностью в HotSpotsCollection
+    // ВАЖНО: Для маппинга индексов использовать RootsPersistenceAndStatistics::findHotSpotIndexByName & HotSpotsCollection::findHotSpotbyName
 
 public:
-    GenerationRootsByStatisticsStrategy(RootsPersistenceAndStatistics* rootStatistics) : GenerationRootsStrategy() {
+    GenerationRootsByStatisticsStrategy(RootsPersistenceAndStatistics* rootStatistics, HotSpotsCollection* hsc) : GenerationRootsStrategy() {
         this->rootStatistics = rootStatistics;
+        this->hsc = hsc;
     };
 
     ~GenerationRootsByStatisticsStrategy() {
         this->rootStatistics = NULL;
+        this->hsc = NULL;
     };
 
     /**
@@ -96,18 +105,25 @@ private:
      * Метод генерирует случайное число пропорчионально распределению rootsDimensionHistogram.
      * Данное число используется для количества уникальных локаций в генерируемом маршруте (размерность маршрута)
      */
-    int generateRootDimension();
+    unsigned int generateRootDimension();
 
     /**
      * Метод генерирует случайное число пропорчионально распределению summarizedIndicatorVector.
      * Данное число используется как индекс той локации, которую нужно включить в состав маршрута.
+     *
+     * ВАЖНО: возвращается это индекс в струкруте файла *.pst (последовательность в нём расходится с последовательностью в HotSpotsCollection)
      */
-    int generateHotSpotIndex();
+    unsigned int generateHotSpotIndexPST();
 
     /**
-     * todo что генерирует данный метод???
+     * Получает количество посещений для данной локации.
+     * Число берётся из просуммированного вектора от всех маршрутов, который поделён на суммарный индикаторный вектор.
+     * Таким образом в каждой компоненте получается среднее количество посещений за те дни,
+     * в которые было хотя бы одно посещение.
+     *
+     * ВАЖНО: hotSpotIndexPST - это индекс в струкруте файла *.pst (последовательность в нём расходится с последовательностью в HotSpotsCollection)
      */
-    int generateHotSpotCount();
+    unsigned int getHotSpotCount(unsigned int hotSpotIndexPST);
 };
 
 #endif

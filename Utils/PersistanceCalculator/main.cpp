@@ -50,11 +50,11 @@ public:
 
     vector<int> *getRootsDimensionsHistogram();
 
-    vector<int> *getSummarizedRoot();
+    vector<double> *getAverageCounterVector(vector<int> *summarizedIndicatorVector);
 
     void GenerateRotFile(char *RootDir, char *SpotDir);
 
-    void save();
+    void save(char *RootDir);
 };
 
 PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
@@ -248,7 +248,7 @@ void PersistenceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
     char SpotNamePattern[256];
     buildFullName(RootNamePattern, RootDir, "*.rot");
     WIN32_FIND_DATA f0;
-    HANDLE h = FindFirstFile(RootNamePattern, &f0);
+    FindFirstFile(RootNamePattern, &f0);
 
     string fileName(f0.cFileName);
     std::size_t found = fileName.find("_");
@@ -347,31 +347,52 @@ vector<int> *PersistenceCalculator::getIndicationVector(vector<HotSpot *> *root)
 }
 
 /**
- * Метод получает просуммированный вектор от всех маршрутов
+ * Метод получает просуммированный вектор от всех маршрутов, поделённый на суммарный индикаторный вектор.
+ * Таким образом в каждой компоненте получается среднее количество посещений за те дни,
+ * в которые было хотя бы одно посещение.
  */
-vector<int> *PersistenceCalculator::getSummarizedRoot() {
-    vector<int> *summarizedRoot = new vector<int>(spotNames.size());
-    for (unsigned int i = 0; i < summarizedRoot->size(); i++) summarizedRoot->at(i) = 0;
+vector<double> *PersistenceCalculator::getAverageCounterVector(vector<int> *summarizedIndicatorVector) {
+    vector<double> *averageCounterVector = new vector<double>(spotNames.size());
+    for (unsigned int i = 0; i < averageCounterVector->size(); i++) averageCounterVector->at(i) = 0;
 
     for (unsigned int i = 0; i < roots.size(); i++) {
         vector<HotSpot *> *root = roots.at(i);
-        ASSERT_1(summarizedRoot->size() == root->size(), -4332);
+        ASSERT_1(averageCounterVector->size() == root->size(), -4332);
         for (unsigned int j = 0; j < root->size(); j++) {
             HotSpot *hotSpot = root->at(j);
             ASSERT_1(hotSpot->counter >= 0, -4432);
-            summarizedRoot->at(j) += hotSpot->counter;
+            averageCounterVector->at(j) += hotSpot->counter;
         }
     }
 
-    return summarizedRoot;
+    ASSERT_1(averageCounterVector->size() == summarizedIndicatorVector->size(), -4132);
+    for (unsigned int i = 0; i < averageCounterVector->size(); i++)
+        if (summarizedIndicatorVector->at(i) != 0)
+            averageCounterVector->at(i) = averageCounterVector->at(i) / (1.0 * summarizedIndicatorVector->at(i));
+        else
+            // если компонента индикаторного вектора равна нулю, то и компонента суммы тоже должна быть нулевой
+        ASSERT_1(averageCounterVector->at(i) == 0, -4430);
+
+    return averageCounterVector;
 }
 
 
 /**
  * Медот сохраняет в xml файл статистичесике данные.
  */
-void PersistenceCalculator::save() {
-    ofstream out("roots_persistence_statistics.pst");
+void PersistenceCalculator::save(char *RootDir) {
+    char RootNamePattern[256];
+    buildFullName(RootNamePattern, RootDir, "*.rot");
+    WIN32_FIND_DATA f0;
+    FindFirstFile(RootNamePattern, &f0);
+
+    string fileName(f0.cFileName);
+    std::size_t found = fileName.find("_");
+    ASSERT_1(found != std::string::npos, -115);
+    string targetName = fileName.substr(0, found);
+    targetName += string("_roots_persistence_statistics.pst");
+
+    ofstream out(targetName);
     out << "<?xml version=\'1.0' ?>" << endl << endl;
     out << "<ROOT-STATISTICS>" << endl;
 
@@ -426,23 +447,34 @@ void PersistenceCalculator::save() {
 
 
     //region SUMMARIZED INDICATOR VECTOR (HISTOGRAM)
-    vector<int> *average = getSummarizedIndicatorVector();
+    vector<int> *summarizedIndicatorVector = getSummarizedIndicatorVector();
     out << "    <SUMMARIZED-INDICATOR-VECTOR>" << endl;
     out << "        <VALS> " << endl;
-    for (unsigned int i = 0; i < average->size(); i++) out << average->at(i) << "  ";
+    for (unsigned int i = 0; i < summarizedIndicatorVector->size(); i++)
+        out << summarizedIndicatorVector->at(i) << "  ";
     out << endl << "        </VALS> " << endl;
     out << "    </SUMMARIZED-INDICATOR-VECTOR>" << endl;
     //endregion
 
 
-    //region SUMMARIZED ROOT
-    vector<int> *summarizedRoot = getSummarizedRoot();
-    out << "    <SUMMARIZED-ROOT>" << endl;
+    //region AVERAGE COUNTER VECTOR
+    vector<double> *averageCounterVector = getAverageCounterVector(summarizedIndicatorVector);
+    out << "    <AVERAGE-COUNTER-VECTOR>" << endl;
     out << "        <VALS> " << endl;
-    for (unsigned int i = 0; i < summarizedRoot->size(); i++) out << summarizedRoot->at(i) << "  ";
+    for (unsigned int i = 0; i < averageCounterVector->size(); i++) out << averageCounterVector->at(i) << "  ";
     out << endl << "        </VALS> " << endl;
-    out << "    </SUMMARIZED-ROOT>" << endl;
+    out << "    </AVERAGE-COUNTER-VECTOR>" << endl;
     //endregion
+
+
+    //region HOT SPOTS (FOR DEBUG)
+    out << "    <HOT-SPOTS>" << endl;
+    out << "        <VALS> " << endl;
+    for (unsigned int i = 0; i < spotNames.size(); i++) out << spotNames.at(i) << "  ";
+    out << endl << "        </VALS> " << endl;
+    out << "    </HOT-SPOTS>" << endl;
+    //endregion
+
 
     out << "</ROOT-STATISTICS>" << endl;
 }
@@ -468,7 +500,7 @@ int main(int argc, char **argv) {
 
     PersistenceCalculator calc(hotspotFilesDir, rootFilesDir);
 
-    calc.save();
+    calc.save(rootFilesDir);
     cout << endl << "Persistence & PDFs are made!" << endl;
 
     calc.GenerateRotFile(rootFilesDir, hotspotFilesDir);

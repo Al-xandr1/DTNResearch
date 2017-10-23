@@ -125,6 +125,9 @@ bool GenerationRootsByPersistenceStrategy::generateNewRoot(
             }
     }
 
+    //количество посещений должно сохраниться в новом маршруте
+    ASSERT(getSum(*currentRootCounter) == getSum(*firstRootCounter));
+
     return true;
 }
 
@@ -136,27 +139,81 @@ bool GenerationRootsByPersistenceStrategy::generateNewRoot(
 bool GenerationRootsByStatisticsStrategy::generateNewRoot(
         vector<HotSpotData*>* firstRoot, vector<unsigned int>* firstRootSnumber, vector<int>* firstRootCounter, vector<int>* firstRootWptsPerVisit,
         vector<HotSpotData*>*& currentRoot, vector<unsigned int>*& currentRootSnumber, vector<int>*& currentRootCounter, vector<int>*& currentRootWptsPerVisit) {
-    exit(-202);
+
+    ASSERT(hsc->getHSData()->size() == rootStatistics->getSummarizedIndicatorVectorPDF()->size());
+
+    currentRoot        = new vector<HotSpotData*>();
+    currentRootSnumber = new vector<unsigned int>();
+    currentRootCounter = new vector<int>();
+    currentRootWptsPerVisit = new vector<int>();
+
+    const int dimension = generateRootDimension();
+    ASSERT(dimension > 0);
+
+    int currentDimension = 0;
+
+    // Добавляем домашнюю локацию
+    currentRoot->push_back(firstRoot->at(0));
+    // ... добавляем её оригинальный индекс
+    currentRootSnumber->push_back(firstRootSnumber->at(0));
+    // ... и количество посещений на основе данных о среднем количестве из файла *.pst (по идексу из файла *.pst)
+    unsigned int homeHotSpotIndexPST = rootStatistics->findHotSpotIndexByName(firstRoot->at(0)->hotSpotName);
+    currentRootCounter->push_back(getHotSpotCount(homeHotSpotIndexPST));
+    currentDimension++;
+
+    while (currentDimension < dimension) {
+        // получаем случайный индекс из файла *.pst
+        const unsigned int currentIndexPST = generateHotSpotIndexPST();
+        // по currentIndexPST получаем имя локации из *.pst,
+        const char* hotSpotName = rootStatistics->getHotSpots()->at(currentIndexPST);
+
+        int signedCurrentIndexHSC = -1;
+        // по имени локации полчаем НУЖНЫЙ ИНДЕКС в hsc->getHSData()
+        hsc->findHotSpotbyName(hotSpotName, signedCurrentIndexHSC);
+        // локация по данному имени обязательно должна найтись!
+        ASSERT(signedCurrentIndexHSC >= 0 && ((unsigned int)signedCurrentIndexHSC < hsc->getHSData()->size()));
+        unsigned int currentIndexHSC = signedCurrentIndexHSC;
+
+        if (contains(*(currentRootSnumber), currentIndexHSC)) {
+            //если уже данная локация включена, то пытаемся ещё раз
+            continue;
+        }
+
+        // регистрируем данную локацию
+        currentRootSnumber->push_back(currentIndexHSC);                     // именно индекс из HotSpotsCollection
+        currentRoot->push_back(&(hsc->getHSData()->at(currentIndexHSC)));
+        currentRootCounter->push_back(getHotSpotCount(currentIndexPST));    // именно индекс из файла *.pst!
+        currentDimension++;
+    }
+
+    for (unsigned int i = 0; i < currentRoot->size(); i++) {
+        //todo Сделать вычисление и проставление числа точек на одно посещение локации currentRootWptsPerVisit
+        currentRootWptsPerVisit->push_back(10);
+    }
+
     return true;
 }
 
 
-int GenerationRootsByStatisticsStrategy::generateRootDimension() {
-    int dimension = generate(this->rootStatistics->getRootsDimensionHistogramPDF());
-    ASSERT(dimension >= 0);
+unsigned int GenerationRootsByStatisticsStrategy::generateRootDimension() {
+    int dimension = generate(rootStatistics->getRootsDimensionHistogramPDF());
+    ASSERT(dimension >= 0 && ((unsigned int)dimension) < rootStatistics->getHotSpots()->size());
     return dimension;
 }
 
-int GenerationRootsByStatisticsStrategy::generateHotSpotIndex() {
-    int hotSpotIndex = generate(this->rootStatistics->getSummarizedIndicatorVectorPDF());
-    ASSERT(hotSpotIndex >= 0);
+unsigned int GenerationRootsByStatisticsStrategy::generateHotSpotIndexPST() {
+    int hotSpotIndex = generate(rootStatistics->getSummarizedIndicatorVectorPDF());
+    ASSERT(hotSpotIndex >= 0 && ((unsigned int)hotSpotIndex) < rootStatistics->getHotSpots()->size());
     return hotSpotIndex;
 }
 
-int GenerationRootsByStatisticsStrategy::generateHotSpotCount() {
-    int hotSpotCount = generate(this->rootStatistics->getSummarizedRootPDF());
-    ASSERT(hotSpotCount >= 0);
-    return hotSpotCount;
+unsigned int GenerationRootsByStatisticsStrategy::getHotSpotCount(unsigned int hotSpotIndexPST) {
+    ASSERT(hotSpotIndexPST >= 0 && hotSpotIndexPST < rootStatistics->getAverageCounterVector()->size());
+    double averageCount = rootStatistics->getAverageCounterVector()->at(hotSpotIndexPST);
+    //в rootStatistics->getAverageCounterVector() значения вещественные, а тут целые. Округляем:
+    int averageCountInt = round(averageCount);
+    ASSERT(averageCountInt >= 0);
+    return averageCountInt;
 }
 
 int GenerationRootsByStatisticsStrategy::generate(vector<double>* pdf)

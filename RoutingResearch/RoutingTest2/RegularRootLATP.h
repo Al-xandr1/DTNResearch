@@ -64,6 +64,12 @@ class RegularRootLATP : public LevyHotSpotsLATP
     void loadFirstRoot();
     void printFirstRoot();
     void printCurrentRoot();
+    void printRoot(
+            const char* lable,
+            vector<HotSpotData*>* root,
+            vector<unsigned int>* rootSnumber,
+            vector<int>* rootCounter,
+            vector<int>* rootWptsPerVisit);
     void makeLocalProbMatrix(double powA);
     void deleteLocalProbMatrix();
     bool isRootFinished();
