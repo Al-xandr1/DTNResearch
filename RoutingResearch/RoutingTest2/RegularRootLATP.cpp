@@ -159,36 +159,43 @@ void RegularRootLATP::deleteLocalProbMatrix()
 void RegularRootLATP::initialize(int stage) {
     LevyHotSpotsLATP::initialize(stage);
 
+
     // загрузка данных об эталонных маршрутах
     if (!rc) rc = RootsCollection::getInstance();
 
-    if (!rootStatistics) rootStatistics =
-            check_and_cast<RootsPersistenceAndStatistics*>(getParentModule()->getParentModule()->getSubmodule("rootsStatistics"));
+
+    if (!rootStatistics) {
+        // сначала читаем ИНДИВИДУАЛЬНЫЕ настройки
+        // TODO ПРОВЕРИТЬ СООТВЕТСТВИЕ ЭТИХ НАСТРОЕК и ПРОЧИТАННОГО ЭТАЛОННОГО МАРШРУТА !!!
+        rootStatistics = RootsPersistenceAndStatisticsCollection::getInstance()->findPersonalRootStatistics(NodeID);
+        // сейчас делаем так, что ВСЕ должны прочитать индивидуальные настройки
+        ASSERT(rootStatistics);
+
+        if (!rootStatistics)
+            // ... и если не смогли прочитать, то читаем ОБЩИЕ настройки
+            rootStatistics = RootsPersistenceAndStatisticsCollection::getInstance()->getCommonRootStatistics();
+    }
     ASSERT(rootStatistics);
 
-    if (rootPersistence == -1)
+
+    if (rootPersistence == -1) {
         // при инициализации выставляем значение по умолчанию для узла.
         // Далее попробуем прочитать индивидуальное значение из названия файла со средним маршрутом
         rootPersistence = rootStatistics->getPersistenceFromMassCenter();
-    ASSERT(rootPersistence);
+    }
+    ASSERT(rootPersistence != -1);
+
 
     ASSERT(hsc);
-    if (!rootGenerator)
-        if (getParentModule()->getParentModule()->par("useRootStatistics").boolValue()) {
-            // сперва пробуем прочитать настройки непосредственно для текущего узла (TODO ПРОВЕРИТЬ СООТВЕТСТВИЕ ЭТИХ НАСТРОЕК и ПРОЧИТАННОГО ЭТАЛОННОГО МАРШРУТА)
-
-            // todo сначала читаем ИНДИВИДУАЛЬНЫЕ настройки из *Host or RegularRootLATP
-            // todo потом читаем ОБЩИЕ настройки из CommonRoutingNetwork
-
+    if (!rootGenerator) {
+        if (getParentModule()->getParentModule()->par("useRootStatistics").boolValue())
             rootGenerator = new GenerationRootsByStatisticsStrategy(rootStatistics, hsc);
-        }
-        else {
+        else
             rootGenerator = new GenerationRootsByPersistenceStrategy(rootPersistence, hsc);
-        }
+    }
 
 
     if (!firstRoot) loadFirstRoot();
-
     if (!currentRoot) {
         // первый раз ходим по эталонному маршруту
         currentRoot = new vector<HotSpotData*>(*firstRoot);
@@ -415,6 +422,7 @@ void RegularRootLATP::makeNewRoot()
 
 
     // for debug
+    ASSERT(currentRoot && currentRootSnumber && currentRootCounter && currentRootWptsPerVisit);
     printFirstRoot();
     printCurrentRoot();
     // суммы посещений должно быть больше нуля в маршрутах

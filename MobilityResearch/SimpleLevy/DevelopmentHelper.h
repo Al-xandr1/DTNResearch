@@ -13,11 +13,12 @@
 using namespace std;
 
 // Имена директорий и файлов
-#define DEF_TR_DIR     (char*)"./Traces"              //Директория по умолчанию для всeй информации о трассах
-#define DEF_HS_DIR     (char*)"./Traces/hotspotfiles" //Директория по умолчанию для "локаций"
-#define DEF_TRS_DIR    (char*)"./Traces/tracefiles"   //Директория по умолчанию для исходных трасс
-#define DEF_WP_DIR     (char*)"./Traces/waypointfiles"//Директория по умолчанию для "путевых точек"
-#define DEF_RT_DIR     (char*)"./Traces/rootfiles"    //Директория по умолчанию для "маршрутов"
+#define DEF_TR_DIR     (char*)"./Traces"                //Директория по умолчанию для всeй информации о трассах
+#define DEF_HS_DIR     (char*)"./Traces/hotspotfiles"   //Директория по умолчанию для "локаций"
+#define DEF_TRS_DIR    (char*)"./Traces/tracefiles"     //Директория по умолчанию для исходных трасс
+#define DEF_WP_DIR     (char*)"./Traces/waypointfiles"  //Директория по умолчанию для "путевых точек"
+#define DEF_RT_DIR     (char*)"./Traces/rootfiles"      //Директория по умолчанию для "маршрутов"
+#define DEF_PST_DIR    (char*)"./Traces/rootstatistics" //Директория по умолчанию для статистик маршрутов (файлов *.pst)
 
 #define OUT_DIR        (char*)"outTrace"              // директория для сохранения выходной информации
 #define WPS_DIR        (char*)"waypointfiles"         // директория для сохранения сгенерированных путевых точек
@@ -45,7 +46,7 @@ using namespace std;
 // Шаблон файлов
 #define TRACE_PATTERN  (char*)"*.txt"
 #define ROOT_PATTERT   (char*)"*.rot"
-
+#define PST_PATTERT    (char*)"*.pst"
 
 class NamesAndDirs {
 

@@ -225,7 +225,7 @@ int GenerationRootsByStatisticsStrategy::generate(vector<double>* pdf)
     for(unsigned int i = 0; i < pdf->size(); i++) {
         probability += pdf->at(i);
         if (rn <= probability) {
-            random = i; // todo или -1 делать???
+            random = i;
             break;
         }
     }

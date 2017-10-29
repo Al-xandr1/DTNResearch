@@ -36,9 +36,10 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
                 (*infile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> sumTime >> waypointNum;
                 ASSERT(sumTime >= 0 && waypointNum >= 0);
 
+                //контроль появления дублей: две ПОДРЯД одинаковых локации идти не могут
                 if (lastRedHotSpotName) {
-                    //это значит наткнулись на дубль последней строки (или в общем случае вообще на дубль строки)
                     bool nextIter = false;
+                    // если true - значит наткнулись на дубль последней строки (или в общем случае вообще на дубль строки)
                     if (strcmp(lastRedHotSpotName, hotSpotName) == 0) nextIter = true;
                     delete[] lastRedHotSpotName;
                     lastRedHotSpotName = NULL;
@@ -57,7 +58,7 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
         }
         while(FindNextFile(h, &f));
     } else cout << "Directory or files not found\n";
-    cout << "RootsData is initialized." << endl;
+    cout << "RootsData is initialized." << endl << endl;
 
 
     // Инициализация структуры RootsDataShort на основании файла allroots.roo (если он есть) ИЛИ на основе RootsData (если файла нет)
@@ -90,7 +91,7 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
         }
     }
     delete rootFileNames;
-    cout << "RootsDataShort is initialized." << endl;
+    cout << "RootsDataShort is initialized." << endl << endl;
 
 
     // Инициализация структуры generatedRootsData для хранения генерируемых маршрутов для каждого узла по дням
@@ -115,7 +116,7 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
             ASSERT(strcmp(RootsDataShort->at(i).hotSpot[j], RootsData->at(i)->at(j).hotSpotName) == 0);
         }
     }
-    cout << "Consistency is checked." << endl;
+    cout << "Consistency is checked." << endl << endl;
 }
 
 void RootsCollection::collectTheoryRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day) {

@@ -6,7 +6,7 @@
 using namespace std;
 
 #define ASSERT_1(trueVal, errorCode) if(!(trueVal)){exit(errorCode);}
-#define ASSERT_2(trueVal, errorCode, meesage) if(!(trueVal)){cout<<meesage<<endl;exit(errorCode);}
+#define ASSERT_2(trueVal, errorCode, message) if(!(trueVal)){cout<<message<<endl;exit(errorCode);}
 
 struct HotSpot {
     HotSpot(bool isHome, long counter, long double sumTime, long long int totalPoints)
@@ -76,7 +76,7 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
     char RootNamePattern[256];
     buildFullName(RootNamePattern, RootDir, "*.rot");
 
-    char spot[256];
+    char hotSpotName[256];
     long double time = 0;
     long long points = 0;
     long double Xmin, Xmax, Ymin, Ymax;
@@ -90,12 +90,28 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
             ifstream *rfile = new ifstream(name);
             vector<HotSpot *> *root = new vector<HotSpot *>();
             for (unsigned int i = 0; i < spotNames.size(); i++) root->push_back(new HotSpot(false, 0, 0, 0));
+            char *lastRedHotSpotName = NULL;
             bool foundHome = false;
             while (!rfile->eof()) {
-                (*rfile) >> spot >> Xmin >> Xmax >> Ymin >> Ymax >> time >> points;
+                (*rfile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> time >> points;
+                ASSERT_2(time >= 0 && points >= 0, -1235, "time or points are wrong");
+
+                //контроль появления дублей: две ПОДРЯД одинаковых локации идти не могут
+                if (lastRedHotSpotName) {
+                    bool nextIter = false;
+                    // если true - значит наткнулись на дубль последней строки (или в общем случае вообще на дубль строки)
+                    if (strcmp(lastRedHotSpotName, hotSpotName) == 0) nextIter = true;
+                    delete[] lastRedHotSpotName;
+                    lastRedHotSpotName = NULL;
+                    if (nextIter) continue;
+                }
+                lastRedHotSpotName = new char[256];
+                lastRedHotSpotName = strcpy(lastRedHotSpotName, hotSpotName);
+
+                //прочитанная локация НЕ является дублем. Продолжаем загрузку
                 bool foundSpot = false;
                 for (unsigned int i = 0; i < spotNames.size(); i++)
-                    if (strcmp(spotNames[i], spot) == 0) {
+                    if (strcmp(spotNames[i], hotSpotName) == 0) {
                         // первая строка в файле - это домашняя локация - ОДНО её посещение исключается из расчётов
                         if (!foundHome) {
                             root->at(i)->isHome = true;
@@ -107,8 +123,8 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
                         foundSpot = true;
                         break;
                     }
-                ASSERT_2(foundSpot || (string(spot).size() == 0), -1234,
-                         string("spot ='") + string(spot) + string("'"));
+                ASSERT_2(foundSpot || (string(hotSpotName).size() == 0), -1234,
+                         string("hotSpotName ='") + string(hotSpotName) + string("'"));
             }
             roots.push_back(root);
             rfile->close();
@@ -369,9 +385,10 @@ vector<double> *PersistenceCalculator::getAverageCounterVector(vector<int> *summ
     for (unsigned int i = 0; i < averageCounterVector->size(); i++)
         if (summarizedIndicatorVector->at(i) != 0)
             averageCounterVector->at(i) = averageCounterVector->at(i) / (1.0 * summarizedIndicatorVector->at(i));
-        else
+        else {
             // если компонента индикаторного вектора равна нулю, то и компонента суммы тоже должна быть нулевой
-        ASSERT_1(averageCounterVector->at(i) == 0, -4430);
+            ASSERT_1(averageCounterVector->at(i) == 0, -4430);
+        }
 
     return averageCounterVector;
 }
@@ -393,7 +410,7 @@ void PersistenceCalculator::save(char *RootDir) {
     targetName += string("_roots_persistence_statistics.pst");
 
     ofstream out(targetName);
-    out << "<?xml version=\'1.0' ?>" << endl << endl;
+    out << "<?xml version=\"1.0\" ?>" << endl << endl;
     out << "<ROOT-STATISTICS>" << endl;
 
     //region PERSISTENCE

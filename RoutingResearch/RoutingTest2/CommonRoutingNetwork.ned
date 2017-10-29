@@ -32,6 +32,4 @@ network CommonRoutingNetwork
         
     submodules:
         routing: RoutingDaemon;        
-        
-        rootsStatistics: RootsPersistenceAndStatistics;
 }
