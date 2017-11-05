@@ -104,9 +104,20 @@ public:
 
     vector<vector<HotSpotDataRoot> *> *getRootsData() { return RootsData; }
 
-    RootDataShort *getRootDataShortByNodeId(int nodeId) { return &(RootsDataShort->at(nodeId)); }
+    RootDataShort *getRootDataShortByNodeId(int nodeId) {
+        ASSERT(nodeId >= 0 && nodeId < RootsDataShort->size());
+        RootDataShort *rootDataShort = &(RootsDataShort->at(nodeId));
+        // проверяем соответствие параметра id (в названии файла - ЕСЛИ он там есть) и nodeId
+        ASSERT(checkFileIdAndNodeId(rootDataShort->RootName, nodeId));
+        return rootDataShort;
+    }
 
-    vector<HotSpotDataRoot> *getRootDataByNodeId(int nodeId) { return RootsData->at(nodeId); }
+    vector<HotSpotDataRoot> *getRootDataByNodeId(int nodeId) {
+        ASSERT(nodeId >= 0 && nodeId < RootsData->size());
+        // вызываем для контроля соответствия параметра id из названия файла и nodeId
+        getRootDataShortByNodeId(nodeId);
+        return RootsData->at(nodeId);
+    }
 
     vector<vector<vector<HotSpotDataRoot*>*>*> *getGeneratedTheoryRootsData() {return generatedTheoryRootsData;}
 

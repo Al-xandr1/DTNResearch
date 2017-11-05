@@ -86,7 +86,7 @@ private:
             cout << vecName << ": " << endl;
             for (unsigned int i = 0; i < vec->size(); i++) {
                 cout << "'" << vec->at(i) << "'  ";
-                if ((i+1) % 12 == 0) cout << endl;
+                if ((i+1) % 11 == 0) cout << endl;
             }
         } else {
             cout << vecName << ": null" << endl;
@@ -188,8 +188,12 @@ public:
 
     RootsPersistenceAndStatistics* findPersonalRootStatistics(unsigned int nodeId) {
         if (nodeId < personalRootStatisticsList->size()) {
-            return personalRootStatisticsList->at(nodeId);
+            RootsPersistenceAndStatistics* stat = personalRootStatisticsList->at(nodeId);
+            // проверяем соответствие параметра id (в названии файла - ЕСЛИ он там есть) и nodeId
+            ASSERT(checkFileIdAndNodeId(stat->getXmlFileName()->c_str(), nodeId));
+            return stat;
         }
+
         return NULL;
     }
 

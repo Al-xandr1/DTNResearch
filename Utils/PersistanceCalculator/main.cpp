@@ -55,6 +55,8 @@ public:
     void GenerateRotFile(char *RootDir, char *SpotDir);
 
     void save(char *RootDir);
+
+    string getFilePrefix(char *RootDir);
 };
 
 PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
@@ -260,16 +262,9 @@ vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
    формирование файла *.rot со средним маршрутом
 */
 void PersistenceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
-    char RootNamePattern[256];
     char SpotNamePattern[256];
-    buildFullName(RootNamePattern, RootDir, "*.rot");
-    WIN32_FIND_DATA f0;
-    FindFirstFile(RootNamePattern, &f0);
 
-    string fileName(f0.cFileName);
-    std::size_t found = fileName.find("_");
-    ASSERT_1(found != std::string::npos, -115);
-    string targetName = fileName.substr(0, found);
+    string targetName = getFilePrefix(RootDir);
     targetName += string("_persistence=");
 
     vector<HotSpot *> *massCenter = GetMassCenter();
@@ -398,15 +393,7 @@ vector<double> *PersistenceCalculator::getAverageCounterVector(vector<int> *summ
  * Медот сохраняет в xml файл статистичесике данные.
  */
 void PersistenceCalculator::save(char *RootDir) {
-    char RootNamePattern[256];
-    buildFullName(RootNamePattern, RootDir, "*.rot");
-    WIN32_FIND_DATA f0;
-    FindFirstFile(RootNamePattern, &f0);
-
-    string fileName(f0.cFileName);
-    std::size_t found = fileName.find("_");
-    ASSERT_1(found != std::string::npos, -115);
-    string targetName = fileName.substr(0, found);
+    string targetName = getFilePrefix(RootDir);
     targetName += string("_roots_persistence_statistics.pst");
 
     ofstream out(targetName);
@@ -524,4 +511,19 @@ int main(int argc, char **argv) {
     cout << endl << "rot file with average root is generated!!" << endl;
 
     return 0;
+}
+
+string PersistenceCalculator::getFilePrefix(char *RootDir) {
+    char RootNamePattern[256];
+    buildFullName(RootNamePattern, RootDir, "*.rot");
+    WIN32_FIND_DATA f0;
+    FindFirstFile(RootNamePattern, &f0);
+
+    string fileName(f0.cFileName);
+    std::size_t found = fileName.find("_id=");
+    cout << "!!! fileName = '" << fileName << "'" << endl;
+    ASSERT_1(found != std::string::npos, -115);
+    string fileNamePrefix = fileName.substr(0, (found + 7));
+    cout << "!!! fileNamePrefix = '" << fileNamePrefix << "'" << endl;
+    return fileNamePrefix;
 }

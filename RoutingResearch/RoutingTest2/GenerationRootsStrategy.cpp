@@ -147,7 +147,8 @@ bool GenerationRootsByStatisticsStrategy::generateNewRoot(
     currentRootCounter = new vector<int>();
     currentRootWptsPerVisit = new vector<int>();
 
-    const int dimension = generateRootDimension();
+    int dimension;
+    while ((dimension = generateRootDimension()) <= 0);
     ASSERT(dimension > 0);
 
     int currentDimension = 0;
@@ -220,14 +221,28 @@ int GenerationRootsByStatisticsStrategy::generate(vector<double>* pdf)
 {
     int random = -1;
     double rn, probability = 0;
-    rn = (double) rand() / RAND_MAX;
+    rn = ((double) rand()) / RAND_MAX;
+    if (rn <= 0 || rn >=1) {cout << "1 WARNING: rn=" << rn << endl; exit(-441);};
 
     for(unsigned int i = 0; i < pdf->size(); i++) {
         probability += pdf->at(i);
+        //todo rn может получиться 0 или 1: тогда можем получить индекс 0 и -1 соответственно (т.к. из-за погрешности сумма PDF может быть меньше 1)
         if (rn <= probability) {
             random = i;
+            if (random <= 0) {
+                cout << "2 WARNING: rn=" << rn << endl;
+                cout << "2 WARNING: probability=" << probability << endl;
+                cout << "2 WARNING: random=" << random << endl;
+                cout << "2 WARNING: i=" << i << endl;
+            };
             break;
         }
     }
+    if (random <= 0) {
+        cout << "3 WARNING: rn=" << rn << endl;
+        cout << "3 WARNING: probability=" << probability << endl;
+        cout << "3 WARNING: random=" << random << endl;
+    };
+
     return random;
 }

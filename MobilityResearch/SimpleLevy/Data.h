@@ -70,8 +70,8 @@ struct RootDataShort {
         hotSpot = new char*[length];
         for(int i=0; i<length; i++ ){ hotSpot[i]=new char[16]; info>>hotSpot[i]; }
         persistence = extractDoubleParameter(RootName, PERSISTENCE);
-        //если коэффициент персистентности есть, то он должен быть больше нуля
-        if (persistence != NULL) ASSERT(*(persistence) > 0);
+        //если коэффициент персистентности есть, то он должен быть больше нуля или равен ему ИЛИ NaN (специфичная проверка)
+        if (persistence) ASSERT( (*(persistence) >= 0) || (*(persistence) != *(persistence)));
     }
 
     void print() {

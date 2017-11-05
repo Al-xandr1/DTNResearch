@@ -168,12 +168,12 @@ void RegularRootLATP::initialize(int stage) {
         // ñíà÷àëà ÷èòàåì ÈÍÄÈÂÈÄÓÀËÜÍÛÅ íàñòðîéêè
         // TODO ÏÐÎÂÅÐÈÒÜ ÑÎÎÒÂÅÒÑÒÂÈÅ ÝÒÈÕ ÍÀÑÒÐÎÅÊ è ÏÐÎ×ÈÒÀÍÍÎÃÎ ÝÒÀËÎÍÍÎÃÎ ÌÀÐØÐÓÒÀ !!!
         rootStatistics = RootsPersistenceAndStatisticsCollection::getInstance()->findPersonalRootStatistics(NodeID);
+
         // ñåé÷àñ äåëàåì òàê, ÷òî ÂÑÅ äîëæíû ïðî÷èòàòü èíäèâèäóàëüíûå íàñòðîéêè
         ASSERT(rootStatistics);
-
-        if (!rootStatistics)
-            // ... è åñëè íå ñìîãëè ïðî÷èòàòü, òî ÷èòàåì ÎÁÙÈÅ íàñòðîéêè
-            rootStatistics = RootsPersistenceAndStatisticsCollection::getInstance()->getCommonRootStatistics();
+//        if (!rootStatistics)
+//            // ... è åñëè íå ñìîãëè ïðî÷èòàòü, òî ÷èòàåì ÎÁÙÈÅ íàñòðîéêè
+//            rootStatistics = RootsPersistenceAndStatisticsCollection::getInstance()->getCommonRootStatistics();
     }
     ASSERT(rootStatistics);
 

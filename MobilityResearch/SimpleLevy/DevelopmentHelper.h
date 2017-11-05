@@ -95,6 +95,11 @@ const char* buildIntParameter(const char* name, int value);
 const char* buildParameter(const char* name, const char* value);
 
 /**
+ * Метод проверяет соответствие параметра id (в названии файла - ЕСЛИ он там есть) и nodeId
+ */
+bool checkFileIdAndNodeId(const char* filename, int nodeId);
+
+/**
  * Извлекает значение параметра из строки (имени файла).
  * Извлекает параметр методом extractParameter и преобразует в число.
  *
