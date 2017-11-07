@@ -12,6 +12,9 @@
 
 using namespace std;
 
+#define myDelete(obj)      if(obj){delete   obj; obj = NULL;}
+#define myDeleteArray(obj) if(obj){delete[] obj; obj = NULL;}
+
 // Имена директорий и файлов
 #define DEF_TR_DIR     (char*)"./Traces"                //Директория по умолчанию для всeй информации о трассах
 #define DEF_HS_DIR     (char*)"./Traces/hotspotfiles"   //Директория по умолчанию для "локаций"

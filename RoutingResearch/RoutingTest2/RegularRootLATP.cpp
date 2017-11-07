@@ -22,6 +22,7 @@ RegularRootLATP::RegularRootLATP()
     currentRootSnumber = NULL;
     currentRootCounter = NULL;
 
+    currentRootActualTrack  = NULL;
     currentRootCounterSAVED = NULL;
 
     isLProbReady = false;
@@ -203,9 +204,10 @@ void RegularRootLATP::initialize(int stage) {
         currentRootCounter = new vector<int>(*firstRootCounter);
         currentRootWptsPerVisit = new vector<int>(*firstRootWptsPerVisit);
         currentRootCounterSAVED = new vector<int>(*currentRootCounter);
+        currentRootActualTrack = new vector<unsigned int>();
 
         // начальная локация - это первая локация текущего маршрута
-        setCurRootIndex(0);
+        setCurRootIndex(0, true);
         //printCurrentRoot();
 
         // —охран€ем дл€ статистики сгенерированный маршрут дл€ первого дн€ в RootsCollection.
@@ -220,7 +222,7 @@ void RegularRootLATP::initialize(int stage) {
 }
 
 
-void RegularRootLATP::setCurRootIndex(unsigned int currentRootIndex)
+void RegularRootLATP::setCurRootIndex(unsigned int currentRootIndex, bool writeIndexToTrack)
 {
     curRootIndex = currentRootIndex;
     currentHSindex = currentRootSnumber->at(curRootIndex);
@@ -232,6 +234,12 @@ void RegularRootLATP::setCurRootIndex(unsigned int currentRootIndex)
 
     // локаци€ в нулевом индексе - это должна быть домашн€€ локаци€
     if (curRootIndex == 0) ASSERT(homeHS == currentRoot->at(curRootIndex));
+
+    if (writeIndexToTrack) {
+        ASSERT(currentRootActualTrack);
+        ASSERT(curRootIndex >= 0);
+        currentRootActualTrack->push_back(curRootIndex);
+    }
 }
 
 
@@ -279,7 +287,7 @@ bool RegularRootLATP::findNextHotSpot()
 
     if( hh == 0 ) return false;                          // маршрут кончился
     if( hh == currentRootCounter->at(ii) ) {             // осталась одна локация (может быть, с несколькими посещениями)
-        setCurRootIndex(ii);
+        setCurRootIndex(ii, true);
         (*currentRootCounter)[curRootIndex]=1;           // если посещений несколько, заменяем одним
 
         return true;
@@ -300,7 +308,7 @@ bool RegularRootLATP::findNextHotSpot()
     for(unsigned int i=0; i<currentRoot->size(); i++) {
         if(curRootIndex != i) pr+=LocalProbMatrix[curRootIndex][i];
         if(rn <= pr) {
-            setCurRootIndex(i);
+            setCurRootIndex(i, true);
             break;
         }
     }
@@ -348,7 +356,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
 
     // маршрут кончилс€, идЄм домой
     if (useWaypointCounter) ASSERT(currentHSWaypointNum == 0);
-    setCurRootIndex(0);
+    setCurRootIndex(0, false);
 
     // проверяем, не дома ли мы уже
     if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
@@ -404,16 +412,25 @@ void RegularRootLATP::makeNewRoot()
             (*currentRootCounterSAVED)[i] -= (*currentRootCounter)[i];
             ASSERT((*currentRootCounterSAVED)[i] >= 0);
         }
-        RootsCollection::getInstance()->collectActualRoot(currentRoot, currentRootSnumber, currentRootCounterSAVED, NodeID, currentDay - 1);
+
+        const int counterSum = getSum(*currentRootCounterSAVED);
+        ASSERT(counterSum >= 0);
+        //  аждое посещение локации фиксируетс€ в currentRootActualTrack.
+        // ќднако в RegularRootLATP::findNextHotSpot последн€€ локаци€ с несколькими посещениесми замен€етс€ одним посещением
+        // ѕоэтому сумма всех посещений, должна быть больше или равна длине трека
+        ASSERT(((unsigned int) counterSum) >= currentRootActualTrack->size());
+
+        RootsCollection::getInstance()->collectActualRoot(currentRoot, currentRootSnumber, currentRootCounterSAVED, currentRootActualTrack, NodeID, currentDay - 1);
         cout << endl << "Saved old root for NodeID: " << NodeID << " at previous day: " << (currentDay - 1) << endl;
 
         // удал€ем старый маршрут
         deleteLocalProbMatrix();
-        delete currentRoot;
-        delete currentRootSnumber;
-        delete currentRootCounter;
-        delete currentRootWptsPerVisit;
-        delete currentRootCounterSAVED;
+        myDelete(currentRoot);
+        myDelete(currentRootSnumber);
+        myDelete(currentRootCounter);
+        myDelete(currentRootWptsPerVisit);
+        myDelete(currentRootCounterSAVED);
+        myDelete(currentRootActualTrack);
     }
 
 
@@ -437,7 +454,8 @@ void RegularRootLATP::makeNewRoot()
 
     makeLocalProbMatrix(powA);
     // начальная локация - это первая локация текущего маршрута - она же домашн€€
-    setCurRootIndex(0);
+    currentRootActualTrack = new vector<unsigned int>();
+    setCurRootIndex(0, true);
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 

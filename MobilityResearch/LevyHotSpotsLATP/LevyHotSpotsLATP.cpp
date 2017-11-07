@@ -332,10 +332,8 @@ void LevyHotSpotsLATP::saveStatistics() {
                 vector<HotSpotDataRoot*>* dailyRoot = theoryRootsPerNode->at(j);
                 for (unsigned int k = 0; k < dailyRoot->size(); k++) {
                     HotSpotDataRoot* hs = dailyRoot->at(k);
-                    for (unsigned int count = 0; count < hs->counter; count++) {
-                        (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                                  << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-                    }
+                    (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                              << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
                 }
                 rtFile->close();
             }
@@ -356,10 +354,8 @@ void LevyHotSpotsLATP::saveStatistics() {
                 vector<HotSpotDataRoot*>* dailyRoot = actualRootsPerNode->at(j);
                 for (unsigned int k = 0; k < dailyRoot->size(); k++) {
                     HotSpotDataRoot* hs = dailyRoot->at(k);
-                    for (unsigned int count = 0; count < hs->counter; count++) {
-                        (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                                  << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-                    }
+                    (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                              << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
                 }
                 rtFile->close();
             }
