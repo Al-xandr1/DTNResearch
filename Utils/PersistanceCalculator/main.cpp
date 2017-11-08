@@ -470,10 +470,10 @@ void PersistenceCalculator::save(char *RootDir) {
     out
             << "    <ROOTS-DIMENSION-HISTOGRAM info=\"Histogram of root's dimensions (sum of non zero components of a root)\">"
             << endl;
-    out << "        <MIN> " << dimensionsHistogram->min << " <MIN>" << endl;
-    out << "        <MAX> " << dimensionsHistogram->max << " <MAX>" << endl;
-    out << "        <AVERAGE> " << dimensionsHistogram->average << " <AVERAGE>" << endl;
-    out << "        <COUNT-OF-VALS> " << dimensionsHistogram->countOfVals << " <COUNT-OF-VALS>" << endl;
+    out << "        <MIN> " << dimensionsHistogram->min << " </MIN>" << endl;
+    out << "        <MAX> " << dimensionsHistogram->max << " </MAX>" << endl;
+    out << "        <AVERAGE> " << dimensionsHistogram->average << " </AVERAGE>" << endl;
+    out << "        <COUNT-OF-VALS> " << dimensionsHistogram->countOfVals << " </COUNT-OF-VALS>" << endl;
     out << "        <VALS> " << endl;
     for (unsigned int i = 0; i < dimensionsHistogram->data->size(); i++)
         out << dimensionsHistogram->data->at(i) << "  ";
