@@ -2,6 +2,8 @@
 #include <fstream>
 #include <vector>
 #include <windows.h>
+#include <limits>
+#include <algorithm>
 
 using namespace std;
 
@@ -18,6 +20,16 @@ struct HotSpot {
     long long totalPoints;  // общее количество путевых точек сделанных в данной локации в рамках данного маршрута
 };
 
+struct Histogram {
+    Histogram(vector<int> *data, int countOfVals, double min, double max, double average)
+            : data(data), countOfVals(countOfVals), max(max), min(min), average(average) {}
+
+    vector<int> *data;      // значения гистограммы
+    int countOfVals;        // количество учтённых отсчётов гистограммы
+    double max;             // максимальное значение
+    double min;             // минимальное значение
+    double average;         // среднее значение
+};
 
 char *buildFullName(char *buffer, char *dir, const char *fileName) {
     strcpy(buffer, dir);
@@ -48,7 +60,7 @@ public:
 
     vector<int> *getIndicationVector(vector<HotSpot *> *root);
 
-    vector<int> *getRootsDimensionsHistogram();
+    Histogram *getRootsDimensionsHistogram();
 
     vector<double> *getAverageCounterVector(vector<int> *summarizedIndicatorVector);
 
@@ -96,7 +108,7 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
             bool foundHome = false;
             while (!rfile->eof()) {
                 (*rfile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> time >> points;
-                ASSERT_2(time >= 0 && points >= 0, -1235, "time or points are wrong");
+                // из-за сгенерированных маршрутов ASSERT_2(time >= 0 && points >= 0, -1235, "time or points are wrong");
 
                 //контроль появления дублей: две ПОДРЯД одинаковых локации идти не могут
                 if (lastRedHotSpotName) {
@@ -248,7 +260,7 @@ vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
         averageCounter /= (1.0 * roots.size());
         averageSumTime /= (1.0 * roots.size());
         averageTotalPoints /= (1.0 * roots.size());
-        ASSERT_1(averageCounter >= 0 && averageSumTime >= 0 && averageTotalPoints >= 0, -321);
+        // из-за сгенерированных маршрутов ASSERT_1(averageCounter >= 0 && averageSumTime >= 0 && averageTotalPoints >= 0, -321);
 
         //TODO проставлять акуальную домашнюю локацию.... КАК ЕЁ ОПРЕДЕЛИТЬ??? Сейчас первая локация с НЕНУЛЕВОЙ кратностью становиться домашней
         massCenter->push_back(
@@ -268,7 +280,7 @@ void PersistenceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
     targetName += string("_persistence=");
 
     vector<HotSpot *> *massCenter = GetMassCenter();
-    double persistence = CalculatePersistence(massCenter, "massCenter");
+    double persistence = CalculatePersistence(massCenter, (char *) "massCenter");
 
     string persistenceStr = to_string(persistence).c_str(); //конвертация double в char
     targetName += string(persistenceStr);
@@ -319,14 +331,18 @@ vector<int> *PersistenceCalculator::getSummarizedIndicatorVector() {
  * Метод получает гистограмму размерности маршрутов
  * (или, иначе, гистограмму весов векторов в многомерном пространстве маршрутов)
  */
-vector<int> *PersistenceCalculator::getRootsDimensionsHistogram() {
-    vector<int> *dimensionsHistogram = new vector<int>(spotNames.size() + 1);
+Histogram *PersistenceCalculator::getRootsDimensionsHistogram() {
+    vector<int> *data = new vector<int>(spotNames.size() + 1);
     // +1 в размере т.к. веса векторов изменяются от 0 по spotNames.size()
-    for (unsigned int i = 0; i < dimensionsHistogram->size(); i++) dimensionsHistogram->at(i) = 0;
+    for (unsigned int i = 0; i < data->size(); i++) data->at(i) = 0;
+
+    double min = std::numeric_limits<double>::max(); // maximum value int;
+    double max = std::numeric_limits<double>::min(); // minimum value int;
+    double average = 0;
 
     for (unsigned int i = 0; i < roots.size(); i++) {
         vector<int> *indicatorVector = getIndicationVector(roots.at(i));
-        ASSERT_1(dimensionsHistogram->size() == (indicatorVector->size() + 1), -4322);
+        ASSERT_1(data->size() == (indicatorVector->size() + 1), -4322);
         int weight = 0;
         for (unsigned int j = 0; j < indicatorVector->size(); j++) {
             int indicator = indicatorVector->at(j);
@@ -334,12 +350,18 @@ vector<int> *PersistenceCalculator::getRootsDimensionsHistogram() {
             weight += indicator;
         }
         ASSERT_1(weight >= 0 && weight <= spotNames.size(), -4434);
-        dimensionsHistogram->at(weight)++;
+
+        data->at((unsigned int) weight)++;
+        average += weight;
+        min = std::min(min, (double) weight);
+        max = std::max(max, (double) weight);
 
         delete indicatorVector;
     }
 
-    return dimensionsHistogram;
+    average /= (1.0 * roots.size());
+
+    return new Histogram(data, roots.size(), min, max, average);
 }
 
 /**
@@ -398,12 +420,14 @@ void PersistenceCalculator::save(char *RootDir) {
 
     ofstream out(targetName);
     out << "<?xml version=\"1.0\" ?>" << endl << endl;
-    out << "<ROOT-STATISTICS>" << endl;
+    out << "<ROOT-STATISTICS info=\"Collected statistics for set of root files\">" << endl;
 
     //region PERSISTENCE
-    out << "    <PERSISTENCE>" << endl;
+    out << "    <PERSISTENCE info=\"Data about persistence for all root files\">" << endl;
 
-    out << "        <COEFFICIENTS>" << endl;
+    out
+            << "        <COEFFICIENTS info=\"Coefficients (second number) for every root (first number) marked as ethalon\">"
+            << endl;
     double averagePersistence = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
         double persistence;
@@ -412,13 +436,14 @@ void PersistenceCalculator::save(char *RootDir) {
     }
     out << "        </COEFFICIENTS>" << endl;
 
-    out << "        <AVERAGE-PERSISTENCE> " << (averagePersistence /= roots.size()) << " </AVERAGE-PERSISTENCE>"
-        << endl;
+    out << "        <AVERAGE-PERSISTENCE info=\"Average coefficient of persistence (based on the tag COEFFICIENTS)\"> "
+        << (averagePersistence /= roots.size()) << " </AVERAGE-PERSISTENCE>" << endl;
 
-    out << "        <MASS-CENTER> " << endl;
+    out << "        <MASS-CENTER info=\"Mass center for set of input vectors (roots)\"> " << endl;
     vector<HotSpot *> *massCenter = GetMassCenter();
-    out << "            <COEF> " << CalculatePersistence(massCenter, "massCenter") << " </COEF>" << endl;
-    out << "            <VALS> " << endl;
+    out << "            <COEF info=\"Coefficient of persistence for mass center marked as ethalon\">"
+        << CalculatePersistence(massCenter, (char *) "massCenter") << " </COEF>" << endl;
+    out << "            <VALS info=\"Components of the mass center (counters for corresponding HOT-SPOTS)\"> " << endl;
     for (unsigned int i = 0; i < massCenter->size(); i++) {
         out << massCenter->at(i)->counter << "  ";
     }
@@ -441,10 +466,17 @@ void PersistenceCalculator::save(char *RootDir) {
 
 
     //region ROOTS DIMENSIONS HISTOGRAM
-    vector<int> *dimensionsHistogram = getRootsDimensionsHistogram();
-    out << "    <ROOTS-DIMENSION-HISTOGRAM>" << endl;
+    Histogram *dimensionsHistogram = getRootsDimensionsHistogram();
+    out
+            << "    <ROOTS-DIMENSION-HISTOGRAM info=\"Histogram of root's dimensions (sum of non zero components of a root)\">"
+            << endl;
+    out << "        <MIN> " << dimensionsHistogram->min << " <MIN>" << endl;
+    out << "        <MAX> " << dimensionsHistogram->max << " <MAX>" << endl;
+    out << "        <AVERAGE> " << dimensionsHistogram->average << " <AVERAGE>" << endl;
+    out << "        <COUNT-OF-VALS> " << dimensionsHistogram->countOfVals << " <COUNT-OF-VALS>" << endl;
     out << "        <VALS> " << endl;
-    for (unsigned int i = 0; i < dimensionsHistogram->size(); i++) out << dimensionsHistogram->at(i) << "  ";
+    for (unsigned int i = 0; i < dimensionsHistogram->data->size(); i++)
+        out << dimensionsHistogram->data->at(i) << "  ";
     out << endl << "        </VALS> " << endl;
     out << "    </ROOTS-DIMENSION-HISTOGRAM>" << endl;
     //endregion
@@ -452,7 +484,9 @@ void PersistenceCalculator::save(char *RootDir) {
 
     //region SUMMARIZED INDICATOR VECTOR (HISTOGRAM)
     vector<int> *summarizedIndicatorVector = getSummarizedIndicatorVector();
-    out << "    <SUMMARIZED-INDICATOR-VECTOR>" << endl;
+    out
+            << "    <SUMMARIZED-INDICATOR-VECTOR info=\"Each component of this vector is the sum of the corresponding roots' components\">"
+            << endl;
     out << "        <VALS> " << endl;
     for (unsigned int i = 0; i < summarizedIndicatorVector->size(); i++)
         out << summarizedIndicatorVector->at(i) << "  ";
@@ -463,7 +497,8 @@ void PersistenceCalculator::save(char *RootDir) {
 
     //region AVERAGE COUNTER VECTOR
     vector<double> *averageCounterVector = getAverageCounterVector(summarizedIndicatorVector);
-    out << "    <AVERAGE-COUNTER-VECTOR>" << endl;
+    out << "    <AVERAGE-COUNTER-VECTOR info=\"Calculated as: averageCounterVector[i] / summarizedIndicatorVector[i]\">"
+        << endl;
     out << "        <VALS> " << endl;
     for (unsigned int i = 0; i < averageCounterVector->size(); i++) out << averageCounterVector->at(i) << "  ";
     out << endl << "        </VALS> " << endl;
@@ -472,7 +507,7 @@ void PersistenceCalculator::save(char *RootDir) {
 
 
     //region HOT SPOTS (FOR DEBUG)
-    out << "    <HOT-SPOTS>" << endl;
+    out << "    <HOT-SPOTS info=\"Vector of corresponding hotspots\">" << endl;
     out << "        <VALS> " << endl;
     for (unsigned int i = 0; i < spotNames.size(); i++) out << spotNames.at(i) << "  ";
     out << endl << "        </VALS> " << endl;
@@ -488,12 +523,12 @@ int main(int argc, char **argv) {
     char *hotspotFilesDir;     //full path name of hot spot files directory
     switch (argc) {
         case 1 :
-            rootFilesDir = "./rootfiles";
-            hotspotFilesDir = "./hotspotfiles";
+            rootFilesDir = (char *) "./rootfiles";
+            hotspotFilesDir = (char *) "./hotspotfiles";
             break;
         case 2 :
             rootFilesDir = argv[1];
-            hotspotFilesDir = "./hotspotfiles";
+            hotspotFilesDir = (char *) "./hotspotfiles";
             break;
         case 3 :
         default:
