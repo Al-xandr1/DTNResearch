@@ -1,3 +1,4 @@
+import org.apache.commons.lang.StringUtils;
 import uk.me.jstott.jcoord.LatLng;
 import uk.me.jstott.jcoord.UTMRef;
 
@@ -19,7 +20,7 @@ public class Main {
     static final String DB_FOLDER_NAME = "data";
     static final String TRACES_FOLDER_NAME = "tracefiles";
 
-    static final Pattern DB_FILES_PATTERN = Pattern.compile("(?<CLEARNAME>CenceMeLiteLog\\d{1,2})\\.txt");
+    static final Pattern DB_FILES_PATTERN = Pattern.compile("(?<CLEARNAME>CenceMeLiteLog_id=\\d{1,3})_\\.txt");
     static final String CLEARNAME = "CLEARNAME";
     static final String TRACE_FILE_SUFFIX = "_trace.txt";
     static final String SEPARATOR = System.getProperty("file.separator");
@@ -144,7 +145,8 @@ public class Main {
             int day = 1;
             String fileName;
             //если "делитель" включён, то нужно имя заменить на другок
-            if (DIVIDE_BY_DAYS) fileName = fullOutputFileName.replaceAll("\\.txt", "_day_" + day + ".txt");
+            if (DIVIDE_BY_DAYS)
+                fileName = fullOutputFileName.replaceAll("\\.txt", "_day=" + toPaddedString(day) + "_.txt");
             else fileName = fullOutputFileName;
             PrintWriter printWriter = new PrintWriter(new FileWriter(fileName));
             boolean newDay;
@@ -156,7 +158,7 @@ public class Main {
                     printWriter.close();
                     day++;
                     printWriter = new PrintWriter(new FileWriter(fullOutputFileName.replaceAll("\\.txt",
-                            "_day_" + day + ".txt")));
+                            "_day=" + toPaddedString(day) + "_.txt")));
                     //обрабатываем текущую запись ещё раз
                     newDay = processLine(printWriter, line);
                     assert !newDay;
@@ -451,5 +453,9 @@ public class Main {
         final long millis = Long.parseLong(timestamp);
         assert millis > 0;
         return millis;
+    }
+
+    private static String toPaddedString(int day) {
+        return StringUtils.leftPad(String.valueOf(day), 3, "0");
     }
 }

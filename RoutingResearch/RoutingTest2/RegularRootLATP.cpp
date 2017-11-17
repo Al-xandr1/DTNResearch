@@ -5,8 +5,9 @@ Define_Module(RegularRootLATP);
 RegularRootLATP::RegularRootLATP()
 {
     rc = NULL;
-
+    rootStatistics  = NULL;
     rootPersistence = -1;
+    rootGenerator   = NULL;
 
     firstRoot        = NULL;
     firstRootSnumber = NULL;
@@ -21,6 +22,7 @@ RegularRootLATP::RegularRootLATP()
     currentRootSnumber = NULL;
     currentRootCounter = NULL;
 
+    currentRootActualTrack  = NULL;
     currentRootCounterSAVED = NULL;
 
     isLProbReady = false;
@@ -49,6 +51,7 @@ void RegularRootLATP::loadFirstRoot()
 
     for(unsigned int i=1; i<root->size(); i++ ) {
         h = hsc->findHotSpotbyName(root->at(i).hotSpotName, Snum);
+        ASSERT(h); // обязаны найти эту локацию в полном наборе
         for(unsigned int j=0; j<firstRoot->size(); j++)
             if( firstRoot->at(j)==h ) {
                 firstRootCounter->at(j)+=1;
@@ -79,48 +82,44 @@ void RegularRootLATP::loadFirstRoot()
 }
 
 
-void RegularRootLATP::printFirstRoot()
-{
-    ASSERT(firstRoot != NULL && hsc != NULL);
-    int totalRepeats = 0,
-        totalWPTS    = 0;
-    for(unsigned int i=0; i<firstRoot->size(); i++) {
-        cout << NodeID
-                  << " First Root: " << (firstRoot->at(i))->hotSpotName
-                  << " Snum=" << firstRootSnumber->at(i)
-                  << " repeat=" << firstRootCounter->at(i)
-                  << " wptsPerRepeat=" << firstRootWptsPerVisit->at(i) <<  endl;
-        totalRepeats += firstRootCounter->at(i);
-        totalWPTS += firstRootCounter->at(i) * firstRootWptsPerVisit->at(i);
-    }
-    int originTotalWPTS = 0;
-    vector<HotSpotDataRoot>* root = rc->getRootDataByNodeId(NodeID);
-    for (unsigned int i=0; i<root->size(); i++) originTotalWPTS += root->at(i).waypointNum;
-    cout << NodeID << "\t\t\t\t totalRepeats=" << totalRepeats
-         << " totalWPTS=" << totalWPTS << " originTotalWPTS=" << originTotalWPTS << endl;
-    cout << "\t\t\t\t rootPersistence = " << rootPersistence << endl;
+void RegularRootLATP::printFirstRoot() {
+    printRoot("First Root: ", firstRoot, firstRootSnumber, firstRootCounter, firstRootWptsPerVisit);
 }
 
 
-void RegularRootLATP::printCurrentRoot()
+void RegularRootLATP::printCurrentRoot() {
+    printRoot("Current Root: ", currentRoot, currentRootSnumber, currentRootCounter, currentRootWptsPerVisit);
+}
+
+
+void RegularRootLATP::printRoot(
+        const char* lable,
+        vector<HotSpotData*>* root,
+        vector<unsigned int>* rootSnumber,
+        vector<int>* rootCounter,
+        vector<int>* rootWptsPerVisit)
 {
-    ASSERT(currentRoot != NULL && hsc != NULL);
+    ASSERT(root != NULL && hsc != NULL);
     int totalRepeats = 0,
         totalWPTS    = 0;
-    for(unsigned int i=0; i<currentRoot->size(); i++) {
-        cout << NodeID
-                  << " Current Root: " << (currentRoot->at(i))->hotSpotName
-                  << " Snum=" << currentRootSnumber->at(i)
-                  << " repeat=" << currentRootCounter->at(i)
-                  << " wptsPerRepeat=" << currentRootWptsPerVisit->at(i) << endl;
-        totalRepeats += currentRootCounter->at(i);
-        totalWPTS += currentRootCounter->at(i) * currentRootWptsPerVisit->at(i);
+    for(unsigned int i = 0; i < root->size(); i++) {
+        cout << "NodeID = " << NodeID << ": "
+                  << lable << (root->at(i))->hotSpotName
+                  << " Snum=" << rootSnumber->at(i)
+                  << " repeat=" << rootCounter->at(i)
+                  << " wptsPerRepeat=" << rootWptsPerVisit->at(i) <<  endl;
+        totalRepeats += rootCounter->at(i);
+        totalWPTS += rootCounter->at(i) * rootWptsPerVisit->at(i);
     }
     int originTotalWPTS = 0;
-    vector<HotSpotDataRoot>* root = rc->getRootDataByNodeId(NodeID);
-    for (unsigned int i=0; i<root->size(); i++) originTotalWPTS += root->at(i).waypointNum;
-    cout << NodeID << "\t\t\t\t totalRepeats=" << totalRepeats
+    vector<HotSpotDataRoot>* originRoot = rc->getRootDataByNodeId(NodeID);
+    for (unsigned int i = 0; i < originRoot->size(); i++)
+        originTotalWPTS += originRoot->at(i).waypointNum;
+    cout << "NodeID = " << NodeID << ":\t\t\t\t totalRepeats=" << totalRepeats
          << " totalWPTS=" << totalWPTS << " originTotalWPTS=" << originTotalWPTS << endl;
+    cout << "NodeID = " << NodeID << ":\t\t\t\t rootPersistence = " << rootPersistence << endl;
+    RootDataShort* originRootShort = rc->getRootDataShortByNodeId(NodeID);
+    cout << "NodeID = " << NodeID << ":\t\t\t\t root filename = " << originRootShort->RootName << endl << endl;
 }
 
 
@@ -161,16 +160,43 @@ void RegularRootLATP::deleteLocalProbMatrix()
 void RegularRootLATP::initialize(int stage) {
     LevyHotSpotsLATP::initialize(stage);
 
+
     // загрузка данных об эталонных маршрутах
     if (!rc) rc = RootsCollection::getInstance();
 
-    if (rootPersistence == -1)
-        // при инициализации выставляем значение по умолчанию для узал.
+
+    if (!rootStatistics) {
+        // сначала читаем ИНДИВИДУАЛЬНЫЕ настройки
+        // TODO ПРОВЕРИТЬ СООТВЕТСТВИЕ ЭТИХ НАСТРОЕК и ПРОЧИТАННОГО ЭТАЛОННОГО МАРШРУТА !!!
+        rootStatistics = RootsPersistenceAndStatisticsCollection::getInstance()->findPersonalRootStatistics(NodeID);
+
+        // сейчас делаем так, что ВСЕ должны прочитать индивидуальные настройки
+        ASSERT(rootStatistics);
+//        if (!rootStatistics)
+//            // ... и если не смогли прочитать, то читаем ОБЩИЕ настройки
+//            rootStatistics = RootsPersistenceAndStatisticsCollection::getInstance()->getCommonRootStatistics();
+    }
+    ASSERT(rootStatistics);
+
+
+    if (rootPersistence == -1) {
+        // при инициализации выставляем значение по умолчанию для узла.
         // Далее попробуем прочитать индивидуальное значение из названия файла со средним маршрутом
-        rootPersistence = getParentModule()->par("rootPersistence").doubleValue();
+        rootPersistence = rootStatistics->getPersistenceFromMassCenter();
+    }
+    ASSERT(rootPersistence != -1);
+
+
+    ASSERT(hsc);
+    if (!rootGenerator) {
+        if (getParentModule()->getParentModule()->par("useRootStatistics").boolValue())
+            rootGenerator = new GenerationRootsByStatisticsStrategy(rootStatistics, hsc);
+        else
+            rootGenerator = new GenerationRootsByPersistenceStrategy(rootPersistence, hsc);
+    }
+
 
     if (!firstRoot) loadFirstRoot();
-
     if (!currentRoot) {
         // первый раз ходим по эталонному маршруту
         currentRoot = new vector<HotSpotData*>(*firstRoot);
@@ -178,13 +204,10 @@ void RegularRootLATP::initialize(int stage) {
         currentRootCounter = new vector<int>(*firstRootCounter);
         currentRootWptsPerVisit = new vector<int>(*firstRootWptsPerVisit);
         currentRootCounterSAVED = new vector<int>(*currentRootCounter);
+        currentRootActualTrack = new vector<unsigned int>();
 
         // начальнаЯ локациЯ - это перваЯ локациЯ текущего маршрута
-        curRootIndex=0;
-        currentHSindex = currentRootSnumber->at(curRootIndex);
-        ASSERT(homeHS == currentRoot->at(curRootIndex));
-        RegularRootLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
-
+        setCurRootIndex(0, true);
         //printCurrentRoot();
 
         // Сохраняем для статистики сгенерированный маршрут для первого дня в RootsCollection.
@@ -199,12 +222,24 @@ void RegularRootLATP::initialize(int stage) {
 }
 
 
-void RegularRootLATP::setCurrentHSbordersWith(HotSpotData* hsi)
+void RegularRootLATP::setCurRootIndex(unsigned int currentRootIndex, bool writeIndexToTrack)
 {
-    LevyHotSpotsLATP::setCurrentHSbordersWith(hsi);
+    curRootIndex = currentRootIndex;
+    currentHSindex = currentRootSnumber->at(curRootIndex);
+
+    LevyHotSpotsLATP::setCurrentHSbordersWith(currentRoot->at(curRootIndex));
     //нужно заново выставить текущий счётчик на среднее значение,
     //т.к. посещение этой локации может быть второй раз
     currentHSWaypointNum = currentRootWptsPerVisit->at(curRootIndex);
+
+    // локация в нулевом индексе - это должна быть домашняя локация
+    if (curRootIndex == 0) ASSERT(homeHS == currentRoot->at(curRootIndex));
+
+    if (writeIndexToTrack) {
+        ASSERT(currentRootActualTrack);
+        ASSERT(curRootIndex >= 0);
+        currentRootActualTrack->push_back(curRootIndex);
+    }
 }
 
 
@@ -252,10 +287,8 @@ bool RegularRootLATP::findNextHotSpot()
 
     if( hh == 0 ) return false;                          // маршрут кончилсЯ
     if( hh == currentRootCounter->at(ii) ) {             // осталась одна локациЯ (может быть, с несколькими посещениЯми)
-        curRootIndex = ii;
+        setCurRootIndex(ii, true);
         (*currentRootCounter)[curRootIndex]=1;           // если посещений несколько, заменЯем одним
-        currentHSindex = currentRootSnumber->at(curRootIndex);
-        RegularRootLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
 
         return true;
     }
@@ -274,11 +307,13 @@ bool RegularRootLATP::findNextHotSpot()
     rn=(double)rand()/RAND_MAX;
     for(unsigned int i=0; i<currentRoot->size(); i++) {
         if(curRootIndex != i) pr+=LocalProbMatrix[curRootIndex][i];
-        if(rn <= pr) { curRootIndex=i; break; }
+        if(rn <= pr) {
+            setCurRootIndex(i, true);
+            break;
+        }
     }
     ASSERT(rn <= pr);
-    currentHSindex = currentRootSnumber->at(curRootIndex);
-    RegularRootLATP::setCurrentHSbordersWith( currentRoot->at(curRootIndex) );
+
     //    cout << "findNextHotSpot: changing location to" << currentHSindex << endl;
     return true;
 }
@@ -308,6 +343,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
             currentHSWaypointNum -= 1;
             return true;
         }
+        // ... если не смогли поменять локацию, то маршрут закончился - идём домой
 
     } else {
         // если не используем счётчик, то генерируем через базовую реализацию
@@ -320,8 +356,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
 
     // маршрут кончился, идём домой
     if (useWaypointCounter) ASSERT(currentHSWaypointNum == 0);
-    currentHSindex=0;
-    RegularRootLATP::setCurrentHSbordersWith( homeHS );
+    setCurRootIndex(0, false);
 
     // проверЯем, не дома ли мы уже
     if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
@@ -332,7 +367,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
         return false;
     }
 
-    // если нет - идЮм домой
+    // если нет - идём домой
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
@@ -377,154 +412,50 @@ void RegularRootLATP::makeNewRoot()
             (*currentRootCounterSAVED)[i] -= (*currentRootCounter)[i];
             ASSERT((*currentRootCounterSAVED)[i] >= 0);
         }
-        RootsCollection::getInstance()->collectActualRoot(currentRoot, currentRootSnumber, currentRootCounterSAVED, NodeID, currentDay - 1);
+
+        const int counterSum = getSum(*currentRootCounterSAVED);
+        ASSERT(counterSum >= 0);
+        // Каждое посещение локации фиксируется в currentRootActualTrack.
+        // Однако в RegularRootLATP::findNextHotSpot последняя локация с несколькими посещениесми заменяется одним посещением
+        // Поэтому сумма всех посещений, должна быть больше или равна длине трека
+        ASSERT(((unsigned int) counterSum) >= currentRootActualTrack->size());
+
+        RootsCollection::getInstance()->collectActualRoot(currentRoot, currentRootSnumber, currentRootCounterSAVED, currentRootActualTrack, NodeID, currentDay - 1);
         cout << endl << "Saved old root for NodeID: " << NodeID << " at previous day: " << (currentDay - 1) << endl;
 
         // удаляем старый маршрут
         deleteLocalProbMatrix();
-        delete currentRoot;
-        delete currentRootSnumber;
-        delete currentRootCounter;
-        delete currentRootWptsPerVisit;
-        delete currentRootCounterSAVED;
+        myDelete(currentRoot);
+        myDelete(currentRootSnumber);
+        myDelete(currentRootCounter);
+        myDelete(currentRootWptsPerVisit);
+        myDelete(currentRootCounterSAVED);
+        myDelete(currentRootActualTrack);
     }
 
 
-    // создаём новый маршрут копируя эталонный
-    currentRoot        = new vector<HotSpotData*>(*firstRoot);
-    currentRootSnumber = new vector<unsigned int>(*firstRootSnumber);
-    currentRootCounter = new vector<int>(*firstRootCounter);
-    currentRootWptsPerVisit = new vector<int>(*firstRootWptsPerVisit);
-    vector<int>* unusedWptsPerVisit = new vector<int>();
-
-
-    unsigned int totalCount=0;
-    for (unsigned int i=0; i<firstRoot->size(); i++) totalCount+=firstRootCounter->at(i);
-    ASSERT(firstRootCounter->at(0) >= 1);   // как минимум одно посещение данной локации должно существовать
-    ASSERT(totalCount >= 1);                // общее количество состоит, как минимум, из посещения домашней локации
-    totalCount--;                           // резервируем одно посещение для домашней локации
-    int replaceCount = totalCount - round( totalCount * rootPersistence);
-    ASSERT(0 <= replaceCount && replaceCount <= totalCount);
-    // уменьшаем счётчики посещений у заданного числа случайных локаций на маршруте.
-    // у первой локации (домашней), счЮтчик нулЮм не делаем.
-    int rem, remCount=replaceCount;
-    while( remCount > 0 ) {
-        rem = rand() % currentRoot->size();
-        if ( (rem == 0 && currentRootCounter->at(0) > 1) || (rem > 0 && currentRootCounter->at(rem) > 0) ) {
-            currentRootCounter->at(rem)--;
-            remCount--;
-            // копим путевые точки, которые удаляем из маршрута: каждое удаление посещения локации
-            // означает удаление из текущего маршрута среднего числа точек за это посещение,
-            // - и сохранения для последующей вставки в новый маршрут
-            unusedWptsPerVisit->push_back(currentRootWptsPerVisit->at(rem));
-        }
-    }
-    // домашняя локация сохраняется
-    ASSERT(currentRootCounter->at(0) >= 1);
-    ASSERT(unusedWptsPerVisit->size() == replaceCount);
-
-
-    // инициализируем набор возможных локаций всеми возможными номерами локаций в порЯдке возрастаниЯ
-    vector<int> possibleReplace;
-    for(unsigned int i=0; i< hsc->getHSData()->size(); i++) possibleReplace.push_back(i);
-    vector<unsigned int>* cur = new vector<unsigned int> (*currentRootSnumber);
-    // удалЯем номера, присутствующие в маршруте, из possibleReplace, начинаЯ с самого большого в cur,
-    // чтобы корректно работал erase в possibleReplace - т.к. в таком случае удаление будет проходить с конца
-    while( cur->size() > 0 ) {
-        for(unsigned int i=1; i<cur->size(); i++) if( cur->at(0) < cur->at(i) ) {
-            unsigned int tmp=cur->at(0); cur->at(0)=cur->at(i); cur->at(i)=tmp;
-        }
-        possibleReplace.erase( possibleReplace.begin() + cur->at(0) );
-        cur->erase(cur->begin());
-    }
-    delete cur;
-    ASSERT(possibleReplace.size() == (hsc->getHSData()->size() - currentRootSnumber->size()));
-    ASSERT(possibleReplace.size() != 0);
-
-
-    // генерируем нужное число случайных номеров новых локаций
-    // из тех, что остались в possibleReplace в отсортированном по возрастанию виде
-    vector<int> sortReplace;
-    unsigned int ri = rand() % possibleReplace.size();
-    const unsigned int replaceCountForCheck = replaceCount;
-    if (replaceCount > 0) {
-        sortReplace.push_back(possibleReplace[ri]);
-        replaceCount--;
-    }
-    while( replaceCount > 0) {
-        unsigned int i;
-        ri = rand() % possibleReplace.size();
-        for(i=0; i<sortReplace.size(); i++) {
-            if( possibleReplace[ri] <= sortReplace[i] ) {
-                sortReplace.insert(sortReplace.begin()+i, possibleReplace[ri]);
-                break;
-            }
-        }
-        if( i == sortReplace.size() ) sortReplace.push_back(possibleReplace[ri]);
-        replaceCount--;
-    }
-    ASSERT(sortReplace.size() == replaceCountForCheck);
-
-
-    // добавляем нужное число новых локаций в маршрут
-    int remainingWPTS = 0;
-    unsigned int wpts = 0;
-    for(unsigned int i=0; i<sortReplace.size(); i++) {
-       ASSERT(currentRootCounter->size() == currentRootWptsPerVisit->size());
-       unsigned int hsNumber=sortReplace[i];
-       HotSpotData* hs = &(hsc->getHSData()->at(hsNumber));
-       // Вставляем сохраненые посещения в новый маршрут: если локация "пустая" то пишем 1, иначе сохранённое число
-       if (hs->isHotSpotEmpty()) {
-           wpts = 1;
-           // неизрасходованные локации сохраняем
-           remainingWPTS += unusedWptsPerVisit->front() - 1;
-           ASSERT(remainingWPTS >= 0);
-       } else {
-           // неизрасходованные локации расходуем при первой возможности
-           wpts = unusedWptsPerVisit->front() + remainingWPTS;
-           remainingWPTS = 0;
-       }
-       // удалёям использованный точки из "памяти"
-       unusedWptsPerVisit->erase(unusedWptsPerVisit->begin());
-       if( hsNumber != currentRootSnumber->back() ) {
-           currentRoot->push_back(hs);
-           currentRootSnumber->push_back(hsNumber);
-           currentRootCounter->push_back(1);
-           currentRootWptsPerVisit->push_back(wpts);
-       } else {
-           currentRootCounter->back()++;
-           currentRootWptsPerVisit->back() += wpts;
-       }
-       wpts = 0;
-    }
-    delete unusedWptsPerVisit;
-    if (remainingWPTS > 0) {
-        for (unsigned int i=currentRoot->size()-1; i>=0; i--)
-            if (!currentRoot->at(i)->isHotSpotEmpty()) {
-                currentRootWptsPerVisit->at(i) += remainingWPTS;
-                remainingWPTS = 0;
-                break;
-            }
-    }
+    rootGenerator->generateNewRoot(
+            firstRoot, firstRootSnumber, firstRootCounter, firstRootWptsPerVisit,
+            currentRoot, currentRootSnumber, currentRootCounter, currentRootWptsPerVisit);
 
 
     // for debug
+    ASSERT(currentRoot && currentRootSnumber && currentRootCounter && currentRootWptsPerVisit);
     printFirstRoot();
     printCurrentRoot();
-    unsigned int sumCurrent=0, sumFirst=0;
-    for(unsigned int i=0; i<currentRootCounter->size(); i++) sumCurrent += currentRootCounter->at(i);
-    for(unsigned int i=0; i<firstRootCounter->size();   i++) sumFirst +=   firstRootCounter->at(i);
-    ASSERT(sumCurrent == sumFirst);
+    // суммы посещений должно быть больше нуля в маршрутах
+    ASSERT(getSum(*currentRootCounter) > 0);
+    ASSERT(getSum(*firstRootCounter) > 0);
     // все структуры одинаковы по размеру
-    ASSERT((currentRoot->size() == currentRootSnumber->size()) && (currentRoot->size() == currentRootCounter->size()));
+    ASSERT((currentRoot->size() == currentRootSnumber->size())
+            && (currentRoot->size() == currentRootCounter->size())
+            && (currentRoot->size() == currentRootWptsPerVisit->size()));
 
 
     makeLocalProbMatrix(powA);
     // начальнаЯ локациЯ - это перваЯ локациЯ текущего маршрута - она же домашняя
-    curRootIndex=0;
-    currentHSindex = currentRootSnumber->at(curRootIndex);
-    ASSERT(homeHS == currentRoot->at(curRootIndex));
-    RegularRootLATP::setCurrentHSbordersWith(homeHS);
+    currentRootActualTrack = new vector<unsigned int>();
+    setCurRootIndex(0, true);
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 

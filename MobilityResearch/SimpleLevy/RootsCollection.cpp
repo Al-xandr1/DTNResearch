@@ -36,9 +36,10 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
                 (*infile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> sumTime >> waypointNum;
                 ASSERT(sumTime >= 0 && waypointNum >= 0);
 
+                //контроль появления дублей: две ПОДРЯД одинаковых локации идти не могут
                 if (lastRedHotSpotName) {
-                    //это значит наткнулись на дубль последней строки (или в общем случае вообще на дубль строки)
                     bool nextIter = false;
+                    // если true - значит наткнулись на дубль последней строки (или в общем случае вообще на дубль строки)
                     if (strcmp(lastRedHotSpotName, hotSpotName) == 0) nextIter = true;
                     delete[] lastRedHotSpotName;
                     lastRedHotSpotName = NULL;
@@ -57,7 +58,7 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
         }
         while(FindNextFile(h, &f));
     } else cout << "Directory or files not found\n";
-    cout << "RootsData is initialized." << endl;
+    cout << "RootsData is initialized." << endl << endl;
 
 
     // Инициализация структуры RootsDataShort на основании файла allroots.roo (если он есть) ИЛИ на основе RootsData (если файла нет)
@@ -90,7 +91,7 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
         }
     }
     delete rootFileNames;
-    cout << "RootsDataShort is initialized." << endl;
+    cout << "RootsDataShort is initialized." << endl << endl;
 
 
     // Инициализация структуры generatedRootsData для хранения генерируемых маршрутов для каждого узла по дням
@@ -115,21 +116,22 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
             ASSERT(strcmp(RootsDataShort->at(i).hotSpot[j], RootsData->at(i)->at(j).hotSpotName) == 0);
         }
     }
-    cout << "Consistency is checked." << endl;
+    cout << "Consistency is checked." << endl << endl;
 }
 
 void RootsCollection::collectTheoryRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day) {
-    collectRoot(generatedTheoryRootsData, root, rootSnumber, rootCounter, nodeId, day);
+    collectRoot(generatedTheoryRootsData, root, rootSnumber, rootCounter, NULL, nodeId, day);
 }
 
-void RootsCollection::collectActualRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day) {
-    collectRoot(generatedActualRootsData, root, rootSnumber, rootCounter, nodeId, day);
+void RootsCollection::collectActualRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, vector<unsigned int>* rootTrack, unsigned int nodeId, unsigned int day) {
+    collectRoot(generatedActualRootsData, root, rootSnumber, rootCounter, rootTrack, nodeId, day);
 }
 
 void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData,
                                   vector<HotSpotData*>* root,
                                   vector<unsigned int>* rootSnumber,
                                   vector<int>* rootCounter,
+                                  vector<unsigned int>* rootTrack,
                                   unsigned int nodeId,
                                   unsigned int day)
 {
@@ -140,20 +142,50 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
     ASSERT(1 <= day);
 
     vector<HotSpotDataRoot*>* rootForHistory = new vector<HotSpotDataRoot*>();
-    for (unsigned int i=0; i<root->size(); i++) {
-        HotSpotDataRoot* data = new HotSpotDataRoot();
-        data->hotSpotName = new char[256];
-        data->hotSpotName = strcpy(data->hotSpotName, root->at(i)->hotSpotName);
-        data->Xmin = root->at(i)->Xmin;
-        data->Xmax = root->at(i)->Xmax;
-        data->Ymin = root->at(i)->Ymin;
-        data->Ymax = root->at(i)->Ymax;
-        //todo сделать запись фактических значений времени пребывания в локации и кот-ва путевых точек в локации (для узла в рамках одного маршрута)
-        data->sumTime = -1;
-        data->waypointNum = -1;
-        // проставляем актуальную кратность
-        data->counter = rootCounter->at(i);
-        rootForHistory->push_back(data);
+
+    if (rootTrack) {
+        // если трек есть, то записываем маршрут на основании его!
+        int counterSum = getSum(*rootCounter);
+        ASSERT(counterSum >= 0);
+        // Каждое посещение локации фиксируется в rootTrack.
+        // Однако в RegularRootLATP::findNextHotSpot последняя локация с несколькими посещениесми заменяется одним посещением
+        // Поэтому сумма всех посещений, должна быть больше или равна длине трека
+        ASSERT(((unsigned int) counterSum) >= rootTrack->size());
+
+        for (unsigned int i = 0; i < rootTrack->size(); i++) {
+            ASSERT(rootTrack->at(i) >= 0 && rootTrack->at(i) < root->size());
+
+            HotSpotDataRoot* data = new HotSpotDataRoot();
+            data->hotSpotName = new char[256];
+            data->hotSpotName = strcpy(data->hotSpotName, root->at(rootTrack->at(i))->hotSpotName);
+            data->Xmin = root->at(rootTrack->at(i))->Xmin;
+            data->Xmax = root->at(rootTrack->at(i))->Xmax;
+            data->Ymin = root->at(rootTrack->at(i))->Ymin;
+            data->Ymax = root->at(rootTrack->at(i))->Ymax;
+            //todo сделать запись фактических значений времени пребывания в локации и кот-ва путевых точек в локации (для узла в рамках одного маршрута)
+            data->sumTime = -1;
+            data->waypointNum = -1;
+            data->counter = -1;
+            rootForHistory->push_back(data);
+        }
+    } else {
+        // если трека нет, то заполняем маршрут на основании rootCounter->at(i) (повторы пишем последовательно)
+        for (unsigned int i = 0; i < root->size(); i++) {
+            for (int count = 0; count < rootCounter->at(i); count++) {
+                HotSpotDataRoot* data = new HotSpotDataRoot();
+                data->hotSpotName = new char[256];
+                data->hotSpotName = strcpy(data->hotSpotName, root->at(i)->hotSpotName);
+                data->Xmin = root->at(i)->Xmin;
+                data->Xmax = root->at(i)->Xmax;
+                data->Ymin = root->at(i)->Ymin;
+                data->Ymax = root->at(i)->Ymax;
+                //todo сделать запись фактических значений времени пребывания в локации и кот-ва путевых точек в локации (для узла в рамках одного маршрута)
+                data->sumTime = -1;
+                data->waypointNum = -1;
+                data->counter = -1;
+                rootForHistory->push_back(data);
+            }
+        }
     }
 
     //получаем маршруты указанного узла по всем прошедшим дням

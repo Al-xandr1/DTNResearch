@@ -108,6 +108,20 @@ const char* buildParameter(const char* name, const char* value) {
     return parameter.c_str();
 }
 
+/**
+ * Метод проверяет соответствие параметра id (в названии файла - ЕСЛИ он там есть) и nodeId
+ */
+bool checkFileIdAndNodeId(const char* filename, int nodeId) {
+    double* id = extractDoubleParameter(filename, "id");
+    if (id) {
+        bool equal = ((*id) == (nodeId + 1));
+        delete id;
+        return equal;
+    }
+    // если id в названии файла нет, то считаем, что одинаково (нужно проверять в ручную при логах при инициализации)
+    return true;
+}
+
 double* extractDoubleParameter(const char* fileName, const char* parameter) {
     const char* value = extractParameter(fileName, parameter);
     if (value == NULL) {
@@ -133,4 +147,3 @@ const char* extractParameter(const char* fileName, const char* parameter) {
 
     return fileNameStr.substr(start+1, end-start-1).c_str();
 }
-

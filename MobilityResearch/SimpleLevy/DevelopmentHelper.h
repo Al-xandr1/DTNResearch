@@ -7,15 +7,21 @@
 #include <list>
 #include <sstream>
 #include <string>
+#include "stlutils.h"
 #include <omnetpp.h>
 
 using namespace std;
 
-#define DEF_TR_DIR     (char*)"./Traces"              //Директория по умолчанию для всeй информации о трассах
-#define DEF_HS_DIR     (char*)"./Traces/hotspotfiles" //Директория по умолчанию для "локаций"
-#define DEF_TRS_DIR    (char*)"./Traces/tracefiles"   //Директория по умолчанию для исходных трасс
-#define DEF_WP_DIR     (char*)"./Traces/waypointfiles"//Директория по умолчанию для "путевых точек"
-#define DEF_RT_DIR     (char*)"./Traces/rootfiles"    //Директория по умолчанию для "маршрутов"
+#define myDelete(obj)      if(obj){delete   obj; obj = NULL;}
+#define myDeleteArray(obj) if(obj){delete[] obj; obj = NULL;}
+
+// Имена директорий и файлов
+#define DEF_TR_DIR     (char*)"./Traces"                //Директория по умолчанию для всeй информации о трассах
+#define DEF_HS_DIR     (char*)"./Traces/hotspotfiles"   //Директория по умолчанию для "локаций"
+#define DEF_TRS_DIR    (char*)"./Traces/tracefiles"     //Директория по умолчанию для исходных трасс
+#define DEF_WP_DIR     (char*)"./Traces/waypointfiles"  //Директория по умолчанию для "путевых точек"
+#define DEF_RT_DIR     (char*)"./Traces/rootfiles"      //Директория по умолчанию для "маршрутов"
+#define DEF_PST_DIR    (char*)"./Traces/rootstatistics" //Директория по умолчанию для статистик маршрутов (файлов *.pst)
 
 #define OUT_DIR        (char*)"outTrace"              // директория для сохранения выходной информации
 #define WPS_DIR        (char*)"waypointfiles"         // директория для сохранения сгенерированных путевых точек
@@ -31,16 +37,19 @@ using namespace std;
 #define ICT_HIST       (char*)"ictHistory.xml"        // имя файла для сохранения истории ICT
 #define RT_HIST        (char*)"routeHistory.xml"      // имя файла для сохранения истории о пройденных маршрутах узлами
 #define STAT_FILE      (char*)"statistics.xml"        // имя файла для сохранения статистики
+#define RT_PST_ST      (char*)"roots_persistence_statistics.pst"  // имя файла с данными о персистентности и статистике маршрутов
+
+// Константы
 #define PERSISTENCE    (char*)"persistence"           // имя параметра с коэффициентом персистентности в имени файла маршрута *.rot
 
-// формат файлов
+// Формат файлов
 #define TRACE_TYPE     (char*)".txt"
 #define WAYPOINTS_TYPE (char*)".wpt"
 
-// шаблон файлов
+// Шаблон файлов
 #define TRACE_PATTERN  (char*)"*.txt"
 #define ROOT_PATTERT   (char*)"*.rot"
-
+#define PST_PATTERT    (char*)"*.pst"
 
 class NamesAndDirs {
 
@@ -89,6 +98,11 @@ const char* buildIntParameter(const char* name, int value);
 const char* buildParameter(const char* name, const char* value);
 
 /**
+ * Метод проверяет соответствие параметра id (в названии файла - ЕСЛИ он там есть) и nodeId
+ */
+bool checkFileIdAndNodeId(const char* filename, int nodeId);
+
+/**
  * Извлекает значение параметра из строки (имени файла).
  * Извлекает параметр методом extractParameter и преобразует в число.
  *
@@ -104,5 +118,40 @@ double* extractDoubleParameter(const char* fileName, const char* parameter);
  * Значение параметра находиться после указанного имени параметра между знаками = и _
  */
 const char* extractParameter(const char* fileName, const char* parameter);
+
+/**
+ * Получение суммы элементов вектора
+ */
+template<typename T>
+inline T getSum(const std::vector<T>& vector) {
+    T sum = 0;
+    for(unsigned int i=0; i < vector.size(); i++) sum += vector.at(i);
+    return sum;
+}
+
+/**
+ * trim from start
+ */
+inline std::string &ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
+}
+
+/**
+ *  trim from end
+ */
+inline std::string &rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
+
+/**
+ *  trim from both ends
+ */
+inline std::string &fullTrim(std::string &s) {
+    return ltrim(rtrim(s));
+}
 
 #endif // DEVELOPMENTHELPER_H_INCLUDED
