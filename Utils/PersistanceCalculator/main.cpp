@@ -10,6 +10,9 @@ using namespace std;
 #define ASSERT_1(trueVal, errorCode) if(!(trueVal)){exit(errorCode);}
 #define ASSERT_2(trueVal, errorCode, message) if(!(trueVal)){cout<<message<<endl;exit(errorCode);}
 
+#define myDelete(obj)      if(obj){delete   obj; obj = NULL;}
+#define myDeleteArray(obj) if(obj){delete[] obj; obj = NULL;}
+
 struct HotSpot {
     HotSpot(bool isHome, long counter, long double sumTime, long long int totalPoints)
             : isHome(isHome), counter(counter), sumTime(sumTime), totalPoints(totalPoints) {}
@@ -48,6 +51,8 @@ public:
 
     ~PersistenceCalculator();
 
+    double CalculateNewPersistence(unsigned int etalonRootNum);
+
     double CalculatePersistence(unsigned int etalonRootNum);
 
     double CalculatePersistence(vector<HotSpot *> *etalonRoot, char *rootName);
@@ -62,6 +67,8 @@ public:
 
     Histogram *getRootsDimensionsHistogram();
 
+    Histogram *getRootsLengthHistogram();
+
     vector<double> *getAverageCounterVector(vector<int> *summarizedIndicatorVector);
 
     void GenerateRotFile(char *RootDir, char *SpotDir);
@@ -69,6 +76,16 @@ public:
     void save(char *RootDir);
 
     string getFilePrefix(char *RootDir);
+
+    /**
+     * Получение суммы элементов вектора
+    */
+    template<typename T>
+    inline T getSum(const std::vector<T> &vector) {
+        T sum = 0;
+        for (unsigned int i = 0; i < vector.size(); i++) sum += vector.at(i);
+        return sum;
+    }
 };
 
 PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
@@ -156,7 +173,39 @@ PersistenceCalculator::~PersistenceCalculator() {
 }
 
 /**
-    Расчёт коэффициента персистентности относительно какого либо маршрута из первоначального набора
+ * Расчёт НОВОГО коэффициента персистентности относительно какого либо маршрута из первоначального набора:
+ *
+ * У двух маршрутов сходство - это отношение количества совпадающих локаций (по индикаторному вектору,
+ * то есть без учёта кратности посещений), к длине (в количестве локаций, также без учёта кратности посещений).
+ * Ну и взять для простоты первый маршрут, и с ним сравнивать все остальные, а полученные коэффициенты усреднить
+*/
+double PersistenceCalculator::CalculateNewPersistence(unsigned int etalonRootNum) {
+    ASSERT_1(etalonRootNum >= 0 && etalonRootNum < roots.size(), -1101);
+
+    vector<int> *etalonIndicatorVector = getIndicationVector(roots.at(etalonRootNum));
+    int etalonIndicatorVectorWeight = getSum(*etalonIndicatorVector);
+    double coef = 0.0;
+    for (unsigned int i = 0; i < roots.size(); i++)
+        if (i != etalonRootNum) {
+            vector<int> *someIndicatorVector = getIndicationVector(roots.at(i));
+            ASSERT_1(etalonIndicatorVector->size() == someIndicatorVector->size(), -1102);
+            double intersectWeight = 0.0;
+            for (unsigned int j = 0; j < etalonIndicatorVector->size(); j++) {
+                intersectWeight += (((etalonIndicatorVector->at(j) == 1) && (someIndicatorVector->at(j) == 1)) ? 1 : 0);
+            }
+            intersectWeight /= (1.0 * std::max(etalonIndicatorVectorWeight, getSum(*someIndicatorVector)));
+            myDelete(someIndicatorVector);
+
+            cout << "New K(" << etalonRootNum << "," << i << ")=" << intersectWeight << endl;
+            coef += intersectWeight;
+        }
+    myDelete(etalonIndicatorVector);
+
+    return coef / (roots.size() - 1); // roots.size() = L
+}
+
+/**
+ * Расчёт коэффициента персистентности относительно какого либо маршрута из первоначального набора
 */
 double PersistenceCalculator::CalculatePersistence(unsigned int etalonRootNum) {
     ASSERT_1(etalonRootNum >= 0 && etalonRootNum < roots.size(), -110);
@@ -174,7 +223,7 @@ double PersistenceCalculator::CalculatePersistence(unsigned int etalonRootNum) {
 }
 
 /**
-    Расчёт коэффициента персистентности относительно маршрута НЕ из первоначального набора
+ * Расчёт коэффициента персистентности относительно маршрута НЕ из первоначального набора
 */
 double PersistenceCalculator::CalculatePersistence(vector<HotSpot *> *etalonRoot, char *rootName) {
     double coef = 0.0;
@@ -242,8 +291,8 @@ double PersistenceCalculator::CoefficientOfSimilarity(vector<HotSpot *> *root1, 
 }
 
 /**
-    Расчёт центра масс с многомерном пространстве, размерности spotNames.size()
-    и векторами roots. Пространство натуральных чисел!!!
+ * Расчёт центра масс с многомерном пространстве, размерности spotNames.size()
+ * и векторами roots. Пространство натуральных чисел!!!
 */
 vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
     vector<HotSpot *> *massCenter = new vector<HotSpot *>();
@@ -271,7 +320,7 @@ vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
 }
 
 /**
-   формирование файла *.rot со средним маршрутом
+ * формирование файла *.rot со средним маршрутом
 */
 void PersistenceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
     char SpotNamePattern[256];
@@ -338,7 +387,7 @@ Histogram *PersistenceCalculator::getRootsDimensionsHistogram() {
 
     double min = std::numeric_limits<double>::max(); // maximum value int;
     double max = std::numeric_limits<double>::min(); // minimum value int;
-    double average = 0;
+    double average = 0.0;
 
     for (unsigned int i = 0; i < roots.size(); i++) {
         vector<int> *indicatorVector = getIndicationVector(roots.at(i));
@@ -359,9 +408,31 @@ Histogram *PersistenceCalculator::getRootsDimensionsHistogram() {
         delete indicatorVector;
     }
 
-    average /= (1.0 * roots.size());
+    return new Histogram(data, roots.size(), min, max, average / (1.0 * roots.size()));
+}
 
-    return new Histogram(data, roots.size(), min, max, average);
+/**
+ * Метод получает МИНИМАЛЬНУЮ, МАКСИМАЛЬНУЮ и СРЕДНЮЮ длины маршрутов (с учётом кратностей)
+ * БЕЗ РАСЧЁТА ГИСТОГРАММЫ (поле в структуре Histogram == NULL)
+ */
+Histogram *PersistenceCalculator::getRootsLengthHistogram() {
+    double min = std::numeric_limits<double>::max(); // maximum value int;
+    double max = std::numeric_limits<double>::min(); // minimum value int;
+    double average = 0.0;
+
+    for (unsigned int i = 0; i < roots.size(); i++) {
+        vector<HotSpot *> *root = roots.at(i);
+        double length = 0.0;
+        for (unsigned int j = 0; j < root->size(); j++) {
+            length += root->at(j)->counter;
+        }
+
+        average += length;
+        min = std::min(min, length);
+        max = std::max(max, length);
+    }
+
+    return new Histogram(NULL, roots.size(), min, max, average / (1.0 * roots.size()));
 }
 
 /**
@@ -374,7 +445,7 @@ vector<int> *PersistenceCalculator::getIndicationVector(vector<HotSpot *> *root)
     vector<int> *indicatorVector = new vector<int>(root->size());
     for (unsigned int i = 0; i < indicatorVector->size(); i++) {
         ASSERT_1(root->at(i), -3211);
-        indicatorVector->at(i) = root->at(i)->counter != 0 ? 1 : 0;
+        indicatorVector->at(i) = (root->at(i)->counter != 0) ? 1 : 0;
     }
     return indicatorVector;
 }
@@ -424,10 +495,7 @@ void PersistenceCalculator::save(char *RootDir) {
 
     //region PERSISTENCE
     out << "    <PERSISTENCE info=\"Data about persistence for all root files\">" << endl;
-
-    out
-            << "        <COEFFICIENTS info=\"Coefficients (second number) for every root (first number) marked as ethalon\">"
-            << endl;
+    out << "        <COEFFICIENTS info=\"Coefficients (second num) for every root (first num), marked as ethalon\">" << endl;
     double averagePersistence = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
         double persistence;
@@ -435,10 +503,8 @@ void PersistenceCalculator::save(char *RootDir) {
         averagePersistence += persistence;
     }
     out << "        </COEFFICIENTS>" << endl;
-
-    out << "        <AVERAGE-PERSISTENCE info=\"Average coefficient of persistence (based on the tag COEFFICIENTS)\"> "
-        << (averagePersistence /= roots.size()) << " </AVERAGE-PERSISTENCE>" << endl;
-
+    out << "        <AVERAGE-PERSISTENCE info=\"Average coefficient for persistence (based on the tag COEFFICIENTS)\"> "
+        << (averagePersistence /= (1.0 * roots.size())) << " </AVERAGE-PERSISTENCE>" << endl;
     out << "        <MASS-CENTER info=\"Mass center for set of input vectors (roots)\"> " << endl;
     vector<HotSpot *> *massCenter = GetMassCenter();
     out << "            <COEF info=\"Coefficient of persistence for mass center marked as ethalon\">"
@@ -449,27 +515,40 @@ void PersistenceCalculator::save(char *RootDir) {
     }
     out << endl << "            </VALS> ";
     out << endl << "        </MASS-CENTER> ";
-
-    // for debug
-    //for(unsigned int i=0; i<roots.size(); i++) {
-    //    cout<<"root "<<i<<": ";
-    //    for(unsigned int j=0; j<roots.at(i)->size(); j++)
-    //    cout<<roots.at(i)->at(j)<<", ";
-    //    cout<<endl;
-    //}
-    //cout<<"massCenter: ";
-    //for(unsigned int j=0; j<massCenter->size(); j++)
-    //cout<<massCenter->at(j)<<", ";
-    //cout<<endl;
     out << endl << "    </PERSISTENCE>" << endl;
+    //endregion
+
+
+    //region NEW PERSISTENCE
+    out << "    <NEW-PERSISTENCE info=\"Data about new persistence for all root files\">" << endl;
+    out << "        <COEFFICIENTS info=\"Coefficients (second num) for every root (first num), marked as ethalon\">" << endl;
+    double averageNewPersistence = 0.0;
+    for (unsigned int i = 0; i < roots.size(); i++) {
+        double newPersistence;
+        out << "            <COEF> " << i << "\t" << (newPersistence = CalculateNewPersistence(i)) << " </COEF>" << endl;
+        averageNewPersistence += newPersistence;
+    }
+    out << "        </COEFFICIENTS>" << endl;
+    out << "        <AVERAGE-NEW-PERSISTENCE info=\"Average coefficient for new persistence (based on the tag COEFFICIENTS)\"> "
+        << (averageNewPersistence /= (1.0 * roots.size())) << " </AVERAGE-NEW-PERSISTENCE>";
+    out << endl << "    </NEW-PERSISTENCE>" << endl;
+    //endregion
+
+
+    //region ROOT LENGTH HISTOGRAM
+    Histogram *lengthHistogram = getRootsLengthHistogram();
+    out << "    <ROOT-LENGTH-HISTOGRAM info=\"Statistics about root's length\">" << endl;
+    out << "        <MIN> " << lengthHistogram->min << " </MIN>" << endl;
+    out << "        <MAX> " << lengthHistogram->max << " </MAX>" << endl;
+    out << "        <AVERAGE> " << lengthHistogram->average << " </AVERAGE>";
+    out << endl << "    </ROOT-LENGTH-HISTOGRAM>" << endl;
+    myDelete(lengthHistogram);
     //endregion
 
 
     //region ROOTS DIMENSIONS HISTOGRAM
     Histogram *dimensionsHistogram = getRootsDimensionsHistogram();
-    out
-            << "    <ROOTS-DIMENSION-HISTOGRAM info=\"Histogram of root's dimensions (sum of non zero components of a root)\">"
-            << endl;
+    out << "    <ROOTS-DIMENSION-HISTOGRAM info=\"Histogram of root's dimensions (sum of non zero root's components)\">" << endl;
     out << "        <MIN> " << dimensionsHistogram->min << " </MIN>" << endl;
     out << "        <MAX> " << dimensionsHistogram->max << " </MAX>" << endl;
     out << "        <AVERAGE> " << dimensionsHistogram->average << " </AVERAGE>" << endl;
@@ -479,14 +558,13 @@ void PersistenceCalculator::save(char *RootDir) {
         out << dimensionsHistogram->data->at(i) << "  ";
     out << endl << "        </VALS> " << endl;
     out << "    </ROOTS-DIMENSION-HISTOGRAM>" << endl;
+    myDelete(dimensionsHistogram);
     //endregion
 
 
     //region SUMMARIZED INDICATOR VECTOR (HISTOGRAM)
     vector<int> *summarizedIndicatorVector = getSummarizedIndicatorVector();
-    out
-            << "    <SUMMARIZED-INDICATOR-VECTOR info=\"Each component of this vector is the sum of the corresponding roots' components\">"
-            << endl;
+    out << "    <SUMMARIZED-INDICATOR-VECTOR info=\"Each component of this vector - sum of the roots' components\">" << endl;
     out << "        <VALS> " << endl;
     for (unsigned int i = 0; i < summarizedIndicatorVector->size(); i++)
         out << summarizedIndicatorVector->at(i) << "  ";
@@ -497,8 +575,7 @@ void PersistenceCalculator::save(char *RootDir) {
 
     //region AVERAGE COUNTER VECTOR
     vector<double> *averageCounterVector = getAverageCounterVector(summarizedIndicatorVector);
-    out << "    <AVERAGE-COUNTER-VECTOR info=\"Calculated as: averageCounterVector[i] / summarizedIndicatorVector[i]\">"
-        << endl;
+    out << "    <AVERAGE-COUNTER-VECTOR info=\"Calculated as: averageCounterVector[i] / summarizedIndicatorVector[i]\">" << endl;
     out << "        <VALS> " << endl;
     for (unsigned int i = 0; i < averageCounterVector->size(); i++) out << averageCounterVector->at(i) << "  ";
     out << endl << "        </VALS> " << endl;
