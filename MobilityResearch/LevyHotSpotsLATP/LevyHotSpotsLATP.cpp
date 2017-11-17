@@ -307,44 +307,52 @@ void LevyHotSpotsLATP::saveStatistics() {
 
         // --- Write Roots for every node & every day ---
         //todo перенести в RootsCollection
-        //todo сделать одни кастомизируемый метод для записи generatedTheoryRootsData & generatedActualRootsData
+        //todo сделать один кастомизируемый метод для записи generatedTheoryRootsData & generatedActualRootsData
         vector<RootDataShort> *rootsDataShort = RootsCollection::getInstance()->getRootsDataShort();
         vector<vector<vector<HotSpotDataRoot*>*>*> *generatedTheoryRootsData = RootsCollection::getInstance()->getGeneratedTheoryRootsData();
         vector<vector<vector<HotSpotDataRoot*>*>*> *generatedActualRootsData = RootsCollection::getInstance()->getGeneratedActualRootsData();
         ASSERT(rootsDataShort->size() == generatedTheoryRootsData->size() && rootsDataShort->size() == generatedActualRootsData->size());
-        for (unsigned int i=0; i<generatedTheoryRootsData->size(); i++) {
+        for (unsigned int i = 0; i < generatedTheoryRootsData->size(); i++) {
 
             vector<vector<HotSpotDataRoot*>*>* theoryRootsPerNode = generatedTheoryRootsData->at(i);
-            for (unsigned int j=0; j<theoryRootsPerNode->size(); j++) {
+            for (unsigned int j = 0; j < theoryRootsPerNode->size(); j++) {
                 string filename("Gen_");
-                filename += string(buildIntParameter("day", j+1));
-                filename += extractSimpleName(rootsDataShort->at(i).RootName);
+                string simpleName = extractSimpleName(rootsDataShort->at(i).RootName);
+                std::size_t found = simpleName.find("_id=");
+                if (found != std::string::npos)
+                    // т.е. в названии файла мы нашли куда вставить номер дня
+                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1)) + simpleName.substr((found + 8), simpleName.size()));
+                else
+                    filename += (string(buildIntParameter("day", j+1)) + extractSimpleName(rootsDataShort->at(i).RootName));
+
                 ofstream* rtFile = new ofstream(buildFullName(thRtDir, filename.c_str()));
                 vector<HotSpotDataRoot*>* dailyRoot = theoryRootsPerNode->at(j);
-                for (unsigned int k=0; k<dailyRoot->size(); k++) {
+                for (unsigned int k = 0; k < dailyRoot->size(); k++) {
                     HotSpotDataRoot* hs = dailyRoot->at(k);
-                    for (unsigned int count = 0; count < hs->counter; count++) {
-                        (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                                  << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-                    }
+                    (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                              << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
                 }
                 rtFile->close();
             }
             cout << "\t Theory roots per node " << i << " are collected!";
 
             vector<vector<HotSpotDataRoot*>*>* actualRootsPerNode = generatedActualRootsData->at(i);
-            for (unsigned int j=0; j<actualRootsPerNode->size(); j++) {
+            for (unsigned int j = 0; j < actualRootsPerNode->size(); j++) {
                 string filename("Gen_");
-                filename += string(buildIntParameter("day", j+1));
-                filename += extractSimpleName(rootsDataShort->at(i).RootName);
+                string simpleName = extractSimpleName(rootsDataShort->at(i).RootName);
+                std::size_t found = simpleName.find("_id=");
+                if (found != std::string::npos)
+                    // т.е. в названии файла мы нашли куда вставить номер дня
+                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1)) + simpleName.substr((found + 8), simpleName.size()));
+                else
+                    filename += (string(buildIntParameter("day", j+1)) + extractSimpleName(rootsDataShort->at(i).RootName));
+
                 ofstream* rtFile = new ofstream(buildFullName(acRtDir, filename.c_str()));
                 vector<HotSpotDataRoot*>* dailyRoot = actualRootsPerNode->at(j);
-                for (unsigned int k=0; k<dailyRoot->size(); k++) {
+                for (unsigned int k = 0; k < dailyRoot->size(); k++) {
                     HotSpotDataRoot* hs = dailyRoot->at(k);
-                    for (unsigned int count = 0; count < hs->counter; count++) {
-                        (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                                  << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-                    }
+                    (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                              << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
                 }
                 rtFile->close();
             }

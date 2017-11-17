@@ -85,7 +85,7 @@ void HotSpotsCollection::print()
 }
 
 
-HotSpotData* HotSpotsCollection::findHotSpotbyName(char* HotSpotName, int& HotSpotNum)
+HotSpotData* HotSpotsCollection::findHotSpotbyName(const char* HotSpotName, int& HotSpotNum)
 {
     for(unsigned int i=0; i<HSData->size(); i++)
         if( strcmp(HSData->at(i).hotSpotName, HotSpotName) == 0 ) {

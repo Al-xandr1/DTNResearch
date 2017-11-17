@@ -18,6 +18,8 @@
 #include "LevyHotSpotsLATP.h"
 #include "MobileHost.h"
 #include "Messages.h"
+#include "RootsPersistenceAndStatistics.h"
+#include "GenerationRootsStrategy.h"
 
 using namespace std;
 
@@ -26,8 +28,9 @@ class RegularRootLATP : public LevyHotSpotsLATP
   protected:
 
     RootsCollection* rc;
-
-    double rootPersistence;
+    RootsPersistenceAndStatistics* rootStatistics;      // ссылка на модуль с общей персистентностью и статистикой
+    double rootPersistence;                             // коэффициент персистентности, для мобильности КОНКРЕТНОГО узла
+    GenerationRootsStrategy* rootGenerator;             // генератор новых маршрутов (сейчас ЛИБО по персистентности, ЛИБО по статистикам
 
     vector<HotSpotData*>*      firstRoot;               // сформированный вектор (эталона) маршрута с информацией, загруженной из файлов *.hts
     vector<unsigned int>*      firstRootSnumber;        // сформированный вектор (эталона) с индексами локаций в структуре HotSpotsCollection
@@ -36,6 +39,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
 
     HotSpotData*               homeHS;                  // первая локация маршрута, она же последняя
 
+    vector<unsigned int>*      currentRootActualTrack;  // фактическая последовательность локаций при прохождении маршрута
     vector<HotSpotData*>*      currentRoot;             // сформированный вектор (текущий) маршрута с информацией, загруженной из файлов *.hts
     vector<unsigned int>*      currentRootSnumber;      // сформированный вектор (текущий) с индексами локаций в структуре HotSpotsCollection
     vector<int>*               currentRootCounter;      // сформированный вектор (текущий) со счётчиками посещений локаций
@@ -53,7 +57,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
     virtual void handleMessage(cMessage * message);
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual bool findNextHotSpot();
-    virtual void setCurrentHSbordersWith(HotSpotData* hsi);
+    void setCurRootIndex(unsigned int curRootIndex, bool writeIndexToTrack);
     virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound = false);
 
   public:
@@ -61,6 +65,12 @@ class RegularRootLATP : public LevyHotSpotsLATP
     void loadFirstRoot();
     void printFirstRoot();
     void printCurrentRoot();
+    void printRoot(
+            const char* lable,
+            vector<HotSpotData*>* root,
+            vector<unsigned int>* rootSnumber,
+            vector<int>* rootCounter,
+            vector<int>* rootWptsPerVisit);
     void makeLocalProbMatrix(double powA);
     void deleteLocalProbMatrix();
     bool isRootFinished();

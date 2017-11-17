@@ -46,7 +46,7 @@ public:
 
     vector<HotSpotData>* getHSData() {return HSData;}
     void getTotalSize(double& minX, double& maxX, double& minY, double& maxY);
-    HotSpotData* findHotSpotbyName(char*, int&);
+    HotSpotData* findHotSpotbyName(const char*, int&);
     void print();
 };
 
