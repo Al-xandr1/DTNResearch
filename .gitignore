@@ -148,6 +148,7 @@ locations.loc
 length.hst
 spotcount.cnt
 allroots.roo
+allroots_not_for_use.roo
 statistics.stat
 statistics_*.stat
 herst.txt
@@ -160,5 +161,5 @@ packetsHistory.xml
 ictHistory.xml
 routeHistory.xml
 routeHistory_another.xml
-persistance.pst
+*.pst
 input/

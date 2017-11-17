@@ -73,7 +73,7 @@ void HistoryCollector::collectICT(simtime_t ict)           {/*ASSERT(ictHistoryF
 void HistoryCollector::insertRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute) {
     if (rd && rd->canCollectStatistics()) {
 //        ASSERT(0 <= nodeId && nodeId <= rd->getNumHosts());
-//        ASSERT(startTimeRoute < endTimeRoute);
+//        ASSERT(startTimeRoute <= endTimeRoute);
 
         RouteInfoForNode* routeInfo = new RouteInfoForNode(day, startTimeRoute, endTimeRoute);
         (*routeHistory)[nodeId]->push_back(routeInfo);

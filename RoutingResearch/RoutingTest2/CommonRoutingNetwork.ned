@@ -19,6 +19,10 @@ network CommonRoutingNetwork
         // parameters for daily root change
         double dayDuration @unit(s) = default(43200s);  // by default 12 hours;
         
+        // параметр, показывающий используем ли мы собранную статистику о реальных маршрутах для генерации новых
+        // ИЛИ используем коэффициент ПЕРСИСТЕНТНОСТИ (всё в RootsPersistenceAndStatistics)
+        bool useRootStatistics = default(true); 
+        
         // statistic collection
         int countOfDays = default(5); 					// number of days will be accounted for collection statistics of total time coonection per a day
         // параметр, который включает или выключает использование 
