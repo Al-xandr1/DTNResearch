@@ -34,6 +34,16 @@ struct Histogram {
     double average;         // среднее значение
 };
 
+/**
+ * Стуктура, описывающая мат. ожидание и дисперсию числа
+ */
+struct MxDx {
+    MxDx(double MX, double DX) : MX(MX), DX(DX) {}
+
+    double MX;
+    double DX;
+};
+
 char *buildFullName(char *buffer, char *dir, const char *fileName) {
     strcpy(buffer, dir);
     strcat(buffer, "/");
@@ -51,9 +61,9 @@ public:
 
     ~PersistenceCalculator();
 
-    double CalculateNewPersistence(unsigned int etalonRootNum);
+    MxDx CalculateNewPersistence(unsigned int etalonRootNum);
 
-    double CalculatePersistence(unsigned int etalonRootNum);
+    MxDx CalculatePersistence(unsigned int etalonRootNum);
 
     double CalculatePersistence(vector<HotSpot *> *etalonRoot, char *rootName);
 
@@ -179,12 +189,13 @@ PersistenceCalculator::~PersistenceCalculator() {
  * то есть без учёта кратности посещений), к длине (в количестве локаций, также без учёта кратности посещений).
  * Ну и взять для простоты первый маршрут, и с ним сравнивать все остальные, а полученные коэффициенты усреднить
 */
-double PersistenceCalculator::CalculateNewPersistence(unsigned int etalonRootNum) {
+MxDx PersistenceCalculator::CalculateNewPersistence(unsigned int etalonRootNum) {
     ASSERT_1(etalonRootNum >= 0 && etalonRootNum < roots.size(), -1101);
 
     vector<int> *etalonIndicatorVector = getIndicationVector(roots.at(etalonRootNum));
     int etalonIndicatorVectorWeight = getSum(*etalonIndicatorVector);
     double coef = 0.0;
+    double coef2 = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++)
         if (i != etalonRootNum) {
             vector<int> *someIndicatorVector = getIndicationVector(roots.at(i));
@@ -198,28 +209,41 @@ double PersistenceCalculator::CalculateNewPersistence(unsigned int etalonRootNum
 
             cout << "New K(" << etalonRootNum << "," << i << ")=" << intersectWeight << endl;
             coef += intersectWeight;
+            coef2 += (intersectWeight * intersectWeight);
         }
     myDelete(etalonIndicatorVector);
 
-    return coef / (roots.size() - 1); // roots.size() = L
+    // MX - это мат.ожидание коэффициента подобия ИЛИ - Коэффициент персистентности
+    double MX = coef / (roots.size() - 1); // roots.size() = L
+    // DX - дисперсия коэффициента подобия
+    double DX = (coef2 / (roots.size() - 1)) - (MX * MX);
+
+    return MxDx(MX, DX);
 }
 
 /**
  * Расчёт коэффициента персистентности относительно какого либо маршрута из первоначального набора
 */
-double PersistenceCalculator::CalculatePersistence(unsigned int etalonRootNum) {
+MxDx PersistenceCalculator::CalculatePersistence(unsigned int etalonRootNum) {
     ASSERT_1(etalonRootNum >= 0 && etalonRootNum < roots.size(), -110);
 
     vector<HotSpot *> *etalonRoot = roots.at(etalonRootNum);
     double coef = 0.0;
+    double coef2 = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++)
         if (i != etalonRootNum) {
             double k = CoefficientOfSimilarity(etalonRoot, roots.at(i));
             cout << "K(" << etalonRootNum << "," << i << ")=" << k << endl;
             coef += k;
+            coef2 += (k * k);
         }
 
-    return coef / (roots.size() - 1); // roots.size() = L
+    // MX - это мат.ожидание коэффициента подобия ИЛИ - Коэффициент персистентности
+    double MX = coef / (roots.size() - 1); // roots.size() = L
+    // DX - дисперсия коэффициента подобия
+    double DX = (coef2 / (roots.size() - 1)) - (MX * MX);
+
+    return MxDx(MX, DX);
 }
 
 /**
@@ -495,12 +519,13 @@ void PersistenceCalculator::save(char *RootDir) {
 
     //region PERSISTENCE
     out << "    <PERSISTENCE info=\"Data about persistence for all root files\">" << endl;
-    out << "        <COEFFICIENTS info=\"Coefficients (second num) for every root (first num), marked as ethalon\">" << endl;
+    out << "        <COEFFICIENTS info=\"1: ethalon root num; 2: coefficient of persistence (MX of coefficient of similarity); "
+        << "3: dispersion of coefficient of similarity\">" << endl;
     double averagePersistence = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
-        double persistence;
-        out << "            <COEF> " << i << "\t" << (persistence = CalculatePersistence(i)) << " </COEF>" << endl;
-        averagePersistence += persistence;
+        MxDx mxdx = CalculatePersistence(i);
+        out << "            <COEF> " << i << "\t" << mxdx.MX << "\t" << mxdx.DX << " </COEF>" << endl;
+        averagePersistence += mxdx.DX;
     }
     out << "        </COEFFICIENTS>" << endl;
     out << "        <AVERAGE-PERSISTENCE info=\"Average coefficient for persistence (based on the tag COEFFICIENTS)\"> "
@@ -521,12 +546,13 @@ void PersistenceCalculator::save(char *RootDir) {
 
     //region NEW PERSISTENCE
     out << "    <NEW-PERSISTENCE info=\"Data about new persistence for all root files\">" << endl;
-    out << "        <COEFFICIENTS info=\"Coefficients (second num) for every root (first num), marked as ethalon\">" << endl;
+    out << "        <COEFFICIENTS info=\"1: ethalon root num; 2: coefficient of persistence (MX of coefficient of similarity); "
+        << "3: dispersion of coefficient of similarity\">" << endl;
     double averageNewPersistence = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
-        double newPersistence;
-        out << "            <COEF> " << i << "\t" << (newPersistence = CalculateNewPersistence(i)) << " </COEF>" << endl;
-        averageNewPersistence += newPersistence;
+        MxDx mxdx = CalculateNewPersistence(i);
+        out << "            <COEF> " << i << "\t" << mxdx.MX << "\t" << mxdx.DX << " </COEF>" << endl;
+        averageNewPersistence += mxdx.MX;
     }
     out << "        </COEFFICIENTS>" << endl;
     out << "        <AVERAGE-NEW-PERSISTENCE info=\"Average coefficient for new persistence (based on the tag COEFFICIENTS)\"> "
