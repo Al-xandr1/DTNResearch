@@ -520,11 +520,11 @@ void PersistenceCalculator::save(char *RootDir) {
     //region PERSISTENCE
     out << "    <PERSISTENCE info=\"Data about persistence for all root files\">" << endl;
     out << "        <COEFFICIENTS info=\"1: ethalon root num; 2: coefficient of persistence (MX of coefficient of similarity); "
-        << "3: dispersion of coefficient of similarity\">" << endl;
+        << "3: Normalized standard deviation of coefficient of similarity\">" << endl;
     double averagePersistence = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
         MxDx mxdx = CalculatePersistence(i);
-        out << "            <COEF> " << i << "\t" << mxdx.MX << "\t" << mxdx.DX << " </COEF>" << endl;
+        out << "            <COEF> " << i << "\t" << mxdx.MX << "\t" << (sqrt(mxdx.DX) / mxdx.MX) << " </COEF>" << endl;
         averagePersistence += mxdx.DX;
     }
     out << "        </COEFFICIENTS>" << endl;
@@ -547,11 +547,11 @@ void PersistenceCalculator::save(char *RootDir) {
     //region NEW PERSISTENCE
     out << "    <NEW-PERSISTENCE info=\"Data about new persistence for all root files\">" << endl;
     out << "        <COEFFICIENTS info=\"1: ethalon root num; 2: coefficient of persistence (MX of coefficient of similarity); "
-        << "3: dispersion of coefficient of similarity\">" << endl;
+        << "3: Normalized standard deviation of coefficient of similarity\">" << endl;
     double averageNewPersistence = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
         MxDx mxdx = CalculateNewPersistence(i);
-        out << "            <COEF> " << i << "\t" << mxdx.MX << "\t" << mxdx.DX << " </COEF>" << endl;
+        out << "            <COEF> " << i << "\t" << mxdx.MX << "\t" << (sqrt(mxdx.DX) / mxdx.MX) << " </COEF>" << endl;
         averageNewPersistence += mxdx.MX;
     }
     out << "        </COEFFICIENTS>" << endl;
