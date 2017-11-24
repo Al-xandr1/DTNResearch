@@ -1,18 +1,34 @@
 IS_COMMON_SCE_LOADED = COMMON_SCE_LOADED;//чтобы убедиться, что файл common.sce загружен
 
+//------------------- Функции для Статистики маршрутов *.pst -------------------
+function printPstFolder(folder)
+    SAVE_PATH = PATH;
+    
+    if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
+    pstFiles = getFiles(PATH, "*.pst");
+
+    tags = ["ROOTS-DIMENSION-HISTOGRAM/MIN" ; "ROOTS-DIMENSION-HISTOGRAM/MAX" ; "ROOTS-DIMENSION-HISTOGRAM/AVERAGE"]
+    privatePrintTable(pstFiles, tags);
+    
+    tags = ["ROOT-LENGTH-HISTOGRAM/MIN" ; "ROOT-LENGTH-HISTOGRAM/MAX" ; "ROOT-LENGTH-HISTOGRAM/AVERAGE"]
+    privatePrintTable(pstFiles, tags);
+
+    tags = ["NEW-PERSISTENCE/ETHALON-ROOT/ROOT-NUM" ; "NEW-PERSISTENCE/ETHALON-ROOT/COEF"]
+    privatePrintTable(pstFiles, tags);
+
+    PATH = SAVE_PATH;
+endfunction
+
+
 //--------------------- Функции для Статистики Мобильности ---------------------
 
 //Рисование всех гистрограмм из файлов статистики мобильности
 function drawWPHistograms(varargin)
-    [lhs, rhs] = argn();// rhs - количество входных параметров
-    if (rhs < 1) then
+    fileNames = vararginToStrinsArray(varargin);
+    if (size(fileNames, 1) < 1) then
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    fileNames = [];
-    for i = 1 : rhs
-        fileNames = [fileNames ; varargin(i)];
-    end
     privateDrawHistograms(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "Flight length, meters");
     //privateDrawHistograms(fileNames, "VELOCITY-HISTOGRAM", "Velocity magnitude, meters/sec");
     //privateDrawHistograms(fileNames, "PAUSE-HISTOGRAM", "Pause time, sec");
@@ -37,15 +53,11 @@ endfunction
 
 //Рисование всех гистрограмм из одного файла статистики маршрутизации
 function drawNodeHistograms(varargin)
-    [lhs, rhs] = argn();// rhs - количество входных параметров
-    if (rhs < 1) then
-        error(msprintf("drawNodeHistograms: Ожидалось один или более параметров (имён файлов)"));
+    fileNames = vararginToStrinsArray(varargin);
+    if (size(fileNames, 1) < 1) then
+        error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    fileNames = [];
-    for i = 1 : rhs
-        fileNames = [fileNames ; varargin(i)];
-    end
     privateDrawHistograms(fileNames, "LIFE-TIME-HISTOGRAM", "Life time, simsecs");
     privateDrawHistograms(fileNames, "ICT-HISTOGRAM", "ICT, simsecs");
 endfunction
@@ -67,14 +79,9 @@ endfunction
 
 //Вывод в таблицу значений из файлов статистики маршрутизации
 function printNodeValues(varargin)
-    [lhs, rhs] = argn();// rhs - количество входных параметров
-    if (rhs < 1) then
-        error(msprintf("drawNodeValues: Ожидалось один или более параметров (имён файлов)"));
-    end
-    
-    fileNames = [];
-    for i = 1 : rhs
-        fileNames = [fileNames ; varargin(i)];
+    fileNames = vararginToStrinsArray(varargin);
+    if (size(fileNames, 1) < 1) then
+        error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
     tags = ["DELIVERED-PACKETS" ; "LIFE-TIME-HISTOGRAM/MEAN"]

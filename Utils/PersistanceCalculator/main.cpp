@@ -583,8 +583,8 @@ void PersistenceCalculator::save(char *RootDir, char *SpotDir) {
     out << "        </COEFFICIENTS>" << endl;
     out << "        <AVERAGE-NEW-PERSISTENCE info=\"Average coefficient for new persistence (based on the tag COEFFICIENTS)\"> "
         << (averageNewPersistence /= (1.0 * roots.size())) << " </AVERAGE-NEW-PERSISTENCE>" << endl;
-    out << "        <ETHALON-ROOT info=\"One root selected as ethalon from input vectors (roots). "
-        << "Root num = " << ethalonRootNum << "\"> " << endl;
+    out << "        <ETHALON-ROOT info=\"One root selected as ethalon from input roots\"> " << endl;
+    out << "            <ROOT-NUM info=\"Number of root marked as ethalon\"> " << ethalonRootNum << " </ROOT-NUM> " << endl;
     out << "            <COEF info=\"Coefficient of persistence for root marked as ethalon\">" << maxMx.MX << " </COEF>" << endl;
     out << "            <VALS info=\"Components of the ethalon root (counters for corresponding HOT-SPOTS)\"> " << endl;
     for (unsigned int i = 0; i < ethalonRoot->size(); i++) out << ethalonRoot->at(i)->counter << "  ";
