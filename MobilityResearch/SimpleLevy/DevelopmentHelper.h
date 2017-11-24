@@ -90,7 +90,7 @@ string extractSimpleName(const char* fullName);
 /**
  * Формирует параметр в строке с целочисленным значением (имени файла).
  */
-const char* buildIntParameter(const char* name, int value);
+const char* buildIntParameter(const char* name, int value, int leftPadByZero);
 
 /**
  * Формирует параметр в строке (имени файла).

@@ -324,9 +324,9 @@ void LevyHotSpotsLATP::saveStatistics() {
                 std::size_t found = simpleName.find("_id=");
                 if (found != std::string::npos)
                     // т.е. в названии файла мы нашли куда вставить номер дня
-                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1)) + simpleName.substr((found + 8), simpleName.size()));
+                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
                 else
-                    filename += (string(buildIntParameter("day", j+1)) + extractSimpleName(rootsDataShort->at(i).RootName));
+                    filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(rootsDataShort->at(i).RootName));
 
                 ofstream* rtFile = new ofstream(buildFullName(thRtDir, filename.c_str()));
                 vector<HotSpotDataRoot*>* dailyRoot = theoryRootsPerNode->at(j);
@@ -346,9 +346,9 @@ void LevyHotSpotsLATP::saveStatistics() {
                 std::size_t found = simpleName.find("_id=");
                 if (found != std::string::npos)
                     // т.е. в названии файла мы нашли куда вставить номер дня
-                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1)) + simpleName.substr((found + 8), simpleName.size()));
+                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
                 else
-                    filename += (string(buildIntParameter("day", j+1)) + extractSimpleName(rootsDataShort->at(i).RootName));
+                    filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(rootsDataShort->at(i).RootName));
 
                 ofstream* rtFile = new ofstream(buildFullName(acRtDir, filename.c_str()));
                 vector<HotSpotDataRoot*>* dailyRoot = actualRootsPerNode->at(j);

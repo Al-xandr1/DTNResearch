@@ -68,6 +68,16 @@ private:
     vector<double>* averageCounterVector;
 
     /**
+     * Гистограмма домашних локаций
+     */
+    vector<int>* homeHotspotHistogram;
+
+    /**
+     * Закон распределения на основе homeHotspotHistogram
+     */
+    vector<double>* homeHotspotHistogramPDF;
+
+    /**
      * Набор локаций, на основании которых собиралась статисктика от реальных маршрутов.
      */
     vector<const char*>* hotSpots;
@@ -103,17 +113,21 @@ public:
         this->summarizedIndicatorVector = NULL;
         this->summarizedIndicatorVectorPDF = NULL;
         this->averageCounterVector = NULL;
+        this->homeHotspotHistogram = NULL;
+        this->homeHotspotHistogramPDF = NULL;
         this->hotSpots = NULL;
         initialize();
     }
 
     virtual ~RootsPersistenceAndStatistics() {
-        if (this->xmlFileName) delete this->xmlFileName;
-        if (this->rootsDimensionHistogram) delete this->rootsDimensionHistogram;
-        if (this->rootsDimensionHistogramPDF) delete this->rootsDimensionHistogramPDF;
-        if (this->summarizedIndicatorVector) delete this->summarizedIndicatorVector;
-        if (this->summarizedIndicatorVectorPDF) delete this->summarizedIndicatorVectorPDF;
-        if (this->averageCounterVector) delete this->averageCounterVector;
+        myDelete(this->xmlFileName);
+        myDelete(this->rootsDimensionHistogram);
+        myDelete(this->rootsDimensionHistogramPDF);
+        myDelete(this->summarizedIndicatorVector);
+        myDelete(this->summarizedIndicatorVectorPDF);
+        myDelete(this->averageCounterVector);
+        myDelete(this->homeHotspotHistogram);
+        myDelete(this->homeHotspotHistogramPDF);
         if (this->hotSpots) {
             for (unsigned int i = 0; i < this->hotSpots->size(); i++) {
                 delete [] this->hotSpots->at(i);
@@ -127,6 +141,7 @@ public:
     vector<double>* getRootsDimensionHistogramPDF() {return rootsDimensionHistogramPDF;};
     vector<double>* getSummarizedIndicatorVectorPDF() {return summarizedIndicatorVectorPDF;};
     vector<double>* getAverageCounterVector() {return averageCounterVector;};
+    vector<double>* getHomeHotspotHistogramPDF() {return homeHotspotHistogramPDF;};
     vector<const char*>* getHotSpots() {return hotSpots;};
 
     /**

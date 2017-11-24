@@ -63,6 +63,8 @@ class RegularRootLATP : public LevyHotSpotsLATP
   public:
     RegularRootLATP();
     void loadFirstRoot();
+    void setHomeLocation(vector<HotSpotData*>* root);
+    void checkHomeLocationIn(vector<HotSpotData*>* root);
     void printFirstRoot();
     void printCurrentRoot();
     void printRoot(

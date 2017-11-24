@@ -7,6 +7,9 @@
 
 using namespace std;
 
+// константа показывает сохраняем ли мы в файл НОВЫЙ СРЕДНИЙ маршрут или ОДИН ИЗ ВХОДНЫХ, выдающий макс. коэффициент
+#define SAVE_MASS_CENTER_IN_ROOT false
+
 #define ASSERT_1(trueVal, errorCode) if(!(trueVal)){exit(errorCode);}
 #define ASSERT_2(trueVal, errorCode, message) if(!(trueVal)){cout<<message<<endl;exit(errorCode);}
 
@@ -40,6 +43,8 @@ struct Histogram {
 struct MxDx {
     MxDx(double MX, double DX) : MX(MX), DX(DX) {}
 
+    MxDx(const MxDx &anotherMxDx) : MX(anotherMxDx.MX), DX(anotherMxDx.DX) {}
+
     double MX;
     double DX;
 };
@@ -55,21 +60,22 @@ class PersistenceCalculator {
 protected:
     vector<char *> spotNames;            // все локации (имена соответствующих файлов)
     vector<vector<HotSpot *> *> roots;   // все маршруты, состоящие из наборов HotSpot
+    vector<string> rootFullFileNames;    // имена всех маршрутов
 
 public:
     PersistenceCalculator(char *SpotDir, char *RootDi);
 
     ~PersistenceCalculator();
 
-    MxDx CalculateNewPersistence(unsigned int etalonRootNum);
+    MxDx calculateNewPersistence(unsigned int etalonRootNum);
 
-    MxDx CalculatePersistence(unsigned int etalonRootNum);
+    MxDx calculatePersistence(unsigned int etalonRootNum);
 
-    double CalculatePersistence(vector<HotSpot *> *etalonRoot, char *rootName);
+    double calculatePersistence(vector<HotSpot *> *etalonRoot, char *rootName);
 
-    double CoefficientOfSimilarity(vector<HotSpot *> *root1, vector<HotSpot *> *root2);
+    double coefficientOfSimilarity(vector<HotSpot *> *root1, vector<HotSpot *> *root2);
 
-    vector<HotSpot *> *GetMassCenter();
+    vector<HotSpot *> *getMassCenter();
 
     vector<int> *getSummarizedIndicatorVector();
 
@@ -79,13 +85,13 @@ public:
 
     Histogram *getRootsLengthHistogram();
 
+    vector<int> *getHomeHotspotHistogram();
+
     vector<double> *getAverageCounterVector(vector<int> *summarizedIndicatorVector);
 
-    void GenerateRotFile(char *RootDir, char *SpotDir);
+    void save(char *RootDir, char *SpotDir);
 
-    void save(char *RootDir);
-
-    string getFilePrefix(char *RootDir);
+    const string getFilePrefix(char *RootDir);
 
     /**
      * Получение суммы элементов вектора
@@ -96,6 +102,10 @@ public:
         for (unsigned int i = 0; i < vector.size(); i++) sum += vector.at(i);
         return sum;
     }
+
+    void saveAggregatedRotFile(char *SpotDir, const string &prefix, vector<HotSpot *> *vec, double coef);
+
+    void saveOriginRotFile(const string &prefix, unsigned int rootNum, double coef);
 };
 
 PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
@@ -126,14 +136,15 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
     HANDLE h2 = FindFirstFile(RootNamePattern, &f2);
     if (h2 != INVALID_HANDLE_VALUE) {
         do {
-            char *name = new char[256];
-            name = buildFullName(name, RootDir, f2.cFileName);
-            ifstream *rfile = new ifstream(name);
+            char *fileName = new char[256];
+            fileName = buildFullName(fileName, RootDir, f2.cFileName);
+            ifstream *rfile = new ifstream(fileName);
             vector<HotSpot *> *root = new vector<HotSpot *>();
             for (unsigned int i = 0; i < spotNames.size(); i++) root->push_back(new HotSpot(false, 0, 0, 0));
             char *lastRedHotSpotName = NULL;
             bool foundHome = false;
             while (!rfile->eof()) {
+                std::fill(&hotSpotName[0], &hotSpotName[0] + sizeof(hotSpotName), 0);
                 (*rfile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> time >> points;
                 // из-за сгенерированных маршрутов ASSERT_2(time >= 0 && points >= 0, -1235, "time or points are wrong");
 
@@ -142,16 +153,14 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
                     bool nextIter = false;
                     // если true - значит наткнулись на дубль последней строки (или в общем случае вообще на дубль строки)
                     if (strcmp(lastRedHotSpotName, hotSpotName) == 0) nextIter = true;
-                    delete[] lastRedHotSpotName;
-                    lastRedHotSpotName = NULL;
+                    myDeleteArray(lastRedHotSpotName);
                     if (nextIter) continue;
                 }
-                lastRedHotSpotName = new char[256];
-                lastRedHotSpotName = strcpy(lastRedHotSpotName, hotSpotName);
+                lastRedHotSpotName = strcpy(new char[256], hotSpotName);
 
                 //прочитанная локация НЕ является дублем. Продолжаем загрузку
                 bool foundSpot = false;
-                for (unsigned int i = 0; i < spotNames.size(); i++)
+                for (unsigned int i = 0; i < spotNames.size(); i++) {
                     if (strcmp(spotNames[i], hotSpotName) == 0) {
                         // первая строка в файле - это домашняя локация - ОДНО её посещение исключается из расчётов
                         if (!foundHome) {
@@ -164,11 +173,14 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
                         foundSpot = true;
                         break;
                     }
-                ASSERT_2(foundSpot || (string(hotSpotName).size() == 0), -1234,
+                }
+                ASSERT_2(foundSpot || (string(hotSpotName).length() == 0), -1234,
                          string("hotSpotName ='") + string(hotSpotName) + string("'"));
             }
             roots.push_back(root);
+            rootFullFileNames.push_back(string(fileName));
             rfile->close();
+            myDelete(rfile);
         } while (FindNextFile(h2, &f2));
     }
 }
@@ -189,7 +201,7 @@ PersistenceCalculator::~PersistenceCalculator() {
  * то есть без учёта кратности посещений), к длине (в количестве локаций, также без учёта кратности посещений).
  * Ну и взять для простоты первый маршрут, и с ним сравнивать все остальные, а полученные коэффициенты усреднить
 */
-MxDx PersistenceCalculator::CalculateNewPersistence(unsigned int etalonRootNum) {
+MxDx PersistenceCalculator::calculateNewPersistence(unsigned int etalonRootNum) {
     ASSERT_1(etalonRootNum >= 0 && etalonRootNum < roots.size(), -1101);
 
     vector<int> *etalonIndicatorVector = getIndicationVector(roots.at(etalonRootNum));
@@ -224,7 +236,7 @@ MxDx PersistenceCalculator::CalculateNewPersistence(unsigned int etalonRootNum) 
 /**
  * Расчёт коэффициента персистентности относительно какого либо маршрута из первоначального набора
 */
-MxDx PersistenceCalculator::CalculatePersistence(unsigned int etalonRootNum) {
+MxDx PersistenceCalculator::calculatePersistence(unsigned int etalonRootNum) {
     ASSERT_1(etalonRootNum >= 0 && etalonRootNum < roots.size(), -110);
 
     vector<HotSpot *> *etalonRoot = roots.at(etalonRootNum);
@@ -232,7 +244,7 @@ MxDx PersistenceCalculator::CalculatePersistence(unsigned int etalonRootNum) {
     double coef2 = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++)
         if (i != etalonRootNum) {
-            double k = CoefficientOfSimilarity(etalonRoot, roots.at(i));
+            double k = coefficientOfSimilarity(etalonRoot, roots.at(i));
             cout << "K(" << etalonRootNum << "," << i << ")=" << k << endl;
             coef += k;
             coef2 += (k * k);
@@ -249,10 +261,10 @@ MxDx PersistenceCalculator::CalculatePersistence(unsigned int etalonRootNum) {
 /**
  * Расчёт коэффициента персистентности относительно маршрута НЕ из первоначального набора
 */
-double PersistenceCalculator::CalculatePersistence(vector<HotSpot *> *etalonRoot, char *rootName) {
+double PersistenceCalculator::calculatePersistence(vector<HotSpot *> *etalonRoot, char *rootName) {
     double coef = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
-        double k = CoefficientOfSimilarity(etalonRoot, roots.at(i));
+        double k = coefficientOfSimilarity(etalonRoot, roots.at(i));
         cout << "K(" << rootName << "," << i << ")=" << k << endl;
         coef += k;
     }
@@ -262,7 +274,7 @@ double PersistenceCalculator::CalculatePersistence(vector<HotSpot *> *etalonRoot
 
 #define MY_MAX(a, b) ((a>b)?a:b)
 
-double PersistenceCalculator::CoefficientOfSimilarity(vector<HotSpot *> *root1, vector<HotSpot *> *root2) {
+double PersistenceCalculator::coefficientOfSimilarity(vector<HotSpot *> *root1, vector<HotSpot *> *root2) {
     ASSERT_1(root1->size() == root2->size(), -222);
 
     double sumDiff = 0, sumOfMaxComponents = 0, k = 0;
@@ -318,7 +330,7 @@ double PersistenceCalculator::CoefficientOfSimilarity(vector<HotSpot *> *root1, 
  * Расчёт центра масс с многомерном пространстве, размерности spotNames.size()
  * и векторами roots. Пространство натуральных чисел!!!
 */
-vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
+vector<HotSpot *> *PersistenceCalculator::getMassCenter() {
     vector<HotSpot *> *massCenter = new vector<HotSpot *>();
     for (unsigned int i = 0; i < roots.at(0)->size(); i++) {
         long double averageCounter = 0.0;
@@ -341,41 +353,6 @@ vector<HotSpot *> *PersistenceCalculator::GetMassCenter() {
     }
 
     return massCenter;
-}
-
-/**
- * формирование файла *.rot со средним маршрутом
-*/
-void PersistenceCalculator::GenerateRotFile(char *RootDir, char *SpotDir) {
-    char SpotNamePattern[256];
-
-    string targetName = getFilePrefix(RootDir);
-    targetName += string("_persistence=");
-
-    vector<HotSpot *> *massCenter = GetMassCenter();
-    double persistence = CalculatePersistence(massCenter, (char *) "massCenter");
-
-    string persistenceStr = to_string(persistence).c_str(); //конвертация double в char
-    targetName += string(persistenceStr);
-    targetName += string("_.rot");
-
-    char buff[50];
-    ofstream file(targetName);
-    for (unsigned int i = 0; i < massCenter->size(); i++) {
-        for (unsigned int k = 0; k < massCenter->at(i)->counter; k++) {
-            buildFullName(SpotNamePattern, SpotDir, spotNames[i]);
-            ifstream fin(SpotNamePattern);
-            file << spotNames[i] << " ";
-            for (int j = 0; j < 4; j++) {
-                fin >> buff;
-                file << buff << " ";
-            }
-            file << (massCenter->at(i)->sumTime / massCenter->at(i)->counter)
-                 << " " << (massCenter->at(i)->totalPoints / massCenter->at(i)->counter) << endl;
-            fin.close();
-        }
-    }
-    file.close();
 }
 
 /**
@@ -416,12 +393,7 @@ Histogram *PersistenceCalculator::getRootsDimensionsHistogram() {
     for (unsigned int i = 0; i < roots.size(); i++) {
         vector<int> *indicatorVector = getIndicationVector(roots.at(i));
         ASSERT_1(data->size() == (indicatorVector->size() + 1), -4322);
-        int weight = 0;
-        for (unsigned int j = 0; j < indicatorVector->size(); j++) {
-            int indicator = indicatorVector->at(j);
-            ASSERT_1(indicator == 0 || indicator == 1, -4433);
-            weight += indicator;
-        }
+        int weight = getSum(*indicatorVector);
         ASSERT_1(weight >= 0 && weight <= spotNames.size(), -4434);
 
         data->at((unsigned int) weight)++;
@@ -429,7 +401,7 @@ Histogram *PersistenceCalculator::getRootsDimensionsHistogram() {
         min = std::min(min, (double) weight);
         max = std::max(max, (double) weight);
 
-        delete indicatorVector;
+        myDelete(indicatorVector);
     }
 
     return new Histogram(data, roots.size(), min, max, average / (1.0 * roots.size()));
@@ -475,6 +447,31 @@ vector<int> *PersistenceCalculator::getIndicationVector(vector<HotSpot *> *root)
 }
 
 /**
+ * Получение гистограммы на основе всех домашних (ПЕРВЫХ) локаций из всех трасс.
+ */
+vector<int> *PersistenceCalculator::getHomeHotspotHistogram() {
+    vector<int> *data = new vector<int>(spotNames.size());
+    for (unsigned int i = 0; i < data->size(); i++) data->at(i) = 0;
+
+    for (unsigned int i = 0; i < roots.size(); i++) {
+        vector<HotSpot *> *root = roots.at(i);
+        ASSERT_1(data->size() == root->size(), -4325);
+        for (unsigned int j = 0; j < root->size(); j++) {
+            if (root->at(j)->isHome) {
+                // фиксирукм данную локацию в гистограмме и выходим из цикла
+                data->at(j) += 1;
+                break;
+            }
+        }
+    }
+
+    int checkSum = getSum(*data);
+    ASSERT_1(checkSum <= roots.size(), -4326); // < из-за ситуации с одним пустым файлом маршрута
+
+    return data;
+}
+
+/**
  * Метод получает просуммированный вектор от всех маршрутов, поделённый на суммарный индикаторный вектор.
  * Таким образом в каждой компоненте получается среднее количество посещений за те дни,
  * в которые было хотя бы одно посещение.
@@ -505,15 +502,17 @@ vector<double> *PersistenceCalculator::getAverageCounterVector(vector<int> *summ
     return averageCounterVector;
 }
 
-
 /**
- * Медот сохраняет в xml файл статистичесике данные.
+ * Сохранение результатов в файлы.
  */
-void PersistenceCalculator::save(char *RootDir) {
-    string targetName = getFilePrefix(RootDir);
-    targetName += string("_roots_persistence_statistics.pst");
+void PersistenceCalculator::save(char *RootDir, char *SpotDir) {
+    const string prefix = getFilePrefix(RootDir);
 
-    ofstream out(targetName);
+
+    /**
+     * Формирование файла СТАТИСТИКИ
+     */
+    ofstream out(prefix + string("_roots_persistence_statistics.pst"));
     out << "<?xml version=\"1.0\" ?>" << endl << endl;
     out << "<ROOT-STATISTICS info=\"Collected statistics for set of root files\">" << endl;
 
@@ -523,7 +522,7 @@ void PersistenceCalculator::save(char *RootDir) {
         << "3: Normalized standard deviation of coefficient of similarity\">" << endl;
     double averagePersistence = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
-        MxDx mxdx = CalculatePersistence(i);
+        MxDx mxdx = calculatePersistence(i);
         out << "            <COEF> " << i << "\t" << mxdx.MX << "\t" << (sqrt(mxdx.DX) / mxdx.MX) << " </COEF>" << endl;
         averagePersistence += mxdx.DX;
     }
@@ -531,13 +530,12 @@ void PersistenceCalculator::save(char *RootDir) {
     out << "        <AVERAGE-PERSISTENCE info=\"Average coefficient for persistence (based on the tag COEFFICIENTS)\"> "
         << (averagePersistence /= (1.0 * roots.size())) << " </AVERAGE-PERSISTENCE>" << endl;
     out << "        <MASS-CENTER info=\"Mass center for set of input vectors (roots)\"> " << endl;
-    vector<HotSpot *> *massCenter = GetMassCenter();
+    vector<HotSpot *> *massCenter = getMassCenter();
+    const double massCenterPersistence = calculatePersistence(massCenter, (char *) "massCenter");
     out << "            <COEF info=\"Coefficient of persistence for mass center marked as ethalon\">"
-        << CalculatePersistence(massCenter, (char *) "massCenter") << " </COEF>" << endl;
+        << massCenterPersistence << " </COEF>" << endl;
     out << "            <VALS info=\"Components of the mass center (counters for corresponding HOT-SPOTS)\"> " << endl;
-    for (unsigned int i = 0; i < massCenter->size(); i++) {
-        out << massCenter->at(i)->counter << "  ";
-    }
+    for (unsigned int i = 0; i < massCenter->size(); i++) out << massCenter->at(i)->counter << "  ";
     out << endl << "            </VALS> ";
     out << endl << "        </MASS-CENTER> ";
     out << endl << "    </PERSISTENCE>" << endl;
@@ -548,15 +546,50 @@ void PersistenceCalculator::save(char *RootDir) {
     out << "    <NEW-PERSISTENCE info=\"Data about new persistence for all root files\">" << endl;
     out << "        <COEFFICIENTS info=\"1: ethalon root num; 2: coefficient of persistence (MX of coefficient of similarity); "
         << "3: Normalized standard deviation of coefficient of similarity\">" << endl;
+    MxDx maxMx(0, 0);
+    vector<unsigned int> *rootsWithMaxMx = new vector<unsigned int>();
+    rootsWithMaxMx->push_back(roots.size() - 1); // значение по умолчанию, если вдруг цикл ничего не найдёт
     double averageNewPersistence = 0.0;
     for (unsigned int i = 0; i < roots.size(); i++) {
-        MxDx mxdx = CalculateNewPersistence(i);
+        MxDx mxdx = calculateNewPersistence(i);
         out << "            <COEF> " << i << "\t" << mxdx.MX << "\t" << (sqrt(mxdx.DX) / mxdx.MX) << " </COEF>" << endl;
         averageNewPersistence += mxdx.MX;
+        if (mxdx.MX > maxMx.MX) {
+            // если очередной маршрут даёт ЛУЧШИЙ коэффициент персистентности, то ...
+            // ... очищаем все маршруты, с мЕньшим коэффициентом персистентности ...
+            rootsWithMaxMx->clear();
+            // ... и запоминаем этот "хороший" маршрут c бОльшим коэффициентом персистентности
+            rootsWithMaxMx->push_back(i);
+            maxMx = mxdx;
+        } else if (mxdx.MX == maxMx.MX) {
+            // если очередной маршрут даёт ТАКОЙ ЖЕ коэффициент персистентности, то запоминаем его
+            rootsWithMaxMx->push_back(i);
+        }
     }
+    ASSERT_1(rootsWithMaxMx->size() > 0, -4137);
+    int ethalonRootNum = -1;
+    // теперь из всех маршрутов в МАКСИМАЛЬНЫМ коэффициентом персистентности нужно выбрать ОДИН
+    int maxDimension = -1;
+    for (unsigned int i = 0; i < rootsWithMaxMx->size(); i++) {
+        vector<int> *iv = getIndicationVector(roots.at(rootsWithMaxMx->at(i)));
+        if (getSum(*iv) > maxDimension) {
+            maxDimension = getSum(*iv);
+            ethalonRootNum = rootsWithMaxMx->at(i);
+        }
+        myDelete(iv);
+    }
+    ASSERT_1(ethalonRootNum >= 0 && ethalonRootNum < roots.size(), -4138);
+    vector<HotSpot *> *ethalonRoot = roots.at((unsigned int) ethalonRootNum);
     out << "        </COEFFICIENTS>" << endl;
     out << "        <AVERAGE-NEW-PERSISTENCE info=\"Average coefficient for new persistence (based on the tag COEFFICIENTS)\"> "
-        << (averageNewPersistence /= (1.0 * roots.size())) << " </AVERAGE-NEW-PERSISTENCE>";
+        << (averageNewPersistence /= (1.0 * roots.size())) << " </AVERAGE-NEW-PERSISTENCE>" << endl;
+    out << "        <ETHALON-ROOT info=\"One root selected as ethalon from input vectors (roots). "
+        << "Root num = " << ethalonRootNum << "\"> " << endl;
+    out << "            <COEF info=\"Coefficient of persistence for root marked as ethalon\">" << maxMx.MX << " </COEF>" << endl;
+    out << "            <VALS info=\"Components of the ethalon root (counters for corresponding HOT-SPOTS)\"> " << endl;
+    for (unsigned int i = 0; i < ethalonRoot->size(); i++) out << ethalonRoot->at(i)->counter << "  ";
+    out << endl << "            </VALS> ";
+    out << endl << "        </ETHALON-ROOT> ";
     out << endl << "    </NEW-PERSISTENCE>" << endl;
     //endregion
 
@@ -580,8 +613,7 @@ void PersistenceCalculator::save(char *RootDir) {
     out << "        <AVERAGE> " << dimensionsHistogram->average << " </AVERAGE>" << endl;
     out << "        <COUNT-OF-VALS> " << dimensionsHistogram->countOfVals << " </COUNT-OF-VALS>" << endl;
     out << "        <VALS> " << endl;
-    for (unsigned int i = 0; i < dimensionsHistogram->data->size(); i++)
-        out << dimensionsHistogram->data->at(i) << "  ";
+    for (unsigned int i = 0; i < dimensionsHistogram->data->size(); i++) out << dimensionsHistogram->data->at(i) << "  ";
     out << endl << "        </VALS> " << endl;
     out << "    </ROOTS-DIMENSION-HISTOGRAM>" << endl;
     myDelete(dimensionsHistogram);
@@ -592,8 +624,7 @@ void PersistenceCalculator::save(char *RootDir) {
     vector<int> *summarizedIndicatorVector = getSummarizedIndicatorVector();
     out << "    <SUMMARIZED-INDICATOR-VECTOR info=\"Each component of this vector - sum of the roots' components\">" << endl;
     out << "        <VALS> " << endl;
-    for (unsigned int i = 0; i < summarizedIndicatorVector->size(); i++)
-        out << summarizedIndicatorVector->at(i) << "  ";
+    for (unsigned int i = 0; i < summarizedIndicatorVector->size(); i++) out << summarizedIndicatorVector->at(i) << "  ";
     out << endl << "        </VALS> " << endl;
     out << "    </SUMMARIZED-INDICATOR-VECTOR>" << endl;
     //endregion
@@ -609,6 +640,16 @@ void PersistenceCalculator::save(char *RootDir) {
     //endregion
 
 
+    //region HOME HOTSPOT HISTOGRAM
+    vector<int> *homeHotspotHistogram = getHomeHotspotHistogram();
+    out << "    <HOME-HOTSPOT-HISTOGRAM info=\"Histogram of home hotspots (made from all roots)\">" << endl;
+    out << "        <VALS> " << endl;
+    for (unsigned int i = 0; i < homeHotspotHistogram->size(); i++) out << homeHotspotHistogram->at(i) << "  ";
+    out << endl << "        </VALS> " << endl;
+    out << "    </HOME-HOTSPOT-HISTOGRAM>" << endl;
+    //endregion
+
+
     //region HOT SPOTS (FOR DEBUG)
     out << "    <HOT-SPOTS info=\"Vector of corresponding hotspots\">" << endl;
     out << "        <VALS> " << endl;
@@ -617,8 +658,71 @@ void PersistenceCalculator::save(char *RootDir) {
     out << "    </HOT-SPOTS>" << endl;
     //endregion
 
-
     out << "</ROOT-STATISTICS>" << endl;
+    cout << endl << "Persistence & PDFs are made!" << endl;
+
+
+    /**
+    * формирование файла *.rot с выбранным маршрутом
+    */
+    if (SAVE_MASS_CENTER_IN_ROOT)
+        saveAggregatedRotFile(SpotDir, prefix, massCenter, massCenterPersistence);
+    else
+        saveOriginRotFile(prefix, (unsigned int) ethalonRootNum, maxMx.MX);
+}
+
+/**
+ * Сохраняет агрегированный маршрут в файл *.rot (со усреднённым значением sumTime & totalPoints на посещение)
+ */
+void PersistenceCalculator::saveAggregatedRotFile(char *SpotDir, const string &prefix, vector<HotSpot *> *vec, double coef) {
+    ofstream file(prefix + string("_persistence=") + string(to_string(coef).c_str()) + string("_.rot"));
+    char SpotNamePattern[256];
+    char buff[50];
+    for (unsigned int i = 0; i < vec->size(); i++) {
+        for (unsigned int k = 0; k < vec->at(i)->counter; k++) {
+            buildFullName(SpotNamePattern, SpotDir, spotNames[i]);
+            ifstream fin(SpotNamePattern);
+            file << spotNames[i] << " ";
+            for (int j = 0; j < 4; j++) {
+                fin >> buff;
+                file << buff << " ";
+            }
+            file << (vec->at(i)->sumTime / vec->at(i)->counter) << " " << (vec->at(i)->totalPoints / vec->at(i)->counter) << endl;
+            fin.close();
+        }
+    }
+    file.close();
+    cout << endl << "rot file is generated!" << endl;
+}
+
+/**
+ * Сохранение оригинального маршрута (прочитанного из файла) под новым именем.
+ */
+void PersistenceCalculator::saveOriginRotFile(const string &prefix, unsigned int rootNum, double coef) {
+    ofstream outFile(prefix + string("_persistence=") + string(to_string(coef).c_str()) + string("_.rot"));
+    ifstream rfile(rootFullFileNames.at(rootNum));
+    string line;
+    while (std::getline(rfile, line)) {
+        outFile << line << endl;
+    }
+    rfile.close();
+    outFile.close();
+    cout << endl << "rot file with ORIGIN root is generated!" << endl;
+}
+
+const string PersistenceCalculator::getFilePrefix(char *RootDir) {
+    char RootNamePattern[256];
+    buildFullName(RootNamePattern, RootDir, "*.rot");
+    WIN32_FIND_DATA f0;
+    FindFirstFile(RootNamePattern, &f0);
+
+    string fileName(f0.cFileName);
+    std::size_t found = fileName.find("_id=");
+    cout << "!!! fileName = '" << fileName << "'" << endl;
+    ASSERT_1(found != std::string::npos, -115);
+    string fileNamePrefix = fileName.substr(0, (found + 7));
+    cout << "!!! fileNamePrefix = '" << fileNamePrefix << "'" << endl;
+    return fileNamePrefix;
 }
 
 int main(int argc, char **argv) {
@@ -641,27 +745,6 @@ int main(int argc, char **argv) {
     }
 
     PersistenceCalculator calc(hotspotFilesDir, rootFilesDir);
-
-    calc.save(rootFilesDir);
-    cout << endl << "Persistence & PDFs are made!" << endl;
-
-    calc.GenerateRotFile(rootFilesDir, hotspotFilesDir);
-    cout << endl << "rot file with average root is generated!!" << endl;
-
+    calc.save(rootFilesDir, hotspotFilesDir);
     return 0;
-}
-
-string PersistenceCalculator::getFilePrefix(char *RootDir) {
-    char RootNamePattern[256];
-    buildFullName(RootNamePattern, RootDir, "*.rot");
-    WIN32_FIND_DATA f0;
-    FindFirstFile(RootNamePattern, &f0);
-
-    string fileName(f0.cFileName);
-    std::size_t found = fileName.find("_id=");
-    cout << "!!! fileName = '" << fileName << "'" << endl;
-    ASSERT_1(found != std::string::npos, -115);
-    string fileNamePrefix = fileName.substr(0, (found + 7));
-    cout << "!!! fileNamePrefix = '" << fileNamePrefix << "'" << endl;
-    return fileNamePrefix;
 }

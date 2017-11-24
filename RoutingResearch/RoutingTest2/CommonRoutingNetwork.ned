@@ -23,6 +23,11 @@ network CommonRoutingNetwork
         // ИЛИ используем коэффициент ПЕРСИСТЕНТНОСТИ (всё в RootsPersistenceAndStatistics)
         bool useRootStatistics = default(true); 
         
+        // параметр, показывающий нужно ли использовать логику по: 
+        // - ФИКСИРОВАНИЮ домашней лоакции во всех очередных маршрутах на протяжении всего времени моделирования -  TRUE
+        // - ГЕНЕРИРОВАНИЯ домашней лоакции во всех очередных маршрутах на протяжении всего времени моделирования - FALSE 
+        bool useFixedHomeLocation = default(true);
+        
         // statistic collection
         int countOfDays = default(5); 					// number of days will be accounted for collection statistics of total time coonection per a day
         // параметр, который включает или выключает использование 

@@ -71,7 +71,7 @@ void RegularRootLATP::loadFirstRoot()
         firstRootWptsPerVisit->at(i) /= firstRootCounter->at(i); // todo сделать округление в бОльшую сторону
 
     // загрузка домашней локации
-    homeHS = firstRoot->at(0);
+    setHomeLocation(firstRoot);
 
     RootDataShort *rootDataShort = rc->getRootDataShortByNodeId(NodeID);
     ASSERT(rootDataShort);
@@ -79,6 +79,16 @@ void RegularRootLATP::loadFirstRoot()
     if (rootDataShort->persistence) rootPersistence = *(rootDataShort->persistence);
 
     printFirstRoot();
+}
+
+
+void RegularRootLATP::setHomeLocation(vector<HotSpotData*>* root) {
+    homeHS = root->at(0);
+}
+
+
+void RegularRootLATP::checkHomeLocationIn(vector<HotSpotData*>* root) {
+    ASSERT(root->at(0) == homeHS);
 }
 
 
@@ -190,9 +200,11 @@ void RegularRootLATP::initialize(int stage) {
     ASSERT(hsc);
     if (!rootGenerator) {
         if (getParentModule()->getParentModule()->par("useRootStatistics").boolValue())
-            rootGenerator = new GenerationRootsByStatisticsStrategy(rootStatistics, hsc);
+            rootGenerator = new GenerationRootsByStatisticsStrategy(hsc, rootStatistics,
+                    getParentModule()->getParentModule()->par("useFixedHomeLocation").boolValue());
         else
-            rootGenerator = new GenerationRootsByPersistenceStrategy(rootPersistence, hsc);
+            rootGenerator = new GenerationRootsByPersistenceStrategy(hsc, rootPersistence,
+                    getParentModule()->getParentModule()->par("useFixedHomeLocation").boolValue());
     }
 
 
@@ -233,7 +245,7 @@ void RegularRootLATP::setCurRootIndex(unsigned int currentRootIndex, bool writeI
     currentHSWaypointNum = currentRootWptsPerVisit->at(curRootIndex);
 
     // локация в нулевом индексе - это должна быть домашняя локация
-    if (curRootIndex == 0) ASSERT(homeHS == currentRoot->at(curRootIndex));
+    if (curRootIndex == 0) checkHomeLocationIn(currentRoot);
 
     if (writeIndexToTrack) {
         ASSERT(currentRootActualTrack);
@@ -382,7 +394,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
 
 bool RegularRootLATP::isRootFinished() {
     ASSERT(currentRoot->size() > 0);
-    ASSERT(homeHS == currentRoot->at(0));
+    checkHomeLocationIn(currentRoot);
     bool finished = true;
     for (unsigned int i=1; i<currentRootCounter->size(); i++) {
         finished &= (currentRootCounter->at(i) == 0);
@@ -437,12 +449,17 @@ void RegularRootLATP::makeNewRoot()
     rootGenerator->generateNewRoot(
             firstRoot, firstRootSnumber, firstRootCounter, firstRootWptsPerVisit,
             currentRoot, currentRootSnumber, currentRootCounter, currentRootWptsPerVisit);
+    if (!getParentModule()->getParentModule()->par("useFixedHomeLocation").boolValue()) {
+        setHomeLocation(currentRoot);
+    }
 
 
     // for debug
     ASSERT(currentRoot && currentRootSnumber && currentRootCounter && currentRootWptsPerVisit);
     printFirstRoot();
     printCurrentRoot();
+    // проверка, что домашняя локация в новом маршруте сохранилась
+    checkHomeLocationIn(currentRoot);
     // суммы посещений должно быть больше нуля в маршрутах
     ASSERT(getSum(*currentRootCounter) > 0);
     ASSERT(getSum(*firstRootCounter) > 0);

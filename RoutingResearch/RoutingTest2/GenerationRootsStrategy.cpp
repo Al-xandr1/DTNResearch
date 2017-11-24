@@ -153,12 +153,27 @@ bool GenerationRootsByStatisticsStrategy::generateNewRoot(
 
     int currentDimension = 0;
 
-    // Добавляем домашнюю локацию
-    currentRoot->push_back(firstRoot->at(0));
+    // Выбираем домашнюю локацию в зависимости от парамета модели useFixedHomeLocation
+    HotSpotData* homeHotSpot = NULL;
+    int homeHotSpotIndexPST = -1;
+    int homeHotSpotIndexHSC = -1;
+    if (useFixedHomeLocation) {
+        homeHotSpot = firstRoot->at(0);
+        homeHotSpotIndexHSC = firstRootSnumber->at(0);
+        homeHotSpotIndexPST = rootStatistics->findHotSpotIndexByName(firstRoot->at(0)->hotSpotName);
+    } else {
+        homeHotSpotIndexPST = generateHomeHotSpotIndexPST();
+        const char* homeHotSpotName = rootStatistics->getHotSpots()->at(homeHotSpotIndexPST);
+        // по имени локации полчаем НУЖНЫЙ ИНДЕКС в hsc->getHSData()
+        homeHotSpot = hsc->findHotSpotbyName(homeHotSpotName, homeHotSpotIndexHSC);
+    }
+    ASSERT(homeHotSpot && homeHotSpotIndexHSC != -1 && homeHotSpotIndexPST != -1);
+
+    // Добавляем домашнюю локацию в новый маршрут
+    currentRoot->push_back(homeHotSpot);
     // ... добавляем её оригинальный индекс
-    currentRootSnumber->push_back(firstRootSnumber->at(0));
+    currentRootSnumber->push_back(homeHotSpotIndexHSC);
     // ... и количество посещений на основе данных о среднем количестве из файла *.pst (по идексу из файла *.pst)
-    unsigned int homeHotSpotIndexPST = rootStatistics->findHotSpotIndexByName(firstRoot->at(0)->hotSpotName);
     currentRootCounter->push_back(getHotSpotCount(homeHotSpotIndexPST));
     currentDimension++;
 
@@ -215,6 +230,12 @@ unsigned int GenerationRootsByStatisticsStrategy::getHotSpotCount(unsigned int h
     int averageCountInt = round(averageCount);
     ASSERT(averageCountInt >= 0);
     return averageCountInt;
+}
+
+unsigned int GenerationRootsByStatisticsStrategy::generateHomeHotSpotIndexPST() {
+    int homeHotSpotIndex = generate(rootStatistics->getHomeHotspotHistogramPDF());
+    ASSERT(homeHotSpotIndex >= 0 && ((unsigned int)homeHotSpotIndex) < rootStatistics->getHotSpots()->size());
+    return homeHotSpotIndex;
 }
 
 int GenerationRootsByStatisticsStrategy::generate(vector<double>* pdf)
