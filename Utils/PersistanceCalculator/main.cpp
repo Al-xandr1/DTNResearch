@@ -136,8 +136,7 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
     HANDLE h2 = FindFirstFile(RootNamePattern, &f2);
     if (h2 != INVALID_HANDLE_VALUE) {
         do {
-            char *fileName = new char[256];
-            fileName = buildFullName(fileName, RootDir, f2.cFileName);
+            char *fileName = buildFullName(new char[256], RootDir, f2.cFileName);
             ifstream *rfile = new ifstream(fileName);
             vector<HotSpot *> *root = new vector<HotSpot *>();
             for (unsigned int i = 0; i < spotNames.size(); i++) root->push_back(new HotSpot(false, 0, 0, 0));
@@ -179,6 +178,9 @@ PersistenceCalculator::PersistenceCalculator(char *SpotDir, char *RootDir) {
             }
             roots.push_back(root);
             rootFullFileNames.push_back(string(fileName));
+
+            myDelete(lastRedHotSpotName);
+            myDelete(fileName);
             rfile->close();
             myDelete(rfile);
         } while (FindNextFile(h2, &f2));
