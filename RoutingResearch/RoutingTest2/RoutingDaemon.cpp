@@ -81,9 +81,9 @@ void RoutingDaemon::initialize() {
     interconnectionRadius = getParentModule()->par("interconnectionRadius");
     numHosts              = getParentModule()->par("numHosts");
 
-    dayDuration   = getParentModule()->par("dayDuration").doubleValue();
-    countOfDays   = getParentModule()->par("countOfDays").doubleValue();
-    useCODForStat = getParentModule()->par("useCODForStat").boolValue();
+    dayDuration           = getParentModule()->par("dayDuration").doubleValue();
+    countOfDays           = getParentModule()->par("countOfDays").doubleValue();
+    useCountOfDaysForStat = getParentModule()->par("useCountOfDaysForStat").boolValue();
 
     matricesCreation();
     matricesInitialization();
@@ -200,7 +200,7 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
 }
 
 bool RoutingDaemon::canCollectStatistics() {
-    return !useCODForStat || currentDay > countOfDays;
+    return !useCountOfDaysForStat || currentDay > countOfDays;
 }
 
 void RoutingDaemon::processNewDay() {

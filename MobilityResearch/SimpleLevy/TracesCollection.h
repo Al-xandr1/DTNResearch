@@ -31,7 +31,7 @@ private:
     }
 
     ~TracesCollection() {
-        if (traces) delete traces;
+        myDelete(traces);
     }
 
     void readTraces(char* TracesDir, char* filePatter);

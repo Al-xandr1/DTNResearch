@@ -25,9 +25,9 @@ private:
     simtime_t    startTimeOfCurrentDay;
     simtime_t    finishTimeOfCurrentDay;
     unsigned int countOfDays;
-    bool         useCODForStat;
+    bool         useCountOfDaysForStat;
 
-    vector<int>*  neighbors;
+    vector<int>* neighbors;
 
 public:
     static double      dayDuration;
@@ -59,22 +59,22 @@ public:
 
 public:
     RoutingDaemon() {
-        routingHeuristics = NULL;
-        currentDay        = 0;
+        routingHeuristics      = NULL;
+        currentDay             = 0;
         startTimeOfCurrentDay  = 0;
         finishTimeOfCurrentDay = 0;
-        dayDuration       = -1;
-        countOfDays       = 0;
-        useCODForStat     = FALSE;
-        neighbors         = NULL;
+        dayDuration            = -1;
+        countOfDays            = 0;
+        useCountOfDaysForStat  = FALSE;
+        neighbors              = NULL;
     }
 
-    int          getNumHosts()      {return numHosts;}
-    unsigned int getCurrentDay()    {return currentDay;}
+    int          getNumHosts()              {return numHosts;}
+    unsigned int getCurrentDay()            {return currentDay;}
     simtime_t    getStartTimeOfCurrentDay() {return startTimeOfCurrentDay;}
-    double       getDayDuration()   {return dayDuration;}
-    unsigned int getCountOfDays()   {return countOfDays;}
-    bool         getUseCODForStat() {return useCODForStat;}
+    double       getDayDuration()           {return dayDuration;}
+    unsigned int getCountOfDays()           {return countOfDays;}
+    bool         getUseCountOfDaysForStat() {return useCountOfDaysForStat;}
 
     void matricesCreation();
     void matricesInitialization();

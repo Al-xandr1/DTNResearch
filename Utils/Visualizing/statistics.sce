@@ -24,7 +24,10 @@ endfunction
 
 //Рисование всех гистрограмм из файлов статистики мобильности
 function drawWPHistograms(varargin)
-    fileNames = vararginToStrinsArray(varargin);
+    fileNames = [];
+    for i = 1 : argn(2)// rhs - количество входных параметров
+        fileNames = [fileNames ; varargin(i)];
+    end
     if (size(fileNames, 1) < 1) then
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
@@ -53,7 +56,10 @@ endfunction
 
 //Рисование всех гистрограмм из одного файла статистики маршрутизации
 function drawNodeHistograms(varargin)
-    fileNames = vararginToStrinsArray(varargin);
+    fileNames = [];
+    for i = 1 : argn(2)// rhs - количество входных параметров
+        fileNames = [fileNames ; varargin(i)];
+    end
     if (size(fileNames, 1) < 1) then
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
@@ -79,7 +85,10 @@ endfunction
 
 //Вывод в таблицу значений из файлов статистики маршрутизации
 function printNodeValues(varargin)
-    fileNames = vararginToStrinsArray(varargin);
+    fileNames = [];
+    for i = 1 : argn(2)// rhs - количество входных параметров
+        fileNames = [fileNames ; varargin(i)];
+    end
     if (size(fileNames, 1) < 1) then
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end

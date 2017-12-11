@@ -719,10 +719,18 @@ const string PersistenceCalculator::getFilePrefix(char *RootDir) {
     FindFirstFile(RootNamePattern, &f0);
 
     string fileName(f0.cFileName);
-    std::size_t found = fileName.find("_id=");
     cout << "!!! fileName = '" << fileName << "'" << endl;
+
+    std::size_t found;
+    if ((found = fileName.find("_id=")) != std::string::npos) {
+        //найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13)
+        found = found + 7;
+    } else if ((found = fileName.find("_30sec_")) != std::string::npos) {
+        //найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair
+        found = found + 10;
+    }
     ASSERT_1(found != std::string::npos, -115);
-    string fileNamePrefix = fileName.substr(0, (found + 7));
+    string fileNamePrefix = fileName.substr(0, found);
     cout << "!!! fileNamePrefix = '" << fileNamePrefix << "'" << endl;
     return fileNamePrefix;
 }

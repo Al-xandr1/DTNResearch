@@ -177,14 +177,15 @@ void RegularRootLATP::initialize(int stage) {
 
     if (!rootStatistics) {
         // сначала читаем ИНДИВИДУАЛЬНЫЕ настройки
-        // TODO ПРОВЕРИТЬ СООТВЕТСТВИЕ ЭТИХ НАСТРОЕК и ПРОЧИТАННОГО ЭТАЛОННОГО МАРШРУТА !!!
         rootStatistics = RootsPersistenceAndStatisticsCollection::getInstance()->findPersonalRootStatistics(NodeID);
-
-        // сейчас делаем так, что ВСЕ должны прочитать индивидуальные настройки
-        ASSERT(rootStatistics);
-//        if (!rootStatistics)
-//            // ... и если не смогли прочитать, то читаем ОБЩИЕ настройки
-//            rootStatistics = RootsPersistenceAndStatisticsCollection::getInstance()->getCommonRootStatistics();
+        if (!getParentModule()->getParentModule()->par("enabledCommonRootStatistics").boolValue()) {
+            // если общие настроцки не разрешены, то ВСЕ узлы должны прочитать индивидуальные настройки
+            ASSERT(rootStatistics);
+        } else if (!rootStatistics) {
+            // ...если настройка НЕ включена И если не смогли прочитать частную настройку, то читаем ОБЩУЮ настройку
+            rootStatistics = RootsPersistenceAndStatisticsCollection::getInstance()->getCommonRootStatistics();
+            ASSERT(rootStatistics);
+        }
     }
     ASSERT(rootStatistics);
 
