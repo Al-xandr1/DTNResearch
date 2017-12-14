@@ -154,4 +154,13 @@ inline std::string &fullTrim(std::string &s) {
     return ltrim(rtrim(s));
 }
 
+template <class T>
+void deleteInVector(vector<T*>*& deleteme, bool deleteVector) {
+    while(!deleteme->empty()) {
+        myDelete(deleteme->back());
+        deleteme->pop_back();
+    }
+    if (deleteVector) myDelete(deleteme);
+}
+
 #endif // DEVELOPMENTHELPER_H_INCLUDED
