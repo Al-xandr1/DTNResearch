@@ -367,3 +367,78 @@ function drawHotSpot(filename, GRAPH_COLOR)
     poly1.mark_foreground = GRAPH_COLOR;
     poly1.mark_background = GRAPH_COLOR;
 endfunction
+
+
+
+//Отображение таблицы для сравнения данных о локациях
+//На вход передаётся список папок с локациями и строится таблица для сравнения
+function printCompareTableHts(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("printCompareTableHts: Ожидалось один или более параметров (имён папок)"));
+    end
+    
+    table  = [];
+    header = ["File:", "Length:", "Width:", "Square:"];
+    for i = 1 : rhs
+        header = [header, "T_Sum(" + varargin(i) + "):"];   // СНАЧАЛА 5 столбец
+    end
+    for i = 1 : rhs
+        header = [header, "WP_Count(" + varargin(i) + "):"];// ПОТОМ 6 столбец
+    end
+    table = [table ; header];
+    
+    firstHtsTable = getTableHts(varargin(1));
+    HS_Count = size(firstHtsTable, 1);
+    for i = 2 : HS_Count
+        row = [];
+        //вырезаем первые 4 стобца i-ой строчки
+        row = [row, firstHtsTable(i, 1:4)];
+
+        //вырезаем СНАЧАЛА 5 столбец каждой строчки
+        for j = 1 : rhs
+            htsTable = getTableHts(varargin(j));
+            row = [row, htsTable(i, 5)];
+        end
+        
+        //вырезаем ПОТОМ 6 столбец каждой строчки
+        for j = 1 : rhs
+            htsTable = getTableHts(varargin(j));
+            row = [row, htsTable(i, 6)];
+        end
+        
+        table = [table ; row];
+    end
+    
+    disp(table);
+endfunction
+
+//Функция извлечения данных из списка локаций в таблицу со стоблацми:
+// ["File:", "Length:", "Width:", "Square:", "T_Sum:", "WP_Count:"]
+function htsTable = getTableHts(folder)
+    SAVE_PATH = PATH;
+    
+    PATH = PATH + folder + SEPARATOR;
+    hsFiles = getFiles(PATH, "*.hts");
+    fileCount = size(hsFiles, 1);
+    
+    htsTable  = [];
+    header = ["File:", "Length:", "Width:", "Square:", "T_Sum:", "WP_Count:"];
+    htsTable = [htsTable ; header];
+    for i = 1 : fileCount
+        HS = read(hsFiles(i), 3, 2);  
+        X_min=HS(1,1);    X_max=HS(1,2);
+        Y_min=HS(2,1);    Y_max=HS(2,2);
+        T_Sum=HS(3,1);    WP_Count=HS(3,2);
+        
+        HS_length = X_max - X_min;
+        HS_width = Y_max - Y_min;
+        HS_Square = HS_length * HS_width; 
+        
+        row = [string(hsFiles(i)), string(HS_length), string(HS_width), string(HS_Square), string(T_Sum), string(WP_Count)];
+        htsTable = [htsTable ; row];
+    end
+    
+    PATH = SAVE_PATH;
+    cd(PATH);   
+endfunction
