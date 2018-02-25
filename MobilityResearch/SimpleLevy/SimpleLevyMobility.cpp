@@ -60,6 +60,11 @@ void SimpleLevyMobility::initialize(int stage) {
             powA = par("powA").doubleValue();
 
         } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
+
+        if (hasPar("kForSpeed") && hasPar("roForSpeed")) {
+            kForSpeed = par("kForSpeed").doubleValue();
+            roForSpeed = par("roForSpeed").doubleValue();
+        } else { cout << "It is necessary to specify ALL parameters for speed function"; exit(-212);}
     }
 
     if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, deltaXJ, joinJ);

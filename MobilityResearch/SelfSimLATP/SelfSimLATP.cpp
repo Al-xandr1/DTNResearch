@@ -64,10 +64,12 @@ void SelfSimLATP::initialize(int stage) {
             powAforHS = par("powAforHS").doubleValue();
             powAforWP = par("powAforWP").doubleValue();
 
-        } else {
-            cout << "It is necessary to specify ALL parameters";
-            exit(-112);
-        }
+        } else { cout << "It is necessary to specify ALL parameters"; exit(-112);}
+
+        if (hasPar("kForSpeed") && hasPar("roForSpeed")) {
+            kForSpeed = par("kForSpeed").doubleValue();
+            roForSpeed = par("roForSpeed").doubleValue();
+        } else { cout << "It is necessary to specify ALL parameters for speed function"; exit(-212);}
     }
 
     if (pause == NULL) pause = new LeviPause(ciP, aliP, deltaXP, joinP);
