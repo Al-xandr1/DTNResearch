@@ -370,6 +370,99 @@ endfunction
 
 
 
+//Отображение таблицы для сравнения данных о локациях по маршрутам
+//На вход передаётся папка с локациями, реальные и сгенерированные маршруты
+function printCompareTableHtsRot(htsFolder, realRtsFolder, genRtsFolder)
+    htsTable = getTableHts(htsFolder);
+    htsTable = htsTable(:,1:4); // оставляем только первые 4 столбца
+    htsTableN = size(htsTable, 1);
+    
+    [realRtsNames, realRtsTableList] = getTableRots(realRtsFolder);
+    [genRtsNames, genRtsTableList] = getTableRots(genRtsFolder);
+    if(DEBUG_ECHO == 1) then
+        printf("Список фалов: "); 
+        disp(realRtsNames);
+        disp(genRtsNames);
+        printf("\n");
+    end;
+    
+    realRtsNamesN = size(realRtsNames, 1);
+    genRtsNamesN = size(genRtsNames, 1);
+    if (realRtsNamesN <> genRtsNamesN) then  
+        error(msprintf("printCompareTableHtsRot: Количество маршрутов в папке " + realRtsFolder + " = " + string(realRtsNamesN) + ", а папке " + genRtsFolder + " = " + string(genRtsNamesN)));
+    end
+    
+    // бежим по всем файлам маршрутов
+    for i = 1 : realRtsNamesN
+        realRtsTable = realRtsTableList(i);
+        genRtsTable = genRtsTableList(i);
+
+        table  = [];
+        //header = [realRtsFolder + "(" + string(realRtsNames(i)) + "):", genRtsFolder + "(" + string(genRtsNames(i)) + "):"];
+        header = [realRtsFolder + "(" + string(i) + "):", genRtsFolder + "(" + string(i) + "):"];
+        table = [table ; header];
+        
+        // бежим по всем локациям в наборе
+        for j = 2 : htsTableN
+            htsName = htsTable(j, 1);
+            row = [0 , 0]; // (1,1) - для реальных точек, (1,2) - для сгенерированных
+            
+            for k = 2 : size(realRtsTable, 1) // начинаем с 2, чтобы пропустить заголовок
+                htsRealInRootName = realRtsTable(k, 1);
+                if (strcmp(htsName, htsRealInRootName) == 0) then
+                    row(1, 1) = row(1, 1) + strtod(realRtsTable(k, 7)); // суммируем путевые точки
+                end
+            end
+            
+            for k = 2 : size(genRtsTable, 1) // начинаем с 2, чтобы пропустить заголовок
+                htsGenInRootName = genRtsTable(k, 1);
+                if (strcmp(htsName, htsGenInRootName) == 0) then
+                    row(1, 2) = row(1, 2) + strtod(genRtsTable(k, 7)); // суммируем путевые точки
+                end
+            end
+            
+            table = [table ; string(row)];
+        end
+        
+        htsTable = [htsTable , table]
+    end
+
+    disp(htsTable);
+endfunction
+
+//Функция извлечения данных из маршрутов в таблицу со стоблацми:
+// ["File:", "Xmin:", "Xmax:", "Ymin:", "Ymax:", "T_Sum:", "WP_Count:"]
+function [rotFileNames, rotTableList] = getTableRots(rotFolder)
+    SAVE_PATH = PATH;
+    
+    PATH = PATH + rotFolder + SEPARATOR;
+    rotFiles = getFiles(PATH, "*.rot");
+    fileCount = size(rotFiles, 1);
+    
+    rotFileNames = [];
+    rotTableList = list();
+    for i = 1 : fileCount
+        rotTable  = [];
+        header = ["File:", "Xmin:", "Xmax:", "Ymin:", "Ymax:", "T_Sum:", "WP_Count:"];
+        rotTable = [rotTable ; header];
+    
+        ROT_STRs = mgetl(rotFiles(i)); //считали вектор строк
+        for j = 1 : size(ROT_STRs, 1)
+            p = strsplit(stripblanks(ROT_STRs(j), %t), '/	/');
+            HS_filename=p(1); X_min=p(2); X_max=p(3); Y_min=p(4); Y_max=p(5); T_Sum=p(6); WP_Count=p(7);
+            row = [HS_filename, X_min, X_max, Y_min, Y_max, T_Sum, WP_Count];
+            rotTable = [rotTable ; row];
+        end
+        
+        rotFileNames = [rotFileNames ; rotFiles(i)];
+        rotTableList($+1) = rotTable;
+    end
+    
+    PATH = SAVE_PATH;
+    cd(PATH);   
+endfunction
+
+
 //Отображение таблицы для сравнения данных о локациях
 //На вход передаётся список папок с локациями и строится таблица для сравнения
 function printCompareTableHts(varargin)
@@ -398,6 +491,9 @@ function printCompareTableHts(varargin)
         //вырезаем СНАЧАЛА 5 столбец каждой строчки
         for j = 1 : rhs
             htsTable = getTableHts(varargin(j));
+            if (HS_Count <> size(htsTable, 1)) then  
+                error(msprintf("printCompareTableHts: Количество локаций в первой папке =" + string(HS_Count) + " и в папке " + string(j) + " = " + string(size(htsTable, 1))));
+            end
             row = [row, htsTable(i, 5)];
         end
         
@@ -409,6 +505,19 @@ function printCompareTableHts(varargin)
         
         table = [table ; row];
     end
+    
+    // теперь добавим строчку с суммой всех столбцов
+    total = zeros(1, size(table, 2));
+    for j = 2 : size(table, 2) // со второго столбца, чтобы пропустить имена локаций
+        for i = 2 : size(table, 1) // со второй строки, чтобы пропустить заголовок
+            total(1,j) = total(1,j) + strtod(table(i,j));
+        end
+    end
+    
+    total = string(total);
+    total(1,1) = "TOTAL:";
+    
+    table = [table ; total];
     
     disp(table);
 endfunction
