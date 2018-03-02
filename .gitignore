@@ -144,6 +144,7 @@ rootfiles/
 rootfiles_actual/
 rootfiles_theory/
 persistance/
+histogramfiles/
 bounds.bnd
 locations.loc
 length.hst
