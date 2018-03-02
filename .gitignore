@@ -143,6 +143,7 @@ waypointfiles/
 rootfiles/
 rootfiles_actual/
 rootfiles_theory/
+persistance/
 bounds.bnd
 locations.loc
 length.hst
