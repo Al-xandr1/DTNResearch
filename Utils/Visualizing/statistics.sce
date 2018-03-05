@@ -209,7 +209,7 @@ endfunction
 
 //----------------- Функции для работы с файлами дисперсий ---------------------
 
-//Рисование зависимости Dx от масштаба по имени файла
+//Рисование зависимости Dx от масштаба по имени файла СТАТИСТИКИ (*.STAT)
 function drawDX(filename)
     doc = xmlRead(PATH + filename);
     
@@ -228,7 +228,7 @@ function drawDX(filename)
 endfunction
 
 
-//Рисование зависимости log(Dx) от log(масштаба) по имени файла
+//Рисование зависимости log(Dx) от log(масштаба) по имени файла СТАТИСТИКИ (*.STAT)
 function drawLogLogDX(filename)
     doc = xmlRead(PATH + filename);
     
@@ -255,6 +255,46 @@ function drawLogLogDX(filename)
     prepareGraphic("log-log Dx of points from: " + filename, "log2( count_of_subareas_per_level )", "log2( DX )");
     
     xmlDelete(doc);
+endfunction
+
+
+//Рисование зависимости Dx от масштаба по имени файла СТАТИСТИКИ (*.STAT)
+function drawDXtxt(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("drawDXtxt: Ожидалось один или более параметров (имён файлов с дисперсиями)"));
+    end
+
+    base = 4;   // число подобластей на каждом уровне    
+    legenda = [];  colorLoc = GRAPH_COLOR;
+    for i = 1 : rhs
+        dispertionPerLevel = read(PATH + varargin(i), 8, 2);
+        levels = dispertionPerLevel(1:8, 1);
+        DX = dispertionPerLevel(1:8, 2); 
+
+        scf(1); 
+        plot2d(base^levels, DX, colorLoc);
+        
+        scf(2); 
+        LOG_areaCount = log2(base^levels);
+        LOG_DX = log2(DX);  
+        plot2d(LOG_areaCount, LOG_DX, colorLoc);
+        
+        colorLoc = colorLoc + COLOR_OFFSET;
+        legenda = [ legenda ; ('DX from  ' + varargin(i)) ];
+    end
+
+    if (SHOW_LEGEND == 1) then 
+        scf(1); 
+        hl=legend(legenda, 3); 
+        scf(2); 
+        hl=legend(legenda, 3);
+    end
+    
+    scf(1); 
+    prepareGraphic("Comparing of dispaersion: ", "count_of_subareas_per_level", "DX");
+    scf(2);
+    prepareGraphic("log-log Dx of points" , "log2( count_of_subareas_per_level )", "log2( DX )");    
 endfunction
 
 

@@ -34,7 +34,7 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
                 double sumTime;
                 unsigned int waypointNum;
                 (*infile) >> hotSpotName >> Xmin >> Xmax >> Ymin >> Ymax >> sumTime >> waypointNum;
-                ASSERT(sumTime >= 0 && waypointNum >= 0);
+                //ASSERT(sumTime >= 0 && waypointNum >= 0);
 
                 //контроль по€влени€ дублей: две ѕќƒ–яƒ одинаковых локации идти не могут
                 if (lastRedHotSpotName) {
