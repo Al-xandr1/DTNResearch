@@ -172,11 +172,11 @@ function privateDrawHistograms(filenames, tag, xlable)
         for k=1:size(ccdf1, 1) secs(k) = len(k); end
         plot2d(log2(secs), log2(ccdf1), colorLoc);
         colorLoc = colorLoc + COLOR_OFFSET;
-        legenda = [ legenda ; ('CCDF from  ' + filenames(i)) ];
+        legenda = [ legenda ; ('CCDF из  ' + filenames(i)) ];
         xmlDelete(doc);
     end
     if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
-    prepareGraphic("CCDF for "+ tag, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
+    prepareGraphic("CCDF для "+ tag, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
 endfunction
 
 
@@ -292,9 +292,9 @@ function drawDXtxt(varargin)
     end
     
     scf(1); 
-    prepareGraphic("Comparing of dispaersion: ", "count_of_subareas_per_level", "DX");
+    prepareGraphic("Comparing of dispaersion: ", "pow(N,l)", "DX");
     scf(2);
-    prepareGraphic("log-log Dx of points" , "log2( count_of_subareas_per_level )", "log2( DX )");    
+    prepareGraphic("log-log Dx of points" , "log2( pow(N,l) )", "log2( DX )");    
 endfunction
 
 

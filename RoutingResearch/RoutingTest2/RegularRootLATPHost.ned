@@ -12,7 +12,7 @@ module RegularRootLATPHost
         
         // parameter for intencity of packet generation (Poisson flow)
         double timeslot = default(50);
-    	double lambda = default(0);            	 // default(0.3);
+    	double lambda = default(0.3);
     							 		       
     	bool useWaypointCounter = default(true); // флаг, показывающий нужно использовать счётчик путевых точек на локацию или нет 					 		     
     
