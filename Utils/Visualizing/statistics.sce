@@ -33,8 +33,8 @@ function drawWPHistograms(varargin)
     end
     
     privateDrawHistograms(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "Flight length, meters");
-    //privateDrawHistograms(fileNames, "VELOCITY-HISTOGRAM", "Velocity magnitude, meters/sec");
-    //privateDrawHistograms(fileNames, "PAUSE-HISTOGRAM", "Pause time, sec");
+    privateDrawHistograms(fileNames, "VELOCITY-HISTOGRAM", "Velocity magnitude, meters/sec");
+    privateDrawHistograms(fileNames, "PAUSE-HISTOGRAM", "Pause time, sec");
 endfunction
 
 
@@ -172,6 +172,7 @@ function privateDrawHistograms(filenames, tag, xlable)
         for k=1:size(ccdf1, 1) secs(k) = len(k); end
         plot2d(log2(secs), log2(ccdf1), colorLoc);
         colorLoc = colorLoc + COLOR_OFFSET;
+        if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
         legenda = [ legenda ; ('CCDF из  ' + filenames(i)) ];
         xmlDelete(doc);
     end
@@ -281,6 +282,7 @@ function drawDXtxt(varargin)
         plot2d(LOG_areaCount, LOG_DX, colorLoc);
         
         colorLoc = colorLoc + COLOR_OFFSET;
+        if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
         legenda = [ legenda ; ('DX from  ' + varargin(i)) ];
     end
 

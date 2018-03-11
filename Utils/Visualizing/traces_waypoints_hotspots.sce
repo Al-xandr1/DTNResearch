@@ -43,6 +43,7 @@ function drawAllTraces(fileNamesVector)
         legenda = [ legenda ; ('Trace  ' + fileNamesVector(i)) ];
         
         GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+        if (GRAPH_COLOR == 8) then GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET; end // перешагиваем белый цвет
     end
 
     if (SHOW_LEGEND == 1) then
@@ -156,6 +157,7 @@ function privateAllWPFiles(fileNamesVector)
         
         if (CHANGE_COLOR == 1) then
             GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+            if (GRAPH_COLOR == 8) then GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET; end // перешагиваем белый цвет
         end
     end
 
@@ -215,6 +217,7 @@ function drawTraceAndWPFolder(traceFolder, wpFolder)
         legenda = [ legenda ; ('WayPoints  ' + wps(i)) ];
             
         GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+        if (GRAPH_COLOR == 8) then GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET; end // перешагиваем белый цвет
     end
     
     if (SHOW_LEGEND == 1) then
@@ -298,6 +301,7 @@ function drawAllWPTFolders(folders)
         legenda = [ legenda ; (' _ ' + folders(i)) + ': ' + string(fileCount) + ' files'];
         
         GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+        if (GRAPH_COLOR == 8) then GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET; end // перешагиваем белый цвет
     end
     
     GRAPH_COLOR = SAVE_COLOR;
