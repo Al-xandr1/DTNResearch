@@ -259,7 +259,7 @@ function drawLogLogDX(filename)
 endfunction
 
 
-//Рисование зависимости Dx от масштаба по имени файла СТАТИСТИКИ (*.STAT)
+//Рисование зависимости Dx от масштаба по имени файла variances.txt
 function drawDXtxt(varargin)
     [lhs, rhs] = argn();// rhs - количество входных параметров
     if (rhs < 1) then
