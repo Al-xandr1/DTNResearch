@@ -16,7 +16,6 @@ class RealMobility : public LineSegmentsMobilityBase
   protected:
     int NodeID;
 
-    bool isPause;
     long step;
 
     double distance;
