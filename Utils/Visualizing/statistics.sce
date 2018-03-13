@@ -1,21 +1,40 @@
 IS_COMMON_SCE_LOADED = COMMON_SCE_LOADED;//чтобы убедиться, что файл common.sce загружен
 
+//------------------- Функции для Статистики маршрутов *.pst -------------------
+function printPstFolder(folder)
+    SAVE_PATH = PATH;
+    
+    if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
+    pstFiles = getFiles(PATH, "*.pst");
+
+    tags = ["ROOTS-DIMENSION-HISTOGRAM/MIN" ; "ROOTS-DIMENSION-HISTOGRAM/MAX" ; "ROOTS-DIMENSION-HISTOGRAM/AVERAGE"]
+    privatePrintTable(pstFiles, tags);
+    
+    tags = ["ROOT-LENGTH-HISTOGRAM/MIN" ; "ROOT-LENGTH-HISTOGRAM/MAX" ; "ROOT-LENGTH-HISTOGRAM/AVERAGE"]
+    privatePrintTable(pstFiles, tags);
+
+    tags = ["NEW-PERSISTENCE/ETHALON-ROOT/ROOT-NUM" ; "NEW-PERSISTENCE/ETHALON-ROOT/COEF"]
+    privatePrintTable(pstFiles, tags);
+
+    PATH = SAVE_PATH;
+endfunction
+
+
 //--------------------- Функции для Статистики Мобильности ---------------------
 
 //Рисование всех гистрограмм из файлов статистики мобильности
 function drawWPHistograms(varargin)
-    [lhs, rhs] = argn();// rhs - количество входных параметров
-    if (rhs < 1) then
+    fileNames = [];
+    for i = 1 : argn(2)// rhs - количество входных параметров
+        fileNames = [fileNames ; varargin(i)];
+    end
+    if (size(fileNames, 1) < 1) then
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    fileNames = [];
-    for i = 1 : rhs
-        fileNames = [fileNames ; varargin(i)];
-    end
     privateDrawHistograms(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "Flight length, meters");
-    //privateDrawHistograms(fileNames, "VELOCITY-HISTOGRAM", "Velocity magnitude, meters/sec");
-    //privateDrawHistograms(fileNames, "PAUSE-HISTOGRAM", "Pause time, sec");
+    privateDrawHistograms(fileNames, "VELOCITY-HISTOGRAM", "Velocity magnitude, meters/sec");
+    privateDrawHistograms(fileNames, "PAUSE-HISTOGRAM", "Pause time, sec");
 endfunction
 
 
@@ -37,15 +56,14 @@ endfunction
 
 //Рисование всех гистрограмм из одного файла статистики маршрутизации
 function drawNodeHistograms(varargin)
-    [lhs, rhs] = argn();// rhs - количество входных параметров
-    if (rhs < 1) then
-        error(msprintf("drawNodeHistograms: Ожидалось один или более параметров (имён файлов)"));
-    end
-    
     fileNames = [];
-    for i = 1 : rhs
+    for i = 1 : argn(2)// rhs - количество входных параметров
         fileNames = [fileNames ; varargin(i)];
     end
+    if (size(fileNames, 1) < 1) then
+        error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
+    end
+    
     privateDrawHistograms(fileNames, "LIFE-TIME-HISTOGRAM", "Life time, simsecs");
     privateDrawHistograms(fileNames, "ICT-HISTOGRAM", "ICT, simsecs");
 endfunction
@@ -67,14 +85,12 @@ endfunction
 
 //Вывод в таблицу значений из файлов статистики маршрутизации
 function printNodeValues(varargin)
-    [lhs, rhs] = argn();// rhs - количество входных параметров
-    if (rhs < 1) then
-        error(msprintf("drawNodeValues: Ожидалось один или более параметров (имён файлов)"));
-    end
-    
     fileNames = [];
-    for i = 1 : rhs
+    for i = 1 : argn(2)// rhs - количество входных параметров
         fileNames = [fileNames ; varargin(i)];
+    end
+    if (size(fileNames, 1) < 1) then
+        error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
     tags = ["DELIVERED-PACKETS" ; "LIFE-TIME-HISTOGRAM/MEAN"]
@@ -156,11 +172,12 @@ function privateDrawHistograms(filenames, tag, xlable)
         for k=1:size(ccdf1, 1) secs(k) = len(k); end
         plot2d(log2(secs), log2(ccdf1), colorLoc);
         colorLoc = colorLoc + COLOR_OFFSET;
-        legenda = [ legenda ; ('CCDF from  ' + filenames(i)) ];
+        if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
+        legenda = [ legenda ; ('CCDF из  ' + filenames(i)) ];
         xmlDelete(doc);
     end
     if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
-    prepareGraphic("CCDF for "+ tag, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
+    prepareGraphic("CCDF для "+ tag, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
 endfunction
 
 
@@ -193,7 +210,7 @@ endfunction
 
 //----------------- Функции для работы с файлами дисперсий ---------------------
 
-//Рисование зависимости Dx от масштаба по имени файла
+//Рисование зависимости Dx от масштаба по имени файла СТАТИСТИКИ (*.STAT)
 function drawDX(filename)
     doc = xmlRead(PATH + filename);
     
@@ -212,7 +229,7 @@ function drawDX(filename)
 endfunction
 
 
-//Рисование зависимости log(Dx) от log(масштаба) по имени файла
+//Рисование зависимости log(Dx) от log(масштаба) по имени файла СТАТИСТИКИ (*.STAT)
 function drawLogLogDX(filename)
     doc = xmlRead(PATH + filename);
     
@@ -239,6 +256,47 @@ function drawLogLogDX(filename)
     prepareGraphic("log-log Dx of points from: " + filename, "log2( count_of_subareas_per_level )", "log2( DX )");
     
     xmlDelete(doc);
+endfunction
+
+
+//Рисование зависимости Dx от масштаба по имени файла variances.txt
+function drawDXtxt(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("drawDXtxt: Ожидалось один или более параметров (имён файлов с дисперсиями)"));
+    end
+
+    base = 4;   // число подобластей на каждом уровне    
+    legenda = [];  colorLoc = GRAPH_COLOR;
+    for i = 1 : rhs
+        dispertionPerLevel = read(PATH + varargin(i), 8, 2);
+        levels = dispertionPerLevel(1:8, 1);
+        DX = dispertionPerLevel(1:8, 2); 
+
+        scf(1); 
+        plot2d(base^levels, DX, colorLoc);
+        
+        scf(2); 
+        LOG_areaCount = log2(base^levels);
+        LOG_DX = log2(DX);  
+        plot2d(LOG_areaCount, LOG_DX, colorLoc);
+        
+        colorLoc = colorLoc + COLOR_OFFSET;
+        if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
+        legenda = [ legenda ; ('DX from  ' + varargin(i)) ];
+    end
+
+    if (SHOW_LEGEND == 1) then 
+        scf(1); 
+        hl=legend(legenda, 3); 
+        scf(2); 
+        hl=legend(legenda, 3);
+    end
+    
+    scf(1); 
+    prepareGraphic("Comparing of dispaersion: ", "pow(N,l)", "DX");
+    scf(2);
+    prepareGraphic("log-log Dx of points" , "log2( pow(N,l) )", "log2( DX )");    
 endfunction
 
 

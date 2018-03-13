@@ -96,8 +96,12 @@ string extractSimpleName(const char *fullName) {
     return fullNameStr.substr(found+1);
 }
 
-const char* buildIntParameter(const char* name, int value) {
-    return buildParameter(name, std::to_string(value).c_str());
+const char* buildIntParameter(const char* name, int value, int leftPadByZero) {
+    string valueStr = std::to_string(value);
+    for (int i = 0; i < (leftPadByZero - valueStr.size() + 1); i++) {
+        valueStr = string("0") + valueStr;
+    }
+    return buildParameter(name, valueStr.c_str());
 }
 
 const char* buildParameter(const char* name, const char* value) {

@@ -142,7 +142,7 @@ void StatisticsCollector2::processRouteHistory() {
 
              // для расчёта длительности дня используем начало и конец дня. savedDuration игнорируем
              double duration = dayEnd - dayStart;
-             ASSERT(duration > 0);
+             ASSERT(duration >= 0);
              routeDurationHist->collect(duration);
              commonRoutesDurationPDF->collect(duration);
          }

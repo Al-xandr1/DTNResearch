@@ -81,9 +81,9 @@ void RoutingDaemon::initialize() {
     interconnectionRadius = getParentModule()->par("interconnectionRadius");
     numHosts              = getParentModule()->par("numHosts");
 
-    dayDuration   = getParentModule()->par("dayDuration").doubleValue();
-    countOfDays   = getParentModule()->par("countOfDays").doubleValue();
-    useCODForStat = getParentModule()->par("useCODForStat").boolValue();
+    dayDuration           = getParentModule()->par("dayDuration").doubleValue();
+    countOfDays           = getParentModule()->par("countOfDays").doubleValue();
+    useCountOfDaysForStat = getParentModule()->par("useCountOfDaysForStat").boolValue();
 
     matricesCreation();
     matricesInitialization();
@@ -200,7 +200,7 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
 }
 
 bool RoutingDaemon::canCollectStatistics() {
-    return !useCODForStat || currentDay > countOfDays;
+    return !useCountOfDaysForStat || currentDay > countOfDays;
 }
 
 void RoutingDaemon::processNewDay() {
@@ -299,6 +299,8 @@ void RoutingDaemon::calculateICT(int nodeId1, int nodeId2) {
 
 simtime_t RoutingDaemon::getLostConnectionTime(int nodeId1, int nodeId2) {
 //    ASSERT(nodeId1 != nodeId2);
+//    ASSERT(0 <= nodeId1 && nodeId1 < RoutingDaemon::numHosts);
+//    ASSERT(0 <= nodeId2 && nodeId2 < RoutingDaemon::numHosts);
     if (nodeId1 > nodeId2) return RoutingDaemon::connectLost[nodeId1][nodeId2];
     else return RoutingDaemon::connectLost[nodeId2][nodeId1];
 }
@@ -306,6 +308,8 @@ simtime_t RoutingDaemon::getLostConnectionTime(int nodeId1, int nodeId2) {
 
 simtime_t RoutingDaemon::getStartConnectionTime(int nodeId1, int nodeId2) {
 //    ASSERT(nodeId1 != nodeId2);
+//    ASSERT(0 <= nodeId1 && nodeId1 < RoutingDaemon::numHosts);
+//    ASSERT(0 <= nodeId2 && nodeId2 < RoutingDaemon::numHosts);
     if (nodeId1 > nodeId2) return RoutingDaemon::connectStart[nodeId1][nodeId2];
     else return RoutingDaemon::connectStart[nodeId2][nodeId1];
 }
@@ -313,6 +317,8 @@ simtime_t RoutingDaemon::getStartConnectionTime(int nodeId1, int nodeId2) {
 
 bool RoutingDaemon::isConnected(int nodeId1, int nodeId2) {
 //    ASSERT(nodeId1 != nodeId2);
+//    ASSERT(0 <= nodeId1 && nodeId1 < RoutingDaemon::numHosts);
+//    ASSERT(0 <= nodeId2 && nodeId2 < RoutingDaemon::numHosts);
     if (nodeId1 > nodeId2) return RoutingDaemon::connections[nodeId1][nodeId2];
     else return RoutingDaemon::connections[nodeId2][nodeId1];
 }
@@ -320,6 +326,8 @@ bool RoutingDaemon::isConnected(int nodeId1, int nodeId2) {
 
 simtime_t RoutingDaemon::getConnectivity(int index, int nodeId1, int nodeId2) {
 //    ASSERT(nodeId1 != nodeId2);
+//    ASSERT(0 <= nodeId1 && nodeId1 < RoutingDaemon::numHosts);
+//    ASSERT(0 <= nodeId2 && nodeId2 < RoutingDaemon::numHosts);
 //    ASSERT(index >= 0 && index < RoutingDaemon::connectivityPerDay->size());
     if (nodeId1 > nodeId2) return (*RoutingDaemon::connectivityPerDay)[index][nodeId1][nodeId2];
     else return (*RoutingDaemon::connectivityPerDay)[index][nodeId2][nodeId1];
@@ -328,6 +336,8 @@ simtime_t RoutingDaemon::getConnectivity(int index, int nodeId1, int nodeId2) {
 
 simtime_t RoutingDaemon::computeTotalConnectivity(int nodeId1, int nodeId2) {
 //    ASSERT(nodeId1 != nodeId2);
+//    ASSERT(0 <= nodeId1 && nodeId1 < RoutingDaemon::numHosts);
+//    ASSERT(0 <= nodeId2 && nodeId2 < RoutingDaemon::numHosts);
 //    ASSERT(RoutingDaemon::connectivityPerDay->size() <= countOfDays);
     simtime_t totalConnectivity = 0;
     for (unsigned int day = 0; day < RoutingDaemon::connectivityPerDay->size(); day++)
@@ -340,12 +350,16 @@ simtime_t RoutingDaemon::computeTotalConnectivity(int nodeId1, int nodeId2) {
 // PROPHET methods ------------------------------------------------------------------------
 void  RoutingDaemon::PROPHET_aging_P(int node1, int node2, simtime_t lastUpdate)
 {
+//    ASSERT(0 <= node1 && node1 < RoutingDaemon::numHosts);
+//    ASSERT(0 <= node2 && node2 < RoutingDaemon::numHosts);
     P_prophet[node1][node2] = P_prophet[node1][node2]*pow(gamma_prophet, SIMTIME_DBL(simTime()-lastUpdate) );
 }
 
 
 void  RoutingDaemon::PROPHET_growing_P(int node1, int node2, simtime_t lastContact)
 {
+//    ASSERT(0 <= node1 && node1 < RoutingDaemon::numHosts);
+//    ASSERT(0 <= node2 && node2 < RoutingDaemon::numHosts);
     double P_encounter = ( simTime()-lastContact >= (simtime_t)I_typ)? P_encounter_max : P_encounter_max*SIMTIME_DBL(simTime()-lastContact)/I_typ;
     P_prophet[node1][node2] =  P_prophet[node1][node2] + (1-delta_prophet-P_prophet[node1][node2])*P_encounter;
 }
@@ -353,12 +367,16 @@ void  RoutingDaemon::PROPHET_growing_P(int node1, int node2, simtime_t lastConta
 
 double  RoutingDaemon::PROPHET_transitivity_P(int node1, int node2, int node3)
 {
-   return max( P_prophet[node1][node3], P_prophet[node1][node2]*P_prophet[node2][node3]*beta_prophet);
+//    ASSERT(0 <= node1 && node1 < RoutingDaemon::numHosts);
+//    ASSERT(0 <= node2 && node2 < RoutingDaemon::numHosts);
+    return max( P_prophet[node1][node3], P_prophet[node1][node2]*P_prophet[node2][node3]*beta_prophet);
 }
 
 
 void RoutingDaemon::PROPHET_connection_starts(int node1, int node2)
  {
+//    ASSERT(0 <= node1 && node1 < RoutingDaemon::numHosts);
+//    ASSERT(0 <= node2 && node2 < RoutingDaemon::numHosts);
     for(int i=0; i<numHosts; i++) {
         if(i != node1 && i != node2) {        // это не тот узел, у которого начался контакт
             if( !isConnected(i, node1) && !isConnected(i, node2)) {  // обработка узлов, не соединённых с обоими сторонами контакта
@@ -389,7 +407,10 @@ void RoutingDaemon::PROPHET_connection_starts(int node1, int node2)
 
 
 // затычка на всякий случай
-void RoutingDaemon::PROPHET_connection_ends(int node1, int node2) {}
+void RoutingDaemon::PROPHET_connection_ends(int node1, int node2) {
+//    ASSERT(0 <= node1 && node1 < RoutingDaemon::numHosts);
+//    ASSERT(0 <= node2 && node2 < RoutingDaemon::numHosts);
+}
 
 
 void RoutingDaemon::PROPHET_timer_processing()

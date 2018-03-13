@@ -10,14 +10,14 @@
 #include "LineSegmentsMobilityBase.h"
 
 #include "LeviStatic.h"
+#include "Data.h"
 #include "HotSpotsCollection.h"
 #include "RootsCollection.h"
 #include "SelfSimMap.h"
 #include "DevelopmentHelper.h"
 
-class SelfSimLATP : public LineSegmentsMobilityBase
-{
-  protected:
+class SelfSimLATP : public LineSegmentsMobilityBase {
+protected:
 
     int NodeID;
 
@@ -36,26 +36,26 @@ class SelfSimLATP : public LineSegmentsMobilityBase
 
     // текущая локация
     Coord currentHSMin, currentHSMax, currentHSCenter;
-    vector<Coord> waypts;
+    vector<Coord *> *waypts;
     unsigned int currentWpt;
 
-    HotSpotsCollection* hsc;
-    unsigned int currentHSindex;
+    HotSpotsCollection *hsc;
+    int currentHSindex;
 
-    HSDistanceMatrix* hsd;
+    HSDistanceMatrix *hsd;
 
-    RootsCollection* rc;
+    RootsCollection *rc;
     unsigned int RootNumber;
-    vector<HotSpotData> currentRoot;
+    vector<HotSpotData *> *currentRoot;
     bool isRootReady;
 
-    SelfSimMapGenerator* gen;
+    SelfSimMapGenerator *gen;
 
-    vector<vector<double>*> dstMatrix;
+    vector<vector<double> *> dstMatrix;
     bool isDstMatrixReady;
 
     bool isWptLoaded;
-    vector<vector<double>*> wptMatrix;
+    vector<vector<double> *> wptMatrix;
     bool isWptMatrixReady;
 
     //statistics collection
@@ -67,39 +67,51 @@ class SelfSimLATP : public LineSegmentsMobilityBase
     std::vector<double> xCoordinates;
     std::vector<double> yCoordinates;
 
-  protected:
+protected:
     virtual int numInitStages() const { return 3; }
+
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
-    virtual void handleMessage(cMessage * message);
+    virtual void handleMessage(cMessage *message);
 
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setInitialPosition();
 
-    bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+    bool generateNextPosition(Coord &targetPosition, simtime_t &nextChange);
+
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
 
-    virtual void finish()        {saveStatistics();};
+    virtual void finish() { saveStatistics(); };
 
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
+
     void saveStatistics();
 
-  public:
+public:
     SelfSimLATP();
-    int getNodeID()              {return NodeID;};
 
-    Coord getLastPosition()      {return this->lastPosition;};
-    Coord getConstraintAreaMin() {return this->constraintAreaMin;};
-    Coord getConstraintAreaMax() {return this->constraintAreaMax;};
+    int getNodeID() { return NodeID; };
+
+    Coord getLastPosition() { return this->lastPosition; };
+
+    Coord getConstraintAreaMin() { return this->constraintAreaMin; };
+
+    Coord getConstraintAreaMax() { return this->constraintAreaMax; };
 
     void makeRoot();
+
     void buildDstMatrix();
+
     double getDistance(unsigned int i, unsigned int j);
+
     void loadHSWaypts();
+
     void buildWptMatrix();
+
     bool findNextWpt();
+
     double getWptDist(unsigned int i, unsigned int j);
 
-    void correctMatrix(vector<vector<double>*> &matrix, unsigned int delete_Index);
+    void correctMatrix(vector<vector<double> *> &matrix, unsigned int delete_Index);
 };
 
 #endif

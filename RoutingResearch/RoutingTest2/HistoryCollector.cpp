@@ -120,7 +120,7 @@ void HistoryCollector::collectPacket(ofstream* out, Packet* packet) {/*ASSERT(ou
 
 void HistoryCollector::write(Packet* packet, ostream* out) {
     if (rd && rd->canCollectStatistics()) {
-        double threshold = rd->getUseCODForStat() ? (rd->getCountOfDays() * rd->getDayDuration()) : 0;
+        double threshold = rd->getUseCountOfDaysForStat() ? (rd->getCountOfDays() * rd->getDayDuration()) : 0;
         if (packet->getCreationTime() >= threshold) {
             (*out) <<TAB<<"<PACKET>" << endl;
             (*out) <<TAB<<TAB<<"<SUMMARY>"<<packet->getSourceId()<<DLM<<packet->getDestinationId()

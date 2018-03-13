@@ -11,6 +11,8 @@ CHANGE_COLOR = 1;
 
 SHOW_LEGEND = 1;    // 1 - показывать легенду, 0 - НЕ показывать легенду
 
+DEBUG_ECHO = 0;     // 1 - показывать отладочный вывод, 0 - НЕ показывать отладочный вывод
+
 //---------------------------- Параметры ---------------------------------------
 
 
@@ -22,9 +24,11 @@ function [files] = getFiles(path, pattern)
     cd(path);
     files = ls(pattern);
     files = invert(files);
-    printf("Список фалов: "); 
-    disp(files);
-    printf("\n");
+    if(DEBUG_ECHO == 1) then
+        printf("Список фалов: "); 
+        disp(files);
+        printf("\n");
+    end;
     filesCount = size(files, 1);
     if (filesCount < 1) then
         error(msprintf("getFiles: Нет файлов для обработки в директории " + path));

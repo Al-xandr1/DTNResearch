@@ -5,7 +5,6 @@ Define_Module(RealMobility);
 RealMobility::RealMobility() {
     NodeID = -1;
 
-    isPause = false;
     step = 0;
 
     movementsFinished = false;
@@ -79,37 +78,28 @@ void RealMobility::setTargetPosition() {
         nextChange = -1;
         return;
     };
-    step++;
-    if (isPause) {
-        waitTime = (simtime_t) 1;//pause->get_Levi_rv(); //todo использование трассы точнее времени между точками
-        ASSERT(waitTime > 0);
-        nextChange = simTime() + waitTime;
-    } else {
-        collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
-        movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
-        if (movementsFinished) {
-            sendDirect(new cMessage("End of route", ROUTE_ENDED), getParentModule()->gate("in"));
-            nextChange = -1;
-            return;
-        };
-    }
-    isPause = !isPause;
+    step++;
+    collectStatistics(simTime(), simTime(), lastPosition.x, lastPosition.y);
+    movementsFinished = !generateNextPosition(targetPosition, nextChange);
+
+    if (movementsFinished) {
+        sendDirect(new cMessage("End of route", ROUTE_ENDED), getParentModule()->gate("in"));
+        nextChange = -1;
+        return;
+    };
 }
 
 
 // √енерирует следующую позицию в зависимости от того, включено использование гор€чих точек или нет
 bool RealMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
-    //есть  step ==  1, 3, 5, 7, 9...
-    unsigned int index = (step / 2) + 1;
-    //нужно index == 1, 2, 3, 4, 5...currentTrace->size()-1
-    ASSERT(0 < index);
-    if (index >= currentTrace->size()) return false; //маршрут кончилс€
+    ASSERT(0 < step);
+    if (step >= currentTrace->size()) return false; //маршрут кончилс€
 
     simtime_t previousNaxtChange = nextChange;
-    nextChange = currentTrace->at(index).T;
-    targetPosition.x = currentTrace->at(index).X;
-    targetPosition.y = currentTrace->at(index).Y;
+    nextChange = currentTrace->at(step).T;
+    targetPosition.x = currentTrace->at(step).X;
+    targetPosition.y = currentTrace->at(step).Y;
 
     distance = lastPosition.distance(targetPosition);
     ASSERT(distance >= 0);
@@ -172,19 +162,11 @@ void RealMobility::saveStatistics() {
 void RealMobility::log() {  // ќтладочна€ функци€
     cout << "----------------------------- LOG --------------------------------" << endl;
     cout << "NodeID = " << NodeID << endl;
-    cout << "step = " << step << ", isPause = " << isPause << endl;
     cout << "simTime() = " << simTime() << endl;
     cout << "lastPosition = " << lastPosition << endl;
-
-    if (isPause) {
-        cout << "waitTime = " << waitTime << endl;
-    } else {
-        cout << "distance = " << distance << ", speed = " << speed << ", travelTime = " << travelTime << endl;
-    }
-
+    cout << "distance = " << distance << ", speed = " << speed << ", travelTime = " << travelTime << endl;
     cout << "targetPosition = " << targetPosition << endl;
     cout << "nextChange = " << nextChange << endl;
-
     cout << "movementsFinished = " << movementsFinished << endl;
     cout << "------------------------------------------------------------------" << endl << endl;
 }

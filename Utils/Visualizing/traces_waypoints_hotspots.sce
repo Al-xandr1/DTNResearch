@@ -43,6 +43,7 @@ function drawAllTraces(fileNamesVector)
         legenda = [ legenda ; ('Trace  ' + fileNamesVector(i)) ];
         
         GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+        if (GRAPH_COLOR == 8) then GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET; end // перешагиваем белый цвет
     end
 
     if (SHOW_LEGEND == 1) then
@@ -156,6 +157,7 @@ function privateAllWPFiles(fileNamesVector)
         
         if (CHANGE_COLOR == 1) then
             GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+            if (GRAPH_COLOR == 8) then GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET; end // перешагиваем белый цвет
         end
     end
 
@@ -215,6 +217,7 @@ function drawTraceAndWPFolder(traceFolder, wpFolder)
         legenda = [ legenda ; ('WayPoints  ' + wps(i)) ];
             
         GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+        if (GRAPH_COLOR == 8) then GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET; end // перешагиваем белый цвет
     end
     
     if (SHOW_LEGEND == 1) then
@@ -298,6 +301,7 @@ function drawAllWPTFolders(folders)
         legenda = [ legenda ; (' _ ' + folders(i)) + ': ' + string(fileCount) + ' files'];
         
         GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET;
+        if (GRAPH_COLOR == 8) then GRAPH_COLOR = GRAPH_COLOR + COLOR_OFFSET; end // перешагиваем белый цвет
     end
     
     GRAPH_COLOR = SAVE_COLOR;
@@ -366,4 +370,188 @@ function drawHotSpot(filename, GRAPH_COLOR)
     poly1.mark_size = 4;
     poly1.mark_foreground = GRAPH_COLOR;
     poly1.mark_background = GRAPH_COLOR;
+endfunction
+
+
+
+//Отображение таблицы для сравнения данных о локациях по маршрутам
+//На вход передаётся папка с локациями, реальные и сгенерированные маршруты
+function printCompareTableHtsRot(htsFolder, realRtsFolder, genRtsFolder)
+    htsTable = getTableHts(htsFolder);
+    htsTable = htsTable(:,1:4); // оставляем только первые 4 столбца
+    htsTableN = size(htsTable, 1);
+    
+    [realRtsNames, realRtsTableList] = getTableRots(realRtsFolder);
+    [genRtsNames, genRtsTableList] = getTableRots(genRtsFolder);
+    if(DEBUG_ECHO == 1) then
+        printf("Список фалов: "); 
+        disp(realRtsNames);
+        disp(genRtsNames);
+        printf("\n");
+    end;
+    
+    realRtsNamesN = size(realRtsNames, 1);
+    genRtsNamesN = size(genRtsNames, 1);
+    if (realRtsNamesN <> genRtsNamesN) then  
+        error(msprintf("printCompareTableHtsRot: Количество маршрутов в папке " + realRtsFolder + " = " + string(realRtsNamesN) + ", а папке " + genRtsFolder + " = " + string(genRtsNamesN)));
+    end
+    
+    // бежим по всем файлам маршрутов
+    for i = 1 : realRtsNamesN
+        realRtsTable = realRtsTableList(i);
+        genRtsTable = genRtsTableList(i);
+
+        table  = [];
+        //header = [realRtsFolder + "(" + string(realRtsNames(i)) + "):", genRtsFolder + "(" + string(genRtsNames(i)) + "):"];
+        header = [realRtsFolder + "(" + string(i) + "):", genRtsFolder + "(" + string(i) + "):"];
+        table = [table ; header];
+        
+        // бежим по всем локациям в наборе
+        for j = 2 : htsTableN
+            htsName = htsTable(j, 1);
+            row = [0 , 0]; // (1,1) - для реальных точек, (1,2) - для сгенерированных
+            
+            for k = 2 : size(realRtsTable, 1) // начинаем с 2, чтобы пропустить заголовок
+                htsRealInRootName = realRtsTable(k, 1);
+                if (strcmp(htsName, htsRealInRootName) == 0) then
+                    row(1, 1) = row(1, 1) + strtod(realRtsTable(k, 7)); // суммируем путевые точки
+                end
+            end
+            
+            for k = 2 : size(genRtsTable, 1) // начинаем с 2, чтобы пропустить заголовок
+                htsGenInRootName = genRtsTable(k, 1);
+                if (strcmp(htsName, htsGenInRootName) == 0) then
+                    row(1, 2) = row(1, 2) + strtod(genRtsTable(k, 7)); // суммируем путевые точки
+                end
+            end
+            
+            table = [table ; string(row)];
+        end
+        
+        htsTable = [htsTable , table]
+    end
+
+    disp(htsTable);
+endfunction
+
+//Функция извлечения данных из маршрутов в таблицу со стоблацми:
+// ["File:", "Xmin:", "Xmax:", "Ymin:", "Ymax:", "T_Sum:", "WP_Count:"]
+function [rotFileNames, rotTableList] = getTableRots(rotFolder)
+    SAVE_PATH = PATH;
+    
+    PATH = PATH + rotFolder + SEPARATOR;
+    rotFiles = getFiles(PATH, "*.rot");
+    fileCount = size(rotFiles, 1);
+    
+    rotFileNames = [];
+    rotTableList = list();
+    for i = 1 : fileCount
+        rotTable  = [];
+        header = ["File:", "Xmin:", "Xmax:", "Ymin:", "Ymax:", "T_Sum:", "WP_Count:"];
+        rotTable = [rotTable ; header];
+    
+        ROT_STRs = mgetl(rotFiles(i)); //считали вектор строк
+        for j = 1 : size(ROT_STRs, 1)
+            p = strsplit(stripblanks(ROT_STRs(j), %t), '/	/');
+            HS_filename=p(1); X_min=p(2); X_max=p(3); Y_min=p(4); Y_max=p(5); T_Sum=p(6); WP_Count=p(7);
+            row = [HS_filename, X_min, X_max, Y_min, Y_max, T_Sum, WP_Count];
+            rotTable = [rotTable ; row];
+        end
+        
+        rotFileNames = [rotFileNames ; rotFiles(i)];
+        rotTableList($+1) = rotTable;
+    end
+    
+    PATH = SAVE_PATH;
+    cd(PATH);   
+endfunction
+
+
+//Отображение таблицы для сравнения данных о локациях
+//На вход передаётся список папок с локациями и строится таблица для сравнения
+function printCompareTableHts(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("printCompareTableHts: Ожидалось один или более параметров (имён папок)"));
+    end
+    
+    table  = [];
+    header = ["File:", "Length:", "Width:", "Square:"];
+    for i = 1 : rhs
+        header = [header, "T_Sum(" + varargin(i) + "):"];   // СНАЧАЛА 5 столбец
+    end
+    for i = 1 : rhs
+        header = [header, "WP_Count(" + varargin(i) + "):"];// ПОТОМ 6 столбец
+    end
+    table = [table ; header];
+    
+    firstHtsTable = getTableHts(varargin(1));
+    HS_Count = size(firstHtsTable, 1);
+    for i = 2 : HS_Count
+        row = [];
+        //вырезаем первые 4 стобца i-ой строчки
+        row = [row, firstHtsTable(i, 1:4)];
+
+        //вырезаем СНАЧАЛА 5 столбец каждой строчки
+        for j = 1 : rhs
+            htsTable = getTableHts(varargin(j));
+            if (HS_Count <> size(htsTable, 1)) then  
+                error(msprintf("printCompareTableHts: Количество локаций в первой папке =" + string(HS_Count) + " и в папке " + string(j) + " = " + string(size(htsTable, 1))));
+            end
+            row = [row, htsTable(i, 5)];
+        end
+        
+        //вырезаем ПОТОМ 6 столбец каждой строчки
+        for j = 1 : rhs
+            htsTable = getTableHts(varargin(j));
+            row = [row, htsTable(i, 6)];
+        end
+        
+        table = [table ; row];
+    end
+    
+    // теперь добавим строчку с суммой всех столбцов
+    total = zeros(1, size(table, 2));
+    for j = 2 : size(table, 2) // со второго столбца, чтобы пропустить имена локаций
+        for i = 2 : size(table, 1) // со второй строки, чтобы пропустить заголовок
+            total(1,j) = total(1,j) + strtod(table(i,j));
+        end
+    end
+    
+    total = string(total);
+    total(1,1) = "TOTAL:";
+    
+    table = [table ; total];
+    
+    disp(table);
+endfunction
+
+//Функция извлечения данных из списка локаций в таблицу со стоблацми:
+// ["File:", "Length:", "Width:", "Square:", "T_Sum:", "WP_Count:"]
+function htsTable = getTableHts(folder)
+    SAVE_PATH = PATH;
+    
+    PATH = PATH + folder + SEPARATOR;
+    hsFiles = getFiles(PATH, "*.hts");
+    fileCount = size(hsFiles, 1);
+    
+    htsTable  = [];
+    header = ["File:", "Length:", "Width:", "Square:", "T_Sum:", "WP_Count:"];
+    htsTable = [htsTable ; header];
+    for i = 1 : fileCount
+        HS = read(hsFiles(i), 3, 2);  
+        X_min=HS(1,1);    X_max=HS(1,2);
+        Y_min=HS(2,1);    Y_max=HS(2,2);
+        T_Sum=HS(3,1);    WP_Count=HS(3,2);
+        
+        HS_length = X_max - X_min;
+        HS_width = Y_max - Y_min;
+        HS_Square = HS_length * HS_width; 
+        
+        row = [string(hsFiles(i)), string(HS_length), string(HS_width), string(HS_Square), string(T_Sum), string(WP_Count)];
+        htsTable = [htsTable ; row];
+    end
+    
+    PATH = SAVE_PATH;
+    cd(PATH);   
 endfunction

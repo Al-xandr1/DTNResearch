@@ -98,7 +98,7 @@ public:
                 cout << "\t\tdist= " << dist << ",   flyDur= " << flyDur << endl;
                 cout << "\t\tprevious:  ";   previous->print();
                 cout << "\t\tpoint:  ";      point->print();
-                exit(335);
+//                exit(335);
             }
             lengthHist->put(dist);
             velocityHist->put(dist/flyDur);

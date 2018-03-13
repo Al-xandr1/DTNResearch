@@ -11,6 +11,8 @@ void RootsPersistenceAndStatistics::initialize() {
     ASSERT(!summarizedIndicatorVector);
     ASSERT(!summarizedIndicatorVectorPDF);
     ASSERT(!averageCounterVector);
+    ASSERT(!homeHotspotHistogram);
+    ASSERT(!homeHotspotHistogramPDF);
     ASSERT(!hotSpots);
 
     // Чтение данных из файла
@@ -32,6 +34,9 @@ void RootsPersistenceAndStatistics::initialize() {
     const char* averageCounterVectorStr = rootStatistics.child("AVERAGE-COUNTER-VECTOR").child("VALS").child_value();
     parseData(averageCounterVectorStr, averageCounterVector);
 
+    const char* homeHotspotHistogramStr = rootStatistics.child("HOME-HOTSPOT-HISTOGRAM").child("VALS").child_value();
+    parseData(homeHotspotHistogramStr, homeHotspotHistogram, homeHotspotHistogramPDF);
+
     const char* hotSpotsStr = rootStatistics.child("HOT-SPOTS").child("VALS").child_value();
     parseData(hotSpotsStr, hotSpots);
 
@@ -42,6 +47,8 @@ void RootsPersistenceAndStatistics::initialize() {
     ASSERT(summarizedIndicatorVector);
     ASSERT(summarizedIndicatorVectorPDF);
     ASSERT(averageCounterVector);
+    ASSERT(homeHotspotHistogram);
+    ASSERT(homeHotspotHistogramPDF);
     ASSERT(hotSpots);
     // в rootsDimensionHistogramPDF на одно значение больше (из-за размерности 0)
     ASSERT((hotSpots->size() + 1) == rootsDimensionHistogramPDF->size());
@@ -106,6 +113,11 @@ void RootsPersistenceAndStatistics::print() {
     cout << "summarizedIndicatorVectorPDFSum=" << getSum(*summarizedIndicatorVectorPDF) << endl;
 
     print("averageCounterVector", averageCounterVector);
+
+    print("homeHotspotHistogram", homeHotspotHistogram);
+    print("homeHotspotHistogramPDF", homeHotspotHistogramPDF);
+    cout << "homeHotspotHistogramPDFSum=" << getSum(*homeHotspotHistogramPDF) << endl;
+
     print("hotSpots", hotSpots);
 
     if (hotSpots) cout << "hotSpots->size() = " << hotSpots->size() << endl;

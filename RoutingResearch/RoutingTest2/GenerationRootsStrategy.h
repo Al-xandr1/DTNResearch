@@ -14,10 +14,25 @@ using namespace std;
  * Общий класс для стратегий генерации маршрутов.
  */
 class GenerationRootsStrategy {
+protected:
+    /**
+     * Указатель на коллекцию локаций (ТОЛЬКО ДЛЯ ЧТЕНИЯ) (проставляется из мобильности)
+     */
+    HotSpotsCollection* hsc;
+
+    /**
+     * Использовать ФИКСИРОВАННЮ домашнюю локацию, или ГЕНЕРИРОВАТЬ (в зависимости от стратегии)
+     */
+    bool useFixedHomeLocation;
+
 public:
-    GenerationRootsStrategy() {;
+    GenerationRootsStrategy(HotSpotsCollection* hsc, bool useFixedHomeLocation) {;
+        this->hsc = hsc;
+        this->useFixedHomeLocation = useFixedHomeLocation;
     }
+
     virtual ~GenerationRootsStrategy() {
+        this->hsc = NULL;
     };
 
     /**
@@ -39,17 +54,18 @@ public:
  */
 class GenerationRootsByPersistenceStrategy : public GenerationRootsStrategy {
 private:
-    double rootPersistence;     // фиксированный коэффициент персистентности (проставляется из мобильности)
-    HotSpotsCollection* hsc;    // указатель на коллекция локаций (ТОЛЬКО ДЛЯ ЧТЕНИЯ) (проставляется из мобильности)
+    /**
+     * Фиксированный коэффициент персистентности (проставляется из мобильности)
+     */
+    double rootPersistence;
 
 public:
-    GenerationRootsByPersistenceStrategy(double rootPersistence, HotSpotsCollection* hsc) : GenerationRootsStrategy() {
+    GenerationRootsByPersistenceStrategy(HotSpotsCollection* hsc, double rootPersistence, bool useFixedHomeLocation)
+            : GenerationRootsStrategy(hsc, useFixedHomeLocation) {
         this->rootPersistence = rootPersistence;
-        this->hsc = hsc;
     };
 
     ~GenerationRootsByPersistenceStrategy() {
-        hsc = NULL;
     };
 
     /**
@@ -68,26 +84,22 @@ public:
  * Связано с набором законов распределения в классе RootsPersistenceAndStatistics.
  */
 class GenerationRootsByStatisticsStrategy : public GenerationRootsStrategy {
-
-    /** Указатель на модуль с общей персистентностью и статистикой ТОЛЬКО ДЛЯ ЧТЕНИЯ) (проставляется из мобильности)
+private:
+    /**
+     * Указатель на модуль с общей персистентностью и статистикой ТОЛЬКО ДЛЯ ЧТЕНИЯ) (проставляется из мобильности)
+     * ВАЖНО: Последовательность локаций в RootsPersistenceAndStatistics расходится с последовательностью в HotSpotsCollection
+     * ВАЖНО: Для маппинга индексов использовать RootsPersistenceAndStatistics::findHotSpotIndexByName & HotSpotsCollection::findHotSpotbyName
      */
     RootsPersistenceAndStatistics* rootStatistics;
-    /**
-     * Указатель на коллекцию локаций (ТОЛЬКО ДЛЯ ЧТЕНИЯ) (проставляется из мобильности)
-     */
-    HotSpotsCollection* hsc;
-    // ВАЖНО: Последовательность локаций в RootsPersistenceAndStatistics расходится с последовательностью в HotSpotsCollection
-    // ВАЖНО: Для маппинга индексов использовать RootsPersistenceAndStatistics::findHotSpotIndexByName & HotSpotsCollection::findHotSpotbyName
 
 public:
-    GenerationRootsByStatisticsStrategy(RootsPersistenceAndStatistics* rootStatistics, HotSpotsCollection* hsc) : GenerationRootsStrategy() {
+    GenerationRootsByStatisticsStrategy(HotSpotsCollection* hsc, RootsPersistenceAndStatistics* rootStatistics, bool useFixedHomeLocation)
+            : GenerationRootsStrategy(hsc, useFixedHomeLocation) {
         this->rootStatistics = rootStatistics;
-        this->hsc = hsc;
     };
 
     ~GenerationRootsByStatisticsStrategy() {
         this->rootStatistics = NULL;
-        this->hsc = NULL;
     };
 
     /**
@@ -124,6 +136,14 @@ private:
      * ВАЖНО: hotSpotIndexPST - это индекс в струкруте файла *.pst (последовательность в нём расходится с последовательностью в HotSpotsCollection)
      */
     unsigned int getHotSpotCount(unsigned int hotSpotIndexPST);
+
+    /**
+     * Метод генерирует случайное число пропорчионально распределению homeHotspotHistogramPDF.
+     * Данное число используется как индекс той локации, которую нужно включить в состав маршрута как домашнюю.
+     *
+     * ВАЖНО: возвращается это индекс в струкруте файла *.pst (последовательность в нём расходится с последовательностью в HotSpotsCollection)
+     */
+    unsigned int generateHomeHotSpotIndexPST();
 };
 
 #endif

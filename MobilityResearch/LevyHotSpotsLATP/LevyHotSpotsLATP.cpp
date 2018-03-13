@@ -9,8 +9,8 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     step = 0;
     jump = NULL;
     pause = NULL;
-    kForSpeed =  31.1457;
-    roForSpeed = 0.504349;
+    kForSpeed =  1;
+    roForSpeed = 0;
 
     currentHSindex = -1;
 
@@ -64,6 +64,11 @@ void LevyHotSpotsLATP::initialize(int stage) {
            powA = par("powA").doubleValue();
 
         } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
+
+        if (hasPar("kForSpeed") && hasPar("roForSpeed")) {
+            kForSpeed = par("kForSpeed").doubleValue();
+            roForSpeed = par("roForSpeed").doubleValue();
+        } else { cout << "It is necessary to specify ALL parameters for speed function"; exit(-212);}
     }
 
     if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, deltaXJ, joinJ);
@@ -321,12 +326,19 @@ void LevyHotSpotsLATP::saveStatistics() {
             for (unsigned int j = 0; j < theoryRootsPerNode->size(); j++) {
                 string filename("Gen_");
                 string simpleName = extractSimpleName(rootsDataShort->at(i).RootName);
-                std::size_t found = simpleName.find("_id=");
-                if (found != std::string::npos)
-                    // т.е. в названии файла мы нашли куда вставить номер дня
-                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1)) + simpleName.substr((found + 8), simpleName.size()));
-                else
-                    filename += (string(buildIntParameter("day", j+1)) + extractSimpleName(rootsDataShort->at(i).RootName));
+
+                std::size_t found;
+                if ((found = simpleName.find("_id=")) != std::string::npos) {
+                    // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
+                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
+
+                } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
+                    // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
+                    filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", j+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
+
+                } else {
+                    filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(rootsDataShort->at(i).RootName));
+                }
 
                 ofstream* rtFile = new ofstream(buildFullName(thRtDir, filename.c_str()));
                 vector<HotSpotDataRoot*>* dailyRoot = theoryRootsPerNode->at(j);
@@ -343,12 +355,19 @@ void LevyHotSpotsLATP::saveStatistics() {
             for (unsigned int j = 0; j < actualRootsPerNode->size(); j++) {
                 string filename("Gen_");
                 string simpleName = extractSimpleName(rootsDataShort->at(i).RootName);
-                std::size_t found = simpleName.find("_id=");
-                if (found != std::string::npos)
-                    // т.е. в названии файла мы нашли куда вставить номер дня
-                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1)) + simpleName.substr((found + 8), simpleName.size()));
-                else
-                    filename += (string(buildIntParameter("day", j+1)) + extractSimpleName(rootsDataShort->at(i).RootName));
+
+                std::size_t found;
+                if ((found = simpleName.find("_id=")) != std::string::npos) {
+                    // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
+                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
+
+                } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
+                    // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
+                    filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", j+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
+
+                } else {
+                    filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(rootsDataShort->at(i).RootName));
+                }
 
                 ofstream* rtFile = new ofstream(buildFullName(acRtDir, filename.c_str()));
                 vector<HotSpotDataRoot*>* dailyRoot = actualRootsPerNode->at(j);

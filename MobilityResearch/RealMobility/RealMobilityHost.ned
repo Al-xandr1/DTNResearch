@@ -2,7 +2,7 @@ module RealMobilityHost
 {
     parameters:
         string mobilityType = default("RealMobility");
-        
+
         @node();
         @display("i=device/pocketpc_s");
         
