@@ -283,7 +283,7 @@ function drawDXtxt(varargin)
         
         colorLoc = colorLoc + COLOR_OFFSET;
         if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-        legenda = [ legenda ; ('DX from  ' + varargin(i)) ];
+        legenda = [ legenda ; ('DX из  ' + varargin(i)) ];
     end
 
     if (SHOW_LEGEND == 1) then 
@@ -294,9 +294,9 @@ function drawDXtxt(varargin)
     end
     
     scf(1); 
-    prepareGraphic("Comparing of dispaersion: ", "pow(N,l)", "DX");
+    prepareGraphic("График изменения дисперсий", "pow(N,l)", "DX");
     scf(2);
-    prepareGraphic("log-log Dx of points" , "log2( pow(N,l) )", "log2( DX )");    
+    prepareGraphic("График изменения дисперсий (логарифмические оси)" , "log2( pow(N,l) )", "log2( DX )");    
 endfunction
 
 
