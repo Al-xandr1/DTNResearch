@@ -236,27 +236,30 @@ void RootsCollection::saveRoots(const char *thRtDir, const char *acRtDir)
 
 void RootsCollection::innerSaveRoots(const char *logPrefix, const char *rtDir, vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData)
 {
+    // Формируем плоский список всех файлов пользователей за все дни
     for (unsigned int i = 0; i < generatedRootsData->size(); i++) {
-        vector<vector<HotSpotDataRoot*>*>* rootsPerNode = generatedRootsData->at(i);
-        for (unsigned int j = 0; j < rootsPerNode->size(); j++) {
+        // бежим по данным всех узлов и сохраняем их маршруты
+
+        vector<vector<HotSpotDataRoot*>*>* dailyRootsPerNode = generatedRootsData->at(i);
+        for (unsigned int j = 0; j < dailyRootsPerNode->size(); j++) {
+
+            // формируем имя файла для текущего маршрута j ...
             string filename("Gen_");
             string simpleName = extractSimpleName(RootsDataShort->at(i).RootName);
-
             std::size_t found;
             if ((found = simpleName.find("_id=")) != std::string::npos) {
                 // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
                 filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
-
             } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
                 // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
                 filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", j+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
-
             } else {
                 filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(RootsDataShort->at(i).RootName));
             }
 
+            // бежим по маршрутам j за все дни текущего узла i
             ofstream* rtFile = new ofstream(buildFullName(rtDir, filename.c_str()));
-            vector<HotSpotDataRoot*>* dailyRoot = rootsPerNode->at(j);
+            vector<HotSpotDataRoot*>* dailyRoot = dailyRootsPerNode->at(j);
             for (unsigned int k = 0; k < dailyRoot->size(); k++) {
                 HotSpotDataRoot* hs = dailyRoot->at(k);
                 (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
@@ -265,5 +268,47 @@ void RootsCollection::innerSaveRoots(const char *logPrefix, const char *rtDir, v
             rtFile->close();
         }
         cout << "\t " << logPrefix << " roots per node " << i << " are collected!";
+    }
+
+    // Формируем маршруты по дням (в папках)
+    // получаем число всех дней
+    unsigned int days = generatedRootsData->at(0)->size();
+    for (unsigned int day = 0; day < days; day++) {
+        // бежим по всем дням
+
+        // создаём папку с маршрутами текущего дня
+        const char *dirForDayRoots = buildFullName(rtDir, buildIntParameter("_day", day+1, 3));
+        if (CreateDirectory(dirForDayRoots, NULL)) cout << "create output directory: " << dirForDayRoots << endl;
+        else cout << "error create output directory: " << dirForDayRoots << endl;
+
+        for (unsigned int node = 0; node < generatedRootsData->size(); node++) {
+            // бежим по всем пользователям (для каждого дня берём от всех пользователей маршруты)
+            vector<HotSpotDataRoot*>* dailyRoot = generatedRootsData->at(node)->at(day);
+
+            // формируем имя файла для текущего маршрута node ...
+            string filename("Gen_");
+            string simpleName = extractSimpleName(RootsDataShort->at(node).RootName);
+            std::size_t found;
+            if ((found = simpleName.find("_id=")) != std::string::npos) {
+                // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
+                filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", day+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
+            } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
+                // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
+                filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", day+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
+            } else {
+                filename += (string(buildIntParameter("day", day+1, 3)) + extractSimpleName(RootsDataShort->at(node).RootName));
+            }
+
+            // бежим по маршрутам за все дни текущего узла
+            ofstream* rtFile = new ofstream(buildFullName(dirForDayRoots, filename.c_str()));
+            for (unsigned int k = 0; k < dailyRoot->size(); k++) {
+                HotSpotDataRoot* hs = dailyRoot->at(k);
+                (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                          << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
+            }
+            rtFile->close();
+        }
+
+        cout << "\t " << logPrefix << " roots per day " << day << " are collected!";
     }
 }
