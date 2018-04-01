@@ -148,6 +148,8 @@ public:
 
     void printRootsData();
 
+    void saveRoots(const char *thRtDir, const char *acRtDir);
+
 private:
     /**
      * Сохраняет указанный машрут для указанного пользователя в конкретный указанный день.

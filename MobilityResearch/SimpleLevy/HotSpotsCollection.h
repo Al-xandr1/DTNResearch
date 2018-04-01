@@ -48,6 +48,14 @@ public:
     void getTotalSize(double& minX, double& maxX, double& minY, double& maxY);
     HotSpotData* findHotSpotbyName(const char*, int&);
     void print();
+    /**
+     * Write HotSpots
+     */
+    void saveHotSpots(const char *hotSpotDirName);
+    /**
+     * Write Locations
+     */
+    void saveLocationsFile(const char *locationsFileName);
 };
 
 

@@ -307,107 +307,15 @@ void LevyHotSpotsLATP::saveStatistics() {
         if (CreateDirectory(acRtDir, NULL)) cout << "create output directory: " << acRtDir << endl;
         else cout << "error create output directory: " << acRtDir << endl;
 
+        // --- Write Locations ---
+        hsc->saveHotSpots(hsDir);
 
         // --- Write HotSpots ---
-        //todo перенести в HotSpotCollections
-        for (unsigned int i = 0; i < hsc->getHSData()->size(); i++) {
-            const char* fullNameHS = buildFullName(hsDir, hsc->getHSData()->at(i).hotSpotName);
-            ofstream* hsFile = new ofstream(fullNameHS);
-            (*hsFile) << hsc->getHSData()->at(i).Xmin << "\t" << hsc->getHSData()->at(i).Xmax << endl;
-            (*hsFile) << hsc->getHSData()->at(i).Ymin << "\t" << hsc->getHSData()->at(i).Ymax << endl;
-            (*hsFile) << hsc->getHSData()->at(i).generatedSumTime << "\t"<< hsc->getHSData()->at(i).generatedWaypointNum << endl;
-
-            for(unsigned int j = 0; j < hsc->getHSData()->at(i).waypoints.size(); j++)
-                (*hsFile) << hsc->getHSData()->at(i).waypoints[j].X  << "\t" << hsc->getHSData()->at(i).waypoints[j].Y  << "\t"
-                          << hsc->getHSData()->at(i).waypoints[j].Tb << "\t" << hsc->getHSData()->at(i).waypoints[j].Te << "\t"
-                          << hsc->getHSData()->at(i).waypoints[j].traceName << endl;
-
-            hsFile->close();
-            delete hsFile;
-        }
-
+        hsc->saveLocationsFile(locs);
 
         // --- Write Roots for every node & every day ---
-        //todo перенести в RootsCollection
-        //todo сделать один кастомизируемый метод для записи generatedTheoryRootsData & generatedActualRootsData
-        vector<RootDataShort> *rootsDataShort = RootsCollection::getInstance()->getRootsDataShort();
-        vector<vector<vector<HotSpotDataRoot*>*>*> *generatedTheoryRootsData = RootsCollection::getInstance()->getGeneratedTheoryRootsData();
-        vector<vector<vector<HotSpotDataRoot*>*>*> *generatedActualRootsData = RootsCollection::getInstance()->getGeneratedActualRootsData();
-        ASSERT(rootsDataShort->size() == generatedTheoryRootsData->size() && rootsDataShort->size() == generatedActualRootsData->size());
-        for (unsigned int i = 0; i < generatedTheoryRootsData->size(); i++) {
-
-            vector<vector<HotSpotDataRoot*>*>* theoryRootsPerNode = generatedTheoryRootsData->at(i);
-            for (unsigned int j = 0; j < theoryRootsPerNode->size(); j++) {
-                string filename("Gen_");
-                string simpleName = extractSimpleName(rootsDataShort->at(i).RootName);
-
-                std::size_t found;
-                if ((found = simpleName.find("_id=")) != std::string::npos) {
-                    // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
-                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
-
-                } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
-                    // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
-                    filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", j+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
-
-                } else {
-                    filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(rootsDataShort->at(i).RootName));
-                }
-
-                ofstream* rtFile = new ofstream(buildFullName(thRtDir, filename.c_str()));
-                vector<HotSpotDataRoot*>* dailyRoot = theoryRootsPerNode->at(j);
-                for (unsigned int k = 0; k < dailyRoot->size(); k++) {
-                    HotSpotDataRoot* hs = dailyRoot->at(k);
-                    (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                              << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-                }
-                rtFile->close();
-            }
-            cout << "\t Theory roots per node " << i << " are collected!";
-
-            vector<vector<HotSpotDataRoot*>*>* actualRootsPerNode = generatedActualRootsData->at(i);
-            for (unsigned int j = 0; j < actualRootsPerNode->size(); j++) {
-                string filename("Gen_");
-                string simpleName = extractSimpleName(rootsDataShort->at(i).RootName);
-
-                std::size_t found;
-                if ((found = simpleName.find("_id=")) != std::string::npos) {
-                    // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
-                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
-
-                } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
-                    // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
-                    filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", j+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
-
-                } else {
-                    filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(rootsDataShort->at(i).RootName));
-                }
-
-                ofstream* rtFile = new ofstream(buildFullName(acRtDir, filename.c_str()));
-                vector<HotSpotDataRoot*>* dailyRoot = actualRootsPerNode->at(j);
-                for (unsigned int k = 0; k < dailyRoot->size(); k++) {
-                    HotSpotDataRoot* hs = dailyRoot->at(k);
-                    (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                              << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-                }
-                rtFile->close();
-            }
-            cout << "\t Actual roots per node " << i << " are collected!";
-        }
-
-
-        // --- Write Locations ---
-        //todo перенести в HotSpotCollections
-        ofstream lcfile(locs);
-        for(unsigned int i = 0; i < hsc->getHSData()->size(); i++) {
-            lcfile << hsc->getHSData()->at(i).hotSpotName << "\t"<< hsc->getHSData()->at(i).generatedSumTime << "\t" << "\t";
-            lcfile << hsc->getHSData()->at(i).generatedWaypointNum << "\t" << "\t";
-            lcfile << hsc->getHSData()->at(i).Xmin << "\t"<< hsc->getHSData()->at(i).Xmax << "\t";
-            lcfile << hsc->getHSData()->at(i).Ymin << "\t"<< hsc->getHSData()->at(i).Ymax << endl;
-        }
-        lcfile.close();
+        RootsCollection::getInstance()->saveRoots(thRtDir, acRtDir);
     }
-
 
     //--- Write points ---
     ofstream wpFile(buildFullName(wpsDir, wpFileName));
