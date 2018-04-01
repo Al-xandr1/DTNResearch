@@ -225,14 +225,20 @@ void RootsCollection::printRootsData()
 }
 
 
-//todo сделать один кастомизируемый метод для записи generatedTheoryRootsData & generatedActualRootsData
 void RootsCollection::saveRoots(const char *thRtDir, const char *acRtDir)
 {
     ASSERT(RootsDataShort->size() == generatedTheoryRootsData->size() && RootsDataShort->size() == generatedActualRootsData->size());
-    for (unsigned int i = 0; i < generatedTheoryRootsData->size(); i++) {
 
-        vector<vector<HotSpotDataRoot*>*>* theoryRootsPerNode = generatedTheoryRootsData->at(i);
-        for (unsigned int j = 0; j < theoryRootsPerNode->size(); j++) {
+    innerSaveRoots("Theory", thRtDir, generatedTheoryRootsData);
+    innerSaveRoots("Actual", acRtDir, generatedActualRootsData);
+}
+
+
+void RootsCollection::innerSaveRoots(const char *logPrefix, const char *rtDir, vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData)
+{
+    for (unsigned int i = 0; i < generatedRootsData->size(); i++) {
+        vector<vector<HotSpotDataRoot*>*>* rootsPerNode = generatedRootsData->at(i);
+        for (unsigned int j = 0; j < rootsPerNode->size(); j++) {
             string filename("Gen_");
             string simpleName = extractSimpleName(RootsDataShort->at(i).RootName);
 
@@ -249,8 +255,8 @@ void RootsCollection::saveRoots(const char *thRtDir, const char *acRtDir)
                 filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(RootsDataShort->at(i).RootName));
             }
 
-            ofstream* rtFile = new ofstream(buildFullName(thRtDir, filename.c_str()));
-            vector<HotSpotDataRoot*>* dailyRoot = theoryRootsPerNode->at(j);
+            ofstream* rtFile = new ofstream(buildFullName(rtDir, filename.c_str()));
+            vector<HotSpotDataRoot*>* dailyRoot = rootsPerNode->at(j);
             for (unsigned int k = 0; k < dailyRoot->size(); k++) {
                 HotSpotDataRoot* hs = dailyRoot->at(k);
                 (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
@@ -258,35 +264,6 @@ void RootsCollection::saveRoots(const char *thRtDir, const char *acRtDir)
             }
             rtFile->close();
         }
-        cout << "\t Theory roots per node " << i << " are collected!";
-
-        vector<vector<HotSpotDataRoot*>*>* actualRootsPerNode = generatedActualRootsData->at(i);
-        for (unsigned int j = 0; j < actualRootsPerNode->size(); j++) {
-            string filename("Gen_");
-            string simpleName = extractSimpleName(RootsDataShort->at(i).RootName);
-
-            std::size_t found;
-            if ((found = simpleName.find("_id=")) != std::string::npos) {
-                // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
-                filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
-
-            } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
-                // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
-                filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", j+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
-
-            } else {
-                filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(RootsDataShort->at(i).RootName));
-            }
-
-            ofstream* rtFile = new ofstream(buildFullName(acRtDir, filename.c_str()));
-            vector<HotSpotDataRoot*>* dailyRoot = actualRootsPerNode->at(j);
-            for (unsigned int k = 0; k < dailyRoot->size(); k++) {
-                HotSpotDataRoot* hs = dailyRoot->at(k);
-                (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                          << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-            }
-            rtFile->close();
-        }
-        cout << "\t Actual roots per node " << i << " are collected!";
+        cout << "\t " << logPrefix << " roots per node " << i << " are collected!";
     }
 }

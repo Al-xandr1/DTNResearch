@@ -94,6 +94,8 @@ private:
 
     void readRootsData(char *TracesDir, char *allRootsFile, char *rootsDir, char *filePatter);
 
+    void innerSaveRoots(const char *logPrefix, const char *rtDir, vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData);
+
 public:
     /**
     * Получение готового проинициализированного объекта для работы
