@@ -28,6 +28,7 @@ simple LevyHotSpotsLATP extends MovingMobilityBase
  		
  		double kForSpeed = default(31.1457);    // scale parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility) 
  		double roForSpeed = default(0.504349);  // power parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility)
+ 		int countOfFirstSkippedLongFlight = default(1); // count of FIRST LONG flights that will be skipped in CURRENT hotspot 
  		
     	string specification = default("LevyHotSpotsLATP"); // concrete specification for Levy mobility 
     												  // available values = SimpleLevy | LevyHotSpotsRandom | LevyHotSpotsLATPCenterLogic | LevyHotSpotsLATP | LevyHotSpotsLATPPathCounts 

@@ -7,6 +7,8 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
 
     isPause = false;
     step = 0;
+    countOfFirstSkippedLongFlight = -1;
+
     jump = NULL;
     pause = NULL;
     kForSpeed =  1;
@@ -45,6 +47,8 @@ void LevyHotSpotsLATP::initialize(int stage) {
         constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
         constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
         constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
+
+        countOfFirstSkippedLongFlight = par("countOfFirstSkippedLongFlight").longValue();
 
         NodeID = (int) par("NodeID");
 
@@ -139,7 +143,11 @@ void LevyHotSpotsLATP::setTargetPosition() {
         nextChange = simTime() + waitTime;
     } else {
         collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
-        movementsFinished = !generateNextPosition(targetPosition, nextChange);
+        // если количество первых прыжков, которые нужно пропустить для текущей локации больше нуля,
+        // то регенерируем прыжки в случае выхода за границу
+        bool regenerateIfOutOfBound = (countOfFirstSkippedLongFlight > 0);
+        movementsFinished = !generateNextPosition(targetPosition, nextChange, regenerateIfOutOfBound);
+        if (regenerateIfOutOfBound) countOfFirstSkippedLongFlight--;
 
         if (movementsFinished) {nextChange = -1; return;};
         ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
@@ -218,6 +226,9 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
 
 bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
     if (findNextHotSpot()) {   // нашли следующую локацию - идём в её случайную точку
+        // перечитываем начальное количество первых длинных прижков, которые надо пропустить для новой локации
+        countOfFirstSkippedLongFlight = par("countOfFirstSkippedLongFlight").longValue();
+
         targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
         targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
@@ -256,7 +267,10 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
     outTimes.push_back(outTime);
     xCoordinates.push_back(x);
     yCoordinates.push_back(y);
-    hsc->getHSData()->at(currentHSindex).generatedSumTime += (outTime - inTime).dbl();
+
+    double generatedSumTime = (outTime - inTime).dbl();
+    ASSERT(generatedSumTime >= 0); // на этапе инициализации возникают отсчёты с нулевой длительностью
+    hsc->getHSData()->at(currentHSindex).generatedSumTime += generatedSumTime;
     hsc->getHSData()->at(currentHSindex).generatedWaypointNum++;
 
     Waypoint h(x, y, inTime.dbl(), outTime.dbl(), wpFileName);

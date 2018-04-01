@@ -23,6 +23,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 
     bool isPause;
     long step;
+    long countOfFirstSkippedLongFlight;
 
     LeviJump  *jump;
     LeviPause *pause;
@@ -71,7 +72,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
 
     virtual void finish()        {saveStatistics();};
 
-    void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
+    virtual void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
     void saveStatistics();
 
     bool isCorrectCoordinates(double x, double y);

@@ -32,19 +32,21 @@ class RegularRootLATP : public LevyHotSpotsLATP
     double rootPersistence;                             // коэффициент персистентности, для мобильности КОНКРЕТНОГО узла
     GenerationRootsStrategy* rootGenerator;             // генератор новых маршрутов (сейчас ЛИБО по персистентности, ЛИБО по статистикам
 
-    vector<HotSpotData*>*      firstRoot;               // сформированный вектор (эталона) маршрута с информацией, загруженной из файлов *.hts
-    vector<unsigned int>*      firstRootSnumber;        // сформированный вектор (эталона) с индексами локаций в структуре HotSpotsCollection
-    vector<int>*               firstRootCounter;        // сформированный вектор (эталона) со счётчиками посещений локаций
-    vector<int>*               firstRootWptsPerVisit;   // сформированный вектор (эталона) среднего количества путевых точек на локацию маршрута
+    vector<HotSpotData*>*    firstRoot;               // сформированный вектор (эталона) маршрута с информацией, загруженной из файлов *.hts
+    vector<unsigned int>*    firstRootSnumber;        // сформированный вектор (эталона) с индексами локаций в структуре HotSpotsCollection
+    vector<int>*             firstRootCounter;        // сформированный вектор (эталона) со счётчиками посещений локаций
+    vector<int>*             firstRootWptsPerVisit;   // сформированный вектор (эталона) среднего количества путевых точек на локацию маршрута
 
-    HotSpotData*               homeHS;                  // первая локация маршрута, она же последняя
+    HotSpotData*             homeHS;                  // первая локация маршрута, она же последняя
 
-    vector<unsigned int>*      currentRootActualTrack;  // фактическая последовательность локаций при прохождении маршрута
-    vector<HotSpotData*>*      currentRoot;             // сформированный вектор (текущий) маршрута с информацией, загруженной из файлов *.hts
-    vector<unsigned int>*      currentRootSnumber;      // сформированный вектор (текущий) с индексами локаций в структуре HotSpotsCollection
-    vector<int>*               currentRootCounter;      // сформированный вектор (текущий) со счётчиками посещений локаций
-    vector<int>*               currentRootWptsPerVisit; // сформированный вектор (текущий) среднего количества путевых точек на локацию маршрута
-    vector<int>*               currentRootCounterSAVED; // после каждого создания маршрута сюда сохраняется currentRootCounter для дальнейшего вычисления фактически пройденного
+    vector<unsigned int>*    currentRootActualTrack;  // фактическая последовательность локаций при прохождении маршрута
+    vector<double>*          currentRootActualTrackSumTime;     // фактическая последовательность времён, проведённых в появляющихся локациях маршрута
+    vector<int>*             currentRootActualTrackWaypointNum; // фактическая последовательность количества путевых точек, пройденных в появляющихся локациях маршрута
+    vector<HotSpotData*>*    currentRoot;             // сформированный вектор (текущий) маршрута с информацией, загруженной из файлов *.hts
+    vector<unsigned int>*    currentRootSnumber;      // сформированный вектор (текущий) с индексами локаций в структуре HotSpotsCollection
+    vector<int>*             currentRootCounter;      // сформированный вектор (текущий) со счётчиками посещений локаций
+    vector<int>*             currentRootWptsPerVisit; // сформированный вектор (текущий) среднего количества путевых точек на локацию маршрута
+    vector<int>*             currentRootCounterSAVED; // после каждого создания маршрута сюда сохраняется currentRootCounter для дальнейшего вычисления фактически пройденного
 
     unsigned int curRootIndex;                          // индекс текущей локации в текущем маршруте
     unsigned int currentHSWaypointNum;                  // количество оставшихся путевых точек в текущей локации
@@ -59,6 +61,7 @@ class RegularRootLATP : public LevyHotSpotsLATP
     virtual bool findNextHotSpot();
     void setCurRootIndex(unsigned int curRootIndex, bool writeIndexToTrack);
     virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound = false);
+    virtual void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
 
   public:
     RegularRootLATP();

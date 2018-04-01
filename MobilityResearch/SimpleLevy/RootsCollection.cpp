@@ -119,12 +119,23 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
     cout << "Consistency is checked." << endl << endl;
 }
 
-void RootsCollection::collectTheoryRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day) {
-    collectRoot(generatedTheoryRootsData, root, rootSnumber, rootCounter, NULL, nodeId, day);
+void RootsCollection::collectTheoryRoot(vector<HotSpotData*>* root,
+                                        vector<unsigned int>* rootSnumber,
+                                        vector<int>* rootCounter,
+                                        unsigned int nodeId,
+                                        unsigned int day) {
+    collectRoot(generatedTheoryRootsData, root, rootSnumber, rootCounter, NULL, NULL, NULL, nodeId, day);
 }
 
-void RootsCollection::collectActualRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, vector<unsigned int>* rootTrack, unsigned int nodeId, unsigned int day) {
-    collectRoot(generatedActualRootsData, root, rootSnumber, rootCounter, rootTrack, nodeId, day);
+void RootsCollection::collectActualRoot(vector<HotSpotData*>* root,
+                                        vector<unsigned int>* rootSnumber,
+                                        vector<int>* rootCounter,
+                                        vector<unsigned int>* rootTrack,
+                                        vector<double>* rootTrackSumTime,
+                                        vector<int>* rootTrackWaypointNum,
+                                        unsigned int nodeId,
+                                        unsigned int day) {
+    collectRoot(generatedActualRootsData, root, rootSnumber, rootCounter, rootTrack, rootTrackSumTime, rootTrackWaypointNum, nodeId, day);
 }
 
 void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData,
@@ -132,6 +143,8 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
                                   vector<unsigned int>* rootSnumber,
                                   vector<int>* rootCounter,
                                   vector<unsigned int>* rootTrack,
+                                  vector<double>* rootTrackSumTime,
+                                  vector<int>* rootTrackWaypointNum,
                                   unsigned int nodeId,
                                   unsigned int day)
 {
@@ -145,13 +158,6 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
 
     if (rootTrack) {
         // если трек есть, то записываем маршрут на основании его!
-        int counterSum = getSum(*rootCounter);
-        ASSERT(counterSum >= 0);
-        // Каждое посещение локации фиксируется в rootTrack.
-        // Однако в RegularRootLATP::findNextHotSpot последняя локация с несколькими посещениесми заменяется одним посещением
-        // Поэтому сумма всех посещений, должна быть больше или равна длине трека
-        ASSERT(((unsigned int) counterSum) >= rootTrack->size());
-
         for (unsigned int i = 0; i < rootTrack->size(); i++) {
             ASSERT(rootTrack->at(i) >= 0 && rootTrack->at(i) < root->size());
 
@@ -162,10 +168,12 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
             data->Xmax = root->at(rootTrack->at(i))->Xmax;
             data->Ymin = root->at(rootTrack->at(i))->Ymin;
             data->Ymax = root->at(rootTrack->at(i))->Ymax;
-            //todo сделать запись фактических значений времени пребывания в локации и кот-ва путевых точек в локации (для узла в рамках одного маршрута)
-            data->sumTime = -1;
-            data->waypointNum = -1;
-            data->counter = -1;
+            //Запись фактических значений времени пребывания в локации и кот-ва путевых точек в локации (для узла в рамках одного маршрута)
+            ASSERT(rootTrackSumTime->at(i) > 0);
+            data->sumTime = rootTrackSumTime->at(i);
+            ASSERT(rootTrackWaypointNum->at(i) > 0);
+            data->waypointNum = rootTrackWaypointNum->at(i);
+            data->counter = -1; // далее это поле использоваться не должно!
             rootForHistory->push_back(data);
         }
     } else {
@@ -179,10 +187,10 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
                 data->Xmax = root->at(i)->Xmax;
                 data->Ymin = root->at(i)->Ymin;
                 data->Ymax = root->at(i)->Ymax;
-                //todo сделать запись фактических значений времени пребывания в локации и кот-ва путевых точек в локации (для узла в рамках одного маршрута)
+                //трека нет только в случае, когда записывается теоретический маршрут. В этом случае не заполняем поля sumTime & waypointNum!
                 data->sumTime = -1;
                 data->waypointNum = -1;
-                data->counter = -1;
+                data->counter = -1; // далее это поле использоваться не должно!
                 rootForHistory->push_back(data);
             }
         }

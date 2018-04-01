@@ -14,7 +14,7 @@ module RegularRootLATPHost
         double timeslot = default(50);
     	double lambda = default(0.3);
     							 		       
-    	bool useWaypointCounter = default(true); // флаг, показывающий нужно использовать счётчик путевых точек на локацию или нет 					 		     
+    	bool useWaypointCounter = default(false); // флаг, показывающий нужно использовать счётчик путевых точек на локацию или нет 					 		     
     
     gates:
         input in @directIn;

@@ -126,12 +126,23 @@ public:
     /**
      * Сохраняет указанный машрут в качестве СФОРМИРОВАННОГО, НО НЕ ПРОЙДЕННОГО для указанного пользователя в конкретный указанный день.
      */
-    void collectTheoryRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day);
+    void collectTheoryRoot(vector<HotSpotData*>* root,
+                           vector<unsigned int>* rootSnumber,
+                           vector<int>* rootCounter,
+                           unsigned int nodeId,
+                           unsigned int day);
 
     /**
      * Сохраняет указанный машрут в качестве ФАКТИЧЕСКИ ПРОЙДЕННОГО для указанного пользователя в конкретный указанный день.
      */
-    void collectActualRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, vector<unsigned int>* currentRootActualTrack, unsigned int nodeId, unsigned int day);
+    void collectActualRoot(vector<HotSpotData*>* root,
+                           vector<unsigned int>* rootSnumber,
+                           vector<int>* rootCounter,
+                           vector<unsigned int>* rootTrack,
+                           vector<double>* rootTrackSumTime,
+                           vector<int>* rootTrackWaypointNum,
+                           unsigned int nodeId,
+                           unsigned int day);
 
     void printRootsDataShort();
 
@@ -148,6 +159,8 @@ private:
      *     vector<unsigned int>*      currentRootSnumber;  - сформированный вектор (текущий) с индексами локаций в структуре HotSpotsCollection
      *     vector<int>*               currentRootCounter;  - сформированный вектор (текущий) со счётчиками посещений локаций
      *     vector<unsigned int>*      rootTrack            - сформированный вектор фактической последовательности появления локаций в маршруте
+     *     vector<double>*            rootTrackSumTime     - сформированный вектор фактических времён, проведённых в появляющихся локациях маршрута
+     *     vector<int>*               rootTrackWaypointNum - сформированный вектор фактического количества путевых точек, пройденных в появляющихся локациях маршрута
      *     unsigned int               nodeId               - ID узла, для которого сохраняется маршрут
      *     unsigned int               day                  - номер дня, для которого сохраняется маршрут.
      *                                                       Дни нумеруются с 1, но структуре generatedRootsData они хранятся начиная с 0.
@@ -157,6 +170,8 @@ private:
                             vector<unsigned int>* rootSnumber,
                             vector<int>* rootCounter,
                             vector<unsigned int>* rootTrack,
+                            vector<double>* rootTrackSumTime,
+                            vector<int>* rootTrackWaypointNum,
                             unsigned int nodeId,
                             unsigned int day);
 };
