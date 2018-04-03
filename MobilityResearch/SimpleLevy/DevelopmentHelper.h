@@ -163,4 +163,29 @@ void deleteInVector(vector<T*>*& deleteme, bool deleteVector) {
     if (deleteVector) myDelete(deleteme);
 }
 
+inline vector<string>* getSubDirectories(const char* currentDirectory) {
+    vector<string>* subDirectories = new vector<string>();
+
+    WIN32_FIND_DATA fi;
+    HANDLE h = FindFirstFileEx(
+            (string(currentDirectory) + string("/*")).c_str(),
+            FindExInfoStandard,
+            &fi,
+            FindExSearchLimitToDirectories,
+            NULL,
+            0);
+    if (h != INVALID_HANDLE_VALUE) {
+        do {
+            if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                if (strcmp(fi.cFileName, (char*)".") != 0 && strcmp(fi.cFileName, (char*)"..") != 0) {
+                    subDirectories->push_back(string(fi.cFileName));
+                }
+            }
+        } while (FindNextFile(h, &fi));
+        FindClose(h);
+    }
+
+    return subDirectories;
+}
+
 #endif // DEVELOPMENTHELPER_H_INCLUDED

@@ -6,12 +6,12 @@ RootsCollection* RootsCollection::instance = NULL;            // указатель на si
 
 RootsCollection* RootsCollection::getInstance()
 {
-    if (!instance) instance = new RootsCollection();
+    if (!instance) instance = new RootsCollection(DEF_TR_DIR, ALLROOTS_FILE, DEF_RT_DIR, ROOT_PATTERT);
     return instance;
 }
 
 
-void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* rootsDir, char* filePattern)
+void RootsCollection::readRootsData(const char* TracesDir, const char* allRootsFile, const char* rootsDir, const char* filePattern)
 {
     // Инициализация структуры RootsData на основании набора файлов *.rot из rootfiles
     cout << "Initializing of RootsData..." << endl;
@@ -50,11 +50,11 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
 
                 root->push_back(HotSpotDataRoot(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum));
             }
-            infile->close();
-            delete infile;
-            delete[] inputFileName;
             RootsData->push_back(root);
             rootFileNames->push_back(string(inputFileName));
+            infile->close();
+            myDelete(infile);
+            myDeleteArray(inputFileName);
         }
         while(FindNextFile(h, &f));
     } else cout << "Directory or files not found\n";
@@ -65,12 +65,13 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
     cout << "Initializing of RootsDataShort..." << endl;
     ASSERT(!RootsDataShort);
     RootsDataShort = new vector<RootDataShort>();
-    ifstream rfile(buildFullName(TracesDir, allRootsFile));
-    if (rfile.good()) {
+    ifstream* rfile = NULL;
+    if (TracesDir && allRootsFile) rfile = new ifstream(buildFullName(TracesDir, allRootsFile));
+    if (TracesDir && allRootsFile && rfile->good()) {
         // Если файл allroots.roo существует - считываем из него
-        while(!rfile.eof()) {
+        while(!rfile->eof()) {
             string rootinfo;
-            getline(rfile, rootinfo);
+            getline((*rfile), rootinfo);
             RootsDataShort->push_back(RootDataShort(rootinfo));
         }
         RootsDataShort->pop_back(); // удаляем дубль в конце
@@ -117,6 +118,26 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
         }
     }
     cout << "Consistency is checked." << endl << endl;
+}
+
+void RootsCollection::readDailyRoots(const char* fakeTracesDir, const char* fakeAllRootsFile, const char* rootsDir, const char* filePattern) {
+    vector<string>* subDirectories = getSubDirectories(rootsDir);
+
+    if (!subDirectories->empty()) {
+        DailyRoot = new vector<RootsCollection*>();
+        for (unsigned int i = 0; i < subDirectories->size(); i++) {
+            double* day = extractDoubleParameter(subDirectories->at(i).c_str(), (char*)"day");
+            ASSERT((*day) == (i+1)); // проверяем, что порядковый номер папки равен номеру дня в названии папки
+            myDelete(day);
+
+            const char* subDir = buildFullName(rootsDir, subDirectories->at(i).c_str());
+            cout << "Start processing roots for day " << i + 1 << " from directory: " << subDir << "/" << filePattern <<  endl;
+            DailyRoot->push_back(new RootsCollection(NULL, NULL, subDir, filePattern));
+            cout << "Processed roots for day " << i + 1 << " from directory: " << subDir << "/" << filePattern <<  endl;
+        }
+    }
+
+    myDelete(subDirectories);
 }
 
 void RootsCollection::collectTheoryRoot(vector<HotSpotData*>* root,
@@ -208,13 +229,6 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
 }
 
 
-void RootsCollection::printRootsDataShort()
-{
-    cout << "RootsCollection::printRootsDataShort RootsDataShort:" <<endl;
-    for (unsigned int i=0; i<RootsDataShort->size(); i++) (*RootsDataShort)[i].print();
-}
-
-
 void RootsCollection::printRootsData()
 {
     cout << "RootsCollection::printRootsDataShort RootsData:" <<endl;
@@ -222,6 +236,13 @@ void RootsCollection::printRootsData()
         cout << "Root " << i <<":" <<endl;
         for(unsigned int j=0; j<(*RootsData)[i]->size(); j++) (*RootsData)[i]->at(j).print();
     }
+}
+
+
+void RootsCollection::printRootsDataShort()
+{
+    cout << "RootsCollection::printRootsDataShort RootsDataShort:" <<endl;
+    for (unsigned int i=0; i<RootsDataShort->size(); i++) (*RootsDataShort)[i].print();
 }
 
 
