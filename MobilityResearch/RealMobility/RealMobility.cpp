@@ -56,7 +56,14 @@ void RealMobility::handleMessage(cMessage * message)
         MobilityBase::handleMessage(message);
     else
         switch (message->getKind()) {
-            //todo Заглушка. Делать окончание и начало дня как для RegularRootLATP::handleMessage ИЛИ НЕТ! т.е. тут просто заглушка
+            // используется для "пинка" для мобильности, чтобы снова начать ходить
+            case MOBILITY_START:{
+                //todo Заглушка. Делать окончание и начало дня как для RegularRootLATP::handleMessage ИЛИ НЕТ! т.е. тут просто заглушка
+                myDelete(message);
+                break;
+            }
+            default:
+                ASSERT(false); //unreacheble statement
         }
 }
 
