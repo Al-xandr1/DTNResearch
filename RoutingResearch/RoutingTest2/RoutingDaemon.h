@@ -80,6 +80,7 @@ public:
     void matricesInitialization();
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
+    virtual void finish();
 
     bool canCollectStatistics();
     void processNewDay();

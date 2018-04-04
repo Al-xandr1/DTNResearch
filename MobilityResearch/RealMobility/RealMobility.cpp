@@ -71,10 +71,9 @@ void RealMobility::setInitialPosition() {
     targetPosition = lastPosition;
 }
 
-#define ROUTE_ENDED          10 // сообщение об окончании маршрута
 void RealMobility::setTargetPosition() {
     if (movementsFinished) {
-        sendDirect(new cMessage("End of route", ROUTE_ENDED), getParentModule()->gate("in"));
+        sendDirect(new cMessage("ROUTE_ENDED", ROUTE_ENDED), getParentModule()->gate("in"));
         nextChange = -1;
         return;
     };
@@ -84,7 +83,7 @@ void RealMobility::setTargetPosition() {
     movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
     if (movementsFinished) {
-        sendDirect(new cMessage("End of route", ROUTE_ENDED), getParentModule()->gate("in"));
+        sendDirect(new cMessage("ROUTE_ENDED", ROUTE_ENDED), getParentModule()->gate("in"));
         nextChange = -1;
         return;
     };

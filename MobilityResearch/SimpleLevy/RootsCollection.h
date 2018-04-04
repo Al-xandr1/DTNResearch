@@ -111,6 +111,8 @@ public:
 
     vector<RootDataShort> *getRootsDataShort() { return RootsDataShort; }
 
+    vector<RootsCollection *> *getDailyRoot() { return DailyRoot; };
+
     RootDataShort *getRootDataShortByNodeId(int nodeId) {
         ASSERT(nodeId >= 0 && nodeId < RootsDataShort->size());
         RootDataShort *rootDataShort = &(RootsDataShort->at(nodeId));

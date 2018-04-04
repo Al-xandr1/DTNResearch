@@ -83,8 +83,9 @@ void MobileHost::finish()
         Packet* packet = (*it);
         HistoryCollector::insertRowRemoved(packet, nodeId, getMobility()->getCurrentPosition());
         HistoryCollector::collectPacket(packet);
-        //todo made erasing & packet deletion
+        delete packet;
     }
+    delete packetsForSending;
 
     //так как при окончании маршрута сразу стартует новый, в конце его нужно принудительно закончить
     ensureEndRoute();
@@ -106,7 +107,7 @@ void MobileHost::startRoute()
     // для первого дня маршрут построен при инициализации мобильности
     if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
     // используется для "пинка" для мобильности, чтобы снова начать ходить
-    sendDirect(new cMessage("Start mobility", MOBILITY_START), getSubmodule("mobility")->gate("in"));
+    sendDirect(new cMessage("MOBILITY_START", MOBILITY_START), getSubmodule("mobility")->gate("in"));
 
     // включение генерации пакетов
     newPacketMsg = new cMessage("FOR_NEW_PACKET", FOR_NEW_PACKET);

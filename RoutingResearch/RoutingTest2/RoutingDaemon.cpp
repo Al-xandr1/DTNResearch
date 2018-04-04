@@ -98,6 +98,13 @@ void RoutingDaemon::initialize() {
     // ------------------------------------------------------------------------------------------
 }
 
+void RoutingDaemon::finish() {
+    if (requests)
+        for (unsigned int i = 0; i < requests->size(); i++) {
+            delete requests->at(i);
+        }
+}
+
 void RoutingDaemon::matricesCreation() {
     // Создаём нижнетреугольную матрицу связности
     connections = new bool*[numHosts];

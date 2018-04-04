@@ -14,6 +14,7 @@
 #include "HotSpotsCollection.h"
 #include "RootsCollection.h"
 #include "SelfSimMap.h"
+#include "Messages.h"
 #include "DevelopmentHelper.h"
 
 class SelfSimLATP : public LineSegmentsMobilityBase {
@@ -96,6 +97,10 @@ public:
     Coord getConstraintAreaMin() { return this->constraintAreaMin; };
 
     Coord getConstraintAreaMax() { return this->constraintAreaMax; };
+
+    void setCurrentHSindex(int hsIndex);
+
+    void reloadRoot();
 
     void makeRoot();
 

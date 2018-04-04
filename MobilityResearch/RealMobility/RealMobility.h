@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 #include "math.h"
+#include "Messages.h"
 #include "DevelopmentHelper.h"
 #include "TracesCollection.h"
 

@@ -90,18 +90,12 @@ void SelfSimLATP::initialize(int stage) {
     // загрузка данных об эталонных маршрутах
     if (!rc) {
         rc = RootsCollection::getInstance();
-        makeRoot();
-        buildDstMatrix();
+        reloadRoot();
     }
 
     // выбор случайной локации из маршрута
     if (currentHSindex == -1) {
-        currentHSindex = rand() % currentRoot->size();
-        currentHSMin.x = currentRoot->at(currentHSindex)->Xmin;
-        currentHSMin.y = currentRoot->at(currentHSindex)->Ymin;
-        currentHSMax.x = currentRoot->at(currentHSindex)->Xmax;
-        currentHSMax.y = currentRoot->at(currentHSindex)->Ymax;
-        currentHSCenter = (currentHSMin + currentHSMax) * 0.5;
+        setCurrentHSindex(rand() % currentRoot->size());
     }
 
     // генерация путевых точек в выбранной локации
@@ -120,14 +114,37 @@ void SelfSimLATP::initialize(int stage) {
     }
 }
 
+
 void SelfSimLATP::handleMessage(cMessage *message) {
     if (message->isSelfMessage())
         MobilityBase::handleMessage(message);
     else
         switch (message->getKind()) {
-            //todo Заглушка. Делать окончание и начало дня как для RegularRootLATP::handleMessage
+            // используется для "пинка" для мобильности, чтобы снова начать ходить
+            case MOBILITY_START:{
+//                if (simTime() > 1) {
+//                    cout << "NEW_DAY! " << endl;
+//                    myDelete(currentRoot);
+//
+//                    reloadRoot();
+//                    setCurrentHSindex(rand() % currentRoot->size());
+//                    isWptLoaded = false;
+//                    loadHSWaypts();
+//                    isWptMatrixReady = false;
+//                    buildWptMatrix();
+//
+//                    nextChange = simTime();
+//                    MovingMobilityBase::scheduleUpdate();
+//                    emitMobilityStateChangedSignal();
+//                }
+                myDelete(message);
+                break;
+            }
+            default:
+                ASSERT(false); //unreacheble statement
         }
 }
+
 
 void SelfSimLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
@@ -226,37 +243,52 @@ bool SelfSimLATP::findNextHotSpot() {
                 currentRoot->erase(currentRoot->begin() + currentHSindex);
                 correctMatrix(dstMatrix, currentHSindex);
                 ASSERT(currentHSindex >= 0);
-                (i < currentHSindex) ? currentHSindex = i : currentHSindex = i - 1;
+                (i < currentHSindex) ? setCurrentHSindex(i) : setCurrentHSindex(i - 1);
                 flag = true;
                 break;
             }
         }
         if (!flag) {  // на маршруте осталось несколок посещений одной локации
-            currentHSindex = 0;
+            setCurrentHSindex(0);
             myDelete(currentRoot->back());
             currentRoot->pop_back();
         }
-        currentHSMin.x = currentRoot->at(currentHSindex)->Xmin;
-        currentHSMin.y = currentRoot->at(currentHSindex)->Ymin;
-        currentHSMax.x = currentRoot->at(currentHSindex)->Xmax;
-        currentHSMax.y = currentRoot->at(currentHSindex)->Ymax;
-        currentHSCenter = (currentHSMin + currentHSMax) * 0.5;
         return true;
     } else return false;
 }
 
 
+void SelfSimLATP::setCurrentHSindex(int hsIndex) {
+    ASSERT(hsIndex >= 0 && hsIndex < currentRoot->size());
+    currentHSindex = hsIndex;
+    currentHSMin.x = currentRoot->at(currentHSindex)->Xmin;
+    currentHSMin.y = currentRoot->at(currentHSindex)->Ymin;
+    currentHSMax.x = currentRoot->at(currentHSindex)->Xmax;
+    currentHSMax.y = currentRoot->at(currentHSindex)->Ymax;
+    currentHSCenter = (currentHSMin + currentHSMax) * 0.5;
+}
+
+
 //-------------------------- Root operations --------------------------------------
+void SelfSimLATP::reloadRoot() {
+    isRootReady = false;
+    isDstMatrixReady = false;
+    makeRoot();
+    buildDstMatrix();
+}
+
 void SelfSimLATP::makeRoot() {
     ASSERT(!currentRoot);
 
     if (!isRootReady) {
         RootNumber = rand() % rc->getRootsData()->size(); //todo почему случайным образом, а не NodeId
+        //RootNumber = NodeID;
+        ASSERT(RootNumber >= 0 && RootNumber < rc->getRootsData()->size());
         currentRoot = new vector<HotSpotData *>();
         for (unsigned int i = 0; i < rc->getRootsData()->at(RootNumber)->size(); i++) {
             currentRoot->push_back(new HotSpotData(rc->getRootsData()->at(RootNumber)->at(i)));
         }
-        cout << "root made" << endl;
+        cout << "root made for NodeID = " << NodeID << endl;
     }
     isRootReady = true;
 }
@@ -313,7 +345,7 @@ void SelfSimLATP::loadHSWaypts() {
         }
         (gen->mapx).clear();
         (gen->mapy).clear();
-        delete gen;
+        myDelete(gen);
         isWptLoaded = true;
 
         //checking of duplicated waypoints
