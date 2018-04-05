@@ -285,6 +285,7 @@ void RegularRootLATP::handleMessage(cMessage * message)
                 MovingMobilityBase::scheduleUpdate();
                 emitMobilityStateChangedSignal();
                 ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+                myDelete(message);
                 break;
             }
             default:
