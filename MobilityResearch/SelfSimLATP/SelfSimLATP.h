@@ -74,6 +74,9 @@ protected:
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
     virtual void handleMessage(cMessage *message);
 
+    void setCurrentWpt(unsigned int i);
+    unsigned int getCurrentWpt();
+
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setInitialPosition();
 

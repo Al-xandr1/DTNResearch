@@ -111,21 +111,6 @@ void SelfSimLATP::handleMessage(cMessage *message) {
         switch (message->getKind()) {
             // используется для "пинка" для мобильности, чтобы снова начать ходить
             case MOBILITY_START:{
-//                if (simTime() > 1) {
-//                    cout << "NEW_DAY! " << endl;
-//                    myDelete(currentRoot);
-//
-//                    reloadRoot();
-//                    setCurrentHSindex(rand() % currentRoot->size());
-//                    isWptLoaded = false;
-//                    loadHSWaypts();
-//                    isWptMatrixReady = false;
-//                    buildWptMatrix();
-//
-//                    nextChange = simTime();
-//                    MovingMobilityBase::scheduleUpdate();
-//                    emitMobilityStateChangedSignal();
-//                }
                 myDelete(message);
                 break;
             }
@@ -138,12 +123,21 @@ void SelfSimLATP::handleMessage(cMessage *message) {
 void SelfSimLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
-    currentWpt = rand() % waypts->size();
-    ASSERT(0 <= currentWpt && currentWpt < waypts->size());
-    lastPosition.x = waypts->at(currentWpt)->x;
-    lastPosition.y = waypts->at(currentWpt)->y;
+    setCurrentWpt(rand() % waypts->size());
+    lastPosition.x = waypts->at(getCurrentWpt())->x;
+    lastPosition.y = waypts->at(getCurrentWpt())->y;
     targetPosition = lastPosition;
-    cout << "Initial position: point #" << currentWpt << " x=" << lastPosition.x << " y=" << lastPosition.y << endl;
+    cout << "Initial position: point #" << getCurrentWpt() << " x=" << lastPosition.x << " y=" << lastPosition.y << endl;
+}
+
+void SelfSimLATP::setCurrentWpt(unsigned int i) {
+    ASSERT(0 <= i && i < waypts->size());
+    currentWpt = i;
+}
+
+unsigned int SelfSimLATP::getCurrentWpt() {
+    ASSERT(0 <= currentWpt && currentWpt < waypts->size());
+    return currentWpt;
 }
 
 void SelfSimLATP::setTargetPosition() {
@@ -173,7 +167,7 @@ void SelfSimLATP::setTargetPosition() {
 
 bool SelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextChange) {
     if (findNextWpt()) {
-        targetPosition = *(waypts->at(currentWpt));
+        targetPosition = *(waypts->at(getCurrentWpt()));
         double distance = sqrt((targetPosition.x - lastPosition.x) * (targetPosition.x - lastPosition.x) +
                                (targetPosition.y - lastPosition.y) * (targetPosition.y - lastPosition.y));
 
@@ -193,10 +187,9 @@ bool SelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextCha
         loadHSWaypts();
         isWptMatrixReady = false;
         buildWptMatrix();
-        currentWpt = rand() % waypts->size();
-        ASSERT(0 <= currentWpt && currentWpt < waypts->size());
-        targetPosition.x = waypts->at(currentWpt)->x;
-        targetPosition.y = waypts->at(currentWpt)->y;
+        setCurrentWpt(rand() % waypts->size());
+        targetPosition.x = waypts->at(getCurrentWpt())->x;
+        targetPosition.y = waypts->at(getCurrentWpt())->y;
         double distance = sqrt((targetPosition.x - lastPosition.x) * (targetPosition.x - lastPosition.x) +
                                (targetPosition.y - lastPosition.y) * (targetPosition.y - lastPosition.y));
 
@@ -274,14 +267,20 @@ void SelfSimLATP::makeNewRoot() {
     loadHSWaypts();
     isWptMatrixReady = false;
     buildWptMatrix();
+
+    // выбираем случайную точку в новой локации
+    setCurrentWpt(rand() % waypts->size());
+
+    // начинаем маршрут с паузы, чтобы мы "нормально прошли" первую точку (например постояли в ней)
+    // а не так, чтобы при инициализации маршрута мы её поставили и при первой генерации сразу выбрали новую
+    isPause = true;
 }
 
 void SelfSimLATP::makeRoot() {
     ASSERT(!currentRoot);
 
     if (!isRootReady) {
-        RootNumber = rand() % rc->getRootsData()->size(); //todo почему случайным образом, а не NodeId
-        //RootNumber = NodeID;
+        RootNumber = NodeID % rc->getRootsData()->size();
         ASSERT(RootNumber >= 0 && RootNumber < rc->getRootsData()->size());
         currentRoot = new vector<HotSpotData *>();
         for (unsigned int i = 0; i < rc->getRootsData()->at(RootNumber)->size(); i++) {
@@ -390,11 +389,19 @@ void SelfSimLATP::buildWptMatrix() {
 }
 
 double SelfSimLATP::getWptDist(unsigned int i, unsigned int j) {
-    if (i <= j) return (wptMatrix[i])->at(j - i);
-    else return (wptMatrix[j])->at(i - j);
+    if (i <= j) {
+        ASSERT(i >= 0 && i < wptMatrix.size());
+        ASSERT((j-i) >= 0 && (j-i) < wptMatrix[i]->size());
+        return (wptMatrix[i])->at(j - i);
+    } else {
+        ASSERT(j >= 0 && j < wptMatrix.size());
+        ASSERT((i-j) >= 0 && (i-j) < wptMatrix[j]->size());
+        return (wptMatrix[j])->at(i - j);
+    }
 }
 
 void SelfSimLATP::correctMatrix(vector<vector<double> *> &matrix, unsigned int delete_Index) {
+    ASSERT(delete_Index >= 0 && delete_Index < matrix.size());
     for (unsigned int i = 0; i < delete_Index; i++) (matrix[i])->erase((matrix[i])->begin() + delete_Index - i);
     vector<double> *removed = matrix[delete_Index];
     removed->clear();
@@ -407,38 +414,38 @@ bool SelfSimLATP::findNextWpt() {
         double rn, pr = 0, sum = 0, h;
         do { rn = (double) rand() / RAND_MAX; } while (rn == 0);
         for (unsigned int i = 0; i < waypts->size(); i++)
-            if ((h = getWptDist(currentWpt, i)) > 0) sum += pow(1 / h, powAforWP);
+            if ((h = getWptDist(getCurrentWpt(), i)) > 0) sum += pow(1 / h, powAforWP);
 
         if (sum == 0) {// remains only duplicates of waypoints
-            myDelete(waypts->at(currentWpt));
-            waypts->erase(waypts->begin() + currentWpt);
-            correctMatrix(wptMatrix, currentWpt);
-            if (currentWpt > 0) currentWpt--;
+            myDelete(waypts->at(getCurrentWpt()));
+            waypts->erase(waypts->begin() + getCurrentWpt());
+            correctMatrix(wptMatrix, getCurrentWpt());
+            if (getCurrentWpt() > 0) setCurrentWpt(getCurrentWpt() - 1);
 
         } else {
             bool found = false;
             int additions = 0;
             for (unsigned int i = 0; i < waypts->size(); i++) {
-                if ((h = getWptDist(currentWpt, i)) > 0) {
+                if ((h = getWptDist(getCurrentWpt(), i)) > 0) {
                     pr += pow(1 / h, powAforWP);
                     additions++;
                 }
                 if (rn <= pr / sum) {
-                    myDelete(waypts->at(currentWpt));
-                    waypts->erase(waypts->begin() + currentWpt);
-                    correctMatrix(wptMatrix, currentWpt);
-                    (i < currentWpt) ? currentWpt = i : currentWpt = i - 1;
+                    correctMatrix(wptMatrix, getCurrentWpt());
+                    myDelete(waypts->at(getCurrentWpt()));
+                    waypts->erase(waypts->begin() + getCurrentWpt());
+                    (i < currentWpt) ? setCurrentWpt(i) : setCurrentWpt(i - 1);
                     found = true;
                     break;
                 }
             }
             if (!found) {
                 printf("rn = %0.30f, pr = %0.30f, sum = %0.30f, pr/sum = %0.30f,  additions = %d, waypts.size() = %d, currentWpt = %d",
-                       rn, pr, sum, pr / sum, additions, waypts->size(), currentWpt);
+                       rn, pr, sum, pr / sum, additions, waypts->size(), getCurrentWpt());
                 cout << endl;
                 for (unsigned int i = 0; i < waypts->size(); i++) {
                     printf("index = %d, h = %0.30f, coord = (%0.30f, %0.30f)",
-                           i, getWptDist(currentWpt, i), waypts->at(i)->x, waypts->at(i)->y);
+                           i, getWptDist(getCurrentWpt(), i), waypts->at(i)->x, waypts->at(i)->y);
                     cout << endl;
                 }
                 exit(-132);
