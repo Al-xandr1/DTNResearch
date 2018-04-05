@@ -28,9 +28,11 @@ void MobileHost::handleMessage(cMessage *msg)
 
        case FOR_NEW_PACKET: {      // Сообщение о создании нового пакета
            if ( msg->isSelfMessage() ) {
-              Packet* packet = createPacket();
-              registerPacket(packet);
-              if (lambda>0) scheduleAt(simTime() + timeslot * exponential(1/lambda), msg);
+               if (lambda > 0) {
+                   Packet* packet = createPacket();
+                   registerPacket(packet);
+                   scheduleAt(simTime() + timeslot * exponential(1/lambda), msg);
+               }
            } else {
                ASSERT(false); //unreachable statement
            };
