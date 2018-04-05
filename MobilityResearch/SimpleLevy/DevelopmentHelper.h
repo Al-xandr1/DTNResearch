@@ -155,7 +155,7 @@ inline std::string &fullTrim(std::string &s) {
 }
 
 template <class T>
-void deleteInVector(vector<T*>*& deleteme, bool deleteVector) {
+void deleteVector(vector<T*>*& deleteme, bool deleteVector) {
     while(!deleteme->empty()) {
         myDelete(deleteme->back());
         deleteme->pop_back();

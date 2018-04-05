@@ -83,9 +83,9 @@ void MobileHost::finish()
         Packet* packet = (*it);
         HistoryCollector::insertRowRemoved(packet, nodeId, getMobility()->getCurrentPosition());
         HistoryCollector::collectPacket(packet);
-        delete packet;
+        myDelete(packet);
     }
-    delete packetsForSending;
+    myDelete(packetsForSending);
 
     //так как при окончании маршрута сразу стартует новый, в конце его нужно принудительно закончить
     ensureEndRoute();
@@ -130,8 +130,7 @@ void MobileHost::endRoute()
     // отключение генерации пакетов
     cMessage* canceled = cancelEvent(newPacketMsg);
     ASSERT(canceled == newPacketMsg);
-    delete newPacketMsg;
-    newPacketMsg = NULL;
+    myDelete(newPacketMsg);
 }
 
 

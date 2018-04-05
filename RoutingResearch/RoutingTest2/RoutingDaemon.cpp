@@ -99,10 +99,7 @@ void RoutingDaemon::initialize() {
 }
 
 void RoutingDaemon::finish() {
-    if (requests)
-        for (unsigned int i = 0; i < requests->size(); i++) {
-            delete requests->at(i);
-        }
+    deleteVector(requests, false);
 }
 
 void RoutingDaemon::matricesCreation() {

@@ -100,7 +100,7 @@ public:
 
     void setCurrentHSindex(int hsIndex);
 
-    void reloadRoot();
+    void makeNewRoot();
 
     void makeRoot();
 

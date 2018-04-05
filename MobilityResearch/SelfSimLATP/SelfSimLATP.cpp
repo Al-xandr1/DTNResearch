@@ -90,18 +90,7 @@ void SelfSimLATP::initialize(int stage) {
     // загрузка данных об эталонных маршрутах
     if (!rc) {
         rc = RootsCollection::getInstance();
-        reloadRoot();
-    }
-
-    // выбор случайной локации из маршрута
-    if (currentHSindex == -1) {
-        setCurrentHSindex(rand() % currentRoot->size());
-    }
-
-    // генерация путевых точек в выбранной локации
-    if (gen == NULL) {
-        loadHSWaypts();
-        buildWptMatrix();
+        makeNewRoot();
     }
 
     if (wpFileName == NULL && trFileName == NULL) {
@@ -270,11 +259,21 @@ void SelfSimLATP::setCurrentHSindex(int hsIndex) {
 
 
 //-------------------------- Root operations --------------------------------------
-void SelfSimLATP::reloadRoot() {
+void SelfSimLATP::makeNewRoot() {
+    myDelete(currentRoot);
     isRootReady = false;
     isDstMatrixReady = false;
     makeRoot();
     buildDstMatrix();
+
+    // выбор случайной локации из маршрута
+    setCurrentHSindex(rand() % currentRoot->size());
+
+    // генерация путевых точек в выбранной локации
+    isWptLoaded = false;
+    loadHSWaypts();
+    isWptMatrixReady = false;
+    buildWptMatrix();
 }
 
 void SelfSimLATP::makeRoot() {
@@ -303,17 +302,16 @@ void SelfSimLATP::buildDstMatrix() {
             hscntr[i].x = 0.5 * (currentRoot->at(i)->Xmin + currentRoot->at(i)->Xmax);
             hscntr[i].y = 0.5 * (currentRoot->at(i)->Ymin + currentRoot->at(i)->Ymax);
         }
+
+        for (unsigned int i = 0; i < dstMatrix.size(); i++) myDelete(dstMatrix[i]);
         dstMatrix.clear();
+
         for (unsigned int i = 0; i < currentRoot->size(); i++) {
-            vector<double> *dij;
-            dij = new vector<double>;
-            dij->clear();
+            vector<double> *dij = new vector<double>;
             dij->push_back(0);
             for (unsigned int j = i + 1; j < currentRoot->size(); j++) {
-                double d;
-                d = sqrt((hscntr[i].x - hscntr[j].x) * (hscntr[i].x - hscntr[j].x) +
-                         (hscntr[i].y - hscntr[j].y) * (hscntr[i].y - hscntr[j].y));
-                dij->push_back(d);
+                dij->push_back(sqrt((hscntr[i].x - hscntr[j].x) * (hscntr[i].x - hscntr[j].x) +
+                                    (hscntr[i].y - hscntr[j].y) * (hscntr[i].y - hscntr[j].y)));
             }
             dstMatrix.push_back(dij);
         }
@@ -337,7 +335,7 @@ void SelfSimLATP::loadHSWaypts() {
         gen = new SelfSimMapGenerator(currentHSMin.x, currentHSMax.x, currentHSMin.y, currentHSMax.y, 9);
         gen->MakeSelfSimSet(buildFullName(DEF_TR_DIR, VAR_FILE), currentRoot->at(currentHSindex)->waypointNum);
         gen->PutSetOnMap();
-        if (waypts) deleteInVector(waypts, false);
+        if (waypts) deleteVector(waypts, false);
         else waypts = new vector<Coord *>();
         ASSERT(waypts && waypts->size() == 0);
         for (unsigned int i = 0; i < (gen->mapx).size(); i++) {
@@ -375,15 +373,15 @@ void SelfSimLATP::loadHSWaypts() {
 
 void SelfSimLATP::buildWptMatrix() {
     if (isWptLoaded && !isWptMatrixReady) {
+        for (unsigned int i = 0; i < wptMatrix.size(); i++) myDelete(wptMatrix[i]);
         wptMatrix.clear();
+
         for (unsigned int i = 0; i < waypts->size(); i++) {
             vector<double> *wij = new vector<double>;
             wij->push_back(0);
             for (unsigned int j = i + 1; j < waypts->size(); j++) {
-                double d;
-                d = sqrt((waypts->at(i)->x - waypts->at(j)->x) * (waypts->at(i)->x - waypts->at(j)->x) +
-                         (waypts->at(i)->y - waypts->at(j)->y) * (waypts->at(i)->y - waypts->at(j)->y));
-                wij->push_back(d);
+                wij->push_back(sqrt((waypts->at(i)->x - waypts->at(j)->x) * (waypts->at(i)->x - waypts->at(j)->x) +
+                                    (waypts->at(i)->y - waypts->at(j)->y) * (waypts->at(i)->y - waypts->at(j)->y)));
             }
             wptMatrix.push_back(wij);
         }
@@ -450,7 +448,7 @@ bool SelfSimLATP::findNextWpt() {
         return true;
     } else {
         ASSERT(waypts);
-        deleteInVector(waypts, false);
+        deleteVector(waypts, false);
         ASSERT(waypts && waypts->size() == 0);
 
         return false;
