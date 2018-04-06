@@ -29,8 +29,5 @@ simple SelfSimLATP extends MovingMobilityBase
         
         //statistic collection
     	string traceFileName = default("traceOfNode");
-    	int NodeID = default(0);
-    	
-    gates:
-        input in @directIn;    
+    	int NodeID = default(0); 
 }

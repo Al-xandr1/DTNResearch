@@ -95,9 +95,9 @@ void MobileHost::finish()
 }
 
 
-MovingMobilityBase* MobileHost::getMobility()                {return (MovingMobilityBase*)getSubmodule("mobility");}
-RegularRootLATP*    MobileHost::getRegularRootLATPMobility() {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
-SelfSimLATP*        MobileHost::getSelfSimLATPMobility()     {return dynamic_cast<SelfSimLATP*>(getSubmodule("mobility"));}
+MovingMobilityBase* MobileHost::getMobility()                  {return (MovingMobilityBase*)getSubmodule("mobility");}
+RegularRootLATP*    MobileHost::getRegularRootLATPMobility()   {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
+RegularSelfSimLATP* MobileHost::getRegularSelfSimLATPMobility(){return dynamic_cast<RegularSelfSimLATP*>(getSubmodule("mobility"));}
 
 
 void MobileHost::startRoute()
@@ -108,6 +108,11 @@ void MobileHost::startRoute()
     RegularRootLATP* regularMobility = getRegularRootLATPMobility();
     // для первого дня маршрут построен при инициализации мобильности
     if (regularMobility && rd->getCurrentDay() > 1) regularMobility->makeNewRoot();
+
+    RegularSelfSimLATP* regularSelfSimMobility = getRegularSelfSimLATPMobility();
+    // для первого дня маршрут построен при инициализации мобильности
+    if (regularSelfSimMobility && rd->getCurrentDay() > 1) regularSelfSimMobility->makeNewRoot();
+
     // используется для "пинка" для мобильности, чтобы снова начать ходить
     sendDirect(new cMessage("MOBILITY_START", MOBILITY_START), getSubmodule("mobility")->gate("in"));
 

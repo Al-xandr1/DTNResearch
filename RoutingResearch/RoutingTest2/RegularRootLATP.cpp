@@ -229,8 +229,8 @@ void RegularRootLATP::initialize(int stage) {
 
         // Сохраняем для статистики сгенерированный маршрут для первого дня в RootsCollection.
         const int currentDay = RoutingDaemon::instance->getCurrentDay();
-        ASSERT(currentDay == 0);
-        RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, currentDay+1);
+        ASSERT(currentDay == 1);
+        RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, currentDay);
     }
 
     if (!LocalProbMatrix) makeLocalProbMatrix(powA);
@@ -526,4 +526,8 @@ void RegularRootLATP::makeNewRoot()
      */
     RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, currentDay);
     currentRootCounterSAVED = new vector<int>(*currentRootCounter);
+
+    // начинаем маршрут с паузы, чтобы мы "нормально прошли" первую точку (например постояли в ней)
+    // а не так, чтобы при инициализации маршрута мы её поставили и при первой генерации сразу выбрали новую
+    isPause = true;
 }

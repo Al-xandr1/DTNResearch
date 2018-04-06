@@ -16,8 +16,7 @@
 #include "RootsCollection.h"
 #include "HotSpotsCollection.h"
 
-class LevyHotSpotsLATP : public LineSegmentsMobilityBase
-{
+class LevyHotSpotsLATP : public LineSegmentsMobilityBase {
   protected:
     int NodeID;
 
@@ -76,6 +75,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase
     void saveStatistics();
 
     bool isCorrectCoordinates(double x, double y);
+    void log(string log);
     void log();
 
   public:

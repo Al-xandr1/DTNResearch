@@ -6,7 +6,7 @@
 #include "INETDefs.h"
 #include <RoutingDaemon.h>
 #include "RegularRootLATP.h"
-#include "SelfSimLATP.h"
+#include "RegularSelfSimLATP.h"
 #include <HistoryCollector.h>
 #include <Messages.h>
 
@@ -14,6 +14,7 @@ using namespace std;
 
 class RoutingDaemon;
 class RegularRootLATP;
+class RegularSelfSimLATP;
 
 class MobileHost : public cSimpleModule
 {
@@ -37,7 +38,7 @@ public:
 
     MovingMobilityBase* getMobility();
     RegularRootLATP*    getRegularRootLATPMobility();
-    SelfSimLATP*        getSelfSimLATPMobility();
+    RegularSelfSimLATP* getRegularSelfSimLATPMobility();
 
     void startRoute();
     void ensureEndRoute();

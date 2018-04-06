@@ -72,7 +72,6 @@ protected:
     virtual int numInitStages() const { return 3; }
 
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
-    virtual void handleMessage(cMessage *message);
 
     void setCurrentWpt(unsigned int i);
     unsigned int getCurrentWpt();
@@ -85,6 +84,8 @@ protected:
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
 
     virtual void finish() { saveStatistics(); };
+
+    void log(string log);
 
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
 
@@ -105,7 +106,7 @@ public:
 
     void makeNewRoot();
 
-    void makeRoot();
+    virtual void makeRoot();
 
     void buildDstMatrix();
 

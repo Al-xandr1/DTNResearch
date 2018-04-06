@@ -103,23 +103,6 @@ void SelfSimLATP::initialize(int stage) {
     }
 }
 
-
-void SelfSimLATP::handleMessage(cMessage *message) {
-    if (message->isSelfMessage())
-        MobilityBase::handleMessage(message);
-    else
-        switch (message->getKind()) {
-            // используется для "пинка" для мобильности, чтобы снова начать ходить
-            case MOBILITY_START:{
-                myDelete(message);
-                break;
-            }
-            default:
-                ASSERT(false); //unreacheble statement
-        }
-}
-
-
 void SelfSimLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
@@ -142,7 +125,7 @@ unsigned int SelfSimLATP::getCurrentWpt() {
 
 void SelfSimLATP::setTargetPosition() {
     if (movementsFinished) {
-        cout << "End of root!" << endl;
+        log("End of root!");
         nextChange = -1;
         return;
     };
@@ -157,7 +140,7 @@ void SelfSimLATP::setTargetPosition() {
         movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
         if (movementsFinished) {
-            cout << "End of root!" << endl;
+            log("End of root!");
             nextChange = -1;
             return;
         };
@@ -286,7 +269,7 @@ void SelfSimLATP::makeRoot() {
         for (unsigned int i = 0; i < rc->getRootsData()->at(RootNumber)->size(); i++) {
             currentRoot->push_back(new HotSpotData(rc->getRootsData()->at(RootNumber)->at(i)));
         }
-        cout << "root made for NodeID = " << NodeID << endl;
+        log("Root made");
     }
     isRootReady = true;
 }
@@ -460,6 +443,10 @@ bool SelfSimLATP::findNextWpt() {
 
         return false;
     }
+}
+
+void SelfSimLATP::log(string log) {
+    cout << "NodeId = " << NodeID << ": "  << log << endl;
 }
 
 

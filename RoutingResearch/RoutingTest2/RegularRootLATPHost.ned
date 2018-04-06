@@ -1,8 +1,6 @@
 module RegularRootLATPHost
 {
     parameters:
-        string mobilityType = default("LevyHotSpotsRandom");
-        
         @node();
         @display("i=device/pocketpc_s");
         

@@ -49,6 +49,9 @@ private:
         this->readDailyRoots(TracesDir, allRootsFile, rootsDir, filePattern);
         this->printRootsData();
         this->printRootsDataShort();
+        if (DailyRoot) {
+            cout << "RootsCollection: dailyRoots loaded, count days = " << DailyRoot->size() << endl;
+        }
     }
 
     ~RootsCollection() {

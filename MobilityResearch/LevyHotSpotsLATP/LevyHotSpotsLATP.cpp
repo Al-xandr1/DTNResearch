@@ -108,19 +108,19 @@ void LevyHotSpotsLATP::initialize(int stage) {
 
 void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi)
 {
-    currentHSMin.x = hsi->Xmin;    //std::cout<<currentHSMin.x<<"\t";
-    currentHSMin.y = hsi->Ymin;    //std::cout<<currentHSMin.y<<"\t";
-    currentHSMax.x = hsi->Xmax;    //std::cout<<currentHSMax.x<<"\t";
-    currentHSMax.y = hsi->Ymax;    //std::cout<<currentHSMax.y<<"\n";
+    currentHSMin.x = hsi->Xmin;
+    currentHSMin.y = hsi->Ymin;
+    currentHSMax.x = hsi->Xmax;
+    currentHSMax.y = hsi->Ymax;
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 }
 
 
 void LevyHotSpotsLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
-    
-    lastPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
-    lastPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
+
+    lastPosition.x = uniform(currentHSMin.x, currentHSMax.x);
+    lastPosition.y = uniform(currentHSMin.y, currentHSMax.y);
     targetPosition = lastPosition;
     ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
 }
@@ -132,7 +132,12 @@ bool LevyHotSpotsLATP::isHotSpotEmpty() {
 
 
 void LevyHotSpotsLATP::setTargetPosition() {
-    if (movementsFinished) {nextChange = -1; return;};
+    if (movementsFinished) {
+        log(" End of root!");
+        nextChange = -1;
+        return;
+    };
+
     ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
     ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
 
@@ -149,7 +154,11 @@ void LevyHotSpotsLATP::setTargetPosition() {
         movementsFinished = !generateNextPosition(targetPosition, nextChange, regenerateIfOutOfBound);
         if (regenerateIfOutOfBound) countOfFirstSkippedLongFlight--;
 
-        if (movementsFinished) {nextChange = -1; return;};
+        if (movementsFinished) {
+            log(" End of root!");
+            nextChange = -1;
+            return;
+        };
         ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
     }
     isPause = !isPause;
@@ -340,6 +349,9 @@ bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
     return false;
 }
 
+void LevyHotSpotsLATP::log(string log) {
+    cout << "NodeId = " << NodeID << ": "  << log << endl;
+}
 
 void LevyHotSpotsLATP::log() {  // Отладочная функция
     cout << "----------------------------- LOG --------------------------------" << endl;

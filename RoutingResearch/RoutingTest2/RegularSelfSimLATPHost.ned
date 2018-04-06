@@ -1,7 +1,6 @@
-module NewSelfSimLATPHost
+module RegularSelfSimLATPHost
 {
     parameters:
-        
         @node();
         @display("i=device/pocketpc_s");
         
@@ -17,7 +16,7 @@ module NewSelfSimLATPHost
         input in @directIn;
         
     submodules:
-        mobility: SelfSimLATP {
+        mobility: RegularSelfSimLATP {
             parameters: 
                 @display("is=s;p=72,44");
             	NodeID = NodeID_;

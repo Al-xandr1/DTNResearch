@@ -69,8 +69,13 @@ public:
         neighbors              = NULL;
     }
 
+    unsigned int getCurrentDay() {
+        // Костыль. Нумерация дней начинаеся с 1, а тут мв обращаемся до его проставления в 1
+        // TODO ПОПРАВИТЬ! Возможно из-за этого один день теряется.
+        if (currentDay == 0) return 1;
+        return currentDay;
+    }
     int          getNumHosts()              {return numHosts;}
-    unsigned int getCurrentDay()            {return currentDay;}
     simtime_t    getStartTimeOfCurrentDay() {return startTimeOfCurrentDay;}
     double       getDayDuration()           {return dayDuration;}
     unsigned int getCountOfDays()           {return countOfDays;}
