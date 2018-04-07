@@ -5,8 +5,14 @@ Define_Module(LevyHotSpotsLATP);
 LevyHotSpotsLATP::LevyHotSpotsLATP() {
     NodeID = -1;
 
-    isPause = false;
+    // начинаем маршрут с паузы, чтобы мы "нормально прошли" первую точку (например посто€ли в ней)
+    // а не так, чтобы при инициализации маршрута мы еЄ поставили и при первой генерации сразу выбрали новую
+    isPause = true;
+
+    // первый шаг нулевой. ƒалее на нЄм провер€ем, что мы прошли инициализацию,
+    // и реально начали ходить (начина€ с первого шага)
     step = 0;
+
     countOfFirstSkippedLongFlight = -1;
 
     jump = NULL;
@@ -141,12 +147,15 @@ void LevyHotSpotsLATP::setTargetPosition() {
     ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
     ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
 
-    step++;
+    // так как данный метод вызываетс€ на этапе инициализации, то этот вызов мы и пропускаем
+    if (step++ == 0) return;
+
     if (isPause) {
         waitTime = (simtime_t) pause->get_Levi_rv();
         ASSERT(waitTime > 0);
         nextChange = simTime() + waitTime;
     } else {
+        ASSERT(simTime() >= waitTime);
         collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
         // если количество первых прыжков, которые нужно пропустить дл€ текущей локации больше нул€,
         // то регенерируем прыжки в случае выхода за границу

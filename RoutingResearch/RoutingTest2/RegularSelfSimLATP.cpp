@@ -40,21 +40,27 @@ void RegularSelfSimLATP::setTargetPosition() {
      if (!isRootReady) {
          unsigned int day = RoutingDaemon::instance->getCurrentDay();
          ASSERT(day >= 1);
+         RootsCollection *collection = NULL;
 
          vector<RootsCollection *> *dailyRoot = rc->getDailyRoot();
-         ASSERT(dailyRoot);
+         if (dailyRoot) {
+             // если наборы маршрутов для КАЖДОГО дня есть, то ходим по ним
 
-         // Тут номер дня может быть больше чем наборов для дней.
-         // Поэтому, например, последний маршрут повторяем бесконечно
-         if (day > dailyRoot->size()) day = dailyRoot->size();
-         RootsCollection *dailyRC = dailyRoot->at(day-1);
+             // Тут номер дня может быть больше чем наборов для дней.
+             // Поэтому, например, последний маршрут повторяем бесконечно
+             if (day > dailyRoot->size()) day = dailyRoot->size();
+             collection = dailyRoot->at(day-1);
 
-         RootNumber = NodeID % dailyRC->getRootsData()->size();
-         ASSERT(RootNumber >= 0 && RootNumber < dailyRC->getRootsData()->size());
+         } else {
+             // если наборо для каждого дня нет, то ходим КАЖДЫЙ день по одному ОБЩЕМУ набору
+             collection = rc;
+         }
 
+         RootNumber = NodeID % collection->getRootsData()->size();
+         ASSERT(RootNumber >= 0 && RootNumber < collection->getRootsData()->size());
          currentRoot = new vector<HotSpotData *>();
-         for (unsigned int i = 0; i < dailyRC->getRootsData()->at(RootNumber)->size(); i++) {
-             currentRoot->push_back(new HotSpotData(dailyRC->getRootsData()->at(RootNumber)->at(i)));
+         for (unsigned int i = 0; i < collection->getRootsData()->at(RootNumber)->size(); i++) {
+             currentRoot->push_back(new HotSpotData(collection->getRootsData()->at(RootNumber)->at(i)));
          }
          cout << "NodeId = " << NodeID << ": "  << "Root made for day " << day << endl;
      }

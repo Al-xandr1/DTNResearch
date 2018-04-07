@@ -5,8 +5,14 @@ Define_Module(SelfSimLATP);
 SelfSimLATP::SelfSimLATP() {
     NodeID = -1;
 
-    isPause = false;
+    // начинаем маршрут с паузы, чтобы мы "нормально прошли" первую точку (например посто€ли в ней)
+    // а не так, чтобы при инициализации маршрута мы еЄ поставили и при первой генерации сразу выбрали новую
+    isPause = true;
+
+    // первый шаг нулевой. ƒалее на нЄм провер€ем, что мы прошли инициализацию,
+    // и реально начали ходить (начина€ с первого шага)
     step = 0;
+
     kForSpeed = 1;
     roForSpeed = 0;
 
@@ -130,12 +136,15 @@ void SelfSimLATP::setTargetPosition() {
         return;
     };
 
-    step++;
+    // так как данный метод вызываетс€ на этапе инициализации, то этот вызов мы и пропускаем
+    if (step++ == 0) return;
+
     if (isPause) {
         waitTime = (simtime_t) pause->get_Levi_rv();
         ASSERT(waitTime > 0);
         nextChange = simTime() + waitTime;
     } else {
+        ASSERT(simTime() >= waitTime);
         collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
         movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
@@ -197,13 +206,13 @@ bool SelfSimLATP::findNextHotSpot() {
         double rn, pr = 0, sum = 0, h;
         unsigned int i;
         bool flag = false;
-        rn = (double) rand() / RAND_MAX;
+        do { rn = (double) rand() / RAND_MAX; } while (rn == 0);
         for (i = 0; i < currentRoot->size(); i++)
             if ((h = getDistance(currentHSindex, i)) > 0) sum += pow(1 / h, powAforHS);
         for (i = 0; i < currentRoot->size(); i++) {
             if ((h = getDistance(currentHSindex, i)) > 0) pr += pow(1 / h, powAforHS);
             if (rn <= pr / sum) {
-                //cout << "rn=" <<rn <<"  pr="<<pr<<endl;
+                //cout << "DEBUG!!! rn=" << rn << ",  pr=" << pr << ", sum=" << sum << endl;
                 myDelete(currentRoot->at(currentHSindex));
                 currentRoot->erase(currentRoot->begin() + currentHSindex);
                 correctMatrix(dstMatrix, currentHSindex);
@@ -238,8 +247,8 @@ void SelfSimLATP::setCurrentHSindex(int hsIndex) {
 void SelfSimLATP::makeNewRoot() {
     myDelete(currentRoot);
     isRootReady = false;
-    isDstMatrixReady = false;
     makeRoot();
+    isDstMatrixReady = false;
     buildDstMatrix();
 
     // выбор случайной локации из маршрута
