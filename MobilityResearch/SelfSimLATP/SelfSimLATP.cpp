@@ -206,7 +206,7 @@ bool SelfSimLATP::findNextHotSpot() {
         double rn, pr = 0, sum = 0, h;
         unsigned int i;
         bool flag = false;
-        do { rn = (double) rand() / RAND_MAX; } while (rn == 0);
+        do { rn = ((double) rand()) / RAND_MAX; } while (rn == 0);
         for (i = 0; i < currentRoot->size(); i++)
             if ((h = getDistance(currentHSindex, i)) > 0) sum += pow(1 / h, powAforHS);
         for (i = 0; i < currentRoot->size(); i++) {
@@ -404,7 +404,7 @@ void SelfSimLATP::correctMatrix(vector<vector<double> *> &matrix, unsigned int d
 bool SelfSimLATP::findNextWpt() {
     if (waypts->size() > 1) {
         double rn, pr = 0, sum = 0, h;
-        do { rn = (double) rand() / RAND_MAX; } while (rn == 0);
+        do { rn = ((double) rand()) / RAND_MAX; } while (rn == 0);
         for (unsigned int i = 0; i < waypts->size(); i++)
             if ((h = getWptDist(getCurrentWpt(), i)) > 0) sum += pow(1 / h, powAforWP);
 
