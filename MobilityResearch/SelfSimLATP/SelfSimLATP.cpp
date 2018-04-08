@@ -469,6 +469,7 @@ void SelfSimLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double 
 
 
 void SelfSimLATP::saveStatistics() {
+    log("Start saving statistics...");
     const char *outDir = NamesAndDirs::getOutDir();
     const char *wpsDir = NamesAndDirs::getOutWpsDir();
     const char *trsDir = NamesAndDirs::getOutTrsDir();
@@ -507,4 +508,5 @@ void SelfSimLATP::saveStatistics() {
         wpFile.close();
         trFile.close();
     }
+    log("Statistics saved");
 }

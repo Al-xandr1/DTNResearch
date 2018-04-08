@@ -80,7 +80,9 @@ void RealMobility::setInitialPosition() {
 
 void RealMobility::setTargetPosition() {
     if (movementsFinished) {
-        sendDirect(new cMessage("ROUTE_ENDED", ROUTE_ENDED), getParentModule()->gate("in"));
+        cMessage* msg = new cMessage("ROUTE_ENDED", ROUTE_ENDED);
+        take(msg);
+        sendDirect(msg, getParentModule()->gate("in"));
         nextChange = -1;
         return;
     };
@@ -90,7 +92,9 @@ void RealMobility::setTargetPosition() {
     movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
     if (movementsFinished) {
-        sendDirect(new cMessage("ROUTE_ENDED", ROUTE_ENDED), getParentModule()->gate("in"));
+        cMessage* msg = new cMessage("ROUTE_ENDED", ROUTE_ENDED);
+        take(msg);
+        sendDirect(msg, getParentModule()->gate("in"));
         nextChange = -1;
         return;
     };
@@ -130,6 +134,7 @@ void RealMobility::collectStatistics(simtime_t inTime, simtime_t outTime, double
 
 
 void RealMobility::saveStatistics() {
+    log("Start saving statistics...");
     const char *outDir = NamesAndDirs::getOutDir();
     const char *wpsDir = NamesAndDirs::getOutWpsDir();
     const char *trsDir = NamesAndDirs::getOutTrsDir();
@@ -162,8 +167,12 @@ void RealMobility::saveStatistics() {
 
     wpFile.close();
     trFile.close();
+    log("Statistics saved");
 }
 
+void RealMobility::log(string log) {
+    cout << "NodeId = " << NodeID << ": "  << log << endl;
+}
 
 void RealMobility::log() {  // Отладочная функция
     cout << "----------------------------- LOG --------------------------------" << endl;

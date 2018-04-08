@@ -47,6 +47,7 @@ class RealMobility : public LineSegmentsMobilityBase
     virtual void finish()        {saveStatistics();};
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
     void saveStatistics();
+    void log(string log);
     void log();
 
   public:

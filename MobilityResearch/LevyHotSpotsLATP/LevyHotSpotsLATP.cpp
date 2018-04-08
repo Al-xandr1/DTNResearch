@@ -297,6 +297,7 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
 
 
 void LevyHotSpotsLATP::saveStatistics() {
+    log("Start saving statistics...");
     const char *outDir  = NamesAndDirs::getOutDir();
     const char *wpsDir  = NamesAndDirs::getOutWpsDir();
     const char *trsDir  = NamesAndDirs::getOutTrsDir();
@@ -349,6 +350,7 @@ void LevyHotSpotsLATP::saveStatistics() {
     }
     wpFile.close();
     trFile.close();
+    log("Statistics saved");
 }
 
 
