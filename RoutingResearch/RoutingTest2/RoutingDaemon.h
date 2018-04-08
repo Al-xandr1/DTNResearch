@@ -71,7 +71,6 @@ public:
 
     unsigned int getCurrentDay() {
         // Костыль. Нумерация дней начинаеся с 1, а тут мв обращаемся до его проставления в 1
-        // TODO ПОПРАВИТЬ! Возможно из-за этого один день теряется.
         if (currentDay == 0) return 1;
         return currentDay;
     }

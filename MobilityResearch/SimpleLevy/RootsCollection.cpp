@@ -182,6 +182,10 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
         for (unsigned int i = 0; i < rootTrack->size(); i++) {
             ASSERT(rootTrack->at(i) >= 0 && rootTrack->at(i) < root->size());
 
+            // Костыль. Т.к. в RegularRootLATP происходит запись последней локации,
+            // то появляются записи с нулевыми временем и количеством путевых точек
+            if (i == (rootTrack->size()-1) && (rootTrackSumTime->at(i) == 0 || rootTrackWaypointNum->at(i) == 0)) continue;
+
             HotSpotDataRoot* data = new HotSpotDataRoot();
             data->hotSpotName = new char[256];
             data->hotSpotName = strcpy(data->hotSpotName, root->at(rootTrack->at(i))->hotSpotName);

@@ -387,7 +387,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
 
     // маршрут кончилс€, идЄм домой
     if (useWaypointCounter) ASSERT(currentHSWaypointNum == 0);
-    setCurRootIndex(0, false);
+    setCurRootIndex(0, true);
 
     // проверяем, не дома ли мы уже
     if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
