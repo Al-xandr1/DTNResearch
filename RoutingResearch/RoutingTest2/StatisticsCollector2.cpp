@@ -211,7 +211,9 @@ void StatisticsCollector2::finish() {
 
     ASSERT(deliveredPackets <= createdPackets);
     double deliveredPercentage = (100.0 * deliveredPackets) / (1.0 * createdPackets);
-    ASSERT(deliveredPercentage <= 100);
+    if (deliveredPercentage < 0 || deliveredPercentage > 100 || deliveredPercentage != deliveredPercentage)
+        cout << endl << "\t!!! WARNING !!! deliveredPercentage = " << deliveredPercentage
+        << ", deliveredPackets = " << deliveredPackets << ", createdPackets = " << createdPackets << endl << endl;
     out << "    <DELIVERED-PACKETS> " << deliveredPercentage << " </DELIVERED-PACKETS>" << endl << endl;
 
 
