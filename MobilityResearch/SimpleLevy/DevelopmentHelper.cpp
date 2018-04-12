@@ -151,3 +151,11 @@ const char* extractParameter(const char* fileName, const char* parameter) {
 
     return fileNameStr.substr(start+1, end-start-1).c_str();
 }
+
+double checkValue(const double value, const double maxPermittedValue, const char* where) {
+    if (value <= 0 || value > maxPermittedValue) {
+        cout << "ERROR!!! value=" << value << ", maxPermittedValue="  << maxPermittedValue << ", where = " << where << endl;
+    }
+    ASSERT(value > 0 && value <= maxPermittedValue);
+    return value;
+}

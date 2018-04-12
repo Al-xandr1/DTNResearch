@@ -45,6 +45,7 @@ class SimpleLevyMobility : public LineSegmentsMobilityBase
     double speed;
     Coord deltaVector;
     simtime_t travelTime;
+    double maxPermittedDistance;
 
     double powA;
 

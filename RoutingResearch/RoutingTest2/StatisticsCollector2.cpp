@@ -44,7 +44,6 @@ void StatisticsCollector2::processPacketHistory() {
     xml_node packetsHistory = packetsHistoryDoc.child("PACKETS-HISTORY");
 
     for (xml_node_iterator packetPT = packetsHistory.begin(); packetPT != packetsHistory.end(); ++packetPT) {
-        cout << "Packet:";
         xml_node packet = (*packetPT);
 
         // считывание тега SUMMARY

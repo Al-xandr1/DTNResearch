@@ -19,6 +19,7 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     pause = NULL;
     kForSpeed =  1;
     roForSpeed = 0;
+    maxPermittedDistance = -1;
 
     currentHSindex = -1;
 
@@ -54,6 +55,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
         constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
         constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
 
+        maxPermittedDistance = (constraintAreaMax - constraintAreaMin).length();
         countOfFirstSkippedLongFlight = par("countOfFirstSkippedLongFlight").longValue();
 
         NodeID = (int) par("NodeID");
@@ -151,8 +153,8 @@ void LevyHotSpotsLATP::setTargetPosition() {
     if (step++ == 0) return;
 
     if (isPause) {
-        waitTime = (simtime_t) pause->get_Levi_rv();
-        ASSERT(waitTime > 0);
+        waitTime = checkValue(pause->get_Levi_rv((MAXTIME - simTime()).dbl()), (MAXTIME - simTime()).dbl(), "HERE 2 !!!");
+        ASSERT(waitTime > 0 && waitTime <= (MAXTIME - simTime()));
         nextChange = simTime() + waitTime;
     } else {
         ASSERT(simTime() >= waitTime);
@@ -178,12 +180,11 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
     while (true) {
         // генерируем прыжок Леви как обычно
         angle = uniform(0, 2 * PI);
-        distance = jump->get_Levi_rv();
-        ASSERT(distance > 0);
+        distance = checkValue(jump->get_Levi_rv(maxPermittedDistance), maxPermittedDistance, "HERE 1 !!!");
         speed = kForSpeed * pow(distance, 1 - roForSpeed);
         Coord delta(distance * cos(angle), distance * sin(angle), 0);
         deltaVector = delta;
-        travelTime = distance / speed;
+        travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl());
         const Coord remTargetPosition = targetPosition;  // сохраняем старое значение
         targetPosition = lastPosition + delta;           // записываем новое значение
         ASSERT(targetPosition.x != lastPosition.x);
@@ -253,7 +254,7 @@ bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
         distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
         ASSERT(distance > 0);
         speed = kForSpeed * pow(distance, 1 - roForSpeed);
-        travelTime = distance / speed;
+        travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl());
         nextChange = simTime() + travelTime;
         return true;
     }
@@ -352,7 +353,6 @@ void LevyHotSpotsLATP::saveStatistics() {
     trFile.close();
     log("Statistics saved");
 }
-
 
 bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
     if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) return true;

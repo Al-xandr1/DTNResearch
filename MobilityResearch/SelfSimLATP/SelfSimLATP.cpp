@@ -140,8 +140,8 @@ void SelfSimLATP::setTargetPosition() {
     if (step++ == 0) return;
 
     if (isPause) {
-        waitTime = (simtime_t) pause->get_Levi_rv();
-        ASSERT(waitTime > 0);
+        waitTime = checkValue(pause->get_Levi_rv((MAXTIME - simTime()).dbl()), (MAXTIME - simTime()).dbl());
+        ASSERT(waitTime > 0 && waitTime <= (MAXTIME - simTime()));
         nextChange = simTime() + waitTime;
     } else {
         ASSERT(simTime() >= waitTime);
@@ -169,9 +169,10 @@ bool SelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextCha
             travelTime = distance / speed;
         } else {
             //pause is generated again
-            travelTime = (simtime_t) pause->get_Levi_rv();
+            travelTime = checkValue(pause->get_Levi_rv((MAXTIME - simTime()).dbl()), (MAXTIME - simTime()).dbl());
         }
 
+        ASSERT(travelTime > 0 && travelTime <= (MAXTIME - simTime()));
         nextChange = simTime() + travelTime;
 
     } else if (findNextHotSpot()) {
@@ -191,9 +192,10 @@ bool SelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextCha
             travelTime = distance / speed;
         } else {
             //pause is generated again
-            travelTime = (simtime_t) pause->get_Levi_rv();
+            travelTime = checkValue(pause->get_Levi_rv((MAXTIME - simTime()).dbl()), (MAXTIME - simTime()).dbl());
         }
 
+        ASSERT(travelTime > 0 && travelTime <= (MAXTIME - simTime()));
         nextChange = simTime() + travelTime;
     } else return false;
 

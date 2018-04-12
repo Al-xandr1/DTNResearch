@@ -405,7 +405,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
     distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
     ASSERT(distance > 0);
     speed = kForSpeed * pow(distance, 1 - roForSpeed);
-    travelTime = distance / speed;
+    travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl());
     nextChange = simTime() + travelTime;
     return true;
 }

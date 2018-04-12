@@ -11,6 +11,7 @@ SimpleLevyMobility::SimpleLevyMobility() {
     pause = NULL;
     kForSpeed = 1;
     roForSpeed = 0;
+    maxPermittedDistance = -1;
 
     currentHSindex = -1;
 
@@ -41,6 +42,8 @@ void SimpleLevyMobility::initialize(int stage) {
         constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
         constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
         constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
+
+        maxPermittedDistance = (constraintAreaMax - constraintAreaMin).length();
 
         NodeID = (int) par("NodeID");
 
@@ -118,8 +121,8 @@ void SimpleLevyMobility::setTargetPosition() {
 
     step++;
     if (isPause) {
-        waitTime = (simtime_t) pause->get_Levi_rv();
-        ASSERT(waitTime > 0);
+        waitTime = checkValue(pause->get_Levi_rv((MAXTIME - simTime()).dbl()), (MAXTIME - simTime()).dbl());
+        ASSERT(waitTime > 0 && waitTime <= (MAXTIME - simTime()));
         nextChange = simTime() + waitTime;
     } else {
         collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
@@ -135,12 +138,11 @@ bool SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& 
     
     // генерируем прыжок Леви как обычно
     angle = uniform(0, 2 * PI);
-    distance = jump->get_Levi_rv();
-    ASSERT(distance > 0);
+    distance = checkValue(jump->get_Levi_rv(maxPermittedDistance), maxPermittedDistance);
     speed = kForSpeed * pow(distance, 1 - roForSpeed);
     Coord delta(distance * cos(angle), distance * sin(angle), 0);
     deltaVector = delta;
-    travelTime = distance / speed;
+    travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl());
 
     targetPosition = lastPosition + delta;
     ASSERT(targetPosition.x != lastPosition.x);

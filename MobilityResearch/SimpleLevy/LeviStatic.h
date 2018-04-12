@@ -1,8 +1,12 @@
 #ifndef LEVISTATIC_H
 #define LEVISTATIC_H
 
-// #include <omnetpp.h>
+#include <omnetpp.h>
 #include <math.h>
+#include <stdlib.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
 
 // Levi distribution for distance of travel between way points
 class LeviJump
@@ -40,6 +44,7 @@ public:
   // methods for r.v. generation
   int Dran();
   double get_Levi_rv();
+  double get_Levi_rv(double maxPermittedValue);
 };
 
 
@@ -79,6 +84,7 @@ public:
   // methods for r.v. generation
   int Dran();
   double get_Levi_rv();
+  double get_Levi_rv(double maxPermittedValue);
 };
 
 #endif
