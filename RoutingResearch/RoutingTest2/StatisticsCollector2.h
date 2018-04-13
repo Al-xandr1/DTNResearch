@@ -10,9 +10,9 @@ using namespace std;
 
 class StatisticsCollector2 : public cSimpleModule {
 private:
-    xml_document packetsHistoryDoc; // заргуженный xml документ с историей пакетов
-    xml_document ictHistoryDoc;     // заргуженный xml документ с историей ICT
-    xml_document routeHistoryDoc;   // заргуженный xml документ с историей о маршрутах узлов
+    xml_document *packetsHistoryDoc; // заргуженный xml документ с историей пакетов
+    xml_document *ictHistoryDoc;     // заргуженный xml документ с историей ICT
+    xml_document *routeHistoryDoc;   // заргуженный xml документ с историей о маршрутах узлов
 
     unsigned int createdPackets;
     unsigned int deliveredPackets;

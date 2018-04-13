@@ -4,44 +4,54 @@ Define_Module(StatisticsCollector2);
 
 void StatisticsCollector2::initialize()
 {
-    // Чтение данных из файлов
-    const char* packetsHistoryDocName = par("packetsHistoryDoc");
-    xml_parse_result packetsHistoryDocResult = packetsHistoryDoc.load_file(packetsHistoryDocName);
-    cout << endl << "Result of loading packetsHistoryDoc (" << packetsHistoryDocName << "): " << packetsHistoryDocResult.description() << endl;
-
-    const char* ictHistoryDocDocName = par("ictHistoryDoc");
-    xml_parse_result ictHistoryDocResult = ictHistoryDoc.load_file(ictHistoryDocDocName);
-    cout << endl << "Result of loading ictHistoryDoc (" << ictHistoryDocDocName << "): " << ictHistoryDocResult.description() << endl;
-
-    const char* routeHistoryDocName = par("routeHistoryDoc");
-    xml_parse_result routeHistoryDocResult = routeHistoryDoc.load_file(routeHistoryDocName);
-    cout << endl << "Result of loading routeHistoryDoc (" << routeHistoryDocName << "): " << routeHistoryDocResult.description() << endl;
-
+    // Обоработка ИСТОРИИ ПАКЕТОВ
     createdPackets = 0;
     deliveredPackets = 0;
 
     lifeTimePDF = new cDoubleHistogram("LIFE-TIME-HISTOGRAM", 300);
     lifeTimePDF->setRange(0.0, 81000);
 
+    // Чтение данных из файлов
+    packetsHistoryDoc = new xml_document();
+    const char* packetsHistoryDocName = par("packetsHistoryDoc");
+    xml_parse_result packetsHistoryDocResult = packetsHistoryDoc->load_file(packetsHistoryDocName);
+    cout << endl << "Result of loading packetsHistoryDoc (" << packetsHistoryDocName << "): " << packetsHistoryDocResult.description() << endl;
+
+    processPacketHistory();
+    myDelete(packetsHistoryDoc);
+
+
+    // Обоработка ИСТОРИИ ICT
     ictPDF = new cDoubleHistogram("ICT-HISTOGRAM", 300);
     ictPDF->setRange(0.0, 45000);
 
-    commonRoutesDurationPDF = NULL;
+    ictHistoryDoc = new xml_document();
+    const char* ictHistoryDocDocName = par("ictHistoryDoc");
+    xml_parse_result ictHistoryDocResult = ictHistoryDoc->load_file(ictHistoryDocDocName);
+    cout << endl << "Result of loading ictHistoryDoc (" << ictHistoryDocDocName << "): " << ictHistoryDocResult.description() << endl;
 
+    processICTHistory();
+    myDelete(ictHistoryDoc);
+
+
+    // Обоработка ИСТОРИИ МАРШРУТОВ
+    commonRoutesDurationPDF = NULL;
     routesDurationPDFbyNode = new vector<cDoubleHistogram*>();
 
-    cout << "StatisticsCollector2: initialized" << endl;
+    routeHistoryDoc = new xml_document();
+    const char* routeHistoryDocName = par("routeHistoryDoc");
+    xml_parse_result routeHistoryDocResult = routeHistoryDoc->load_file(routeHistoryDocName);
+    cout << endl << "Result of loading routeHistoryDoc (" << routeHistoryDocName << "): " << routeHistoryDocResult.description() << endl;
 
-    processPacketHistory();
-    processICTHistory();
     processRouteHistory();
+    myDelete(routeHistoryDoc);
 
     cout << "StatisticsCollector2: statistics collected" << endl;
 }
 
 
 void StatisticsCollector2::processPacketHistory() {
-    xml_node packetsHistory = packetsHistoryDoc.child("PACKETS-HISTORY");
+    xml_node packetsHistory = packetsHistoryDoc->child("PACKETS-HISTORY");
 
     for (xml_node_iterator packetPT = packetsHistory.begin(); packetPT != packetsHistory.end(); ++packetPT) {
         xml_node packet = (*packetPT);
@@ -103,7 +113,7 @@ void StatisticsCollector2::processPacketHistory() {
 
 
 void StatisticsCollector2::processICTHistory() {
-    xml_node ictHistory = ictHistoryDoc.child("ICT-HISTORY");
+    xml_node ictHistory = ictHistoryDoc->child("ICT-HISTORY");
     cStringTokenizer tok(ictHistory.child_value());
     vector<double> ictValues = tok.asDoubleVector();
     for (unsigned int i=0; i<ictValues.size(); i++) {
@@ -115,7 +125,7 @@ void StatisticsCollector2::processICTHistory() {
 
 void StatisticsCollector2::processRouteHistory() {
     ASSERT(routesDurationPDFbyNode->size() == 0);
-    xml_node routeHistory = routeHistoryDoc.child("ROUTE-HISTORY");
+    xml_node routeHistory = routeHistoryDoc->child("ROUTE-HISTORY");
     double maxDayDuration = routeHistory.attribute("maxDayDuration").as_double();
 
     commonRoutesDurationPDF = new cDoubleHistogram("COMMON-ROUTE-DURATION-HISTOGRAM", 10);
