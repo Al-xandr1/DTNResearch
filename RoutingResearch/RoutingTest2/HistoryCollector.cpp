@@ -10,7 +10,7 @@ unsigned int HistoryCollector::deliveredPackets = 0;
 RoutingDaemon* HistoryCollector::rd = NULL;
 vector<vector<RouteInfoForNode*>*>* HistoryCollector::routeHistory = NULL;
 
-#define MAX_COLLECTED_PACKETS_IN_HISTORY_PART 1000
+#define MAX_COLLECTED_PACKETS_IN_HISTORY_PART 100000
 
 void HistoryCollector::initialize(RoutingDaemon* rd) {
     HistoryCollector::rd = rd;
