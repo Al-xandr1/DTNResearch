@@ -7,10 +7,7 @@ network StatisticsCollectorNetwork
 
 simple StatisticsCollector2
 {
-    parameters:
-    	string packetsHistoryDoc = default("outTrace/packetsHistory.xml");
-    	string ictHistoryDoc 	 = default("outTrace/ictHistory.xml");
-    	string routeHistoryDoc 	 = default("outTrace/routeHistory.xml");
+    //имена файлов беруться из DevelopmentHelper.h
 }
 
 simple StatisticsCalculator

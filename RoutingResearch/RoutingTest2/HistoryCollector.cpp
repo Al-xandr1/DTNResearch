@@ -15,6 +15,10 @@ vector<vector<RouteInfoForNode*>*>* HistoryCollector::routeHistory = NULL;
 void HistoryCollector::initialize(RoutingDaemon* rd) {
     HistoryCollector::rd = rd;
 
+    if (!packetsHistoryFile) {
+        packetsHistoryFile = createPacketsHistoryPartFile();
+    }
+
     if (!ictHistoryFile) {
         ictHistoryFile = createXmlFile(ICT_HIST, "<ICT-HISTORY>");
     }
@@ -64,15 +68,7 @@ void HistoryCollector::collectPacket(Packet* packet) {
     ASSERT(packet);
 
     if (!packetsHistoryFile) {
-        string filename;
-        std::size_t found;
-        string tmp(PACKETS_HIST);
-        if ((found = tmp.find(".")) != string::npos) {
-            filename = tmp.substr(0, found) + string("_")
-                    + string(buildIntParameter("part", currentFilePartOfCollectedPackets, 3))
-                    + tmp.substr(found, tmp.size());
-        }
-        packetsHistoryFile = createXmlFile(filename.c_str(), "<PACKETS-HISTORY>");
+        packetsHistoryFile = createPacketsHistoryPartFile();
     }
 
     if (write(packet, packetsHistoryFile)) {
@@ -111,6 +107,18 @@ void HistoryCollector::printHistory(Packet* packet) {write(packet, &cout);}
 
 
 //-------------------------------------- private ------------------------------------------------
+
+ofstream* HistoryCollector::createPacketsHistoryPartFile() {
+    string filename;
+    size_t found;
+    string tmp(PACKETS_HIST);
+    if ((found = tmp.find(".")) != string::npos) {
+        filename = tmp.substr(0, found) + string("_")
+                + string(buildIntParameter("part", currentFilePartOfCollectedPackets, 3))
+                + tmp.substr(found, tmp.size());
+    }
+    return createXmlFile(filename.c_str(), "<PACKETS-HISTORY>");
+}
 
 void HistoryCollector::write(int nodeId, vector<RouteInfoForNode*>* routesForNode, ostream* out) {
     (*out) <<TAB<<"<NODE nodeId=\""<<nodeId<<"\">"<< endl;

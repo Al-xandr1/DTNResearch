@@ -71,6 +71,7 @@ public:
     static void printHistory(Packet* packet);
 
 private:
+    static ofstream* createPacketsHistoryPartFile();
     static void write(int nodeId, vector<RouteInfoForNode*>* routesForNode, ostream* out);
     static void insertRow(Packet* packet, char* event, int nodeId, Coord position);
     static bool write(Packet* packet, ostream* out);

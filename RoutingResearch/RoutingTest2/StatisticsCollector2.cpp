@@ -12,13 +12,31 @@ void StatisticsCollector2::initialize()
     lifeTimePDF->setRange(0.0, 81000);
 
     // Чтение данных из файлов
-    packetsHistoryDoc = new xml_document();
-    const char* packetsHistoryDocName = par("packetsHistoryDoc");
-    xml_parse_result packetsHistoryDocResult = packetsHistoryDoc->load_file(packetsHistoryDocName);
-    cout << endl << "Result of loading packetsHistoryDoc (" << packetsHistoryDocName << "): " << packetsHistoryDocResult.description() << endl;
+    string filename;
+    size_t found;
+    string tmp(PACKETS_HIST);
+    if ((found = tmp.find(".")) != string::npos) {
+        filename = tmp.substr(0, found) + string("_")
+                + string(buildParameter("part", "*"))
+                + tmp.substr(found, tmp.size());
+    }
+    const char* packetHistoryFileNamePattern = buildFullName(OUT_DIR, filename.c_str());
+    WIN32_FIND_DATA f;
+    HANDLE h = FindFirstFile(packetHistoryFileNamePattern, &f);
+    if(h != INVALID_HANDLE_VALUE) {
+        do {
+            const char* packetsHistoryPartDocName = buildFullName(OUT_DIR, f.cFileName);
+            packetsHistoryDoc = new xml_document();
+            xml_parse_result packetsHistoryDocResult = packetsHistoryDoc->load_file(packetsHistoryPartDocName);
+            cout << endl << "Result of loading packetsHistoryPartDocName (" << packetsHistoryPartDocName << "): " << packetsHistoryDocResult.description() << endl;
 
-    processPacketHistory();
-    myDelete(packetsHistoryDoc);
+            processPacketHistory();
+
+            myDelete(packetsHistoryDoc);
+            myDeleteArray(packetsHistoryPartDocName);
+        }
+        while(FindNextFile(h, &f));
+    } else cout << "Directory or files not found\n";
 
 
     // Обоработка ИСТОРИИ ICT
@@ -26,9 +44,9 @@ void StatisticsCollector2::initialize()
     ictPDF->setRange(0.0, 45000);
 
     ictHistoryDoc = new xml_document();
-    const char* ictHistoryDocDocName = par("ictHistoryDoc");
-    xml_parse_result ictHistoryDocResult = ictHistoryDoc->load_file(ictHistoryDocDocName);
-    cout << endl << "Result of loading ictHistoryDoc (" << ictHistoryDocDocName << "): " << ictHistoryDocResult.description() << endl;
+    const char* ictHistoryDocName = buildFullName(OUT_DIR, ICT_HIST);
+    xml_parse_result ictHistoryDocResult = ictHistoryDoc->load_file(ictHistoryDocName);
+    cout << endl << "Result of loading ictHistoryDoc (" << ictHistoryDocName << "): " << ictHistoryDocResult.description() << endl;
 
     processICTHistory();
     myDelete(ictHistoryDoc);
@@ -39,7 +57,7 @@ void StatisticsCollector2::initialize()
     routesDurationPDFbyNode = new vector<cDoubleHistogram*>();
 
     routeHistoryDoc = new xml_document();
-    const char* routeHistoryDocName = par("routeHistoryDoc");
+    const char* routeHistoryDocName = buildFullName(OUT_DIR, RT_HIST);
     xml_parse_result routeHistoryDocResult = routeHistoryDoc->load_file(routeHistoryDocName);
     cout << endl << "Result of loading routeHistoryDoc (" << routeHistoryDocName << "): " << routeHistoryDocResult.description() << endl;
 
