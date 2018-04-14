@@ -75,6 +75,22 @@ char *createFileName(char *buffer, int numberOfExperiment,
     return result;
 }
 
+ofstream* createXmlFile(const char* filename, const char* openRootTag) {
+    ASSERT(filename);
+    ASSERT(openRootTag);
+    ofstream* xmlFile = new ofstream(buildFullName(OUT_DIR, filename));
+    (*xmlFile) << "<?xml version=\'1.0' ?>" << endl;
+    (*xmlFile) << openRootTag << endl;
+    return xmlFile;
+}
+
+void closeXmlFile(ofstream* xmlFile, const char* closeRootTag) {
+    ASSERT(xmlFile);
+    ASSERT(closeRootTag);
+    (*xmlFile) << closeRootTag << endl;
+    xmlFile->close();
+}
+
 int countMaxValue(list<int> queueSizePoints) {
     int maxQueueSize = 0;
     list<int>::iterator iterSize;

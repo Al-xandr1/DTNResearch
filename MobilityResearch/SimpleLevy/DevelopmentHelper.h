@@ -6,6 +6,8 @@
 #include <math.h>
 #include <list>
 #include <sstream>
+#include <iostream>
+#include <fstream>
 #include <string>
 #include "stlutils.h"
 #include <omnetpp.h>
@@ -76,6 +78,10 @@ const char *buildFullName(const char *dir, const char *fileName);
 
 char *createFileName(char *buffer, int numberOfExperiment,
                      const char *rawName, int index, const char *fileType);
+
+ofstream* createXmlFile(const char* filename, const char* openRootTag) ;
+
+void closeXmlFile(ofstream* xmlFile, const char* closeRootTag);
 
 int countMaxValue(list<int> queueSizePoints);
 

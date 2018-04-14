@@ -3,28 +3,27 @@
 ofstream* HistoryCollector::packetsHistoryFile = NULL;   // файл с информацией о всех пакетах
 ofstream* HistoryCollector::ictHistoryFile = NULL;       // файл с информацией о времени взаимодействия узлов
 ofstream* HistoryCollector::routeHistoryFile = NULL;     // файл с информацией о времени взаимодействия узлов
+unsigned int HistoryCollector::currentFilePartOfCollectedPackets = 0;
+unsigned int HistoryCollector::collectedPackets = 0;
 unsigned int HistoryCollector::createdPackets = 0;
 unsigned int HistoryCollector::deliveredPackets = 0;
 RoutingDaemon* HistoryCollector::rd = NULL;
 vector<vector<RouteInfoForNode*>*>* HistoryCollector::routeHistory = NULL;
 
+#define MAX_COLLECTED_PACKETS_IN_HISTORY_PART 1000
+
 void HistoryCollector::initialize(RoutingDaemon* rd) {
     HistoryCollector::rd = rd;
-    if (!packetsHistoryFile) {
-        packetsHistoryFile = new ofstream(buildFullName(OUT_DIR, PACKETS_HIST));
-        (*packetsHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
-        (*packetsHistoryFile)<<"<PACKETS-HISTORY>"<< endl;
-    }
+
     if (!ictHistoryFile) {
-        ictHistoryFile = new ofstream(buildFullName(OUT_DIR, ICT_HIST));
-        (*ictHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
-        (*ictHistoryFile)<<"<ICT-HISTORY>"<< endl;
+        ictHistoryFile = createXmlFile(ICT_HIST, "<ICT-HISTORY>");
     }
+
     if (!routeHistoryFile) {
-        routeHistoryFile = new ofstream(buildFullName(OUT_DIR, RT_HIST));
-        (*routeHistoryFile)<<"<?xml version=\'1.0' ?>"<<endl;
-        (*routeHistoryFile)<<"<ROUTE-HISTORY maxDayDuration=\""<<rd->getDayDuration()<<"\">"<< endl;
+        string openTag = string("<ROUTE-HISTORY maxDayDuration=\"") + to_string(rd->getDayDuration()) + string("\">");
+        routeHistoryFile = createXmlFile(RT_HIST, openTag.c_str());
     }
+
     if (!routeHistory) {
         routeHistory = new vector<vector<RouteInfoForNode*>*>();
         for (int i=0; i<rd->getNumHosts(); i++) {
@@ -34,17 +33,13 @@ void HistoryCollector::initialize(RoutingDaemon* rd) {
 }
 
 void HistoryCollector::finish() {
-    ASSERT(packetsHistoryFile);
-    (*packetsHistoryFile)<<"</PACKETS-HISTORY>"<<endl;
-    packetsHistoryFile->close();
-    delete packetsHistoryFile;
-    packetsHistoryFile = NULL;
+    if (packetsHistoryFile) {
+        closeXmlFile(packetsHistoryFile, "</PACKETS-HISTORY>");
+        myDelete(packetsHistoryFile);
+    }
 
-    ASSERT(ictHistoryFile);
-    (*ictHistoryFile)<<"</ICT-HISTORY>"<<endl;
-    ictHistoryFile->close();
-    delete ictHistoryFile;
-    ictHistoryFile = NULL;
+    closeXmlFile(ictHistoryFile, "</ICT-HISTORY>");
+    myDelete(ictHistoryFile);
 
     ASSERT(routeHistoryFile);
     ASSERT(routeHistory->size() == rd->getNumHosts());
@@ -61,13 +56,37 @@ void HistoryCollector::finish() {
     }
     delete routeHistory;
 
-    (*routeHistoryFile)<<"</ROUTE-HISTORY>"<<endl;
-    routeHistoryFile->close();
-    delete routeHistoryFile;
-    routeHistoryFile = NULL;
+    closeXmlFile(routeHistoryFile, "</ROUTE-HISTORY>");
+    myDelete(routeHistoryFile);
 }
 
-void HistoryCollector::collectPacket(Packet* packet)       {ASSERT(packetsHistoryFile); collectPacket(packetsHistoryFile, packet);}
+void HistoryCollector::collectPacket(Packet* packet) {
+    ASSERT(packet);
+
+    if (!packetsHistoryFile) {
+        string filename;
+        std::size_t found;
+        string tmp(PACKETS_HIST);
+        if ((found = tmp.find(".")) != string::npos) {
+            filename = tmp.substr(0, found) + string("_")
+                    + string(buildIntParameter("part", currentFilePartOfCollectedPackets, 3))
+                    + tmp.substr(found, tmp.size());
+        }
+        packetsHistoryFile = createXmlFile(filename.c_str(), "<PACKETS-HISTORY>");
+    }
+
+    if (write(packet, packetsHistoryFile)) {
+        collectedPackets++;
+
+        if (collectedPackets % MAX_COLLECTED_PACKETS_IN_HISTORY_PART == 0) {
+            // откусываем кусок файла
+            closeXmlFile(packetsHistoryFile, "</PACKETS-HISTORY>");
+            myDelete(packetsHistoryFile);
+            currentFilePartOfCollectedPackets++;
+        }
+    }
+}
+
 void HistoryCollector::collectICT(simtime_t ict)           {ASSERT(ictHistoryFile); ASSERT(ict>=0); if (ict>0) write(ict, ictHistoryFile);}
 
 void HistoryCollector::insertRouteInfo(int nodeId, unsigned int day, simtime_t startTimeRoute, simtime_t endTimeRoute) {
@@ -116,9 +135,7 @@ void HistoryCollector::insertRow(Packet* packet, char* event, int nodeId, Coord 
     }
 }
 
-void HistoryCollector::collectPacket(ofstream* out, Packet* packet) {ASSERT(out); write(packet, out);}
-
-void HistoryCollector::write(Packet* packet, ostream* out) {
+bool HistoryCollector::write(Packet* packet, ostream* out) {
     if (rd && rd->canCollectStatistics()) {
         double threshold = rd->getUseCountOfDaysForStat() ? (rd->getCountOfDays() * rd->getDayDuration()) : 0;
         if (packet->getCreationTime() >= threshold) {
@@ -136,11 +153,13 @@ void HistoryCollector::write(Packet* packet, ostream* out) {
 
             (*out) <<TAB<<TAB<<"</HISTORY>"<<endl;
             (*out) <<TAB<<"</PACKET>"<<endl;
+            return true;
         } else {
             //проверить, что учитываемый пакет НЕ имеет событие о создании
             if (packet->eventHistory.size()>0) ASSERT(strcmp(packet->eventHistory[0], CREATED_EVENT) != 0);
         }
     }
+    return false;
 }
 
 void HistoryCollector::write(simtime_t ict, ostream* out) {
