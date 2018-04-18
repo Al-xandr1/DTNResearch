@@ -19,6 +19,7 @@ class RealMobility : public LineSegmentsMobilityBase
 
     long step;
 
+    simtime_t timeOffset;
     double distance;
     double speed;
     simtime_t travelTime;
@@ -41,7 +42,6 @@ class RealMobility : public LineSegmentsMobilityBase
     virtual int numInitStages() const { return 3; }
     virtual void initialize(int stage);
     virtual void setTargetPosition();
-    virtual void handleMessage(cMessage * message);
     virtual void setInitialPosition();
     bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
     virtual void finish()        {saveStatistics();};
@@ -52,6 +52,8 @@ class RealMobility : public LineSegmentsMobilityBase
 
   public:
     RealMobility();
+
+    virtual void makeNewRoot();
 
     int   getNodeID()            {return this->NodeID;};
     Coord getLastPosition()      {return this->lastPosition;};

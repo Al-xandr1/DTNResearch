@@ -12,6 +12,7 @@ RealMobility::RealMobility() {
     traces = NULL;
     currentTrace = NULL;
 
+    timeOffset = 0;
     distance = -1;
     speed = -1;
     travelTime = 0;
@@ -35,8 +36,7 @@ void RealMobility::initialize(int stage) {
 
     if (!traces) {
         traces = TracesCollection::getInstance();
-        currentTrace = traces->getTraces()->at(NodeID);
-        ASSERT(currentTrace->size() > 0);
+        makeNewRoot();
     }
 
     if (wpFileName == NULL && trFileName == NULL) {
@@ -49,24 +49,18 @@ void RealMobility::initialize(int stage) {
     }
 }
 
+void RealMobility::makeNewRoot() {
+    if (!currentTrace) currentTrace = traces->getTraces()->at(NodeID);
+    ASSERT(currentTrace->size() > 0);
 
-void RealMobility::handleMessage(cMessage * message)
-{
-    if (message->isSelfMessage())
-        MobilityBase::handleMessage(message);
-    else
-        switch (message->getKind()) {
-            // èñïîëüçóåòñÿ äëÿ "ïèíêà" äëÿ ìîáèëüíîñòè, ÷òîáû ñíîâà íà÷àòü õîäèòü
-            case MOBILITY_START:{
-                //todo Çàãëóøêà. Äåëàòü îêîí÷àíèå è íà÷àëî äíÿ êàê äëÿ RegularRootLATP::handleMessage ÈËÈ ÍÅÒ! ò.å. òóò ïğîñòî çàãëóøêà
-                myDelete(message);
-                break;
-            }
-            default:
-                ASSERT(false); //unreacheble statement
-        }
+    step = 0;
+
+    lastPosition.x = currentTrace->at(0).X;
+    lastPosition.y = currentTrace->at(0).Y;
+    lastPosition.z = 0;
+
+    targetPosition = lastPosition;
 }
-
 
 void RealMobility::setInitialPosition() {
     MobilityBase::setInitialPosition();
@@ -107,7 +101,7 @@ bool RealMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     if (step >= currentTrace->size()) return false; //ìàğøğóò êîí÷èëñÿ
 
     simtime_t previousNaxtChange = nextChange;
-    nextChange = currentTrace->at(step).T;
+    nextChange = timeOffset + currentTrace->at(step).T;
     targetPosition.x = currentTrace->at(step).X;
     targetPosition.y = currentTrace->at(step).Y;
 

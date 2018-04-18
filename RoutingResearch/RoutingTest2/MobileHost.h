@@ -5,6 +5,7 @@
 #include <math.h>
 #include "INETDefs.h"
 #include <RoutingDaemon.h>
+#include "RegularRealMobility.h"
 #include "RegularRootLATP.h"
 #include "RegularSelfSimLATP.h"
 #include <HistoryCollector.h>
@@ -15,6 +16,7 @@ using namespace std;
 class RoutingDaemon;
 class RegularRootLATP;
 class RegularSelfSimLATP;
+class RegularRealMobility;
 
 class MobileHost : public cSimpleModule
 {
@@ -36,9 +38,10 @@ public:
     int getNodeId() {return nodeId;};
     vector<Packet*>* getPacketsForSending() {return packetsForSending;};
 
-    MovingMobilityBase* getMobility();
-    RegularRootLATP*    getRegularRootLATPMobility();
-    RegularSelfSimLATP* getRegularSelfSimLATPMobility();
+    MovingMobilityBase*  getMobility();
+    RegularRootLATP*     getRegularRootLATPMobility();
+    RegularSelfSimLATP*  getRegularSelfSimLATPMobility();
+    RegularRealMobility* getRegularRealMobility();
 
     void startRoute();
     void ensureEndRoute();

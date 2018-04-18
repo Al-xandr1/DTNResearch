@@ -17,7 +17,7 @@ module NewRealMobilityHost
         input in @directIn;
         
     submodules:
-        mobility: RealMobility {
+        mobility: RegularRealMobility {
             parameters: 
                 @display("is=s;p=72,44");
             	NodeID = NodeID_;
