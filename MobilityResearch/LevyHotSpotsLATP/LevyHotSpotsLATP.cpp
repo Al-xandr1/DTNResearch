@@ -37,8 +37,7 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
 
     waitTime = 0;
 
-    wpFileName = NULL;
-    trFileName = NULL;
+    mvnHistory = NULL;
 }
 
 
@@ -103,14 +102,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
         LevyHotSpotsLATP::setCurrentHSbordersWith( &(hsc->getHSData()->at(currentHSindex)) );
     }
 
-    if (wpFileName == NULL && trFileName == NULL) {
-        wpFileName = new char[256];
-        trFileName = new char[256];
-        wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), WAYPOINTS_TYPE);
-        trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), TRACE_TYPE);
-    }
+    if (!mvnHistory) mvnHistory = new MovementHistory(NodeID);
 }
 
 
@@ -282,17 +274,14 @@ bool LevyHotSpotsLATP::findNextHotSpot()
 
 //-------------------------- Statistic collection ---------------------------------
 void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
-    inTimes.push_back(inTime);
-    outTimes.push_back(outTime);
-    xCoordinates.push_back(x);
-    yCoordinates.push_back(y);
+    mvnHistory->collect(inTime, outTime, x, y);
 
     double generatedSumTime = (outTime - inTime).dbl();
     ASSERT(generatedSumTime >= 0); // на этапе инициализации возникают отсчёты с нулевой длительностью
     hsc->getHSData()->at(currentHSindex).generatedSumTime += generatedSumTime;
     hsc->getHSData()->at(currentHSindex).generatedWaypointNum++;
 
-    Waypoint h(x, y, inTime.dbl(), outTime.dbl(), wpFileName);
+    Waypoint h(x, y, inTime.dbl(), outTime.dbl(), mvnHistory->getWpFileName());
     hsc->getHSData()->at(currentHSindex).waypoints.push_back(h);
 }
 
@@ -338,19 +327,7 @@ void LevyHotSpotsLATP::saveStatistics() {
     }
 
     //--- Write points ---
-    ofstream wpFile(buildFullName(wpsDir, wpFileName));
-    ofstream trFile(buildFullName(trsDir, trFileName));
-    for (unsigned int i = 0; i < outTimes.size(); i++) {
-        simtime_t inTime = inTimes[i];
-        simtime_t outTime = outTimes[i];
-        double x = xCoordinates[i];
-        double y = yCoordinates[i];
-
-        wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
-        trFile << inTime << "\t" << x << "\t" << y << endl;
-    }
-    wpFile.close();
-    trFile.close();
+    mvnHistory->save(wpsDir, trsDir);
     log("Statistics saved");
 }
 

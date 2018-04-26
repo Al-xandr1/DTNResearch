@@ -26,7 +26,5 @@ simple SimpleLevyMobility extends MovingMobilityBase
     												  // available values = SimpleLevy | LevyHotSpotsRandom | LevyHotSpotsLATPCenterLogic | LevyHotSpotsLATP | LevyHotSpotsLATPPathCounts 
         double powA = default(1);		// is a fixed floating number constant within 0 to infinity - power for distance
         
-        //statistic collection
-    	string traceFileName = default("traceOfNode");
-    	int fileSuffix = default(0);
+    	int NodeID = default(0); 
 }

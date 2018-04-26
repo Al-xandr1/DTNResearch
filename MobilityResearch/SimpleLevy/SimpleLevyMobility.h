@@ -7,6 +7,7 @@
 
 #include "INETDefs.h"
 #include "LineSegmentsMobilityBase.h"
+#include "MovementHistory.h"
 #include "DevelopmentHelper.h"
 
 #include "LeviStatic.h"
@@ -40,6 +41,7 @@ class SimpleLevyMobility : public LineSegmentsMobilityBase
     double kForSpeed;
     double roForSpeed;
 
+    simtime_t waitTime;
     double angle;
     double distance;
     double speed;
@@ -56,13 +58,7 @@ class SimpleLevyMobility : public LineSegmentsMobilityBase
     int currentHSindex;
 
     //statistics collection
-    char *wpFileName;
-    char *trFileName;
-    simtime_t waitTime;
-    std::vector<simtime_t> inTimes;
-    std::vector<simtime_t> outTimes;
-    std::vector<double> xCoordinates;
-    std::vector<double> yCoordinates;
+    MovementHistory* mvnHistory;
 
   protected:
     virtual int numInitStages() const { return 3; }

@@ -17,8 +17,7 @@ RealMobility::RealMobility() {
     speed = -1;
     travelTime = 0;
 
-    wpFileName = NULL;
-    trFileName = NULL;
+    mvnHistory = NULL;
 }
 
 
@@ -39,14 +38,7 @@ void RealMobility::initialize(int stage) {
         makeNewRoot();
     }
 
-    if (wpFileName == NULL && trFileName == NULL) {
-        wpFileName = new char[256];
-        trFileName = new char[256];
-        wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), WAYPOINTS_TYPE);
-        trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), TRACE_TYPE);
-    }
+    if (!mvnHistory) mvnHistory = new MovementHistory(NodeID);
 }
 
 void RealMobility::makeNewRoot() {
@@ -82,7 +74,7 @@ void RealMobility::setTargetPosition() {
     };
 
     step++;
-    collectStatistics(simTime(), simTime(), lastPosition.x, lastPosition.y);
+    mvnHistory->collect(simTime(), simTime(), lastPosition.x, lastPosition.y);
     movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
     if (movementsFinished) {
@@ -117,16 +109,6 @@ bool RealMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     return true;
 }
 
-
-//-------------------------- Statistic collection ---------------------------------
-void RealMobility::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
-    inTimes.push_back(inTime);
-    outTimes.push_back(outTime);
-    xCoordinates.push_back(x);
-    yCoordinates.push_back(y);
-}
-
-
 void RealMobility::saveStatistics() {
     log("Start saving statistics...");
     const char *outDir = NamesAndDirs::getOutDir();
@@ -146,21 +128,7 @@ void RealMobility::saveStatistics() {
     }
 
     //--- Write points ---
-    ofstream wpFile(buildFullName(wpsDir, wpFileName));
-    ofstream trFile(buildFullName(trsDir, trFileName));
-
-    for (unsigned int i = 0; i < outTimes.size(); i++) {
-        simtime_t inTime = inTimes[i];
-        simtime_t outTime = outTimes[i];
-        double x = xCoordinates[i];
-        double y = yCoordinates[i];
-
-        wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
-        trFile << inTime << "\t" << x << "\t" << y << endl;
-    }
-
-    wpFile.close();
-    trFile.close();
+    mvnHistory->save(wpsDir, trsDir);
     log("Statistics saved");
 }
 

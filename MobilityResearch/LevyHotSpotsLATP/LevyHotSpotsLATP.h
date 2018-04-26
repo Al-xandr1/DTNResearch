@@ -14,6 +14,7 @@
 #include "DevelopmentHelper.h"
 #include "LeviStatic.h"
 #include "RootsCollection.h"
+#include "MovementHistory.h"
 #include "HotSpotsCollection.h"
 
 class LevyHotSpotsLATP : public LineSegmentsMobilityBase {
@@ -29,6 +30,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase {
     double kForSpeed;
     double roForSpeed;
 
+    simtime_t waitTime;
     double angle;
     double distance;
     double speed;
@@ -49,13 +51,7 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase {
     HSDistanceMatrix* hsd;
 
     //statistics collection
-    char *wpFileName;
-    char *trFileName;
-    simtime_t waitTime;
-    std::vector<simtime_t> inTimes;
-    std::vector<simtime_t> outTimes;
-    std::vector<double> xCoordinates;
-    std::vector<double> yCoordinates;
+    MovementHistory* mvnHistory;
 
   protected:
     virtual int  numInitStages() const { return 3; }

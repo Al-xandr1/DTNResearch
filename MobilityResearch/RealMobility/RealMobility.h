@@ -9,6 +9,7 @@
 #include "math.h"
 #include "Messages.h"
 #include "DevelopmentHelper.h"
+#include "MovementHistory.h"
 #include "TracesCollection.h"
 
 
@@ -30,13 +31,7 @@ class RealMobility : public LineSegmentsMobilityBase
     vector<TracePoint>* currentTrace;
 
     //statistics collection
-    char *wpFileName;
-    char *trFileName;
-    simtime_t waitTime;
-    std::vector<simtime_t> inTimes;
-    std::vector<simtime_t> outTimes;
-    std::vector<double> xCoordinates;
-    std::vector<double> yCoordinates;
+    MovementHistory* mvnHistory;
 
   protected:
     virtual int numInitStages() const { return 3; }

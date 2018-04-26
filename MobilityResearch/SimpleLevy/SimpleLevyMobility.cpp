@@ -13,6 +13,7 @@ SimpleLevyMobility::SimpleLevyMobility() {
     roForSpeed = 0;
     maxPermittedDistance = -1;
 
+    waitTime = 0;
     currentHSindex = -1;
 
     movementsFinished = false;
@@ -24,10 +25,7 @@ SimpleLevyMobility::SimpleLevyMobility() {
 
     powA=2.0;
 
-    waitTime = 0;
-
-    wpFileName = NULL;
-    trFileName = NULL;
+    mvnHistory = NULL;
 }
 
 void SimpleLevyMobility::initialize(int stage) {
@@ -74,22 +72,12 @@ void SimpleLevyMobility::initialize(int stage) {
     if (pause == NULL) pause = new LeviPause(ciP, aliP, deltaXP, joinP);
 
 
-
     // начальная локация - всё поле
     currentHSMin=getConstraintAreaMin();
     currentHSMax=getConstraintAreaMax();
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 
-
-
-    if (wpFileName == NULL && trFileName == NULL) {
-        wpFileName = new char[256];
-        trFileName = new char[256];
-        wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), WAYPOINTS_TYPE);
-        trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), TRACE_TYPE);
-    }
+    if (!mvnHistory) mvnHistory = new MovementHistory(NodeID);
 }
 
 
@@ -125,7 +113,7 @@ void SimpleLevyMobility::setTargetPosition() {
         ASSERT(waitTime > 0 && waitTime <= (MAXTIME - simTime()));
         nextChange = simTime() + waitTime;
     } else {
-        collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
+        mvnHistory->collect(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
         movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
         if (movementsFinished) {nextChange = -1; return;};
@@ -181,15 +169,6 @@ bool SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& 
     return true;
 }
 
-
-//-------------------------- Statistic collection ---------------------------------
-void SimpleLevyMobility::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
-    inTimes.push_back(inTime);
-    outTimes.push_back(outTime);
-    xCoordinates.push_back(x);
-    yCoordinates.push_back(y);
-}
-
 void SimpleLevyMobility::saveStatistics() {
     const char *outDir = NamesAndDirs::getOutDir();
     const char *wpsDir = NamesAndDirs::getOutWpsDir();
@@ -208,20 +187,7 @@ void SimpleLevyMobility::saveStatistics() {
     }
 
     //--- Write points ---
-    ofstream wpFile(buildFullName(wpsDir, wpFileName));
-    ofstream trFile(buildFullName(trsDir, trFileName));
-    for (unsigned int i = 0; i < outTimes.size(); i++) {
-        simtime_t inTime = inTimes[i];
-        simtime_t outTime = outTimes[i];
-        double x = xCoordinates[i];
-        double y = yCoordinates[i];
-
-        wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
-        trFile << inTime << "\t" << x << "\t" << y << endl;
-    }
-
-    wpFile.close();
-    trFile.close();
+    mvnHistory->save(wpsDir, trsDir);
 }
 
 bool SimpleLevyMobility::isCorrectCoordinates(double x, double y) {

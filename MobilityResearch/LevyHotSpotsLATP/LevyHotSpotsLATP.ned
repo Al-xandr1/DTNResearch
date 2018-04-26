@@ -32,7 +32,5 @@ simple LevyHotSpotsLATP extends MovingMobilityBase
  		
         double powA = default(1);		// is a fixed floating number constant within 0 to infinity - power for distance
         
-        //statistic collection
-    	string traceFileName = default("traceOfNode");
     	int NodeID = default(0);
 }

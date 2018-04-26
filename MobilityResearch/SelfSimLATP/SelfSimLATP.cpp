@@ -32,16 +32,14 @@ SelfSimLATP::SelfSimLATP() {
     isRootReady = false;
     isDstMatrixReady = false;
 
+    waitTime = 0;
     currentHSindex = -1;
     waypts = NULL;
     isWptLoaded = false;
     gen = NULL;
     isWptMatrixReady = false;
 
-    waitTime = 0;
-
-    wpFileName = NULL;
-    trFileName = NULL;
+    mvnHistory = NULL;
 }
 
 void SelfSimLATP::initialize(int stage) {
@@ -99,14 +97,7 @@ void SelfSimLATP::initialize(int stage) {
         makeNewRoot();
     }
 
-    if (wpFileName == NULL && trFileName == NULL) {
-        wpFileName = new char[256];
-        trFileName = new char[256];
-        wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-                                    (int) ((par("NodeID"))), WAYPOINTS_TYPE);
-        trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-                                    (int) ((par("NodeID"))), TRACE_TYPE);
-    }
+    if (!mvnHistory) mvnHistory = new MovementHistory(NodeID);
 }
 
 void SelfSimLATP::setInitialPosition() {
@@ -145,7 +136,7 @@ void SelfSimLATP::setTargetPosition() {
         nextChange = simTime() + waitTime;
     } else {
         ASSERT(simTime() >= waitTime);
-        collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
+        mvnHistory->collect(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
         movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
         if (movementsFinished) {
@@ -460,16 +451,6 @@ void SelfSimLATP::log(string log) {
     cout << "NodeId = " << NodeID << ": "  << log << endl;
 }
 
-
-//-------------------------- Statistic collection ---------------------------------
-void SelfSimLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
-    inTimes.push_back(inTime);
-    outTimes.push_back(outTime);
-    xCoordinates.push_back(x);
-    yCoordinates.push_back(y);
-}
-
-
 void SelfSimLATP::saveStatistics() {
     log("Start saving statistics...");
     const char *outDir = NamesAndDirs::getOutDir();
@@ -489,26 +470,6 @@ void SelfSimLATP::saveStatistics() {
     }
 
     //--- Write points ---
-    if (outTimes.size() > 0) {
-        const char *wpName = buildFullName(wpsDir, wpFileName);
-        const char *trName = buildFullName(trsDir, trFileName);
-        cout << "wpName = " << wpName << endl;
-        cout << "trName = " << trName << endl << endl;
-
-        ofstream wpFile(wpName);
-        ofstream trFile(trName);
-        for (unsigned int i = 0; i < outTimes.size(); i++) {
-            simtime_t inTime = inTimes[i];
-            simtime_t outTime = outTimes[i];
-            double x = xCoordinates[i];
-            double y = yCoordinates[i];
-
-            wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
-            trFile << inTime << "\t" << x << "\t" << y << endl;
-        }
-
-        wpFile.close();
-        trFile.close();
-    }
+    mvnHistory->save(wpsDir, trsDir);
     log("Statistics saved");
 }

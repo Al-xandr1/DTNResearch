@@ -12,6 +12,6 @@ module SimpleLevyHost
         mobility: SimpleLevyMobility {
             parameters: 
                 @display("is=s;p=72,44");
-            	fileSuffix = indexOfNode;
+            	NodeID = indexOfNode;
         }
 }

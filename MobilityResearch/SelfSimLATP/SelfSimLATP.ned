@@ -27,7 +27,5 @@ simple SelfSimLATP extends MovingMobilityBase
         double powAforHS = default(2);		// is a fixed floating number constant within 0 to infinity - power for distance between HS
         double powAforWP = default(2);		// is a fixed floating number constant within 0 to infinity - power for distance between WP
         
-        //statistic collection
-    	string traceFileName = default("traceOfNode");
     	int NodeID = default(0); 
 }

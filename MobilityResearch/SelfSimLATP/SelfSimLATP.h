@@ -15,6 +15,7 @@
 #include "RootsCollection.h"
 #include "SelfSimMap.h"
 #include "Messages.h"
+#include "MovementHistory.h"
 #include "DevelopmentHelper.h"
 
 class SelfSimLATP : public LineSegmentsMobilityBase {
@@ -45,6 +46,7 @@ protected:
 
     HSDistanceMatrix *hsd;
 
+    simtime_t waitTime;
     RootsCollection *rc;
     unsigned int RootNumber;
     vector<HotSpotData *> *currentRoot;
@@ -60,13 +62,7 @@ protected:
     bool isWptMatrixReady;
 
     //statistics collection
-    char *wpFileName;
-    char *trFileName;
-    simtime_t waitTime;
-    std::vector<simtime_t> inTimes;
-    std::vector<simtime_t> outTimes;
-    std::vector<double> xCoordinates;
-    std::vector<double> yCoordinates;
+    MovementHistory* mvnHistory;
 
 protected:
     virtual int numInitStages() const { return 3; }

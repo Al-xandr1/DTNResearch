@@ -15,8 +15,6 @@ simple RealMobility extends MovingMobilityBase
         //constraintAreaMaxZ @unit(m) = default(0m); 						// max z position of the constraint area, unconstrained by default (positive infinity)
 	
 		@class(RealMobility);
- 
-        //statistic collection
-    	string traceFileName = default("traceOfNode");
+
     	int NodeID = default(0);
 }
