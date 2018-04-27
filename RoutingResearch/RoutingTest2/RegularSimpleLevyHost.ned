@@ -10,7 +10,7 @@ module RegularSimpleLevyHost
         
         // parameter for intencity of packet generation (Poisson flow)
         double timeslot = default(50);
-    	double lambda = default(0.3); //todo revert!
+    	double lambda = default(0.3);
     
     gates:
         input in @directIn;

@@ -32,15 +32,8 @@ void RegularSimpleLevyMobility::setTargetPosition() {
         movementsFinished = false;
         nextChange = MAXTIME;
     }
-
 }
 
 void RegularSimpleLevyMobility::makeNewRoot() {
-//    RealMobility::makeNewRoot();
-//
-//    unsigned int day = RoutingDaemon::instance->getCurrentDay();
-//    ASSERT(day >= 1);
-//
-//    timeOffset = (day-1) * RoutingDaemon::instance->getDayDuration();
-//    cout << "Root made! day = " << day << ", NodeID = " << NodeID << ", simetime = " << simTime() << endl;
+    // this method should be empty
 }
