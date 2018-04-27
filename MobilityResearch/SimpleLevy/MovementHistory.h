@@ -5,6 +5,9 @@
 #include <string>
 #include "DevelopmentHelper.h"
 
+/**
+ * Class for storing generated traces and waypoints
+ */
 class MovementHistory {
 private:
     //statistics collection

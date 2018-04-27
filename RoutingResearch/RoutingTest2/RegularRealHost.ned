@@ -1,7 +1,6 @@
-module NewRealMobilityHost
+module RegularRealHost
 {
     parameters:
-        
         @node();
         @display("i=device/pocketpc_s");
         
@@ -11,7 +10,7 @@ module NewRealMobilityHost
         
         // parameter for intencity of packet generation (Poisson flow)
         double timeslot = default(50);
-    	double lambda = default(0.3);
+    	double lambda = default(0.3); //todo revert!
     
     gates:
         input in @directIn;

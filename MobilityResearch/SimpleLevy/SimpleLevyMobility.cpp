@@ -71,18 +71,12 @@ void SimpleLevyMobility::initialize(int stage) {
     if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, deltaXJ, joinJ);
     if (pause == NULL) pause = new LeviPause(ciP, aliP, deltaXP, joinP);
 
-
     // начальная локация - всё поле
     currentHSMin=getConstraintAreaMin();
     currentHSMax=getConstraintAreaMax();
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 
     if (!mvnHistory) mvnHistory = new MovementHistory(NodeID);
-}
-
-
-int SimpleLevyMobility::getNodeID() {
-    return NodeID;
 }
 
 void SimpleLevyMobility::setInitialPosition() {
@@ -155,7 +149,7 @@ bool SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& 
         // проверяем, можем ли остаться в прямоугольнике текущей локации, если прыгать к дальнему углу прямоугольника
         if ( distance <= (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
             // можем - прыгаем
-	    delta.x = Xdir * distance/dir;
+            delta.x = Xdir * distance/dir;
             delta.y = Ydir * distance/dir;
             targetPosition = getLastPosition() + delta;
         } else { // не можем - надо переходить в другую локацию

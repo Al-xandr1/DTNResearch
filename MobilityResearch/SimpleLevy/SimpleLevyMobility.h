@@ -81,8 +81,8 @@ class SimpleLevyMobility : public LineSegmentsMobilityBase
 
   public:
     SimpleLevyMobility();
-    int getNodeID();
 
+    int getNodeID()              {return this->NodeID;}
     Coord getLastPosition()      {return this->lastPosition;};
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};
     Coord getConstraintAreaMax() {return this->constraintAreaMax;};

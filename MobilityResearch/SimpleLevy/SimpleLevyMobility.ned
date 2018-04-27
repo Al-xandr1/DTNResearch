@@ -22,8 +22,6 @@ simple SimpleLevyMobility extends MovingMobilityBase
  		double kForSpeed = default(31.1457);    // scale parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility) 
  		double roForSpeed = default(0.504349);  // power parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility)
     	
-    	string specification = default("SimpleLevy"); // concrete specification for Levy mobility 
-    												  // available values = SimpleLevy | LevyHotSpotsRandom | LevyHotSpotsLATPCenterLogic | LevyHotSpotsLATP | LevyHotSpotsLATPPathCounts 
         double powA = default(1);		// is a fixed floating number constant within 0 to infinity - power for distance
         
     	int NodeID = default(0); 
