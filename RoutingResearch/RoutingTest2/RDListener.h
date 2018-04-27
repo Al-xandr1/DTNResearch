@@ -11,6 +11,7 @@
 #include <LevyHotSpotsLATP.h>
 #include "SelfSimLATP.h"
 #include "RealMobility.h"
+#include "SimpleLevyMobility.h"
 #include <MobileHost.h>
 #include "DevelopmentHelper.h"
 

@@ -95,10 +95,11 @@ void MobileHost::finish()
 }
 
 
-MovingMobilityBase*  MobileHost::getMobility()                   {return (MovingMobilityBase*)getSubmodule("mobility");}
-RegularRootLATP*     MobileHost::getRegularRootLATPMobility()    {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
-RegularSelfSimLATP*  MobileHost::getRegularSelfSimLATPMobility() {return dynamic_cast<RegularSelfSimLATP*>(getSubmodule("mobility"));}
-RegularRealMobility* MobileHost::getRegularRealMobility()        {return dynamic_cast<RegularRealMobility*>(getSubmodule("mobility"));}
+MovingMobilityBase*        MobileHost::getMobility()                   {return (MovingMobilityBase*)getSubmodule("mobility");}
+RegularRootLATP*           MobileHost::getRegularRootLATPMobility()    {return dynamic_cast<RegularRootLATP*>(getSubmodule("mobility"));}
+RegularSelfSimLATP*        MobileHost::getRegularSelfSimLATPMobility() {return dynamic_cast<RegularSelfSimLATP*>(getSubmodule("mobility"));}
+RegularRealMobility*       MobileHost::getRegularRealMobility()        {return dynamic_cast<RegularRealMobility*>(getSubmodule("mobility"));}
+RegularSimpleLevyMobility* MobileHost::getRegularSimpleLevyMobility()  {return dynamic_cast<RegularSimpleLevyMobility*>(getSubmodule("mobility"));}
 
 
 void MobileHost::startRoute()
@@ -117,6 +118,10 @@ void MobileHost::startRoute()
     RegularRealMobility* regularRealMobility = getRegularRealMobility();
     // для первого дня маршрут построен при инициализации мобильности
     if (regularRealMobility && rd->getCurrentDay() > 1) regularRealMobility->makeNewRoot();
+
+    RegularSimpleLevyMobility* regularSimpleLevyMobility = getRegularSimpleLevyMobility();
+    // для первого дня маршрут построен при инициализации мобильности
+    if (regularSimpleLevyMobility && rd->getCurrentDay() > 1) regularSimpleLevyMobility->makeNewRoot();
 
     // используется для "пинка" для мобильности, чтобы снова начать ходить
     sendDirect(new cMessage("MOBILITY_START", MOBILITY_START), getSubmodule("mobility")->gate("in"));

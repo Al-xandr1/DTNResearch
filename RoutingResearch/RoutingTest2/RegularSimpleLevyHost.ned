@@ -1,4 +1,4 @@
-module RegularRealHost
+module RegularSimpleLevyHost
 {
     parameters:
         @node();
@@ -10,15 +10,15 @@ module RegularRealHost
         
         // parameter for intencity of packet generation (Poisson flow)
         double timeslot = default(50);
-    	double lambda = default(0.3);
+    	double lambda = default(0.3); //todo revert!
     
     gates:
         input in @directIn;
         
     submodules:
-        mobility: RegularRealMobility {
+        mobility: RegularSimpleLevyMobility {
             parameters: 
                 @display("is=s;p=72,44");
             	NodeID = NodeID_;
-        }        
+        }         
 }

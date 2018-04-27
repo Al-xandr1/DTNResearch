@@ -8,6 +8,7 @@
 #include "RegularRealMobility.h"
 #include "RegularRootLATP.h"
 #include "RegularSelfSimLATP.h"
+#include "RegularSimpleLevyMobility.h"
 #include <HistoryCollector.h>
 #include <Messages.h>
 
@@ -17,6 +18,7 @@ class RoutingDaemon;
 class RegularRootLATP;
 class RegularSelfSimLATP;
 class RegularRealMobility;
+class RegularSimpleLevyMobility;
 
 class MobileHost : public cSimpleModule
 {
@@ -38,10 +40,11 @@ public:
     int getNodeId() {return nodeId;};
     vector<Packet*>* getPacketsForSending() {return packetsForSending;};
 
-    MovingMobilityBase*  getMobility();
-    RegularRootLATP*     getRegularRootLATPMobility();
-    RegularSelfSimLATP*  getRegularSelfSimLATPMobility();
-    RegularRealMobility* getRegularRealMobility();
+    MovingMobilityBase*        getMobility();
+    RegularRootLATP*           getRegularRootLATPMobility();
+    RegularSelfSimLATP*        getRegularSelfSimLATPMobility();
+    RegularRealMobility*       getRegularRealMobility();
+    RegularSimpleLevyMobility* getRegularSimpleLevyMobility();
 
     void startRoute();
     void ensureEndRoute();
