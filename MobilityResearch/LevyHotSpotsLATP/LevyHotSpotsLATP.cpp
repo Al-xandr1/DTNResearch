@@ -160,7 +160,7 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
         const Coord remTargetPosition = targetPosition;             // сохраняем старое значение
         targetPosition = lastPosition + movement->getDeltaVector(); // записываем новое значение
         if (targetPosition == lastPosition) log();
-        ASSERT(targetPosition.x != lastPosition.x); // todo fix!
+        ASSERT(targetPosition != lastPosition);
         nextChange = simTime() + movement->getTravelTime();
 
         // если вышли за пределы локации

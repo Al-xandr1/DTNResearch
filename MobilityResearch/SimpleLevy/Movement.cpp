@@ -15,8 +15,12 @@ bool Movement::genFlight(const char* where) {
     if (leviJump) {
         // генерируем прыжок Леви как обычно
         angle = uniform(0, 2 * PI);
-        const double dist = leviJump->get_Levi_rv(maxPermittedDistance);
-        distance = checkValue(dist, maxPermittedDistance, where);
+
+        do {
+            const double dist = leviJump->get_Levi_rv(maxPermittedDistance);
+            distance = checkValue(dist, maxPermittedDistance, where);
+        } while (getDeltaVector() == Coord::ZERO);
+
         speed = kForSpeed * pow(distance, 1 - roForSpeed);
         travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl());
         return true;
@@ -54,4 +58,7 @@ void Movement::log() {
     cout << "Movement->angle = " << angle << endl;
     cout << "Movement->speed = " << speed << endl;
     cout << "Movement->travelTime = " << travelTime << endl;
+    cout << "Movement->getDeltaVector() = " << getDeltaVector() << endl;
+    cout << "Movement->getDeltaVector().length() = " << getDeltaVector().length() << ", EPSILON = " << EPSILON << endl;
+    cout << "Movement->(getDeltaVector() != Coord::ZERO) = " << (getDeltaVector() != Coord::ZERO) << endl;
 }

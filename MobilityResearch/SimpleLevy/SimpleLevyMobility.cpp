@@ -113,7 +113,7 @@ bool SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& 
     
     targetPosition = lastPosition + movement->getDeltaVector();
     if (targetPosition == lastPosition) log();
-    ASSERT(targetPosition.x != lastPosition.x); // todo fix!
+    ASSERT(targetPosition != lastPosition);
     nextChange = simTime() + movement->getTravelTime();
 
     // если вышли за пределы локации
