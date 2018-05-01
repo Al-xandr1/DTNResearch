@@ -7,6 +7,7 @@
 
 #include "INETDefs.h"
 #include "LineSegmentsMobilityBase.h"
+#include "Movement.h"
 #include "MovementHistory.h"
 #include "DevelopmentHelper.h"
 
@@ -15,30 +16,15 @@
 /**
  * Simple Levy mobility on the single area
  */
-class SimpleLevyMobility : public LineSegmentsMobilityBase
-{
-  protected:
+class SimpleLevyMobility : public LineSegmentsMobilityBase {
+protected:
     int NodeID;
 
     bool isPause;
     long step;
-
-    LeviJump  *jump;
-    LeviPause *pause;
-    double kForSpeed;
-    double roForSpeed;
-
-    simtime_t waitTime;
-    double angle;
-    double distance;
-    double speed;
-    Coord deltaVector;
-    simtime_t travelTime;
-    double maxPermittedDistance;
-
-    double powA;
-
     bool movementsFinished;    // показывает окончил ли пользователь движение или нет
+
+    Movement *movement;
 
     // текущая локация
     Coord currentHSMin, currentHSMax, currentHSCenter;
@@ -47,7 +33,7 @@ class SimpleLevyMobility : public LineSegmentsMobilityBase
     //statistics collection
     MovementHistory* mvnHistory;
 
-  protected:
+protected:
     virtual int numInitStages() const { return 3; }
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
 
@@ -66,7 +52,7 @@ class SimpleLevyMobility : public LineSegmentsMobilityBase
     bool isCorrectCoordinates(double x, double y);
     void log();
 
-  public:
+public:
     SimpleLevyMobility();
 
     int getNodeID()              {return this->NodeID;}

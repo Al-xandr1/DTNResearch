@@ -3,10 +3,6 @@ import inet.mobility.common.MovingMobilityBase;
 simple SimpleLevyMobility extends MovingMobilityBase
 {
     parameters:
-        //Ќачальное положение задаетс€ в методе MobilityBase::setInitialPosition()
-        bool initFromDisplayString = default(true);
-        volatile double speed @unit(mps) = default(uniform(20mps,50mps)); 	// use uniform(minSpeed, maxSpeed) or another distribution (fake parameter - used by base classes)
-        volatile double waitTime @unit(s) = default(uniform(3s,8s)); 		// wait time between reaching a target and choosing a new one  (fake parameter - used by base classes)
         @class(SimpleLevyMobility);
  
  		double ciJ  = default(1);       // scale coeff (c) in Levy LENGTH disttibution - 10 in external research paper
@@ -24,5 +20,5 @@ simple SimpleLevyMobility extends MovingMobilityBase
     	
         double powA = default(1);		// is a fixed floating number constant within 0 to infinity - power for distance
         
-    	int NodeID = default(0); 
+    	int NodeID = default(-1); 
 }

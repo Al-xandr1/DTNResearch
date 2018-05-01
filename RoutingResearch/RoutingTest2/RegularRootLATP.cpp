@@ -402,11 +402,9 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
-    distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
-    ASSERT(distance > 0);
-    speed = kForSpeed * pow(distance, 1 - roForSpeed);
-    travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl());
-    nextChange = simTime() + travelTime;
+    movement->setDistance(sqrt(  (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)
+                               + (targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) ));
+    nextChange = simTime() + movement->getTravelTime();
     return true;
 }
 

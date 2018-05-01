@@ -8,14 +8,13 @@
 /**
  * Класс, описывающий ежедневную реальную мобильность
  */
-class RegularRealMobility : public RealMobility
-{
-  protected:
+class RegularRealMobility : public RealMobility {
+protected:
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
     virtual void handleMessage(cMessage *message);
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
 
-  public:
+ public:
     virtual void makeNewRoot();
 };
 

@@ -25,20 +25,20 @@ void RealMobility::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
     if (stage == 0) {
-        stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
+        stationary = false;
         NodeID = (int) par("NodeID");
 
         lastPosition.x = 0;
         lastPosition.y = 0;
         lastPosition.z = 0;
-    }
 
-    if (!traces) {
+        ASSERT(!traces);
         traces = TracesCollection::getInstance();
         makeNewRoot();
-    }
 
-    if (!mvnHistory) mvnHistory = new MovementHistory(NodeID);
+        ASSERT(!mvnHistory);
+        mvnHistory = new MovementHistory(NodeID);
+    }
 }
 
 void RealMobility::makeNewRoot() {

@@ -13,6 +13,7 @@
 #include "Data.h"
 #include "HotSpotsCollection.h"
 #include "RootsCollection.h"
+#include "Movement.h"
 #include "SelfSimMap.h"
 #include "Messages.h"
 #include "MovementHistory.h"
@@ -20,21 +21,15 @@
 
 class SelfSimLATP : public LineSegmentsMobilityBase {
 protected:
-
     int NodeID;
 
     bool isPause;
     long step;
-
-    double kForSpeed;
-    double roForSpeed;
-
-    LeviPause *pause;
-
+    bool movementsFinished;    // показывает окончил ли пользователь движение или нет
     double powAforHS;
     double powAforWP;
 
-    bool movementsFinished;    // показывает окончил ли пользователь движение или нет
+    Movement *movement;
 
     // текущая локация
     Coord currentHSMin, currentHSMax, currentHSCenter;
@@ -46,7 +41,6 @@ protected:
 
     HSDistanceMatrix *hsd;
 
-    simtime_t waitTime;
     RootsCollection *rc;
     unsigned int RootNumber;
     vector<HotSpotData *> *currentRoot;

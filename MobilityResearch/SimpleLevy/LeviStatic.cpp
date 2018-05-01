@@ -176,11 +176,11 @@ double LeviJump::get_Levi_rv() {
 }
 
 
-double LeviJump::get_Levi_rv(double maxPermittedValue) {
+double LeviJump::get_Levi_rv(const double maxPermittedValue) {
     ASSERT(maxPermittedValue > 0);
     double result = get_Levi_rv();
     while (result > maxPermittedValue) {
-        cout << "WARNING!!! Value is too long: LeviJump::get_Levi_rv = " << result << endl;
+        cout << "WARNING!!! Value is too long: LeviJump::get_Levi_rv = " << result << ", maxPermittedValue = " << maxPermittedValue <<  endl;
         result = get_Levi_rv();
     }
     return result;
@@ -350,11 +350,11 @@ double LeviPause::get_Levi_rv() {
 }
 
 
-double LeviPause::get_Levi_rv(double maxPermittedValue) {
+double LeviPause::get_Levi_rv(const double maxPermittedValue) {
     ASSERT(maxPermittedValue > 0);
     double result = get_Levi_rv();
     while (result > maxPermittedValue) {
-        cout << "WARNING!!! Value is too long: LeviPause::get_Levi_rv = " << result << endl;
+        cout << "WARNING!!! Value is too long: LeviPause::get_Levi_rv = " << result << ", maxPermittedValue = " << maxPermittedValue << endl;
         result = get_Levi_rv();
     }
     return result;

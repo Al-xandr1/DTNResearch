@@ -8,15 +8,14 @@
 /**
  * Regular (daily) Levy mobility on the single area
  */
-class RegularSimpleLevyMobility : public SimpleLevyMobility
-{
-    protected:
-      virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
-      virtual void handleMessage(cMessage *message);
-      virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
+class RegularSimpleLevyMobility : public SimpleLevyMobility {
+protected:
+    virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
+    virtual void handleMessage(cMessage *message);
+    virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
 
-    public:
-      virtual void makeNewRoot();
+public:
+    virtual void makeNewRoot();
 };
 
 #endif

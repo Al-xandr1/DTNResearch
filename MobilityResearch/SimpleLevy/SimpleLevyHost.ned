@@ -6,7 +6,7 @@ module SimpleLevyHost
         @node();
         @display("i=device/pocketpc_s");
         
-        int indexOfNode = default(0);
+        int indexOfNode = default(-1);
         
     submodules:
         mobility: SimpleLevyMobility {

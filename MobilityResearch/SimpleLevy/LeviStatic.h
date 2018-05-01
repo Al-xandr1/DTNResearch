@@ -44,7 +44,7 @@ public:
   // methods for r.v. generation
   int Dran();
   double get_Levi_rv();
-  double get_Levi_rv(double maxPermittedValue);
+  double get_Levi_rv(const double maxPermittedValue);
 };
 
 
@@ -84,7 +84,7 @@ public:
   // methods for r.v. generation
   int Dran();
   double get_Levi_rv();
-  double get_Levi_rv(double maxPermittedValue);
+  double get_Levi_rv(const double maxPermittedValue);
 };
 
 #endif

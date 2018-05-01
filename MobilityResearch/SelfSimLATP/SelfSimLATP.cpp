@@ -12,19 +12,14 @@ SelfSimLATP::SelfSimLATP() {
     // первый шаг нулевой. ƒалее на нЄм провер€ем, что мы прошли инициализацию,
     // и реально начали ходить (начина€ с первого шага)
     step = 0;
-
-    kForSpeed = 1;
-    roForSpeed = 0;
-
     movementsFinished = false;
+    powAforHS = 2.0;
+    powAforWP = 2.0;
+
+    movement = NULL;
 
     hsc = NULL;
     hsd = NULL;
-
-    pause = NULL;
-
-    powAforHS = 2.0;
-    powAforWP = 2.0;
 
     rc = NULL;
     RootNumber = 0;
@@ -32,7 +27,6 @@ SelfSimLATP::SelfSimLATP() {
     isRootReady = false;
     isDstMatrixReady = false;
 
-    waitTime = 0;
     currentHSindex = -1;
     waypts = NULL;
     isWptLoaded = false;
@@ -45,21 +39,14 @@ SelfSimLATP::SelfSimLATP() {
 void SelfSimLATP::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
-    double ciP, aliP, deltaXP, joinP;
-
     if (stage == 0) {
-        stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
-
-        constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
-        constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
-        constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
-        constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
-
+        stationary = false;
         NodeID = (int) par("NodeID");
 
-        if (hasPar("powAforHS") && hasPar("powAforWP") && hasPar("ciP") && hasPar("aliP") && hasPar("deltaXP") &&
-            hasPar("joinP")) {
+        double ciP, aliP, deltaXP, joinP;
+        double kForSpeed, roForSpeed;
 
+        if (hasPar("powAforHS") && hasPar("powAforWP") && hasPar("ciP") && hasPar("aliP") && hasPar("deltaXP") &&  hasPar("joinP")) {
             ciP = par("ciP").doubleValue();
             aliP = par("aliP").doubleValue();
             deltaXP = par("deltaXP").doubleValue();
@@ -67,18 +54,21 @@ void SelfSimLATP::initialize(int stage) {
 
             powAforHS = par("powAforHS").doubleValue();
             powAforWP = par("powAforWP").doubleValue();
-
         } else { cout << "It is necessary to specify ALL parameters"; exit(-112);}
 
         if (hasPar("kForSpeed") && hasPar("roForSpeed")) {
             kForSpeed = par("kForSpeed").doubleValue();
             roForSpeed = par("roForSpeed").doubleValue();
         } else { cout << "It is necessary to specify ALL parameters for speed function"; exit(-212);}
-    }
 
-    if (pause == NULL) pause = new LeviPause(ciP, aliP, deltaXP, joinP);
+        ASSERT(!movement);
+        movement = new Movement(kForSpeed,
+                                roForSpeed,
+                                -1,
+                                NULL,
+                                new LeviPause(ciP, aliP, deltaXP, joinP));
 
-    if (!hsc) {
+        ASSERT(!hsc);
         // загрузка данных о докаци€х
         hsc = HotSpotsCollection::getInstance();
         double minX, maxX, minY, maxY;
@@ -87,17 +77,18 @@ void SelfSimLATP::initialize(int stage) {
         constraintAreaMin.y = minY;
         constraintAreaMax.x = maxX;
         constraintAreaMax.y = maxY;
-    }
 
-    if (!hsd) hsd = HSDistanceMatrix::getInstance(powAforHS);
+        ASSERT(!hsd);
+        hsd = HSDistanceMatrix::getInstance(powAforHS);
 
-    // загрузка данных об эталонных маршрутах
-    if (!rc) {
+        ASSERT(!rc);
+        // загрузка данных об эталонных маршрутах
         rc = RootsCollection::getInstance();
         makeNewRoot();
-    }
 
-    if (!mvnHistory) mvnHistory = new MovementHistory(NodeID);
+        ASSERT(!mvnHistory);
+        mvnHistory = new MovementHistory(NodeID);
+    }
 }
 
 void SelfSimLATP::setInitialPosition() {
@@ -131,12 +122,12 @@ void SelfSimLATP::setTargetPosition() {
     if (step++ == 0) return;
 
     if (isPause) {
-        waitTime = checkValue(pause->get_Levi_rv((MAXTIME - simTime()).dbl()), (MAXTIME - simTime()).dbl());
-        ASSERT(waitTime > 0 && waitTime <= (MAXTIME - simTime()));
-        nextChange = simTime() + waitTime;
+        const bool success = movement->genPause( (string("DEBUG SelfSimLATP::setTargetPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+        ASSERT(success);
+        nextChange = simTime() + movement->getWaitTime();
     } else {
-        ASSERT(simTime() >= waitTime);
-        mvnHistory->collect(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
+        ASSERT(simTime() >= movement->getWaitTime());
+        mvnHistory->collect(simTime() - movement->getWaitTime(), simTime(), lastPosition.x, lastPosition.y);
         movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
         if (movementsFinished) {
@@ -151,20 +142,18 @@ void SelfSimLATP::setTargetPosition() {
 bool SelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextChange) {
     if (findNextWpt()) {
         targetPosition = *(waypts->at(getCurrentWpt()));
-        double distance = sqrt((targetPosition.x - lastPosition.x) * (targetPosition.x - lastPosition.x) +
-                               (targetPosition.y - lastPosition.y) * (targetPosition.y - lastPosition.y));
 
-        simtime_t travelTime;
+        const double distance = sqrt(  (targetPosition.x - lastPosition.x) * (targetPosition.x - lastPosition.x)
+                                     + (targetPosition.y - lastPosition.y) * (targetPosition.y - lastPosition.y));
         if (distance != 0) {
-            double speed = kForSpeed * pow(distance, 1 - roForSpeed);
-            travelTime = distance / speed;
+            movement->setDistance(distance);
+            nextChange = simTime() + movement->getTravelTime();
         } else {
             //pause is generated again
-            travelTime = checkValue(pause->get_Levi_rv((MAXTIME - simTime()).dbl()), (MAXTIME - simTime()).dbl());
+            const bool success = movement->genPause( (string("DEBUG SelfSimLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+            ASSERT(success);
+            nextChange = simTime() + movement->getWaitTime();
         }
-
-        ASSERT(travelTime > 0 && travelTime <= (MAXTIME - simTime()));
-        nextChange = simTime() + travelTime;
 
     } else if (findNextHotSpot()) {
         isWptLoaded = false;
@@ -174,20 +163,18 @@ bool SelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextCha
         setCurrentWpt(rand() % waypts->size());
         targetPosition.x = waypts->at(getCurrentWpt())->x;
         targetPosition.y = waypts->at(getCurrentWpt())->y;
-        double distance = sqrt((targetPosition.x - lastPosition.x) * (targetPosition.x - lastPosition.x) +
-                               (targetPosition.y - lastPosition.y) * (targetPosition.y - lastPosition.y));
 
-        simtime_t travelTime;
+        const double distance = sqrt(  (targetPosition.x - lastPosition.x) * (targetPosition.x - lastPosition.x)
+                                     + (targetPosition.y - lastPosition.y) * (targetPosition.y - lastPosition.y));
         if (distance != 0) {
-            double speed = kForSpeed * pow(distance, 1 - roForSpeed);
-            travelTime = distance / speed;
+            movement->setDistance(distance);
+            nextChange = simTime() + movement->getTravelTime();
         } else {
             //pause is generated again
-            travelTime = checkValue(pause->get_Levi_rv((MAXTIME - simTime()).dbl()), (MAXTIME - simTime()).dbl());
+            const bool success = movement->genPause( (string("DEBUG SelfSimLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+            ASSERT(success);
+            nextChange = simTime() + movement->getWaitTime();
         }
-
-        ASSERT(travelTime > 0 && travelTime <= (MAXTIME - simTime()));
-        nextChange = simTime() + travelTime;
     } else return false;
 
     return true;

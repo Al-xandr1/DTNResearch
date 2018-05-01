@@ -177,7 +177,7 @@ function privateDrawHistograms(filenames, tag, xlable)
         xmlDelete(doc);
     end
     if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
-    prepareGraphic("CCDF для "+ tag, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
+    prepareGraphic("CCDF для "+ tag, "log2( " + xlable + " )", "log2( CCDF : P(X > x) )");
 endfunction
 
 

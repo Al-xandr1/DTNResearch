@@ -6,7 +6,7 @@ module RealMobilityHost
         @node();
         @display("i=device/pocketpc_s");
         
-        int NodeID_ = default(0);
+        int NodeID_ = default(-1);
         
     submodules:
         mobility: RealMobility {

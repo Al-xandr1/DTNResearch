@@ -5,25 +5,20 @@ Define_Module(SimpleLevyMobility);
 SimpleLevyMobility::SimpleLevyMobility() {
     NodeID = -1;
 
-    isPause = false;
+    // начинаем маршрут с паузы, чтобы мы "нормально прошли" первую точку (например постояли в ней)
+    // а не так, чтобы при инициализации маршрута мы её поставили и при первой генерации сразу выбрали новую
+    isPause = true;
+
+    // первый шаг нулевой. Далее на нём проверяем, что мы прошли инициализацию,
+    // и реально начали ходить (начиная с первого шага)
     step = 0;
-    jump = NULL;
-    pause = NULL;
-    kForSpeed = 1;
-    roForSpeed = 0;
-    maxPermittedDistance = -1;
-
-    waitTime = 0;
-    currentHSindex = -1;
-
     movementsFinished = false;
+    movement = NULL;
 
-    angle = -1;
-    distance = -1;
-    speed = -1;
-    travelTime = 0;
-
-    powA=2.0;
+    currentHSMin = Coord::ZERO;
+    currentHSMax = Coord::ZERO;
+    currentHSCenter = Coord::ZERO;
+    currentHSindex = -1;
 
     mvnHistory = NULL;
 }
@@ -31,23 +26,16 @@ SimpleLevyMobility::SimpleLevyMobility() {
 void SimpleLevyMobility::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
-    double ciJ,aliJ,deltaXJ,joinJ, ciP,aliP,deltaXP,joinP;
-
     if (stage == 0) {
-        stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
-
-        constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
-        constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
-        constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
-        constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
-
-        maxPermittedDistance = (constraintAreaMax - constraintAreaMin).length();
-
+        stationary = false;
         NodeID = (int) par("NodeID");
+
+        double ciJ,aliJ,deltaXJ,joinJ, ciP,aliP,deltaXP,joinP;
+        double kForSpeed, roForSpeed, maxPermittedDistance;
+        maxPermittedDistance = (constraintAreaMax - constraintAreaMin).length();
 
         if (hasPar("ciJ") && hasPar("aliJ") && hasPar("deltaXJ") && hasPar("joinJ")
                 && hasPar("ciP") && hasPar("aliP") && hasPar("deltaXP") && hasPar("joinP")) {
-
             ciJ  = par("ciJ").doubleValue();
             aliJ = par("aliJ").doubleValue();
             deltaXJ = par("deltaXJ").doubleValue();
@@ -57,26 +45,29 @@ void SimpleLevyMobility::initialize(int stage) {
             aliP = par("aliP").doubleValue();
             deltaXP = par("deltaXP").doubleValue();
             joinP = par("joinP").doubleValue();
-
-            powA = par("powA").doubleValue();
-
         } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
+
 
         if (hasPar("kForSpeed") && hasPar("roForSpeed")) {
             kForSpeed = par("kForSpeed").doubleValue();
             roForSpeed = par("roForSpeed").doubleValue();
         } else { cout << "It is necessary to specify ALL parameters for speed function"; exit(-212);}
+
+        ASSERT(!movement);
+        movement = new Movement(kForSpeed,
+                                roForSpeed,
+                                maxPermittedDistance,
+                                new LeviJump(ciJ, aliJ, deltaXJ, joinJ),
+                                new LeviPause(ciP, aliP, deltaXP, joinP));
+
+        // начальная локация - всё поле
+        currentHSMin=getConstraintAreaMin();
+        currentHSMax=getConstraintAreaMax();
+        currentHSCenter=(currentHSMin+currentHSMax)*0.5;
+
+        ASSERT(!mvnHistory);
+        mvnHistory = new MovementHistory(NodeID);
     }
-
-    if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, deltaXJ, joinJ);
-    if (pause == NULL) pause = new LeviPause(ciP, aliP, deltaXP, joinP);
-
-    // начальная локация - всё поле
-    currentHSMin=getConstraintAreaMin();
-    currentHSMax=getConstraintAreaMax();
-    currentHSCenter=(currentHSMin+currentHSMax)*0.5;
-
-    if (!mvnHistory) mvnHistory = new MovementHistory(NodeID);
 }
 
 void SimpleLevyMobility::setInitialPosition() {
@@ -103,11 +94,11 @@ void SimpleLevyMobility::setTargetPosition() {
 
     step++;
     if (isPause) {
-        waitTime = checkValue(pause->get_Levi_rv((MAXTIME - simTime()).dbl()), (MAXTIME - simTime()).dbl());
-        ASSERT(waitTime > 0 && waitTime <= (MAXTIME - simTime()));
-        nextChange = simTime() + waitTime;
+        const bool success = movement->genPause( (string("DEBUG SimpleLevyMobility::setTargetPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+        ASSERT(success);
+        nextChange = simTime() + movement->getWaitTime();
     } else {
-        mvnHistory->collect(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
+        mvnHistory->collect(simTime() - movement->getWaitTime(), simTime(), lastPosition.x, lastPosition.y);
         movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
         if (movementsFinished) {nextChange = -1; return;};
@@ -117,18 +108,13 @@ void SimpleLevyMobility::setTargetPosition() {
 }
 
 bool SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextChange) {
+    const bool success = movement->genFlight( (string("DEBUG SimpleLevyMobility::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+    ASSERT(success);
     
-    // генерируем прыжок Леви как обычно
-    angle = uniform(0, 2 * PI);
-    distance = checkValue(jump->get_Levi_rv(maxPermittedDistance), maxPermittedDistance);
-    speed = kForSpeed * pow(distance, 1 - roForSpeed);
-    Coord delta(distance * cos(angle), distance * sin(angle), 0);
-    deltaVector = delta;
-    travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl());
-
-    targetPosition = lastPosition + delta;
-    ASSERT(targetPosition.x != lastPosition.x);
-    nextChange = simTime() + travelTime;
+    targetPosition = lastPosition + movement->getDeltaVector();
+    if (targetPosition == lastPosition) log();
+    ASSERT(targetPosition.x != lastPosition.x); // todo fix!
+    nextChange = simTime() + movement->getTravelTime();
 
     // если вышли за пределы локации
     if (currentHSMin.x > targetPosition.x || targetPosition.x > currentHSMax.x || currentHSMin.y > targetPosition.y || targetPosition.y > currentHSMax.y) {
@@ -147,10 +133,11 @@ bool SimpleLevyMobility::generateNextPosition(Coord& targetPosition, simtime_t& 
         }
 
         // проверяем, можем ли остаться в прямоугольнике текущей локации, если прыгать к дальнему углу прямоугольника
-        if ( distance <= (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
+        if ( movement->getDistance() <= (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
             // можем - прыгаем
-            delta.x = Xdir * distance/dir;
-            delta.y = Ydir * distance/dir;
+            Coord delta;
+            delta.x = Xdir * movement->getDistance()/dir;
+            delta.y = Ydir * movement->getDistance()/dir;
             targetPosition = getLastPosition() + delta;
         } else { // не можем - надо переходить в другую локацию
             if ( findNextHotSpot() ) {   // нашли следующую локацию - идём в её случайную точку
@@ -192,7 +179,7 @@ bool SimpleLevyMobility::isCorrectCoordinates(double x, double y) {
 }
 
 void SimpleLevyMobility::log() {  // Отладочная функция
-    cout << "-------------------------------------------------------------" << endl;
+    cout << "----------------------------- LOG --------------------------------" << endl;
     cout << "step = " << step << ", isPause = " << isPause << endl;
     cout << "simTime() = " << simTime() << endl;
     cout << "lastPosition = " << lastPosition << endl;
@@ -204,11 +191,12 @@ void SimpleLevyMobility::log() {  // Отладочная функция
     cout << "\t isHotSpotEmpty = " << isHotSpotEmpty() << endl;
 
     if (isPause) {
-        cout << "waitTime = " << waitTime << endl;
+        cout << "waitTime = " << movement->getWaitTime() << endl;
     } else {
-        cout << "distance = " << distance << ", angle = " << angle << ", speed = " << speed << endl;
-        cout << "deltaVector = " << deltaVector << ", travelTime = " << travelTime << endl;
+        cout << "distance = " << movement->getDistance() << ", angle = " << movement->getAngle() << ", speed = " << movement->getSpeed() << endl;
+        cout << "deltaVector = " << movement->getDeltaVector() << ", travelTime = " << movement->getTravelTime() << endl;
     }
+    movement->log();
 
     cout << "targetPosition = " << targetPosition << endl;
     cout << "nextChange = " << nextChange << endl;

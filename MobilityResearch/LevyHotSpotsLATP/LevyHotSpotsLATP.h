@@ -12,8 +12,8 @@
 #include "LineSegmentsMobilityBase.h"
 
 #include "DevelopmentHelper.h"
-#include "LeviStatic.h"
 #include "RootsCollection.h"
+#include "Movement.h"
 #include "MovementHistory.h"
 #include "HotSpotsCollection.h"
 
@@ -23,24 +23,11 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase {
 
     bool isPause;
     long step;
+    bool movementsFinished;    // показывает окончил ли пользователь движение или нет
     long countOfFirstSkippedLongFlight;
-
-    LeviJump  *jump;
-    LeviPause *pause;
-    double kForSpeed;
-    double roForSpeed;
-
-    simtime_t waitTime;
-    double angle;
-    double distance;
-    double speed;
-    Coord deltaVector;
-    simtime_t travelTime;
-    double maxPermittedDistance;
-
     double powA;
 
-    bool movementsFinished;    // показывает окончил ли пользователь движение или нет
+    Movement *movement;
 
     // текущая локация
     Coord currentHSMin, currentHSMax, currentHSCenter;
