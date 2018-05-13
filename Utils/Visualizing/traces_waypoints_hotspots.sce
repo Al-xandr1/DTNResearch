@@ -242,6 +242,10 @@ function drawWPTs(x, y, GRAPH_COLOR)
     poly1.mark_size = 1
     poly1.mark_foreground = GRAPH_COLOR;
     poly1.mark_background = GRAPH_COLOR;
+    a.x_label.text="x";
+    a.x_label.font_size=3;
+    a.y_label.text="y";
+    a.Y_label.font_size=3;
 endfunction
 
 
@@ -310,7 +314,7 @@ function drawAllWPTFolders(folders)
         hl=legend(legenda);
     end
     
-    xtitle("WayPoints");
+    xtitle("Путевые точки");
 endfunction
 
 

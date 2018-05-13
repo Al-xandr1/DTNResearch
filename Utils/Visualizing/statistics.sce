@@ -32,9 +32,9 @@ function drawWPHistograms(varargin)
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    privateDrawHistograms(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "Flight length, meters");
-    privateDrawHistograms(fileNames, "VELOCITY-HISTOGRAM", "Velocity magnitude, meters/sec");
-    privateDrawHistograms(fileNames, "PAUSE-HISTOGRAM", "Pause time, sec");
+    privateDrawHistograms(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "длина, [м]");      // "Flight length [meters]"
+    privateDrawHistograms(fileNames, "VELOCITY-HISTOGRAM", "скорость, [м/с]");      // "Velocity magnitude [meters/sec]"
+    privateDrawHistograms(fileNames, "PAUSE-HISTOGRAM", "пауза, [с]");              // "Pause time [sec]"
 endfunction
 
 
@@ -47,8 +47,8 @@ function drawNodeHistogramsFolder(folder)
     if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
     statisticFiles = getFiles(PATH, "*.xml");
     
-    privateDrawHistograms(statisticFiles, "LIFE-TIME-HISTOGRAM", "Life time, simsecs");
-    privateDrawHistograms(statisticFiles, "ICT-HISTOGRAM", "ICT, simsecs");
+    privateDrawHistograms(statisticFiles, "LIFE-TIME-HISTOGRAM", "время жизни, [с]");    // "Life time [sec]"
+    privateDrawHistograms(statisticFiles, "ICT-HISTOGRAM", "время контакта, [с]");       // "ICT [sec]"
     
     PATH = SAVE_PATH;
 endfunction
@@ -64,8 +64,8 @@ function drawNodeHistograms(varargin)
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    privateDrawHistograms(fileNames, "LIFE-TIME-HISTOGRAM", "Life time, simsecs");
-    privateDrawHistograms(fileNames, "ICT-HISTOGRAM", "ICT, simsecs");
+    privateDrawHistograms(fileNames, "LIFE-TIME-HISTOGRAM", "время жизни, [с]");     // "Life time [sec]"
+    privateDrawHistograms(fileNames, "ICT-HISTOGRAM", "время контакта, [с]");        // "ICT [sec]"
 endfunction
 
 
