@@ -64,8 +64,8 @@ function drawNodeHistograms(varargin)
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    privateDrawHistograms(fileNames, "LIFE-TIME-HISTOGRAM", "время жизни, [с]");     // "Life time [sec]"
-    privateDrawHistograms(fileNames, "ICT-HISTOGRAM", "время контакта, [с]");        // "ICT [sec]"
+    privateDrawHistograms(fileNames, "LIFE-TIME-HISTOGRAM", "время жизни, [с]");         // "Life time [sec]"
+    privateDrawHistograms(fileNames, "ICT-HISTOGRAM", "время между контактами, [с]");    // "ICT [sec]"
 endfunction
 
 
