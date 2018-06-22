@@ -54,6 +54,13 @@ void RealMobility::makeNewRoot() {
     targetPosition = lastPosition;
 }
 
+void RealMobility::endRoute() {
+    cMessage* msg = new cMessage("END_ROUTE", END_ROUTE);
+    take(msg);
+    sendDirect(msg, getParentModule()->gate("in"));
+    nextChange = -1;
+}
+
 void RealMobility::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
@@ -66,10 +73,7 @@ void RealMobility::setInitialPosition() {
 
 void RealMobility::setTargetPosition() {
     if (movementsFinished) {
-        cMessage* msg = new cMessage("ROUTE_ENDED", ROUTE_ENDED);
-        take(msg);
-        sendDirect(msg, getParentModule()->gate("in"));
-        nextChange = -1;
+        endRoute();
         return;
     };
 
@@ -78,10 +82,7 @@ void RealMobility::setTargetPosition() {
     movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
     if (movementsFinished) {
-        cMessage* msg = new cMessage("ROUTE_ENDED", ROUTE_ENDED);
-        take(msg);
-        sendDirect(msg, getParentModule()->gate("in"));
-        nextChange = -1;
+        endRoute();
         return;
     };
 }

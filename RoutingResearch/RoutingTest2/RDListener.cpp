@@ -7,8 +7,12 @@ RD_Listener::RD_Listener(RoutingDaemon* rd)
 
     NodeId = -1;
     position = Coord::ZERO;
+    isTurnedOn = true;
 
-    for (int i=0; i<RoutingDaemon::numHosts; i++) nodePositions.push_back(Coord::ZERO);
+    for (int i=0; i<RoutingDaemon::numHosts; i++) {
+        nodePositions.push_back(Coord::ZERO);
+        nodeIsTurnedOnStates.push_back(true);
+    }
 
     cout << "RD_Listener constructor: end! " << endl;
 }
@@ -18,18 +22,18 @@ void RD_Listener::receiveSignal(cComponent *source, simsignal_t signalID, cObjec
     if (signalID == mobilityStateChangedSignal) {
         IMobility *mobility = check_and_cast<IMobility*>(source);
         position = mobility->getCurrentPosition();
+        // todo isTurnedOn = check_and_cast<MobileHost*>(check_and_cast<cSimpleModule*>(mobility)->getParentModule())->isTurnedOn();
 
         LevyHotSpotsLATP* src1 = dynamic_cast<LevyHotSpotsLATP*>(source);
-        if (src1) NodeId = src1->getNodeID();
-
         SelfSimLATP* src2 = dynamic_cast<SelfSimLATP*>(source);
-        if (src2) NodeId = src2->getNodeID();
-
         RealMobility* src3 = dynamic_cast<RealMobility*>(source);
-        if (src3) NodeId = src3->getNodeID();
-
         SimpleLevyMobility* src4 = dynamic_cast<SimpleLevyMobility*>(source);
-        if (src4) NodeId = src4->getNodeID();
+
+        if (src1) NodeId = src1->getNodeID();
+        else if (src2) NodeId = src2->getNodeID();
+        else if (src3) NodeId = src3->getNodeID();
+        else if (src4) NodeId = src4->getNodeID();
+        else ASSERT(false); //unreachable statement
 
         ASSERT(checkReceivedData());
 		if (processReceivedData()) rd->connectionsChanged();
@@ -41,15 +45,15 @@ bool RD_Listener::isConnected(int node1, int node2)
 {
     Coord position1 = nodePositions[node1];
     Coord position2 = nodePositions[node2];
-    double distance = position1.distance(position2);
 
-    return distance < RoutingDaemon::interconnectionRadius;
+    return nodeIsTurnedOnStates[node1] && nodeIsTurnedOnStates[node2] && (position1.distance(position2) < RoutingDaemon::interconnectionRadius);
 }
 
 
 bool RD_Listener::processReceivedData()
 {
     nodePositions[NodeId] = position;
+    nodeIsTurnedOnStates[NodeId] = isTurnedOn;
 
     bool anyChanged = false;
 
@@ -122,11 +126,12 @@ void RD_Listener::log()
 {
     cout << "NodeId = " << NodeId << endl;
     cout << "position = " << position << endl;
+    cout << "isTurnedOn = " << isTurnedOn << endl;
     cout << "RoutingDaemon::numHosts = " << RoutingDaemon::numHosts << endl;
 
     cout << "All positions: " << endl;
     for (int i=0; i<RoutingDaemon::numHosts; i++) {
-        cout << "NodeId=" << i << "  x="<< nodePositions[i].x <<" y="<< nodePositions[i].y <<endl;
+        cout << "NodeId=" << i << "  x="<< nodePositions[i].x << " y=" << nodePositions[i].y << "  isTurnedOn=" << nodeIsTurnedOnStates[i] <<endl;
     }
 
     for (int i=0; i<RoutingDaemon::numHosts; i++) {

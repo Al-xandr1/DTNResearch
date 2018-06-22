@@ -49,10 +49,13 @@ public:
     void startRoute();
     void ensureEndRoute();
     void endRoute();
+    void turnOn();
+    void turnOff();
+    bool isTurnedOn();
     Packet* createPacket();
     int generateTarget();
     void registerPacket(Packet* packet);
-    void sendPacket(Packet* packet, int destinationId);
+    bool sendPacket(Packet* packet, int destinationId);
     void destroyPacket(Packet* packet);
 
     virtual void initialize();

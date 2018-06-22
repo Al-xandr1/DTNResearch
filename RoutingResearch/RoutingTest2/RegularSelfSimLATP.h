@@ -27,7 +27,11 @@ protected:
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
     virtual void handleMessage(cMessage *message);
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
+    void endRoute();
     virtual void makeRoot();
+
+public:
+    void nodeTurnedOff();
 };
 
 #endif

@@ -13,6 +13,12 @@ void RegularSelfSimLATP::handleMessage(cMessage *message) {
         switch (message->getKind()) {
             // используется для "пинка" для мобильности, чтобы снова начать ходить
             case MOBILITY_START:{
+                ASSERT(RoutingDaemon::instance->getCurrentDay() >= 1);
+                // для первого дня маршрут построен при инициализации мобильности
+                if (RoutingDaemon::instance->getCurrentDay() > 1) {
+                    SelfSimLATP::makeNewRoot();
+                }
+
                 nextChange = simTime();
                 MovingMobilityBase::scheduleUpdate();
                 emitMobilityStateChangedSignal();
@@ -29,9 +35,20 @@ void RegularSelfSimLATP::setTargetPosition() {
 
     if (movementsFinished) {
         // очищают статус и планируем в бесконечность - чтобы приостановить, но не завершить
+        endRoute();
         movementsFinished = false;
         nextChange = MAXTIME;
     }
+}
+
+void RegularSelfSimLATP::nodeTurnedOff() {
+    emitMobilityStateChangedSignal();
+}
+
+void RegularSelfSimLATP::endRoute() {
+    cMessage* msg = new cMessage("END_ROUTE", END_ROUTE);
+    take(msg);
+    sendDirect(msg, getParentModule()->gate("in"));
 }
 
  void RegularSelfSimLATP::makeRoot() {

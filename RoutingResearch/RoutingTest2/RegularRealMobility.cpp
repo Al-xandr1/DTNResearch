@@ -13,6 +13,12 @@ void RegularRealMobility::handleMessage(cMessage *message) {
         switch (message->getKind()) {
             // используется для "пинка" для мобильности, чтобы снова начать ходить
             case MOBILITY_START:{
+                ASSERT(RoutingDaemon::instance->getCurrentDay() >= 1);
+                // для первого дня маршрут построен при инициализации мобильности
+                if (RoutingDaemon::instance->getCurrentDay() > 1) {
+                    makeNewRoot();
+                }
+
                 nextChange = simTime();
                 MovingMobilityBase::scheduleUpdate();
                 emitMobilityStateChangedSignal();
@@ -32,7 +38,10 @@ void RegularRealMobility::setTargetPosition() {
         movementsFinished = false;
         nextChange = MAXTIME;
     }
+}
 
+void RegularRealMobility::nodeTurnedOff() {
+    emitMobilityStateChangedSignal();
 }
 
 void RegularRealMobility::makeNewRoot() {
@@ -42,5 +51,5 @@ void RegularRealMobility::makeNewRoot() {
     ASSERT(day >= 1);
 
     timeOffset = (day-1) * RoutingDaemon::instance->getDayDuration();
-    cout << "Root made! day = " << day << ", NodeID = " << NodeID << ", simetime = " << simTime() << endl;
+    cout << "Root made! day = " << day << ", NodeID = " << NodeID << ", simTime = " << simTime() << ", timeOffset = " << timeOffset << endl;
 }

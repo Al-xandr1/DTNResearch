@@ -39,6 +39,8 @@ class RealMobility : public LineSegmentsMobilityBase
     virtual void setTargetPosition();
     virtual void setInitialPosition();
     bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+    virtual void makeNewRoot();
+    void endRoute();
     virtual void finish()        {saveStatistics();};
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
     void saveStatistics();
@@ -47,8 +49,6 @@ class RealMobility : public LineSegmentsMobilityBase
 
   public:
     RealMobility();
-
-    virtual void makeNewRoot();
 
     int   getNodeID()            {return this->NodeID;};
     Coord getLastPosition()      {return this->lastPosition;};

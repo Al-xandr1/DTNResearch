@@ -171,7 +171,7 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
 
                 processNewDay();
 
-                //"асинхронное" оповещение об окончании дня
+                //"асинхронное" оповещение о начале нового дня
                 if (getCurrentDay() >= 1)
                     for (int i=0; i < numHosts; i++)
                         sendDirect(new cMessage("Start of the Day", DAY_START), getParentModule()->getSubmodule("host", i)->gate("in"));
