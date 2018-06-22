@@ -207,8 +207,8 @@ void MobileHost::registerPacket(Packet* packet) {
 bool MobileHost::sendPacket(Packet* packet, int destinationId) {
     ASSERT(nodeId != packet->getDestinationId());
 
-    //todo костыль, описанный выше из-за величины параметра updateInterval. Todo придумать лучше...
-    if (!check_and_cast<MobileHost*>(getParentModule()->getSubmodule("host", destinationId))->isTurnedOn()) return false;
+    // костыль, описанный выше из-за величины параметра updateInterval. Todo придумать лучше...
+    // todo if (!check_and_cast<MobileHost*>(getParentModule()->getSubmodule("host", destinationId))->isTurnedOn()) return false;
 
     packet->setLastVisitedId(nodeId);
     HistoryCollector::insertRowBeforeSend(packet, nodeId, getMobility()->getCurrentPosition());
