@@ -1,7 +1,6 @@
 module SelfSimLATPHost
 {
     parameters:
-        
         @node();
         @display("i=device/pocketpc_s");
         

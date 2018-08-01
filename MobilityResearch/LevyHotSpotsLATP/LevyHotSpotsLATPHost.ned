@@ -1,8 +1,6 @@
 module LevyHotSpotsLATPHost
 {
     parameters:
-        string mobilityType = default("LevyHotSpotsLATP");
-        
         @node();
         @display("i=device/pocketpc_s");
         

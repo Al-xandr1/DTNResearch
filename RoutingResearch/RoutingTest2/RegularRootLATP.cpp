@@ -409,7 +409,8 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
     movement->setDistance(sqrt(  (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)
-                               + (targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) ));
+                               + (targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) ),
+                          (string("DEBUG RegularRootLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
     nextChange = simTime() + movement->getTravelTime();
     return true;
 }

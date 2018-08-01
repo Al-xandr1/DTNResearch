@@ -21,8 +21,7 @@ bool Movement::genFlight(const char* where) {
             distance = checkValue(dist, maxPermittedDistance, where);
         } while (getDeltaVector() == Coord::ZERO);
 
-        speed = kForSpeed * pow(distance, 1 - roForSpeed);
-        travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl());
+        computeSpeed();
         return true;
     }
 
@@ -34,14 +33,9 @@ void Movement::setWaitTime(const simtime_t waitTime) {
     this->waitTime = waitTime;
 }
 
-void Movement::setDistance(const double dist) {
-    ASSERT(dist > 0);
-    distance = dist;
-    speed = kForSpeed * pow(distance, 1 - roForSpeed);
-
-    const simtime_t maxTravelTime = MAXTIME - simTime();
-    travelTime = checkValue(distance / speed, maxTravelTime.dbl());
-    ASSERT(travelTime > 0 && travelTime <= maxTravelTime);
+void Movement::setDistance(const double dist, const char* where) {
+    distance = checkValue(dist, maxPermittedDistance, where);
+    computeSpeed();
     //todo сбросить остальные параметры?
 }
 
@@ -49,9 +43,18 @@ const Coord Movement::getDeltaVector() {
     return Coord(distance * cos(angle), distance * sin(angle), 0);
 }
 
+void Movement::computeSpeed() {
+    if (distance < distanceThreshold) {
+        speed = kForSpeed_1 * pow(distance, 1 - roForSpeed_1);
+    } else {
+        speed = kForSpeed_2 * pow(distance, 1 - roForSpeed_2);
+    }
+    travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl());
+}
+
 void Movement::log() {
-    cout << "Movement->kForSpeed = " << kForSpeed << endl;
-    cout << "Movement->roForSpeed = " << roForSpeed << endl;
+    cout << "Movement->kForSpeed_1 = " << kForSpeed_1 << endl;
+    cout << "Movement->roForSpeed_1 = " << roForSpeed_1 << endl;
     cout << "Movement->maxPermittedDistance = " << maxPermittedDistance << endl;
     cout << "Movement->waitTime = " << waitTime << endl;
     cout << "Movement->distance = " << distance << endl;

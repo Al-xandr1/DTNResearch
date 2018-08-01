@@ -15,8 +15,11 @@ simple SimpleLevyMobility extends MovingMobilityBase
      	double deltaXP = default(1);    // size of grid 
  		double joinP = default(4);      // merge of grids' cells factor 
  		
- 		double kForSpeed = default(31.1457);    // scale parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility) 
- 		double roForSpeed = default(0.504349);  // power parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility)
+ 		double kForSpeed_1 = default(30.55);   	 // scale parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility) 
+ 		double roForSpeed_1 = default(0.89);  	 // power parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility)
+    	double distanceThreshold = default(500); // power parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility)
+    	double kForSpeed_2 = default(0.76);      // scale parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility) 
+ 		double roForSpeed_2 = default(0.28);     // power parameter for speed equation. Default value setted for KAIST (is computed by cAlfaFitting utility)
     	
         double powA = default(1);		// is a fixed floating number constant within 0 to infinity - power for distance
         

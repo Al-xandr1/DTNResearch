@@ -1,8 +1,6 @@
 module SimpleLevyHost
 {
     parameters:
-        string mobilityType = default("SimpleLevyMobility");
-        
         @node();
         @display("i=device/pocketpc_s");
         

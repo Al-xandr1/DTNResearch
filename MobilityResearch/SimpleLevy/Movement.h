@@ -8,8 +8,12 @@
 
 class Movement {
 private:
-    double kForSpeed;
-    double roForSpeed;
+    double kForSpeed_1;
+    double roForSpeed_1;
+    double distanceThreshold;
+    double kForSpeed_2;
+    double roForSpeed_2;
+
     double maxPermittedDistance;
 
     LeviJump* leviJump;
@@ -22,9 +26,20 @@ private:
     simtime_t travelTime;
 
 public:
-    Movement(const double kForSpeed, const double roForSpeed, const double maxPermittedDistance, LeviJump* leviJump, LeviPause* levyPause) {
-        this->kForSpeed =  kForSpeed;
-        this->roForSpeed = roForSpeed;
+    Movement(const double kForSpeed_1,
+             const double roForSpeed_1,
+             const double distanceThreshold,
+             const double kForSpeed_2,
+             const double roForSpeed_2,
+             const double maxPermittedDistance,
+             LeviJump* leviJump,
+             LeviPause* levyPause) {
+        this->kForSpeed_1 =  kForSpeed_1;
+        this->roForSpeed_1 = roForSpeed_1;
+        this->distanceThreshold = distanceThreshold;
+        this->kForSpeed_2 =  kForSpeed_2;
+        this->roForSpeed_2 = roForSpeed_2;
+
         this->maxPermittedDistance = maxPermittedDistance;
 
         this->leviJump = leviJump;
@@ -41,8 +56,11 @@ public:
         myDelete(this->levyPause);
     };
 
-    const double getKForSpeed()     {return kForSpeed;};
-    const double getRoForSpeed()    {return roForSpeed;};
+    const double getKForSpeed_1()      {return kForSpeed_1;};
+    const double getRoForSpeed_1()     {return roForSpeed_1;};
+    const double getDistanceThreshold(){return distanceThreshold;};
+    const double getKForSpeed_2()      {return kForSpeed_2;};
+    const double getRoForSpeed_2()     {return roForSpeed_2;};
 
     bool genPause(const char* where);
     bool genFlight(const char* where);
@@ -50,7 +68,7 @@ public:
     void setWaitTime(const simtime_t waitTime);
     const simtime_t getWaitTime()   {return waitTime;};
 
-    void setDistance(const double dist);
+    void setDistance(const double dist, const char* where);
     const double getDistance()      {return distance;};
 
     const double getAngle()         {return angle;};
@@ -59,6 +77,9 @@ public:
 
     const Coord getDeltaVector();
     void log();
+
+private:
+    void computeSpeed();
 };
 
 #endif /* MOVEMENTS_H_ */

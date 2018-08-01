@@ -38,7 +38,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
         NodeID = (int) par("NodeID");
 
         double ciJ,aliJ,deltaXJ,joinJ, ciP,aliP,deltaXP,joinP;
-        double kForSpeed, roForSpeed, maxPermittedDistance;
+        double kForSpeed_1, roForSpeed_1, distanceThreshold, kForSpeed_2, roForSpeed_2, maxPermittedDistance;
         maxPermittedDistance = (constraintAreaMax - constraintAreaMin).length();
         countOfFirstSkippedLongFlight = par("countOfFirstSkippedLongFlight").longValue();
 
@@ -57,14 +57,20 @@ void LevyHotSpotsLATP::initialize(int stage) {
            powA = par("powA").doubleValue();
         } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
 
-        if (hasPar("kForSpeed") && hasPar("roForSpeed")) {
-            kForSpeed = par("kForSpeed").doubleValue();
-            roForSpeed = par("roForSpeed").doubleValue();
+        if (hasPar("kForSpeed_1") && hasPar("roForSpeed_1") && hasPar("distanceThreshold") && hasPar("kForSpeed_2") && hasPar("roForSpeed_2")) {
+            kForSpeed_1 = par("kForSpeed_1").doubleValue();
+            roForSpeed_1 = par("roForSpeed_1").doubleValue();
+            distanceThreshold = par("distanceThreshold").doubleValue();
+            kForSpeed_2 = par("kForSpeed_2").doubleValue();
+            roForSpeed_2 = par("roForSpeed_2").doubleValue();
         } else { cout << "It is necessary to specify ALL parameters for speed function"; exit(-212);}
 
         ASSERT(!movement);
-        movement = new Movement(kForSpeed,
-                                roForSpeed,
+        movement = new Movement(kForSpeed_1,
+                                roForSpeed_1,
+                                distanceThreshold,
+                                kForSpeed_2,
+                                roForSpeed_2,
                                 maxPermittedDistance,
                                 new LeviJump(ciJ, aliJ, deltaXJ, joinJ),
                                 new LeviPause(ciP, aliP, deltaXP, joinP));
@@ -226,7 +232,8 @@ bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
         targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
         movement->setDistance(sqrt(  (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)
-                                   + (targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) ));
+                                   + (targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) ),
+                              (string("DEBUG RegularRootLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
         nextChange = simTime() + movement->getTravelTime();
         return true;
     }
