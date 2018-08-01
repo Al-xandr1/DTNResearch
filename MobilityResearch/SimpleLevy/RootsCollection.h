@@ -104,6 +104,14 @@ private:
 
     void innerSaveRoots(const char *logPrefix, const char *rtDir, vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData);
 
+    string genFileName(unsigned int node, unsigned int day);
+
+    void writeRoot(unsigned int node,
+                   unsigned int day,
+                   const char *dirForRoots,
+                   string filename,
+                   vector<HotSpotDataRoot*>* dailyRoot);
+
 public:
     /**
     * Получение готового проинициализированного объекта для работы

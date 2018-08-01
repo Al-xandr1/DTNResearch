@@ -262,42 +262,26 @@ void RootsCollection::saveRoots(const char *thRtDir, const char *acRtDir)
 void RootsCollection::innerSaveRoots(const char *logPrefix, const char *rtDir, vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData)
 {
     // Формируем плоский список всех файлов пользователей за все дни
-    for (unsigned int i = 0; i < generatedRootsData->size(); i++) {
+    for (unsigned int node = 0; node < generatedRootsData->size(); node++) {
         // бежим по данным всех узлов и сохраняем их маршруты
 
-        vector<vector<HotSpotDataRoot*>*>* dailyRootsPerNode = generatedRootsData->at(i);
-        for (unsigned int j = 0; j < dailyRootsPerNode->size(); j++) {
+        vector<vector<HotSpotDataRoot*>*>* dailyRootsPerNode = generatedRootsData->at(node);
+        for (unsigned int day = 0; day < dailyRootsPerNode->size(); day++) {
 
-            // формируем имя файла для текущего маршрута j ...
-            string filename("Gen_");
-            string simpleName = extractSimpleName(RootsDataShort->at(i).RootName);
-            std::size_t found;
-            if ((found = simpleName.find("_id=")) != std::string::npos) {
-                // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
-                filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
-            } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
-                // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
-                filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", j+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
-            } else {
-                filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(RootsDataShort->at(i).RootName));
-            }
+            // формируем имя файла для текущего маршрута day для текущего узла node ...
+            string filename = genFileName(node, day);
 
             // бежим по маршрутам j за все дни текущего узла i
-            ofstream* rtFile = new ofstream(buildFullName(rtDir, filename.c_str()));
-            vector<HotSpotDataRoot*>* dailyRoot = dailyRootsPerNode->at(j);
-            for (unsigned int k = 0; k < dailyRoot->size(); k++) {
-                HotSpotDataRoot* hs = dailyRoot->at(k);
-                (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                          << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-            }
-            rtFile->close();
+            vector<HotSpotDataRoot*>* dailyRoot = dailyRootsPerNode->at(day);
+            writeRoot(node, day, rtDir, filename, dailyRoot);
         }
-        cout << "\t " << logPrefix << " roots per node " << i << " are collected!";
+        cout << "\t " << logPrefix << " roots per node " << node << " are collected!" << endl;
     }
 
     // Формируем маршруты по дням (в папках)
     // получаем число всех дней
     unsigned int days = generatedRootsData->at(0)->size();
+    cout << "\t " << logPrefix << ": count of days = " << days << endl;
     for (unsigned int day = 0; day < days; day++) {
         // бежим по всем дням
 
@@ -306,34 +290,59 @@ void RootsCollection::innerSaveRoots(const char *logPrefix, const char *rtDir, v
         if (CreateDirectory(dirForDayRoots, NULL)) cout << "create output directory: " << dirForDayRoots << endl;
         else cout << "error create output directory: " << dirForDayRoots << endl;
 
+        cout << "\t " << logPrefix << ": DEBUG: generatedRootsData->size() = " << generatedRootsData->size() << endl;
         for (unsigned int node = 0; node < generatedRootsData->size(); node++) {
+            vector<vector<HotSpotDataRoot*>*>* dailyRootsPerNode = generatedRootsData->at(node);
+            if (dailyRootsPerNode->size() == 0) {
+                // т.к. реальных пользователей может быть в моделировании меньше, то записываем только НЕ пустые маршруты
+                continue;
+            }
+
             // бежим по всем пользователям (для каждого дня берём от всех пользователей маршруты)
-            vector<HotSpotDataRoot*>* dailyRoot = generatedRootsData->at(node)->at(day);
+            cout << "\t " << logPrefix << ": DEBUG: generatedRootsData->at(node)->size() = " << generatedRootsData->at(node)->size() << ", node = " << node << ", day = " << day << endl;
 
             // формируем имя файла для текущего маршрута node ...
-            string filename("Gen_");
-            string simpleName = extractSimpleName(RootsDataShort->at(node).RootName);
-            std::size_t found;
-            if ((found = simpleName.find("_id=")) != std::string::npos) {
-                // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
-                filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", day+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
-            } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
-                // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
-                filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", day+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
-            } else {
-                filename += (string(buildIntParameter("day", day+1, 3)) + extractSimpleName(RootsDataShort->at(node).RootName));
-            }
+            string filename = genFileName(node, day);
 
             // бежим по маршрутам за все дни текущего узла
-            ofstream* rtFile = new ofstream(buildFullName(dirForDayRoots, filename.c_str()));
-            for (unsigned int k = 0; k < dailyRoot->size(); k++) {
-                HotSpotDataRoot* hs = dailyRoot->at(k);
-                (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                          << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-            }
-            rtFile->close();
+            vector<HotSpotDataRoot*>* dailyRoot = dailyRootsPerNode->at(day);
+            writeRoot(node, day, dirForDayRoots, filename, dailyRoot);
         }
 
-        cout << "\t " << logPrefix << " roots per day " << day << " are collected!";
+        cout << "\t " << logPrefix << " roots per day " << day << " are collected!" << endl;
     }
+}
+
+
+string RootsCollection::genFileName(unsigned int node, unsigned int day) {
+    // формируем имя файла для текущего маршрута node ...
+    string filename("Gen_");
+    string simpleName = extractSimpleName(RootsDataShort->at(node).RootName);
+    std::size_t found;
+    if ((found = simpleName.find("_id=")) != std::string::npos) {
+        // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
+        filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", day+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
+    } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
+        // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
+        filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", day+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
+    } else {
+        filename += (string(buildIntParameter("day", day+1, 3)) + extractSimpleName(RootsDataShort->at(node).RootName));
+    }
+    return filename;
+}
+
+
+void RootsCollection::writeRoot(unsigned int node,
+                                unsigned int day,
+                                const char *dirForRoots,
+                                string filename,
+                                vector<HotSpotDataRoot*>* dailyRoot) {
+    // бежим по маршрутам за все дни текущего узла
+    ofstream* rtFile = new ofstream(buildFullName(dirForRoots, filename.c_str()));
+    for (unsigned int hsIndex = 0; hsIndex < dailyRoot->size(); hsIndex++) {
+        HotSpotDataRoot* hs = dailyRoot->at(hsIndex);
+        (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                  << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
+    }
+    rtFile->close();
 }
