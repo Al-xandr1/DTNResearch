@@ -50,6 +50,8 @@ public:
         this->angle = -1;
         this->speed = -1;
         this->travelTime = 0;
+
+        log();
     }
     virtual ~Movement() {
         myDelete(this->leviJump);

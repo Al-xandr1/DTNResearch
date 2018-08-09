@@ -341,7 +341,7 @@ bool RegularRootLATP::findNextHotSpot()
     }
     // случайным образом выбираем новую локацию
     double rn, pr=0;
-    rn=(double)rand()/RAND_MAX;
+    do { rn = ((double) rand()) / RAND_MAX; } while (rn == 0 || rn == 1);
     for(unsigned int i=0; i<currentRoot->size(); i++) {
         if(curRootIndex != i) pr+=LocalProbMatrix[curRootIndex][i];
         if(rn <= pr) {

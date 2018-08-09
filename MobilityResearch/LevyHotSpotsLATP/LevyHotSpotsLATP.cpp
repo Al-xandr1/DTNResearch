@@ -246,7 +246,7 @@ bool LevyHotSpotsLATP::findNextHotSpot() {
     int oldHSindex = currentHSindex;
     // выбираем новую локацию
     double rn, pr=0;
-    rn=(double)rand()/RAND_MAX;
+    do { rn = ((double) rand()) / RAND_MAX; } while (rn == 0 || rn == 1);
     for(unsigned int i=0; i<hsc->getHSData()->size(); i++) {
         if(i != currentHSindex ) pr+=(hsd->getProbabilityMatrix())[currentHSindex][i];
         if(rn <= pr) {currentHSindex=i; break; }

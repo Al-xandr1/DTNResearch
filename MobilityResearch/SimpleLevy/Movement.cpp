@@ -53,8 +53,12 @@ void Movement::computeSpeed() {
 }
 
 void Movement::log() {
+    cout << "Movement::log-> ====================================================" << endl;
     cout << "Movement->kForSpeed_1 = " << kForSpeed_1 << endl;
     cout << "Movement->roForSpeed_1 = " << roForSpeed_1 << endl;
+    cout << "Movement->distanceThreshold = " << distanceThreshold << endl;
+    cout << "Movement->kForSpeed_2 = " << kForSpeed_2 << endl;
+    cout << "Movement->roForSpeed_2 = " << roForSpeed_2 << endl;
     cout << "Movement->maxPermittedDistance = " << maxPermittedDistance << endl;
     cout << "Movement->waitTime = " << waitTime << endl;
     cout << "Movement->distance = " << distance << endl;
@@ -64,4 +68,5 @@ void Movement::log() {
     cout << "Movement->getDeltaVector() = " << getDeltaVector() << endl;
     cout << "Movement->getDeltaVector().length() = " << getDeltaVector().length() << ", EPSILON = " << EPSILON << endl;
     cout << "Movement->(getDeltaVector() != Coord::ZERO) = " << (getDeltaVector() != Coord::ZERO) << endl;
+    cout << endl << endl;
 }
