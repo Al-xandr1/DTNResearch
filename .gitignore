@@ -126,6 +126,7 @@ CMakeLists.txt
 #Code::Block files 
 *.layout
 *.depend
+venv/
 
 # Specific files by Omnet++
 .oppbuildspec

@@ -1,0 +1,76 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# from scilab2py import scilab
+# scilab.getd('C:\\Program Files (x86)\\scilab-6.0.1\\bin')
+
+points = 14000
+
+k1 = 0.76
+r1 = 0.28
+thr = 500.
+k2 = 30.55
+r2 = 0.89
+
+
+# монотонно возрастающая функция (склеенная из двух) С точкой разрыва 1 рода
+def drawfun1():
+    d = range(points)
+    v = np.zeros(points)
+    for i in d:
+        if i < thr:
+            v[i] = k1 * d[i] ** (1 - r1)
+        else:
+            v[i] = k2 * d[i] ** (1 - r2)
+
+    draw(d, v, f"With Threshold = {thr}")
+
+
+# монотонно возрастающая функция (склеенная из двух) БЕЗ точки разрыва 1 рода
+def drawfun2():
+    d = range(points)
+    v = np.zeros(points)
+    for i in d:
+        if i < thr:
+            v[i] = k1 * d[i] ** (1 - r1)
+        else:
+            v[i] = k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) - k2 * thr ** (1 - r2))
+
+    draw(d, v, f"With Threshold = {thr}")
+
+
+# функци, склеенная из двух: возрастающей и убывающей С точкой разрыва 1 рода
+def drawfun3():
+    d = range(points)
+    v = np.zeros(points)
+    for i in d:
+        if i < thr:
+            v[i] = k1 * d[i] ** (1 - r1)
+        else:
+            v[i] = -k2 * d[i] ** (1 - r2) + 2 * k2 * thr ** (1 - r2)
+
+    draw(d, v, f"With Threshold = {thr}")
+
+
+# функци, склеенная из двух: возрастающей и убывающей БЕЗ точкой разрыва 1 рода
+def drawfun4():
+    d = range(points)
+    v = np.zeros(points)
+    for i in d:
+        if i < thr:
+            v[i] = k1 * d[i] ** (1 - r1)
+        else:
+            v[i] = -k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) + k2 * thr ** (1 - r2))
+
+    draw(d, v, f"With Threshold = {thr}")
+
+
+def draw(d, v, name=None):
+    plt.plot(d, v)
+    plt.xlabel('distance')
+    plt.ylabel('velocity')
+    plt.title(f'Distance - Velocity Regression ({name})')
+    plt.show()
+
+
+drawfun1()
