@@ -1,5 +1,43 @@
 IS_COMMON_SCE_LOADED = COMMON_SCE_LOADED;//чтобы убедиться, что файл common.sce загружен
 
+function drawSpeed(filename)
+    fd = mopen(PATH + filename, 'rt');
+    mtr = mfscanf(-1, fd, '%lg %lg');      
+    
+    n = size(mtr, 1); 
+    l = mtr(1:n, 1)';
+    t = mtr(1:n, 2)'; 
+    
+    disp(size(l));
+    disp(size(t));
+    
+    lSize = size(l, 2);
+    disp(lSize);
+    v = [];
+    for i=1 : lSize;
+        v = [v; (l(1, i) / t(1, i))];
+    end
+    
+    plot2d(l, v, [GRAPH_COLOR]);
+    a=gca(); 
+    poly1= a.children(1).children(1);
+    poly1.line_mode = 'off';
+    poly1.mark_style = 4;
+    poly1.mark_size_unit = 'point'
+    poly1.mark_size = 3
+    poly1.mark_foreground = GRAPH_COLOR;
+    poly1.mark_background = GRAPH_COLOR;
+    a.x_label.text="length, [m]";
+    a.x_label.font_size=3;
+    a.y_label.text="velocity, [m/s]";
+    a.Y_label.font_size=3;
+
+    xtitle("Speed.dat");
+    xgrid();
+    
+    mclose(fd);
+endfunction
+
 //------------------ Функции для рисования ТРАСС -------------------------------
 
 //Рисование трассы по имени файла
