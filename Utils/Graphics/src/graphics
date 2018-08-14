@@ -23,7 +23,7 @@ def drawfun1():
         else:
             v[i] = k2 * d[i] ** (1 - r2)
 
-    draw(d, v)
+    draw(d, v, "First")
 
 
 # (SECOND) монотонно возрастающая функция (склеенная из двух) БЕЗ точки разрыва 1 рода
@@ -36,7 +36,7 @@ def drawfun2():
         else:
             v[i] = k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) - k2 * thr ** (1 - r2))
 
-    draw(d, v)
+    draw(d, v, "Second")
 
 
 # (THIRD) функци, склеенная из двух: возрастающей и убывающей С точкой разрыва 1 рода
@@ -49,7 +49,7 @@ def drawfun3():
         else:
             v[i] = -k2 * d[i] ** (1 - r2) + 2 * k2 * thr ** (1 - r2)
 
-    draw(d, v)
+    draw(d, v, "Third")
 
 
 # (FORTH) функци, склеенная из двух: возрастающей и убывающей БЕЗ точкой разрыва 1 рода
@@ -62,14 +62,14 @@ def drawfun4():
         else:
             v[i] = -k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) + k2 * thr ** (1 - r2))
 
-    draw(d, v)
+    draw(d, v, "Forth")
 
 
-def draw(d, v):
+def draw(d, v, version=""):
     plt.plot(d, v)
     plt.xlabel('distance')
     plt.ylabel('velocity')
-    plt.title(f'Distance - Velocity Function \n k1={k1}, r1={r1}, threshold={thr}, k2={k2}, r2={r2}')
+    plt.title(f'"Distance - Velocity" {version} Function \n k1={k1}, r1={r1}, threshold={thr}, k2={k2}, r2={r2}')
     plt.show()
 
 
