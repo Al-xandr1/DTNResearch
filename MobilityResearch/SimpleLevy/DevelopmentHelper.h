@@ -39,6 +39,7 @@ using namespace std;
 #define ICT_HIST       (char*)"ictHistory.xml"        // имя файла для сохранения истории ICT
 #define RT_HIST        (char*)"routeHistory.xml"      // имя файла для сохранения истории о пройденных маршрутах узлами
 #define STAT_FILE      (char*)"statistics.xml"        // имя файла для сохранения статистики
+#define STAT_STAT_FILE (char*)"statistics.stat"        // имя файла для сохранения статистики о перемещениях (для тестов, т.к. основная логика в \DTNResearch\Utils\WaypointFinder)
 #define RT_PST_ST      (char*)"roots_persistence_statistics.pst"  // имя файла с данными о персистентности и статистике маршрутов
 
 // Константы

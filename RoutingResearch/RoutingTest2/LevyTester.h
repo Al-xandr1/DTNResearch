@@ -26,6 +26,9 @@ protected:
 private:
     void writeAreaStatistics(ofstream* out);
     void writeHistogramStatistics(ofstream* out, char* tag, cDoubleHistogram* hist);
+    vector<double>* toPDFVector(cDoubleHistogram* hist);
+    vector<double>* toCDFVector(cDoubleHistogram* hist);
+    vector<double>* toCCDFVector(cDoubleHistogram* hist);
 };
 
 #endif
