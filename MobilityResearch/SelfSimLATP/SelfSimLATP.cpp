@@ -43,36 +43,12 @@ void SelfSimLATP::initialize(int stage) {
         stationary = false;
         NodeID = (int) par("NodeID");
 
-        double ciP, aliP, deltaXP, joinP;
-        double kForSpeed_1, roForSpeed_1, distanceThreshold, kForSpeed_2, roForSpeed_2;
-
-        if (hasPar("powAforHS") && hasPar("powAforWP") && hasPar("ciP") && hasPar("aliP") && hasPar("deltaXP") &&  hasPar("joinP")) {
-            ciP = par("ciP").doubleValue();
-            aliP = par("aliP").doubleValue();
-            deltaXP = par("deltaXP").doubleValue();
-            joinP = par("joinP").doubleValue();
-
-            powAforHS = par("powAforHS").doubleValue();
-            powAforWP = par("powAforWP").doubleValue();
-        } else { cout << "It is necessary to specify ALL parameters"; exit(-112);}
-
-        if (hasPar("kForSpeed_1") && hasPar("roForSpeed_1") && hasPar("distanceThreshold") && hasPar("kForSpeed_2") && hasPar("roForSpeed_2")) {
-            kForSpeed_1 = par("kForSpeed_1").doubleValue();
-            roForSpeed_1 = par("roForSpeed_1").doubleValue();
-            distanceThreshold = par("distanceThreshold").doubleValue();
-            kForSpeed_2 = par("kForSpeed_2").doubleValue();
-            roForSpeed_2 = par("roForSpeed_2").doubleValue();
-        } else { cout << "It is necessary to specify ALL parameters for speed function"; exit(-212);}
+        if (!(hasPar("powAforHS") && hasPar("powAforWP"))) {cout << "It is necessary to specify ALL parameters"; exit(-112);}
+        powAforHS = par("powAforHS").doubleValue();
+        powAforWP = par("powAforWP").doubleValue();
 
         ASSERT(!movement);
-        movement = new Movement(kForSpeed_1,
-                                roForSpeed_1,
-                                distanceThreshold,
-                                kForSpeed_2,
-                                roForSpeed_2,
-                                -1,
-                                NULL,
-                                new LeviPause(ciP, aliP, deltaXP, joinP));
+        movement = new Movement(this, -1);
 
         ASSERT(!hsc);
         // загрузка данных о докациях

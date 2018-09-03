@@ -29,7 +29,7 @@ public:
     {
         this->areaTree = Area::createTreeStructure(bounds);
         this->lengthHist =   new Histogram(10000, bounds->getDiagLength());
-        this->velocityHist = new Histogram(3000, 30);
+        this->velocityHist = new Histogram(5000, 50);
         this->pauseHist =    new Histogram(1000, 100000);
         this->previous = NULL;
     }

@@ -30,41 +30,8 @@ void SimpleLevyMobility::initialize(int stage) {
         stationary = false;
         NodeID = (int) par("NodeID");
 
-        double ciJ,aliJ,deltaXJ,joinJ, ciP,aliP,deltaXP,joinP;
-        double kForSpeed_1, roForSpeed_1, distanceThreshold, kForSpeed_2, roForSpeed_2, maxPermittedDistance;
-        maxPermittedDistance = (constraintAreaMax - constraintAreaMin).length();
-
-        if (hasPar("ciJ") && hasPar("aliJ") && hasPar("deltaXJ") && hasPar("joinJ")
-                && hasPar("ciP") && hasPar("aliP") && hasPar("deltaXP") && hasPar("joinP")) {
-            ciJ  = par("ciJ").doubleValue();
-            aliJ = par("aliJ").doubleValue();
-            deltaXJ = par("deltaXJ").doubleValue();
-            joinJ = par("joinJ").doubleValue();
-
-            ciP  = par("ciP").doubleValue();
-            aliP = par("aliP").doubleValue();
-            deltaXP = par("deltaXP").doubleValue();
-            joinP = par("joinP").doubleValue();
-        } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
-
-
-        if (hasPar("kForSpeed_1") && hasPar("roForSpeed_1") && hasPar("distanceThreshold") && hasPar("kForSpeed_2") && hasPar("roForSpeed_2")) {
-            kForSpeed_1 = par("kForSpeed_1").doubleValue();
-            roForSpeed_1 = par("roForSpeed_1").doubleValue();
-            distanceThreshold = par("distanceThreshold").doubleValue();
-            kForSpeed_2 = par("kForSpeed_2").doubleValue();
-            roForSpeed_2 = par("roForSpeed_2").doubleValue();
-        } else { cout << "It is necessary to specify ALL parameters for speed function"; exit(-212);}
-
         ASSERT(!movement);
-        movement = new Movement(kForSpeed_1,
-                                roForSpeed_1,
-                                distanceThreshold,
-                                kForSpeed_2,
-                                roForSpeed_2,
-                                maxPermittedDistance,
-                                new LeviJump(ciJ, aliJ, deltaXJ, joinJ),
-                                new LeviPause(ciP, aliP, deltaXP, joinP));
+        movement = new Movement(this, (constraintAreaMax - constraintAreaMin).length());
 
         // начальная локация - всё поле
         currentHSMin=getConstraintAreaMin();

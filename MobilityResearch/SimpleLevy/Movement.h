@@ -26,24 +26,40 @@ private:
     simtime_t travelTime;
 
 public:
-    Movement(const double kForSpeed_1,
-             const double roForSpeed_1,
-             const double distanceThreshold,
-             const double kForSpeed_2,
-             const double roForSpeed_2,
-             const double maxPermittedDistance,
-             LeviJump* leviJump,
-             LeviPause* levyPause) {
-        this->kForSpeed_1 =  kForSpeed_1;
-        this->roForSpeed_1 = roForSpeed_1;
-        this->distanceThreshold = distanceThreshold;
-        this->kForSpeed_2 =  kForSpeed_2;
-        this->roForSpeed_2 = roForSpeed_2;
+    Movement(cComponent* com, double maxPermittedDistance) {
+        if (com->hasPar("ciJ") && com->hasPar("aliJ") && com->hasPar("deltaXJ") && com->hasPar("joinJ")) {
+            this->leviJump = new LeviJump(
+                            com->par("ciJ").doubleValue(),
+                            com->par("aliJ").doubleValue(),
+                            com->par("deltaXJ").doubleValue(),
+                            com->par("joinJ").doubleValue());
+            cout << "Movement:leviJump is initialized!" << endl;
+        } else {
+            cout << "Movement:leviJump is NOT initialized! Not all parameters are specified" << endl;
+        }
+
+        if (com->hasPar("ciP") && com->hasPar("aliP") && com->hasPar("deltaXP") && com->hasPar("joinP")) {
+            this->levyPause = new LeviPause(
+                            com->par("ciP").doubleValue(),
+                            com->par("aliP").doubleValue(),
+                            com->par("deltaXP").doubleValue(),
+                            com->par("joinP").doubleValue());
+            cout << "Movement:levyPause is initialized!" << endl;
+        } else {
+            cout << "Movement:levyPause is NOT initialized! Not all parameters are specified" << endl;
+        }
 
         this->maxPermittedDistance = maxPermittedDistance;
 
-        this->leviJump = leviJump;
-        this->levyPause = levyPause;
+        if (  !(com->hasPar("kForSpeed_1") && com->hasPar("roForSpeed_1") && com->hasPar("distanceThreshold")
+             && com->hasPar("kForSpeed_2") && com->hasPar("roForSpeed_2"))) {
+            cout << "It is necessary to specify ALL parameters for speed function" << endl; exit(-2121);
+        }
+        this->kForSpeed_1 = com->par("kForSpeed_1").doubleValue();
+        this->roForSpeed_1 = com->par("roForSpeed_1").doubleValue();
+        this->distanceThreshold = com->par("distanceThreshold").doubleValue();
+        this->kForSpeed_2 = com->par("kForSpeed_2").doubleValue();
+        this->roForSpeed_2 = com->par("roForSpeed_2").doubleValue();
 
         this->waitTime = 0;
         this->distance = -1;
@@ -53,6 +69,7 @@ public:
 
         log();
     }
+
     virtual ~Movement() {
         myDelete(this->leviJump);
         myDelete(this->levyPause);
