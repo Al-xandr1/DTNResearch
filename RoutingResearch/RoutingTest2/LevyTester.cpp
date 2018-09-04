@@ -33,16 +33,13 @@ void LevyTester::initialize() {
     for(unsigned int i = 0; i < selectionVolume; i++) {
         bool success = mvnt->genFlight("LevyTester::initialize");
         ASSERT(success);
-        const double flightLength = mvnt->getDistance();
-        lengthHist->put(flightLength);
+        lengthHist->put(mvnt->getDistance());
 
-        const double velocity = mvnt->getSpeed();
-        velocityHist->put(flightLength);
+        velocityHist->put(mvnt->getSpeed());
 
         success = mvnt->genPause("LevyTester::initialize");
         ASSERT(success);
-        const simtime_t pause = mvnt->getWaitTime();
-        pauseHist->put(pause.dbl());
+        pauseHist->put(mvnt->getWaitTime().dbl());
     }
 
     cout << "LevyTester::initialize() is finished!" << endl << endl;
