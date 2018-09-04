@@ -25,29 +25,24 @@ void LevyTester::initialize() {
     selectionVolume = par("selectionVolume").longValue();
     cout << "LevyTester::initialize: selectionVolume = " << selectionVolume << endl;
 
-    flightLengthPDF = new cDoubleHistogram("FLIGHT-LENGTH-HISTOGRAM", 10000);
-    flightLengthPDF->setRange(0.0, maxPermittedDistance);
-
-    velocityPDF = new cDoubleHistogram("VELOCITY-HISTOGRAM", 5000);
-    velocityPDF->setRange(0.0, 50);
-
-    pausePDF = new cDoubleHistogram("PAUSE-HISTOGRAM", 1000);
-    pausePDF->setRange(0.0, 100000);
+    lengthHist =   new Histogram(10000, maxPermittedDistance);
+    velocityHist = new Histogram(5000, 50);
+    pauseHist =    new Histogram(1000, 100000);
 
     // генерируем выборку заданного объёма selectionVolume и формируем гистограмму
     for(unsigned int i = 0; i < selectionVolume; i++) {
         bool success = mvnt->genFlight("LevyTester::initialize");
         ASSERT(success);
         const double flightLength = mvnt->getDistance();
-        flightLengthPDF->collect(flightLength);
+        lengthHist->put(flightLength);
 
         const double velocity = mvnt->getSpeed();
-        velocityPDF->collect(velocity);
+        velocityHist->put(flightLength);
 
         success = mvnt->genPause("LevyTester::initialize");
         ASSERT(success);
         const simtime_t pause = mvnt->getWaitTime();
-        pausePDF->collect(pause);
+        pauseHist->put(pause.dbl());
     }
 
     cout << "LevyTester::initialize() is finished!" << endl << endl;
@@ -74,12 +69,12 @@ void LevyTester::finish() {
     (*statFile) << "<STATISTICS>" << endl;
     (*statFile) << "  <SAMPLED-POINTS>" << selectionVolume << "</SAMPLED-POINTS>" << endl;
     writeAreaStatistics(statFile);
-    if (!flightLengthPDF->isTransformed()) flightLengthPDF->transform();
-    if (!velocityPDF->isTransformed()) velocityPDF->transform();
-    if (!pausePDF->isTransformed()) pausePDF->transform();
-    writeHistogramStatistics(statFile, (char*) "FLIGHT-LENGTH-HISTOGRAM", flightLengthPDF);
-    writeHistogramStatistics(statFile, (char*) "VELOCITY-HISTOGRAM", velocityPDF);
-    writeHistogramStatistics(statFile, (char*) "PAUSE-HISTOGRAM", pausePDF);
+    lengthHist->truncate();
+    velocityHist->truncate();
+    pauseHist->truncate();
+    writeHistogramStatistics(statFile, (char*) "FLIGHT-LENGTH-HISTOGRAM", lengthHist);
+    writeHistogramStatistics(statFile, (char*) "VELOCITY-HISTOGRAM", velocityHist);
+    writeHistogramStatistics(statFile, (char*) "PAUSE-HISTOGRAM", pauseHist);
     (*statFile) << "</STATISTICS>" << endl;
     statFile->close();
     delete statFile;
@@ -125,38 +120,29 @@ void LevyTester::writeAreaStatistics(ofstream* out) {
 /*
  * Скопированный кусок кода из \DTNResearch\Utils\WaypointFinder\src\Statistics.h с исправлениями для работоспособности
  */
-void LevyTester::writeHistogramStatistics(ofstream* out, char* tag, cDoubleHistogram* hist) {
-    long double checkSum = 0; // todo это работает неправильно
-    for(unsigned int i = 0; i < hist->getNumCells(); i++) {
-        checkSum += hist->getPDF(i);
-    }
+void LevyTester::writeHistogramStatistics(ofstream* out, char* tag, Histogram* hist)
+{
+    cout << "\t<" << tag << " checkSum=\"" << hist->getCheckSum()
+                         << "\" totalValues=\"" << hist->getTotalValues()
+                         << "\" underflowValues=\"" << hist->getUnderflowValues()
+                         << "\" overflowValues=\"" << hist->getOverflowValues() << "\">"<< endl;
+    *out << "  <" << tag << " checkSum=\"" << hist->getCheckSum()
+                         << "\" totalValues=\"" << hist->getTotalValues()
+                         << "\" underflowValues=\"" << hist->getUnderflowValues()
+                         << "\" overflowValues=\"" << hist->getOverflowValues() << "\">"<< endl;
 
-    cout << "\t<" << tag << " checkSum=\"" << checkSum
-                         << "\" totalValues=\"" << hist->getCount()
-                         << "\" underflowValues=\"" << hist->getUnderflowCell()
-                         << "\" overflowValues=\"" << hist->getOverflowCell() << "\">"<< endl;
-    *out << "  <" << tag << " checkSum=\"" << checkSum
-                         << "\" totalValues=\"" << hist->getCount()
-                         << "\" underflowValues=\"" << hist->getUnderflowCell()
-                         << "\" overflowValues=\"" << hist->getOverflowCell() << "\">"<< endl;
-
-    //todo слишком большое количество ячеек (хвост может содержать много нулей)
-    cout << "\t  <CELLS>" << hist->getNumCells() << "</CELLS>" << endl;
-    *out << "    <CELLS>" << hist->getNumCells() << "</CELLS>" << endl;
-
-    //todo ширина ячейки расходиться с шириной для длины от программы WaypointFinder
-    cout << "\t  <CELL-WIDTH>" << hist->getCellSize() << "</CELL-WIDTH>" << endl;
-    *out << "    <CELL-WIDTH>" << hist->getCellSize() << "</CELL-WIDTH>" << endl;
-    cout << "\t  <LEFT-BOUND>" << hist->getBasepoint(0) << "</LEFT-BOUND>" << endl;
-    *out << "    <LEFT-BOUND>" << hist->getBasepoint(0) << "</LEFT-BOUND>" << endl;
-    cout << "\t  <RIGHT-BOUND>" << hist->getMax() << "</RIGHT-BOUND>" << endl;
-    *out << "    <RIGHT-BOUND>" << hist->getMax() << "</RIGHT-BOUND>" << endl;
-
-    //todo значения PDF, CDF, CCDF сильно расходятся со старой логикой. Попробовать использовать CDF "родную"
+    cout << "\t  <CELLS>" << hist->getCells() << "</CELLS>" << endl;
+    *out << "    <CELLS>" << hist->getCells() << "</CELLS>" << endl;
+    cout << "\t  <CELL-WIDTH>" << hist->getWidthOfCell() << "</CELL-WIDTH>" << endl;
+    *out << "    <CELL-WIDTH>" << hist->getWidthOfCell() << "</CELL-WIDTH>" << endl;
+    cout << "\t  <LEFT-BOUND>" << hist->getLeftBound() << "</LEFT-BOUND>" << endl;
+    *out << "    <LEFT-BOUND>" << hist->getLeftBound() << "</LEFT-BOUND>" << endl;
+    cout << "\t  <RIGHT-BOUND>" << hist->getRightBound() << "</RIGHT-BOUND>" << endl;
+    *out << "    <RIGHT-BOUND>" << hist->getRightBound() << "</RIGHT-BOUND>" << endl;
 
     cout << "\t  <PDF-VALS>" << endl;
     *out << "    <PDF-VALS>" << endl;
-    vector<double>* pdf = toPDFVector(hist);
+    vector<double>* pdf = hist->toPDFVector();
     for (int i = 0; i < pdf->size(); i++) {
         *out << (*pdf)[i]; if (i != pdf->size()-1) *out << "  "; else *out << endl;
     }
@@ -165,7 +151,7 @@ void LevyTester::writeHistogramStatistics(ofstream* out, char* tag, cDoubleHisto
 
     cout << "\t  <CDF-VALS>" << endl;
     *out << "    <CDF-VALS>" << endl;
-    vector<double>* cdf = toCDFVector(hist);
+    vector<double>* cdf = hist->toCDFVector();
     for (int i = 0; i < cdf->size(); i++) {
         *out << (*cdf)[i]; if (i != cdf->size()-1) *out << "  "; else *out << endl;
     }
@@ -174,7 +160,7 @@ void LevyTester::writeHistogramStatistics(ofstream* out, char* tag, cDoubleHisto
 
     cout << "\t  <CCDF-VALS>" << endl;
     *out << "    <CCDF-VALS>" << endl;
-    vector<double>* ccdf = toCCDFVector(hist);
+    vector<double>* ccdf = hist->toCCDFVector();
     for (int i = 0; i < ccdf->size(); i++) {
         *out << (*ccdf)[i]; if (i != ccdf->size()-1) *out << "  "; else *out << endl;
     }
@@ -186,34 +172,5 @@ void LevyTester::writeHistogramStatistics(ofstream* out, char* tag, cDoubleHisto
     delete pdf;
     delete cdf;
     delete ccdf;
-}
-
-vector<double>* LevyTester::toPDFVector(cDoubleHistogram* hist) {
-    vector<double>* pdf = new vector<double>();
-    for (int i = 0; i < hist->getNumCells(); i++)
-        pdf->push_back(hist->getCellPDF(i));
-    return pdf;
-}
-
-vector<double>* LevyTester::toCDFVector(cDoubleHistogram* hist) {
-    vector<double>* cdf = new vector<double>();
-    vector<double>* pdf = toPDFVector(hist);
-    for (unsigned int i = 0; i < pdf->size(); i++)
-    {
-        double val = 0;
-        for (unsigned int j = 0; j <= i; j++) val += pdf->at(j);
-        cdf->push_back(val);
-    }
-    delete pdf;
-    return cdf;
-}
-
-vector<double>* LevyTester::toCCDFVector(cDoubleHistogram* hist) {
-    vector<double>* ccdf = new vector<double>();
-    vector<double>* cdf = toCDFVector(hist);
-    for (unsigned int i = 0; i < cdf->size(); i++)
-        ccdf->push_back(1 - cdf->at(i));
-    delete cdf;
-    return ccdf;
 }
 
