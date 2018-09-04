@@ -39,7 +39,6 @@ using namespace std;
 #define ICT_HIST       (char*)"ictHistory.xml"        // имя файла для сохранения истории ICT
 #define RT_HIST        (char*)"routeHistory.xml"      // имя файла для сохранения истории о пройденных маршрутах узлами
 #define STAT_FILE      (char*)"statistics.xml"        // имя файла для сохранения статистики
-#define STAT_STAT_FILE (char*)"statistics.stat"        // имя файла для сохранения статистики о перемещениях (для тестов, т.к. основная логика в \DTNResearch\Utils\WaypointFinder)
 #define RT_PST_ST      (char*)"roots_persistence_statistics.pst"  // имя файла с данными о персистентности и статистике маршрутов
 
 // Константы
@@ -98,6 +97,11 @@ string extractSimpleName(const char* fullName);
  * Формирует параметр в строке с целочисленным значением (имени файла).
  */
 const char* buildIntParameter(const char* name, int value, int leftPadByZero);
+
+/**
+ * Формирует параметр в строке с вещественным значением (имени файла).
+ */
+const char* buildDblParameter(const char* name, double value) ;
 
 /**
  * Формирует параметр в строке (имени файла).

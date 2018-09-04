@@ -6,6 +6,10 @@ LevyTester::LevyTester() {
 }
 
 LevyTester::~LevyTester() {
+    myDelete(mvnt);
+    myDelete(lengthHist);
+    myDelete(velocityHist);
+    myDelete(pauseHist);
 }
 
 void LevyTester::initialize() {
@@ -20,7 +24,7 @@ void LevyTester::initialize() {
     constraintAreaMax.z = par("constraintAreaMaxZ");
     const double maxPermittedDistance = (constraintAreaMax - constraintAreaMin).length();
 
-    Movement* mvnt = new Movement(this, maxPermittedDistance);
+    mvnt = new Movement(this, maxPermittedDistance);
 
     selectionVolume = par("selectionVolume").longValue();
     cout << "LevyTester::initialize: selectionVolume = " << selectionVolume << endl;
@@ -56,8 +60,16 @@ void LevyTester::handleMessage(cMessage *msg) {
 void LevyTester::finish() {
     cout << "LevyTester::finish() is started!" << endl << endl;
 
-    const char* statFileName = buildFullName(OUT_DIR, STAT_STAT_FILE);
-    ofstream* statFile = new ofstream(statFileName);
+    string statFileName("statistics");
+    statFileName += string("_")
+            + string(buildDblParameter("k1", mvnt->getKForSpeed_1()))
+            + string(buildDblParameter("r1", mvnt->getRoForSpeed_1()))
+            + string(buildDblParameter("d", mvnt->getDistanceThreshold()))
+            + string(buildDblParameter("k2", mvnt->getKForSpeed_2()))
+            + string(buildDblParameter("r2", mvnt->getRoForSpeed_2()))
+            + string(".stat");
+
+    ofstream* statFile = new ofstream(buildFullName(OUT_DIR, statFileName.c_str()));
     if (!statFile) {
         cout << endl << "\t" << "Statistics write(): Output file " << statFileName << " opening failed." << endl;
         exit(-333);

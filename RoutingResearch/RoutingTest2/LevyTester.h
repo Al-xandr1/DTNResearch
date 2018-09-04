@@ -1,6 +1,7 @@
 #ifndef LEVYTESTER_H_
 #define LEVYTESTER_H_
 
+#include <string.h>
 #include <omnetpp.h>
 #include "Coord.h"
 #include "Movement.h"
@@ -185,6 +186,7 @@ class Histogram {
 class LevyTester : public cSimpleModule {
 private:
     unsigned int selectionVolume;
+    Movement* mvnt;
     Histogram* lengthHist;
     Histogram* velocityHist;
     Histogram* pauseHist;

@@ -120,6 +120,10 @@ const char* buildIntParameter(const char* name, int value, int leftPadByZero) {
     return buildParameter(name, valueStr.c_str());
 }
 
+const char* buildDblParameter(const char* name, double value) {
+    return buildParameter(name, std::to_string(value).c_str());
+}
+
 const char* buildParameter(const char* name, const char* value) {
     string parameter(name);
     parameter += string("=");
