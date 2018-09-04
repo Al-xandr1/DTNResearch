@@ -35,13 +35,13 @@ void LevyTester::initialize() {
 
     // генерируем выборку заданного объёма selectionVolume и формируем гистограмму
     for(unsigned int i = 0; i < selectionVolume; i++) {
-        bool success = mvnt->genFlight("LevyTester::initialize");
+        bool success = mvnt->genFlight("LevyTester::initialize: flight");
         ASSERT(success);
         lengthHist->put(mvnt->getDistance());
 
         velocityHist->put(mvnt->getSpeed());
 
-        success = mvnt->genPause("LevyTester::initialize");
+        success = mvnt->genPause("LevyTester::initialize: pause");
         ASSERT(success);
         pauseHist->put(mvnt->getWaitTime().dbl());
     }
