@@ -88,10 +88,13 @@ class Histogram {
         vector<double>* toCCDFVector()
         {
             vector<double>* ccdf = new vector<double>();
-            vector<double>* cdf = toCDFVector();
-            for (unsigned int i = 0; i < cdf->size(); i++)
-                ccdf->push_back(1 - cdf->at(i));
-            delete cdf;
+            vector<double>* pdf = toPDFVector();
+            for (int i = 0; i < pdf->size(); i++) {
+                double val = 0;
+                for (int j = i+1; j < pdf->size(); j++) val+= pdf->at(j);
+                ccdf->push_back(val);
+            }
+            delete pdf;
             return ccdf;
         }
 
