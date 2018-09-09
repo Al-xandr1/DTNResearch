@@ -199,6 +199,6 @@ inline vector<string>* getSubDirectories(const char* currentDirectory) {
     return subDirectories;
 }
 
-double checkValue(const double value, const double maxPermittedValue, const char* where = "unknown");
+double checkValue(const double value, const double maxPermittedValue, string where = string("unknown"));
 
 #endif // DEVELOPMENTHELPER_H_INCLUDED

@@ -81,13 +81,13 @@ public:
     const double getKForSpeed_2()      {return kForSpeed_2;};
     const double getRoForSpeed_2()     {return roForSpeed_2;};
 
-    bool genPause(const char* where);
-    bool genFlight(const char* where);
+    bool genPause(string where);
+    bool genFlight(string where);
 
     void setWaitTime(const simtime_t waitTime);
     const simtime_t getWaitTime()   {return waitTime;};
 
-    void setDistance(const double dist, const char* where);
+    void setDistance(const double dist, string where);
     const double getDistance()      {return distance;};
 
     const double getAngle()         {return angle;};

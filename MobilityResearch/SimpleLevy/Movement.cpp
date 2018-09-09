@@ -1,24 +1,24 @@
 #include <Movement.h>
 
-bool Movement::genPause(const char* where) {
+bool Movement::genPause(string where) {
     if (levyPause) {
         const double maxPermittedPause = (MAXTIME - simTime()).dbl();
         const double pauseTime = levyPause->get_Levi_rv(maxPermittedPause);
-        setWaitTime(checkValue(pauseTime, maxPermittedPause, where));
+        setWaitTime(checkValue(pauseTime, maxPermittedPause, string("Movement::genPause:") + where));
         return true;
     }
 
     return false;
 }
 
-bool Movement::genFlight(const char* where) {
+bool Movement::genFlight(string where) {
     if (leviJump) {
         // генерируем прыжок Леви как обычно
         angle = uniform(0, 2 * PI);
 
         do {
             const double dist = leviJump->get_Levi_rv(maxPermittedDistance);
-            distance = checkValue(dist, maxPermittedDistance, where);
+            distance = checkValue(dist, maxPermittedDistance, string("Movement::genFlight:") + where);
         } while (getDeltaVector() == Coord::ZERO);
 
         computeSpeed();
@@ -33,10 +33,9 @@ void Movement::setWaitTime(const simtime_t waitTime) {
     this->waitTime = waitTime;
 }
 
-void Movement::setDistance(const double dist, const char* where) {
-    distance = checkValue(dist, maxPermittedDistance, where);
+void Movement::setDistance(const double dist, string where) {
+    distance = checkValue(dist, maxPermittedDistance, string("Movement::setDistance:") + where);
     computeSpeed();
-    //todo сбросить остальные параметры?
 }
 
 const Coord Movement::getDeltaVector() {
