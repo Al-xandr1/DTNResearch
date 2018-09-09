@@ -22,6 +22,21 @@ endfunction
 
 //--------------------- Функции для Статистики Мобильности ---------------------
 
+//Рисование всех гистрограмм из одного файла статистики мобильности, взятых из папки folder
+function drawWPHistogramsFolder(folder)
+    SAVE_PATH = PATH;
+    
+    if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
+    statisticFiles = getFiles(PATH, "*.stat");
+    
+    privateDrawHistograms(statisticFiles, "FLIGHT-LENGTH-HISTOGRAM", "длина, [м]");      // "Flight length [meters]"
+    privateDrawHistograms(statisticFiles, "VELOCITY-HISTOGRAM", "скорость, [м/с]");      // "Velocity magnitude [meters/sec]"
+    privateDrawHistograms(statisticFiles, "PAUSE-HISTOGRAM", "пауза, [с]");              // "Pause time [sec]"
+    
+    PATH = SAVE_PATH;
+endfunction
+
+
 //Рисование всех гистрограмм из файлов статистики мобильности
 function drawWPHistograms(varargin)
     fileNames = [];
