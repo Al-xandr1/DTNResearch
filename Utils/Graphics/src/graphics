@@ -89,4 +89,4 @@ def draw(d, v, version=""):
 
 
 drawfun3()
-# drawfun3fixed()
+drawfun3fixed()
