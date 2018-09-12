@@ -45,10 +45,29 @@ const Coord Movement::getDeltaVector() {
 void Movement::computeSpeed() {
     if (distance < distanceThreshold) {
         speed = kForSpeed_1 * pow(distance, 1 - roForSpeed_1);
+
+        // THIRD_FIXED
+//        speed = speed + deltaV;
     } else {
+        // FIRST
         speed = kForSpeed_2 * pow(distance, 1 - roForSpeed_2);
+
+        // SECOND
+//        speed = kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
+//                (kForSpeed_1 * pow(distanceThreshold, 1 - roForSpeed_1) - kForSpeed_2 * pow(distanceThreshold, 1 - roForSpeed_2));
+
+        // THIRD
+//        speed = -1 * kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
+//                     2 * kForSpeed_2 * pow(distanceThreshold, 1 - roForSpeed_2);
+
+        // THIRD_FIXED
+//        speed = speed - deltaV;
+
+        // FORTH
+//        speed = -1 * kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
+//                     (kForSpeed_1 * pow(distanceThreshold, 1 - roForSpeed_1) + kForSpeed_2 * pow(distanceThreshold, 1 - roForSpeed_2));
     }
-    travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl());
+    travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl(), string("Movement::computeSpeed"));
 }
 
 void Movement::log() {

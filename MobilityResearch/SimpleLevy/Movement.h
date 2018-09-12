@@ -5,6 +5,7 @@
 #include "Coord.h"
 #include "LeviStatic.h"
 #include "DevelopmentHelper.h"
+#include "math.h"
 
 class Movement {
 private:
@@ -13,6 +14,7 @@ private:
     double distanceThreshold;
     double kForSpeed_2;
     double roForSpeed_2;
+    double deltaV;
 
     double maxPermittedDistance;
 
@@ -60,6 +62,9 @@ public:
         this->distanceThreshold = com->par("distanceThreshold").doubleValue();
         this->kForSpeed_2 = com->par("kForSpeed_2").doubleValue();
         this->roForSpeed_2 = com->par("roForSpeed_2").doubleValue();
+        // Вычисляем половину скачка функции
+        this->deltaV = distanceThreshold / 2 *
+                            abs(roForSpeed_2 * pow(distanceThreshold, -roForSpeed_2) - kForSpeed_1 * pow(distanceThreshold, -roForSpeed_1));
 
         this->waitTime = 0;
         this->distance = -1;
