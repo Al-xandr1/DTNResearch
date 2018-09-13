@@ -136,42 +136,44 @@ function privateDrawHistograms(filenames, tag, xlable)
     end
     
     
-//    scf();
-//    //рисуем полигон частот
-//    legenda = [];  colorLoc = GRAPH_COLOR;
-//    for i=1:fileCount
-//        doc = xmlRead(PATH + filenames(i));
-//        len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
-//        pdf = getVector(doc, "//" + tag + "/PDF-VALS/text()", cells(i));
-//        plot2d(len, pdf, colorLoc);
-//        colorLoc = colorLoc + COLOR_OFFSET;
-//        legenda = [ legenda ; ('PDF from  ' + filenames(i)) ];
-//        xmlDelete(doc);
-//    end
-//    if (SHOW_LEGEND == 1) then hl=legend(legenda); end
-//    prepareGraphic("PDF for "+ tag, xlable, "PDF");
+    scf();
+    //рисуем полигон частот
+    legenda = [];  colorLoc = GRAPH_COLOR;
+    for i=1:fileCount
+        doc = xmlRead(PATH + filenames(i));
+        len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
+        pdf = getVector(doc, "//" + tag + "/PDF-VALS/text()", cells(i));
+        plot2d(len, pdf, colorLoc);
+        colorLoc = colorLoc + COLOR_OFFSET;
+        if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
+        legenda = [ legenda ; ('PDF из  ' + filenames(i)) ];
+        xmlDelete(doc);
+    end
+    if (SHOW_LEGEND == 1) then hl=legend(legenda); end
+    prepareGraphic("PDF для "+ tag, xlable, "PDF");
 
 
-//    scf();
-//    legenda = [];  colorLoc = GRAPH_COLOR;
-//    for i=1:fileCount
-//        doc = xmlRead(PATH + filenames(i));
-//        len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
-//        cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells(i));
-//        cdf1 = [];
-//        for k=1:cells(i)
-//            if (cdf(k) < 1) then cdf1(k) = cdf(k); else break; end;
-//        end
-//        meters = [];
-//        for k=1:size(cdf1, 1) meters(k) = len(k); end
-//        plot2d(meters, cdf1, colorLoc);
-//        colorLoc = colorLoc + COLOR_OFFSET;
-//        legenda = [ legenda ; ('CDF from  ' + filenames(i)) ];
-//        xmlDelete(doc);
-//    end
-//    if (SHOW_LEGEND == 1) then h1=legend(legenda); end
-//    prepareGraphic("CDF for "+ tag, xlable, "CDF : P(X < x))");
-
+    scf();
+    legenda = [];  colorLoc = GRAPH_COLOR;
+    for i=1:fileCount
+        doc = xmlRead(PATH + filenames(i));
+        len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
+        cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells(i));
+        cdf1 = [];
+        for k=1:cells(i)
+            if (cdf(k) < 1) then cdf1(k) = cdf(k); else break; end;
+        end
+        secs = [];
+        for k=1:size(cdf1, 1) secs(k) = len(k); end
+        plot2d(log2(secs), log2(cdf1), colorLoc);
+        colorLoc = colorLoc + COLOR_OFFSET;
+        if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
+        legenda = [ legenda ; ('CDF из  ' + filenames(i)) ];
+        xmlDelete(doc);
+    end
+    if (SHOW_LEGEND == 1) then h1=legend(legenda, 4); end
+    prepareGraphic("CDF для " + tag, "log2( " + xlable + " )", "log2( CDF : P(X < x) )");
+    
 
     scf();    
     legenda = [];  colorLoc = GRAPH_COLOR;
