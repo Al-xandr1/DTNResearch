@@ -22,40 +22,40 @@ deltaV = thr / 2 * abs(k2 * thr ** -r2 - k1 * thr ** -r1)
 # (FIRST) монотонно возрастающая функция (склеенная из двух) С точкой разрыва 1 рода
 def drawfun1():
     d = range(points)
-    v = np.zeros(points)
+    t = np.zeros(points)
     for i in d:
         if i < thr:
-            v[i] = k1 * d[i] ** (1 - r1)
+            t[i] = k1 * d[i] ** (1 - r1)
         else:
-            v[i] = k2 * d[i] ** (1 - r2)
+            t[i] = k2 * d[i] ** (1 - r2)
 
-    draw(d, v, "First")
+    draw(d, t, "First")
 
 
 # (SECOND) монотонно возрастающая функция (склеенная из двух) БЕЗ точки разрыва 1 рода
 def drawfun2():
     d = range(points)
-    v = np.zeros(points)
+    t = np.zeros(points)
     for i in d:
         if i < thr:
-            v[i] = k1 * d[i] ** (1 - r1)
+            t[i] = k1 * d[i] ** (1 - r1)
         else:
-            v[i] = k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) - k2 * thr ** (1 - r2))
+            t[i] = k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) - k2 * thr ** (1 - r2))
 
-    draw(d, v, "Second")
+    draw(d, t, "Second")
 
 
 # (THIRD) функци, склеенная из двух: возрастающей и убывающей С точкой разрыва 1 рода
 def drawfun3():
     d = range(points)
-    v = np.zeros(points)
+    t = np.zeros(points)
     for i in d:
         if i < thr:
-            v[i] = k1 * d[i] ** (1 - r1)
+            t[i] = k1 * d[i] ** (1 - r1)
         else:
-            v[i] = -k2 * d[i] ** (1 - r2) + 2 * k2 * thr ** (1 - r2)
+            t[i] = -k2 * d[i] ** (1 - r2) + 2 * k2 * thr ** (1 - r2)
 
-    draw(d, v, "Third")
+    draw(d, t, "Third")
 
 
 # (THIRD_FIXED) функция THIRD "склеенная" через прибавление левой и вычитания из правой половины скачка функции
@@ -74,47 +74,57 @@ def drawfun3fixed():
 # (THIRD) функци под номером THIRD с "обрезанной" верхушкой FIRST
 def drawfun3cuttedFirst():
     d = range(points)
-    v = np.zeros(points)
+    t = np.zeros(points)
     for i in d:
         if i < thr:
-            v[i] = min([constV, k1 * d[i] ** (1 - r1)])
+            t[i] = min([constV, k1 * d[i] ** (1 - r1)])
         else:
-            v[i] = min([constV, -k2 * d[i] ** (1 - r2) + 2 * k2 * thr ** (1 - r2)])
+            t[i] = min([constV, -k2 * d[i] ** (1 - r2) + 2 * k2 * thr ** (1 - r2)])
 
-    draw(d, v, "Third_Cutted_First")
+    draw(d, t, "Third_Cutted_First")
 
 
 # (THIRD) функци под номером THIRD с "обрезанной" верхушкой SECOND
 def drawfun3cuttedSecond():
     d = range(points)
-    v = np.zeros(points)
+    t = np.zeros(points)
     for i in d:
         if i < thr:
-            v[i] = min([constV, (k1 * d[i] ** (1 - r1))])
+            t[i] = min([constV, (k1 * d[i] ** (1 - r1))])
         else:
-            v[i] = constV
+            t[i] = constV
 
-    draw(d, v, "Third_Cutted_Second")
+    draw(d, t, "Third_Cutted_Second")
 
 
 # (FORTH) функци, склеенная из двух: возрастающей и убывающей БЕЗ точкой разрыва 1 рода
 def drawfun4():
     d = range(points)
-    v = np.zeros(points)
+    t = np.zeros(points)
     for i in d:
         if i < thr:
-            v[i] = k1 * d[i] ** (1 - r1)
+            t[i] = k1 * d[i] ** (1 - r1)
         else:
-            v[i] = -k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) + k2 * thr ** (1 - r2))
+            t[i] = -k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) + k2 * thr ** (1 - r2))
 
-    draw(d, v, "Forth")
+    draw(d, t, "Forth")
 
 
-def draw(d, v, version=""):
+def draw(d, t, version=""):
+    plt.plot(d, t)
+    plt.xlabel('Distance [m]')
+    plt.ylabel('Time [s]')
+    plt.title(f'"Distance - Time" {version} Function \n k1={k1}, r1={r1}, threshold={thr}, k2={k2}, r2={r2}')
+
+    plt.figure()
+    v = np.zeros(points)
+    for i in d:
+        v[i] = d[i] / t[i]
     plt.plot(d, v)
-    plt.xlabel('distance')
-    plt.ylabel('velocity')
-    plt.title(f'"Distance - Velocity" {version} Function \n k1={k1}, r1={r1}, threshold={thr}, k2={k2}, r2={r2}')
+    plt.xlabel('Distance [m]')
+    plt.ylabel('Velocity [m/s')
+    plt.title(f'"Distance - Velocity (v=d/t)" {version} Function \n k1={k1}, r1={r1}, threshold={thr}, k2={k2}, r2={r2}')
+
     plt.show()
 
 
