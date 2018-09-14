@@ -44,35 +44,35 @@ const Coord Movement::getDeltaVector() {
 
 void Movement::computeSpeed() {
     if (distance < distanceThreshold) {
-        speed = kForSpeed_1 * pow(distance, 1 - roForSpeed_1);
+        travelTime = kForSpeed_1 * pow(distance, 1 - roForSpeed_1);
 
-//        speed = constV;
+//        travelTime = constV;
 
         // THIRD_FIXED
-//        speed = speed + deltaV;
+//        travelTime = speed + deltaV;
     } else {
         // FIRST
-        speed = kForSpeed_2 * pow(distance, 1 - roForSpeed_2);
+        travelTime = kForSpeed_2 * pow(distance, 1 - roForSpeed_2);
 
         // SECOND
-//        speed = kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
+//        travelTime = kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
 //                (kForSpeed_1 * pow(distanceThreshold, 1 - roForSpeed_1) - kForSpeed_2 * pow(distanceThreshold, 1 - roForSpeed_2));
 
         // THIRD
-//        speed = -1 * kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
+//        travelTime = -1 * kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
 //                     2 * kForSpeed_2 * pow(distanceThreshold, 1 - roForSpeed_2);
 
-//        speed = constV;
+//        travelTime = constV;
         // THIRD_FIXED
-//        speed = speed - deltaV;
+//        travelTime = speed - deltaV;
 
         // FORTH
-//        speed = -1 * kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
+//        travelTime = -1 * kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
 //                     (kForSpeed_1 * pow(distanceThreshold, 1 - roForSpeed_1) + kForSpeed_2 * pow(distanceThreshold, 1 - roForSpeed_2));
     }
-//    speed = min(constV, speed);
+//    travelTime = min(constV, speed);
 
-    travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl(), string("Movement::computeSpeed"));
+    speed = checkValue(distance / travelTime, maxPermittedDistance / 0.0000000001, string("Movement::computeSpeed"));
 }
 
 void Movement::log() {
