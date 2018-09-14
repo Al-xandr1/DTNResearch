@@ -6,17 +6,18 @@ import numpy as np
 
 points = 14000
 
-k1 = 0.15
-r1 = 0.28
-thr = 500.0
-k2 = 5.5
-r2 = 0.89
+k1 = 30.55      # from foreign papaer
+r1 = 0.89       # from foreign papaer
+thr = 500.0     # from foreign papaer
+k2 = 0.76       # from foreign papaer
+r2 = 0.28       # from foreign papaer
 
 # Константа скорости
 constV = 5
 
 # Вычисляем половину скачка функции
 deltaV = thr / 2 * abs(k2 * thr ** -r2 - k1 * thr ** -r1)
+
 
 # (FIRST) монотонно возрастающая функция (склеенная из двух) С точкой разрыва 1 рода
 def drawfun1():
