@@ -46,6 +46,8 @@ void Movement::computeSpeed() {
     if (distance < distanceThreshold) {
         speed = kForSpeed_1 * pow(distance, 1 - roForSpeed_1);
 
+//        speed = constV;
+
         // THIRD_FIXED
 //        speed = speed + deltaV;
     } else {
@@ -60,6 +62,7 @@ void Movement::computeSpeed() {
 //        speed = -1 * kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
 //                     2 * kForSpeed_2 * pow(distanceThreshold, 1 - roForSpeed_2);
 
+//        speed = constV;
         // THIRD_FIXED
 //        speed = speed - deltaV;
 
@@ -67,6 +70,8 @@ void Movement::computeSpeed() {
 //        speed = -1 * kForSpeed_2 * pow(distance, 1 - roForSpeed_2) +
 //                     (kForSpeed_1 * pow(distanceThreshold, 1 - roForSpeed_1) + kForSpeed_2 * pow(distanceThreshold, 1 - roForSpeed_2));
     }
+//    speed = min(constV, speed);
+
     travelTime = checkValue(distance / speed, (MAXTIME - simTime()).dbl(), string("Movement::computeSpeed"));
 }
 

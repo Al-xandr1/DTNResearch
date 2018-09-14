@@ -15,6 +15,7 @@ private:
     double kForSpeed_2;
     double roForSpeed_2;
     double deltaV;
+    double const constV = 5;
 
     double maxPermittedDistance;
 

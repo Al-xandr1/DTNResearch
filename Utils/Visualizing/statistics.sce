@@ -29,7 +29,7 @@ function drawWPHistogramsFolder(folder)
     if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
     statisticFiles = getFiles(PATH, "*.stat");
     
-    //privateDrawHistograms(statisticFiles, "FLIGHT-LENGTH-HISTOGRAM", "длина, [м]");      // "Flight length [meters]"
+    privateDrawHistograms(statisticFiles, "FLIGHT-LENGTH-HISTOGRAM", "длина, [м]");      // "Flight length [meters]"
     privateDrawHistograms(statisticFiles, "VELOCITY-HISTOGRAM", "скорость, [м/с]");      // "Velocity magnitude [meters/sec]"
     //privateDrawHistograms(statisticFiles, "PAUSE-HISTOGRAM", "пауза, [с]");              // "Pause time [sec]"
     

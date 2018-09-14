@@ -6,11 +6,14 @@ import numpy as np
 
 points = 14000
 
-k1 =    0.19    #0.15
-r1 =    0.28    #0.18
-thr =   25.0    #20.0
-k2 =    30.55   #3.5
-r2 =    0.935   #0.89
+k1 = 0.15
+r1 = 0.28
+thr = 500.0
+k2 = 5.5
+r2 = 0.89
+
+# Константа скорости
+constV = 5
 
 # Вычисляем половину скачка функции
 deltaV = thr / 2 * abs(k2 * thr ** -r2 - k1 * thr ** -r1)
@@ -54,19 +57,6 @@ def drawfun3():
     draw(d, v, "Third")
 
 
-# (FORTH) функци, склеенная из двух: возрастающей и убывающей БЕЗ точкой разрыва 1 рода
-def drawfun4():
-    d = range(points)
-    v = np.zeros(points)
-    for i in d:
-        if i < thr:
-            v[i] = k1 * d[i] ** (1 - r1)
-        else:
-            v[i] = -k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) + k2 * thr ** (1 - r2))
-
-    draw(d, v, "Forth")
-
-
 # (THIRD_FIXED) функция THIRD "склеенная" через прибавление левой и вычитания из правой половины скачка функции
 def drawfun3fixed():
     d = range(points)
@@ -80,6 +70,45 @@ def drawfun3fixed():
     draw(d, v, "Third_Fixed")
 
 
+# (THIRD) функци под номером THIRD с "обрезанной" верхушкой FIRST
+def drawfun3cuttedFirst():
+    d = range(points)
+    v = np.zeros(points)
+    for i in d:
+        if i < thr:
+            v[i] = min([constV, k1 * d[i] ** (1 - r1)])
+        else:
+            v[i] = min([constV, -k2 * d[i] ** (1 - r2) + 2 * k2 * thr ** (1 - r2)])
+
+    draw(d, v, "Third_Cutted_First")
+
+
+# (THIRD) функци под номером THIRD с "обрезанной" верхушкой SECOND
+def drawfun3cuttedSecond():
+    d = range(points)
+    v = np.zeros(points)
+    for i in d:
+        if i < thr:
+            v[i] = min([constV, (k1 * d[i] ** (1 - r1))])
+        else:
+            v[i] = constV
+
+    draw(d, v, "Third_Cutted_Second")
+
+
+# (FORTH) функци, склеенная из двух: возрастающей и убывающей БЕЗ точкой разрыва 1 рода
+def drawfun4():
+    d = range(points)
+    v = np.zeros(points)
+    for i in d:
+        if i < thr:
+            v[i] = k1 * d[i] ** (1 - r1)
+        else:
+            v[i] = -k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) + k2 * thr ** (1 - r2))
+
+    draw(d, v, "Forth")
+
+
 def draw(d, v, version=""):
     plt.plot(d, v)
     plt.xlabel('distance')
@@ -88,5 +117,6 @@ def draw(d, v, version=""):
     plt.show()
 
 
-drawfun3()
-drawfun3fixed()
+drawfun1()
+# drawfun3cuttedFirst()
+# drawfun3cuttedSecond()
