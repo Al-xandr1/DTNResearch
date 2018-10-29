@@ -11,6 +11,9 @@
 using namespace std;
 using namespace boost::multiprecision;
 
+#define ASSERT_1(trueVal, errorCode) if(!(trueVal)){exit(errorCode);}
+#define ASSERT_2(trueVal, errorCode, message) if(!(trueVal)){cout<<message<<endl;exit(errorCode);}
+
 class SelfSimCalculator {
 protected:
     int levels;
@@ -145,25 +148,38 @@ void SelfSimCalculator::loadAllDir(char *WaypoitDir) {
 
 void SelfSimCalculator::calculateVariances() {
     int lvl;
-    long int index, hsize;
-    //double MX2, MX;
+    int index, hsize;
     float128 MX2, MX;
+    double MX2_Test, MX_Test;
 
     for (lvl = 0, hsize = 1, index = 0; lvl < levels; lvl++) {
-        MX2 = 0;
-        MX = 0;
-        //for(long int i=0; i<hsize; i++) { MX2+=pointsInArea[index+i]*pointsInArea[index+i]; MX+=pointsInArea[index+i]; }
+        MX2 = MX = 0;
+        MX2_Test = MX_Test = 0;
         for (long int i = 0; i < hsize; i++) {
-            MX2 += float128(pointsInArea[index + i]) * pointsInArea[index + i];
-            MX += pointsInArea[index + i];
+            unsigned int points = pointsInArea[index + i];
+            MX2 += float128(points) * float128(points);
+            MX += float128(points);
+            MX2_Test += points * points;
+            MX_Test += points;
         }
-        // variance[lvl]=MX2/hsize-(MX/hsize)*(MX/hsize);
-        //variance[lvl]=MX2*hsize/(MX*MX)-1;
-        variance[lvl] = double(MX2 * hsize / (MX * MX)) - 1;
+
+        //region For debug
+        double MX2toDbl = double(MX2);
+        double MXMXtoDbl = double(MX * MX);
+//        printf("%d\t MX2      = %12.0f,\t hsize = %d,\t MX*MX          = %12.0f\n", lvl, MX2toDbl, hsize, MXMXtoDbl);
+//        printf("%d\t MX2_Test = %12.0f,\t hsize = %d,\t MX_Test*MX_Test= %12.0f\n", lvl, MX2_Test, hsize, (MX_Test * MX_Test));
+//        printf("%d\t delta_MX2= %12.0f,\t hsize = %d,\t delta_MX_Test= %12.0f\n", lvl, MX2toDbl - MX2_Test, hsize, MXMXtoDbl - (MX_Test * MX_Test));
+        ASSERT_1((MX2toDbl - MX2_Test) == 0, -123);                  
+        ASSERT_1((MXMXtoDbl - (MX_Test * MX_Test)) == 0, -124);
+        ASSERT_1((double(MX2 * float128(hsize)) - MX2_Test*hsize) == 0, -125);
+        //endregion
+
+        variance[lvl] = double(MX2 * float128(hsize) / (MX * MX)) - 1;
         cout << lvl << "\t" << variance[lvl] << endl;
         index += hsize;
         hsize *= 4;
     }
+
     double Mxy = 0, Mx = 0, My = 0, Mx2 = 0;
     for (int i = 1; i < levels; i++) {
         Mx += 2 * i;
