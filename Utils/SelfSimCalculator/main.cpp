@@ -181,11 +181,11 @@ void SelfSimCalculator::calculateVariances() {
     }
 
     double Mxy = 0, Mx = 0, My = 0, Mx2 = 0;
-    for (int i = 1; i < levels; i++) {
-        Mx += 2 * i;
-        My += log2(variance[i]);
-        Mx2 += 4 * i * i;
-        Mxy += log2(variance[i]) * 2 * i;
+    for (lvl = 1; lvl < levels; lvl++) {
+        Mx += 2 * lvl;
+        My += log2(variance[lvl]);
+        Mx2 += 4 * lvl * lvl;
+        Mxy += log2(variance[lvl]) * 2 * lvl;
     }
     Mx /= levels - 1;
     My /= levels - 1;
@@ -195,6 +195,7 @@ void SelfSimCalculator::calculateVariances() {
     b = (Mxy - Mx * My) / (Mx2 - Mx * Mx);
     c = My - b * Mx;
     H = 1 - fabs(b) / 2;
+
     cout << "b=" << b << "\t c=" << c << "\t H=" << H << endl;
     ofstream *file1 = new ofstream("herst.txt");
     (*file1) << "b=" << b << "\t c=" << c << "\t H=" << H << endl;
