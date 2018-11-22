@@ -231,54 +231,28 @@ endfunction
 
 //----------------- Функции для работы с файлами дисперсий ---------------------
 
-//Рисование зависимости Dx от масштаба по имени файла СТАТИСТИКИ (*.STAT)
-function drawDX(filename)
-    doc = xmlRead(PATH + filename);
-    
-    base = getDoubleFromXml(doc, "//BASE/text()");
-    level = getDoubleFromXml(doc, "//LEVELS/text()");
-    levels = 1:1:level;
-    DX = getVector(doc, "//DX/text()", level); 
-
-    plot2d(base^levels, DX, GRAPH_COLOR);
-    if (SHOW_LEGEND == 1) then
-        hl=legend([ 'DX' ]);
+// Рисование зависимости Dx от масштаба и рисование зависимости log(Dx) от log(масштаба) по именам файлов СТАТИСТИКИ (*.STAT) 
+function drawDXxml(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("drawDXxml: Ожидалось один или более параметров (имён файлов со статистикой)"));
     end
-    prepareGraphic("Dx of points from: " + filename, "count_of_subareas_per_level", "DX");
-    
-    xmlDelete(doc);
-endfunction
 
-
-//Рисование зависимости log(Dx) от log(масштаба) по имени файла СТАТИСТИКИ (*.STAT)
-function drawLogLogDX(filename)
-    doc = xmlRead(PATH + filename);
-    
-    base = getDoubleFromXml(doc, "//BASE/text()");
-    level = getDoubleFromXml(doc, "//LEVELS/text()");
-    levels = 1:1:level;
-    LOG_areaCount = log2(base^levels);
-    LOG_DX = log2(getVector(doc, "//DX/text()", level)');  
-
-    plot2d(LOG_areaCount, LOG_DX, -4);
-    //Построение линии методом наименьших квадратов
-    z = [LOG_areaCount; LOG_DX];
-    c = [0; 0;];
-    [a,S] = datafit(F,z,c);
-    t = min(LOG_areaCount):0.01:max(LOG_areaCount);
-    Yt = a(1)*t + a(2);
-
-    plot2d(t, Yt, 5);  
-    if (SHOW_LEGEND == 1) then
-        b = atan(a(1));   
-        H = 1-abs(b)/2;
-        hl=legend([ "log2( DX )" ; "Least squares line, b = " + string(b) + ", H = " + string(H) ]);
+    bases = [];
+    levels = [];
+    DXs = [];
+    filenames = [];
+    for i = 1 : rhs
+        doc = xmlRead(PATH + varargin(i));
+        filenames = [filenames ; varargin(i)];
+        bases     = [bases     ; getDoubleFromXml(doc, "//BASE/text()")];
+        levels    = [levels    ; getDoubleFromXml(doc, "//LEVELS/text()")];
+        DXs       = [DXs       , getVector(doc, "//DX/text()", levels(i))]; 
+        xmlDelete(doc);
     end
-    prepareGraphic("log-log Dx of points from: " + filename, "log2( count_of_subareas_per_level )", "log2( DX )");
-    
-    xmlDelete(doc);
-endfunction
 
+    __drawDX__(filenames, bases, levels, DXs);
+endfunction
 
 //Рисование зависимости Dx от масштаба по имени файла variances.txt
 function drawDXtxt(varargin)
@@ -287,26 +261,51 @@ function drawDXtxt(varargin)
         error(msprintf("drawDXtxt: Ожидалось один или более параметров (имён файлов с дисперсиями)"));
     end
 
-    base = 4;   // число подобластей на каждом уровне    
-    legenda = [];  colorLoc = GRAPH_COLOR;
+    bases = [];
+    levels = [];
+    DXs = [];
+    filenames = [];
     for i = 1 : rhs
         dispertionPerLevel = read(PATH + varargin(i), 8, 2);
-        levels = dispertionPerLevel(1:8, 1);
-        DX = dispertionPerLevel(1:8, 2); 
+        filenames = [filenames ; varargin(i)];
+        bases     = [bases     ; 4]; // число подобластей на каждом уровне
+        levels    = [levels    ; 8]; // число уровней
+        DXs       = [DXs       , dispertionPerLevel(1:8, 2)]; //levels(i)
+    end
+    
+    __drawDX__(filenames, bases, levels, DXs);
+endfunction
 
-        scf(1); 
-        plot2d(base^levels, DX, colorLoc);
+// Private. Рисование графиков дисперсии
+function __drawDX__(filenames, bases, levels, DXs)
+    count = size(filenames, 1);
+    
+    legenda = []; 
+    colorLoc = GRAPH_COLOR;
+    for i = 1 : count
+        filename = filenames(i);
+        base = bases(i);
+        level = levels(i);
+        DX = DXs(1:level, i);    
+
+        lvls = 1:1:level;      // создаём массив из всех уровней для одного файла
+        areaCount = base^lvls; // количесто прямоугольников на уровнях
+        LOG_areaCount = log2(areaCount);
+        LOG_DX = log2(DX');
         
+        // рисование обычного графика
+        scf(1); 
+        plot2d(areaCount, DX, colorLoc);
+        
+        // рисование графика в логарифмических осях
         scf(2); 
-        LOG_areaCount = log2(base^levels);
-        LOG_DX = log2(DX);  
         plot2d(LOG_areaCount, LOG_DX, colorLoc);
         
         colorLoc = colorLoc + COLOR_OFFSET;
         if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-        legenda = [ legenda ; ('DX из  ' + varargin(i)) ];
+        legenda = [ legenda ; ('DX из  ' + filename) ];
     end
-
+    
     if (SHOW_LEGEND == 1) then 
         scf(1); 
         hl=legend(legenda, 3); 
@@ -318,8 +317,22 @@ function drawDXtxt(varargin)
     prepareGraphic("График изменения дисперсий", "pow(N,l)", "DX");
     scf(2);
     prepareGraphic("График изменения дисперсий (логарифмические оси)" , "log2( pow(N,l) )", "log2( DX )");    
+    
+    //Построение линии методом наименьших квадратов
+//    z = [LOG_areaCount; LOG_DX];
+//    c = [0; 0;];
+//    [a,S] = datafit(F,z,c);
+//    t = min(LOG_areaCount):0.01:max(LOG_areaCount);
+//    Yt = a(1)*t + a(2);
+//
+//    plot2d(t, Yt, 5);  
+//    if (SHOW_LEGEND == 1) then
+//        b = atan(a(1));   
+//        H = 1-abs(b)/2;
+//        hl=legend([ "log2( DX )" ; "Least squares line, b = " + string(b) + ", H = " + string(H) ]);
+//    end
+//    prepareGraphic("log-log Dx of points from: " + filename, "log2( count_of_subareas_per_level )", "log2( DX )");
 endfunction
-
 
 // функция для минимизации для построения линии МНК
 function [zr]=F(c,z)
