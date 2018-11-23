@@ -281,6 +281,7 @@ function __drawDX__(filenames, bases, levels, DXs)
     count = size(filenames, 1);
     
     legenda = []; 
+    legendaFit = [];
     colorLoc = GRAPH_COLOR;
     for i = 1 : count
         filename = filenames(i);
@@ -301,37 +302,41 @@ function __drawDX__(filenames, bases, levels, DXs)
         scf(2); 
         plot2d(LOG_areaCount, LOG_DX, colorLoc);
         
+        // Построение линии методом наименьших квадратов
+        scf(3);
+        z = [LOG_areaCount; LOG_DX];
+        c = [0; 0;];
+        [a,S] = datafit(F,z,c);
+        t = min(LOG_areaCount):0.01:max(LOG_areaCount);
+        Yt = a(1)*t + a(2);
+        plot2d(LOG_areaCount, LOG_DX, -colorLoc);  // рисуем точки дисперсий
+        plot2d(t, Yt, colorLoc);            // рисуем прямую МНК
+
+        legenda = [ legenda ; ('D(X / EX) из  ' + filename) ];
+        b = atan(a(1));   
+        H = 1-abs(b)/2;
+        legendaFit = [ legendaFit ; ('D(X / EX) из  ' + filename); "Линия по МНК для " + filename + ": H = " + string(H) ];
+        
         colorLoc = colorLoc + COLOR_OFFSET;
         if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-        legenda = [ legenda ; ('DX из  ' + filename) ];
     end
     
     if (SHOW_LEGEND == 1) then 
+        whereLegenda = 2;
         scf(1); 
-        hl=legend(legenda, 3); 
+        hl=legend(legenda, whereLegenda); 
         scf(2); 
-        hl=legend(legenda, 3);
+        hl=legend(legenda, whereLegenda);
+        scf(3);
+        hl=legend(legendaFit, whereLegenda);
     end
     
     scf(1); 
-    prepareGraphic("График изменения дисперсий", "pow(N,l)", "DX");
+    prepareGraphic("График изменения дисперсий", "pow(N,l)", "D(X / EX)");
     scf(2);
-    prepareGraphic("График изменения дисперсий (логарифмические оси)" , "log2( pow(N,l) )", "log2( DX )");    
-    
-    //Построение линии методом наименьших квадратов
-//    z = [LOG_areaCount; LOG_DX];
-//    c = [0; 0;];
-//    [a,S] = datafit(F,z,c);
-//    t = min(LOG_areaCount):0.01:max(LOG_areaCount);
-//    Yt = a(1)*t + a(2);
-//
-//    plot2d(t, Yt, 5);  
-//    if (SHOW_LEGEND == 1) then
-//        b = atan(a(1));   
-//        H = 1-abs(b)/2;
-//        hl=legend([ "log2( DX )" ; "Least squares line, b = " + string(b) + ", H = " + string(H) ]);
-//    end
-//    prepareGraphic("log-log Dx of points from: " + filename, "log2( count_of_subareas_per_level )", "log2( DX )");
+    prepareGraphic("График изменения дисперсий (логарифмические оси)" , "log2( pow(N,l) )", "log2( D(X / EX) )");    
+    scf(3);
+    prepareGraphic("График изменения дисперсий (логарифмические оси) с аппроксимирующей прямой ", "log2( pow(N,l) )", "log2( D(X / EX) )");
 endfunction
 
 // функция для минимизации для построения линии МНК
