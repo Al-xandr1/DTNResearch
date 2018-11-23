@@ -141,7 +141,8 @@ public:
 private:
     void writeAreaStatistics(ofstream* out, Area* rootArea)
     {
-        double** ExDxPerLevel = Area::computeExDx(rootArea);
+        double b, c, H;
+        double** ExDxPerLevel = Area::computeExDxH(rootArea, b, c, H);
         double areasCount = Area::getSubAreasCount();
         int levels = Area::getLevels();
         cout << endl << endl;
@@ -165,10 +166,29 @@ private:
             if (l != levels - 1) *out << "  ";
         }
         *out << "</DX>" << endl;
+        *out << "    <RECTANGLE-X>";
+        for(int l = 0; l < levels; l++)
+        {
+            *out << ExDxPerLevel[2][l];
+            if (l != levels - 1) *out << "  ";
+        }
+        *out << "</RECTANGLE-X>" << endl;
+        *out << "    <RECTANGLE-Y>";
+        for(int l = 0; l < levels; l++)
+        {
+            *out << ExDxPerLevel[3][l];
+            if (l != levels - 1) *out << "  ";
+        }
+        *out << "</RECTANGLE-Y>" << endl;
+        *out << "    <B>" << b << "</B>" << endl;
+        *out << "    <C>" << c << "</C>" << endl;
+        *out << "    <H>" << H << "</H>" << endl;
         *out << "  </EX-DX-STAT>" << endl;
         cout << "\t</EX-DX-STAT>" << endl;
         delete ExDxPerLevel[0];
         delete ExDxPerLevel[1];
+        delete ExDxPerLevel[2];
+        delete ExDxPerLevel[3];
         delete ExDxPerLevel;
     }
 

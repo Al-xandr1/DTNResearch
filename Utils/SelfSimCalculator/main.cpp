@@ -192,10 +192,10 @@ void SelfSimCalculator::calculateVariances() {
         Mx2 += 4 * lvl * lvl;
         Mxy += log2(variance[lvl]) * 2 * lvl;
     }
-    Mx /= levels - 1;
-    My /= levels - 1;
-    Mx2 /= levels - 1;
-    Mxy /= levels - 1;
+    Mx /= levels;
+    My /= levels;
+    Mx2 /= levels;
+    Mxy /= levels;
     double c, b, H;
     b = (Mxy - Mx * My) / (Mx2 - Mx * Mx);
     c = My - b * Mx;

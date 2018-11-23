@@ -146,10 +146,12 @@ public:
         return initialArea;
     }
 
-    static double** computeExDx(Area* rootArea)
+    static double** computeExDxH(Area *rootArea, double& b, double& c, double& H)
     {
         double* ExPerLevel = new double[getLevels()];
         double* DxPerLevel = new double[getLevels()];
+        double* rectangleXPerLevel = new double[getLevels()];
+        double* rectangleYPerLevel = new double[getLevels()];
         float128 MX2, MX;
 
         queue<Area*> areasForProcess;
@@ -183,13 +185,29 @@ public:
             ExPerLevel[l] = double(MX / float128(areasCount));
             //todo есть погрешность кака€-то начина€ с сотых долей...!!!
             DxPerLevel[l] = double(MX2 * float128(areasCount) / (MX * MX)) - 1;
+            rectangleXPerLevel[l] = (rootArea->getBounds()->getXMax() - rootArea->getBounds()->getXMin()) / std::sqrt(areasCount);
+            rectangleYPerLevel[l] = (rootArea->getBounds()->getYMax() - rootArea->getBounds()->getYMin()) / std::sqrt(areasCount);
 
             areasCount *= getSubAreasCount();
         }
 
-        //todo добавить вычисление параметра херста!
+        double Mxy = 0, Mx = 0, My = 0, Mx2 = 0;
+        for (int lvl = 0; lvl < getLevels(); lvl++) {
+            Mx += 2 * (lvl+1);
+            My += log2(DxPerLevel[lvl]);
+            Mx2 += 4 * (lvl+1) * (lvl+1);
+            Mxy += log2(DxPerLevel[lvl]) * 2 * (lvl+1);
+        }
+        Mx /= getLevels();
+        My /= getLevels();
+        Mx2 /= getLevels();
+        Mxy /= getLevels();
+        b = (Mxy - Mx * My) / (Mx2 - Mx * Mx);
+        c = My - b * Mx;
+        H = 1 - fabs(b) / 2;
+        cout << "b=" << b << "\t c=" << c << "\t H=" << H << endl;
 
-        return new double*[2]{ExPerLevel, DxPerLevel};
+        return new double*[4]{ExPerLevel, DxPerLevel, rectangleXPerLevel, rectangleYPerLevel};
     }
 
     //«апись полученных точек в файл
