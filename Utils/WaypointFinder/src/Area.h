@@ -1,7 +1,15 @@
 #ifndef AREA_H_INCLUDED
 #define AREA_H_INCLUDED
 
+/**
+* Use this library http://www.boost.org
+* The description of usage is here http://www.boost.org/doc/libs/1_55_0/more/getting_started/windows.html
+* With IDE CLion it works this hint with https://stackoverflow.com/questions/3897839/how-to-link-c-program-with-boost-using-cmake
+*/
+#include "boost/multiprecision/float128.hpp"
+
 using namespace std;
+using namespace boost::multiprecision;
 
 #define LEVELS 9
 #define SUB_AREAS_COUNT 4
@@ -142,6 +150,7 @@ public:
     {
         double* ExPerLevel = new double[getLevels()];
         double* DxPerLevel = new double[getLevels()];
+        float128 MX2, MX;
 
         queue<Area*> areasForProcess;
         areasForProcess.push(rootArea);
@@ -149,7 +158,7 @@ public:
 
         for (int l = 0; l < getLevels(); l++)
         {
-            ExPerLevel[l] = DxPerLevel[l] = 0;
+            MX = 0; MX2 = 0;
 
             queue<Area*> areasPerLevel(areasForProcess);
             while(!areasForProcess.empty()) areasForProcess.pop();
@@ -163,22 +172,22 @@ public:
 
                 if (area->subAreas != NULL) {
                     for(int i = 0; i < getSubAreasCount(); i++) {
-                        ExPerLevel[l] += area->subAreas[i]->n;
-                        DxPerLevel[l] += (area->subAreas[i]->n * area->subAreas[i]->n);
-
+                        MX += float128(area->subAreas[i]->n);
+                        MX2 += float128(area->subAreas[i]->n) * float128(area->subAreas[i]->n);
+                        
                         areasForProcess.push(area->subAreas[i]);
                     }
                 }
             }
 
-            ExPerLevel[l] /= areasCount;
-
-            DxPerLevel[l] /= areasCount;
-            DxPerLevel[l] /= ExPerLevel[l] * ExPerLevel[l];
-            DxPerLevel[l] -= 1;
+            ExPerLevel[l] = double(MX / float128(areasCount));
+            //todo есть погрешность какая-то начиная с сотых долей...!!!
+            DxPerLevel[l] = double(MX2 * float128(areasCount) / (MX * MX)) - 1;
 
             areasCount *= getSubAreasCount();
         }
+
+        //todo добавить вычисление параметра херста!
 
         return new double*[2]{ExPerLevel, DxPerLevel};
     }
