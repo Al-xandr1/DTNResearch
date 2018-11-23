@@ -59,7 +59,7 @@ SelfSimCalculator::SelfSimCalculator(char *boundFile, int lvl = 9) {
         exit(3);
     }
     for (long int i = 0; i < arraySize; i++) pointsInArea[i] = 0;
-    variance = new double[levels];
+    variance = new double[levels + 1];
 }
 
 SelfSimCalculator::~SelfSimCalculator() {
@@ -91,7 +91,7 @@ void SelfSimCalculator::loadWaypoints(char *WaypointFile) {
         (*wfile) >> xcoord >> ycoord >> tb >> te;
         pointsInArea[0]++;
 
-        for (index = 0, lvl = 1; lvl < levels; lvl++) {
+        for (index = 0, lvl = 1; lvl <= levels; lvl++) {
             if (xcoord <= (hx = (xmin + xmax) / 2)) {
                 xmax = hx;
                 if (ycoord <= (hy = (ymin + ymax) / 2)) {
@@ -153,7 +153,7 @@ void SelfSimCalculator::calculateVariances() {
     double MX2_Test, MX_Test;
     const double initialSquare = (Xmax - Xmin) * (Ymax - Ymin);
 
-    for (lvl = 0, hsize = 1, index = 0; lvl < levels; lvl++) {
+    for (lvl = 0, hsize = 1, index = 0; lvl <= levels; lvl++) {
         MX2 = MX = 0;
         MX2_Test = MX_Test = 0;
         for (long int i = 0; i < hsize; i++) {
@@ -183,7 +183,7 @@ void SelfSimCalculator::calculateVariances() {
     }
 
     double Mxy = 0, Mx = 0, My = 0, Mx2 = 0;
-    for (lvl = 1; lvl < levels; lvl++) {
+    for (lvl = 1; lvl <= levels; lvl++) {
         Mx += 2 * lvl;
         My += log2(variance[lvl]);
         Mx2 += 4 * lvl * lvl;
@@ -202,7 +202,7 @@ void SelfSimCalculator::calculateVariances() {
     ofstream *file1 = new ofstream("herst.txt");
     (*file1) << "b=" << b << "\t c=" << c << "\t H=" << H << endl;
     ofstream *file2 = new ofstream("variances.txt");
-    for (int i = 1; i < levels; i++) (*file2) << i << "\t" << variance[i] << endl;
+    for (int i = 1; i <= levels; i++) (*file2) << i << "\t" << variance[i] << endl;
     file1->close();
     file2->close();
 }
@@ -221,24 +221,19 @@ void SelfSimCalculator::showArray(int level) {
 int main(int argc, char **argv) {
     cout << "Hello world!" << endl;
 
-    char *WaypointDir;
-    char *boundFile;
-    int lvl;
+    char *WaypointDir = "./waypointfiles";
+    char *boundFile = "bounds.bnd";
+    int lvl = 9;
     switch (argc) {
         case 1 :
-            WaypointDir = "./waypointfiles";
-            boundFile = "bounds.bnd";
-            lvl = 9;
+            // оставляем значения по умолчанию
             break;
         case 2 :
             WaypointDir = argv[1];
-            boundFile = "bounds.bnd";
-            lvl = 9;
             break;
         case 3 :
             WaypointDir = argv[1];
             boundFile = argv[2];
-            lvl = 9;
             break;
         case 4:
         default:
