@@ -153,6 +153,8 @@ void SelfSimCalculator::calculateVariances() {
     double MX2_Test, MX_Test;
     const double initialSquare = (Xmax - Xmin) * (Ymax - Ymin);
 
+    double deltaX = Xmax - Xmin;
+    double deltaY = Ymax - Ymin;
     for (lvl = 0, hsize = 1, index = 0; lvl <= levels; lvl++) {
         MX2 = MX = 0;
         MX2_Test = MX_Test = 0;
@@ -177,7 +179,8 @@ void SelfSimCalculator::calculateVariances() {
         //endregion
 
         variance[lvl] = double(MX2 * float128(hsize) / (MX * MX)) - 1;
-        cout << lvl << "\t" << variance[lvl] << endl;
+        if (lvl != 0) {deltaX/=2;  deltaY/=2;}
+        cout << lvl << "\t" << variance[lvl] << "\t" << deltaX << "\t" << deltaY << endl;
         index += hsize;
         hsize *= 4;
     }
@@ -202,7 +205,11 @@ void SelfSimCalculator::calculateVariances() {
     ofstream *file1 = new ofstream("herst.txt");
     (*file1) << "b=" << b << "\t c=" << c << "\t H=" << H << endl;
     ofstream *file2 = new ofstream("variances.txt");
-    for (int i = 1; i <= levels; i++) (*file2) << i << "\t" << variance[i] << endl;
+    deltaX = Xmax - Xmin; deltaY = Ymax - Ymin;
+    for (int i = 0; i <= levels; i++) {
+        if (i != 0) {deltaX/=2;  deltaY/=2;}
+        (*file2) << i << "\t" << variance[i] << "\t" << deltaX << "\t" << deltaY << endl;
+    }
     file1->close();
     file2->close();
 }
