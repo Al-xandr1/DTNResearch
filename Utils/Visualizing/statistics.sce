@@ -238,10 +238,10 @@ function drawDXxml(varargin)
         error(msprintf("drawDXxml: Ожидалось один или более параметров (имён файлов со статистикой)"));
     end
 
+    filenames = [];
     bases = [];
     levels = [];
     DXs = [];
-    filenames = [];
     for i = 1 : rhs
         doc = xmlRead(PATH + varargin(i));
         filenames = [filenames ; varargin(i)];
@@ -261,16 +261,16 @@ function drawDXtxt(varargin)
         error(msprintf("drawDXtxt: Ожидалось один или более параметров (имён файлов с дисперсиями)"));
     end
 
+    filenames = [];
     bases = [];
     levels = [];
     DXs = [];
-    filenames = [];
     for i = 1 : rhs
-        dispertionPerLevel = read(PATH + varargin(i), 8, 2);
+        dispertionAndSizePerLevel = read(PATH + varargin(i), 10, 4);
         filenames = [filenames ; varargin(i)];
         bases     = [bases     ; 4]; // число подобластей на каждом уровне
-        levels    = [levels    ; 8]; // число уровней
-        DXs       = [DXs       , dispertionPerLevel(1:8, 2)]; //levels(i)
+        levels    = [levels    ; 9]; // число уровней
+        DXs       = [DXs       , dispertionAndSizePerLevel(2:10, 2)];
     end
     
     __drawDX__(filenames, bases, levels, DXs);
