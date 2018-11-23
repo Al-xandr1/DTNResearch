@@ -310,7 +310,7 @@ function __drawDX__(filenames, bases, levels, DXs)
         t = min(LOG_areaCount):0.01:max(LOG_areaCount);
         Yt = a(1)*t + a(2);
         plot2d(LOG_areaCount, LOG_DX, -colorLoc);  // рисуем точки дисперсий
-        plot2d(t, Yt, colorLoc);            // рисуем прямую МНК
+        plot2d(t, Yt, colorLoc);                   // рисуем прямую МНК
 
         legenda = [ legenda ; ('D(X / EX) из  ' + filename) ];
         b = atan(a(1));   
