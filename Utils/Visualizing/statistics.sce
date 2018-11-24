@@ -29,9 +29,9 @@ function drawWPHistogramsFolder(folder)
     if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
     statisticFiles = getFiles(PATH, "*.stat");
     
-    //__privateDrawHistograms__(statisticFiles, "FLIGHT-LENGTH-HISTOGRAM", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
-    __privateDrawHistograms__(statisticFiles, "VELOCITY-HISTOGRAM", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
-    //__privateDrawHistograms__(statisticFiles, "PAUSE-HISTOGRAM", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
+    __privateDrawHistograms__(statisticFiles, "FLIGHT-LENGTH-HISTOGRAM", "длины перемещений", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
+    __privateDrawHistograms__(statisticFiles, "VELOCITY-HISTOGRAM", "скорости", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
+    __privateDrawHistograms__(statisticFiles, "PAUSE-HISTOGRAM", "паузы в путевых точках", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
     
     PATH = SAVE_PATH;
 endfunction
@@ -47,9 +47,9 @@ function drawWPHistograms(varargin)
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    __privateDrawHistograms__(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
-    __privateDrawHistograms__(fileNames, "VELOCITY-HISTOGRAM", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
-    __privateDrawHistograms__(fileNames, "PAUSE-HISTOGRAM", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
+    __privateDrawHistograms__(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "длины перемещений", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
+    __privateDrawHistograms__(fileNames, "VELOCITY-HISTOGRAM", "скорости", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
+    __privateDrawHistograms__(fileNames, "PAUSE-HISTOGRAM", "паузы в путевых точках", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
 endfunction
 
 
@@ -62,8 +62,8 @@ function drawNodeHistogramsFolder(folder)
     if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
     statisticFiles = getFiles(PATH, "*.xml");
     
-    __privateDrawHistograms__(statisticFiles, "LIFE-TIME-HISTOGRAM", "время жизни, [с]", 0, 0, 1);    // "Life time [sec]"
-    __privateDrawHistograms__(statisticFiles, "ICT-HISTOGRAM", "время контакта, [с]", 0, 0, 1);       // "ICT [sec]"
+    __privateDrawHistograms__(statisticFiles, "LIFE-TIME-HISTOGRAM", "времени жизни пакета", "время жизни, [с]", 0, 0, 1);    // "Life time [sec]"
+    __privateDrawHistograms__(statisticFiles, "ICT-HISTOGRAM", "времени взаимодействия узлов", "время контакта, [с]", 0, 0, 1);       // "ICT [sec]"
     
     PATH = SAVE_PATH;
 endfunction
@@ -79,8 +79,8 @@ function drawNodeHistograms(varargin)
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    __privateDrawHistograms__(fileNames, "LIFE-TIME-HISTOGRAM", "время жизни, [с]", 0, 0, 1);         // "Life time [sec]"
-    __privateDrawHistograms__(fileNames, "ICT-HISTOGRAM", "время между контактами, [с]", 0, 0, 1);    // "ICT [sec]"
+    __privateDrawHistograms__(fileNames, "LIFE-TIME-HISTOGRAM", "времени жизни пакета", "время жизни, [с]", 0, 0, 1);         // "Life time [sec]"
+    __privateDrawHistograms__(fileNames, "ICT-HISTOGRAM", "времени взаимодействия узлов", "время между контактами, [с]", 0, 0, 1);    // "ICT [sec]"
 endfunction
 
 
@@ -116,7 +116,7 @@ endfunction
 //-------------------- Private функции для статистики --------------------------
 
 //Рисование гистрограммы из вектора файлов статистики
-function __privateDrawHistograms__(filenames, tag, xlable, pdf, cdf, ccdf)
+function __privateDrawHistograms__(filenames, tag, graphicName, xlable, pdf, cdf, ccdf)
     fileCount = size(filenames, 1);
     
     cells = []; cellWidth = []; leftBound = []; rightBound = [];
@@ -140,11 +140,11 @@ function __privateDrawHistograms__(filenames, tag, xlable, pdf, cdf, ccdf)
             plot2d(len, pdf, colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('PDF от  ' + filenames(i)) ];
+            legenda = [ legenda ; ('PDF ' + filenames(i)) ];
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then hl=legend(legenda); end
-        prepareGraphic("PDF для "+ tag, xlable, "PDF");
+        prepareGraphic("PDF для " + graphicName + " (логарифмические оси)", xlable, "PDF");
     end
 
     if (cdf == 1) then
@@ -163,11 +163,11 @@ function __privateDrawHistograms__(filenames, tag, xlable, pdf, cdf, ccdf)
             plot2d(log2(secs), log2(cdf1), colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('CDF от  ' + filenames(i)) ];
+            legenda = [ legenda ; ('CDF ' + filenames(i)) ];
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then h1=legend(legenda, 4); end
-        prepareGraphic("CDF для " + tag, "log2( " + xlable + " )", "log2( CDF : P(X < x) )");
+        prepareGraphic("CDF для " + graphicName + " (логарифмические оси)", "log2( " + xlable + " )", "log2( CDF : P(X < x) )");
     end
 
     if (ccdf == 1) then
@@ -186,11 +186,11 @@ function __privateDrawHistograms__(filenames, tag, xlable, pdf, cdf, ccdf)
             plot2d(log2(secs), log2(ccdf1), colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('CCDF от  ' + filenames(i)) ];
+            legenda = [ legenda ; ('CCDF ' + filenames(i)) ];
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
-        prepareGraphic("CCDF для "+ tag, "log2( " + xlable + " )", "log2( CCDF : P(X > x) )");
+        prepareGraphic("CCDF для " + graphicName + " (логарифмические оси)", "log2( " + xlable + " )", "log2( CCDF : P(X > x) )");
     end
 endfunction
 
