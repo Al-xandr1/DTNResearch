@@ -30,7 +30,7 @@ function drawWPHistogramsFolder(folder)
     statisticFiles = getFiles(PATH, "*.stat");
     
     __privateDrawHistograms__(statisticFiles, "FLIGHT-LENGTH-HISTOGRAM", "длины перемещений", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
-    __privateDrawHistograms__(statisticFiles, "VELOCITY-HISTOGRAM", "скорости", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
+    __privateDrawHistograms__(statisticFiles, "VELOCITY-HISTOGRAM", "скорости перемещений", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
     __privateDrawHistograms__(statisticFiles, "PAUSE-HISTOGRAM", "паузы в путевых точках", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
     
     PATH = SAVE_PATH;
@@ -48,7 +48,7 @@ function drawWPHistograms(varargin)
     end
     
     __privateDrawHistograms__(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "длины перемещений", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
-    __privateDrawHistograms__(fileNames, "VELOCITY-HISTOGRAM", "скорости", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
+    __privateDrawHistograms__(fileNames, "VELOCITY-HISTOGRAM", "скорости перемещений", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
     __privateDrawHistograms__(fileNames, "PAUSE-HISTOGRAM", "паузы в путевых точках", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
 endfunction
 

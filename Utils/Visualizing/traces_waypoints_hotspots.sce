@@ -280,9 +280,9 @@ function drawWPTs(x, y, GRAPH_COLOR)
     poly1.mark_size = 1
     poly1.mark_foreground = GRAPH_COLOR;
     poly1.mark_background = GRAPH_COLOR;
-    a.x_label.text="x";
+    a.x_label.text="x, [м]";
     a.x_label.font_size=3;
-    a.y_label.text="y";
+    a.y_label.text="y, [м]";
     a.Y_label.font_size=3;
 endfunction
 
@@ -328,6 +328,21 @@ function [fileCount] = drawWPTsFolder(folder)
 endfunction
 
 
+function drawWPTFolders(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("drawWPFolders: Ожидалось один или более параметров (имён папок)"));
+    end
+    
+    wpFolders = [];
+    for i = 1 : rhs
+        wpFolders = [wpFolders ; varargin(i)];
+    end
+    
+    drawAllWPTFolders(wpFolders);
+endfunction
+
+
 function drawAllWPTFolders(folders)
     folderCount = size(folders, 1);
     if (folderCount < 1) then
@@ -353,21 +368,6 @@ function drawAllWPTFolders(folders)
     end
     
     xtitle("Путевые точки");
-endfunction
-
-
-function drawWPTFolders(varargin)
-    [lhs, rhs] = argn();// rhs - количество входных параметров
-    if (rhs < 1) then
-        error(msprintf("drawWPFolders: Ожидалось один или более параметров (имён папок)"));
-    end
-    
-    wpFolders = [];
-    for i = 1 : rhs
-        wpFolders = [wpFolders ; varargin(i)];
-    end
-    
-    drawAllWPTFolders(wpFolders);
 endfunction
 
 
