@@ -301,20 +301,20 @@ function __drawDX__(filenames, bases, levels, DXs)
         c = [0; 0;];
         [a,S] = datafit(F,z,c);
         mnkLine = a(1) * LOG_areaCount + a(2);
+        b = atan(a(1));
+        H = 1-abs(b)/2;
         plot2d(LOG_areaCount, LOG_DX, -colorLoc);  // рисуем точки дисперсий
         plot2d(LOG_areaCount, mnkLine, colorLoc);  // рисуем прямую МНК
-
-        legenda = [ legenda ; ('D(X / EX) от  ' + filename) ];
-        b = atan(a(1));   
-        H = 1-abs(b)/2;
-        legendaFit = [ legendaFit ; ('D(X / EX) от  ' + filename); "Прямая по МНК для " + filename + ": H = " + string(H) ];
+        
+        legenda = [ legenda ; ('Нормированная дисперсия ' + filename) ];
+        legendaFit = [ legendaFit ; ('Нормированная дисперсия ' + filename); "МНК для " + filename + ": H = " + string(H) ];
         
         colorLoc = colorLoc + COLOR_OFFSET;
         if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
     end
     
     if (SHOW_LEGEND == 1) then 
-        whereLegenda = 2;
+        whereLegenda = 4;
         scf(1); 
         hl=legend(legenda, whereLegenda); 
         scf(2); 
@@ -326,9 +326,9 @@ function __drawDX__(filenames, bases, levels, DXs)
     scf(1); 
     prepareGraphic("График изменения дисперсий", "pow(N,l)", "D(X / EX)");
     scf(2);
-    prepareGraphic("График изменения дисперсий (логарифмические оси)" , "log2( pow(N,l) )", "log2( D(X / EX) )");    
+    prepareGraphic("График изменения дисперсий (логарифмические оси)", "log2( pow(N,l) )", "log2( D(X / EX) )");    
     scf(3);
-    prepareGraphic("График изменения дисперсий (логарифмические оси) с прямой по МНК", "log2( pow(N,l) )", "log2( D(X / EX) )");
+    prepareGraphic("График изменения дисперсий (логарифмические оси)", "log2( pow(N,l) )", "log2( D(X / EX) )");
 endfunction
 
 // функция для минимизации для построения линии МНК
