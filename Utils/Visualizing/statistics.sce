@@ -273,6 +273,7 @@ endfunction
 function __drawDX__(filenames, bases, levels, DXs)
     count = size(filenames, 1);
     
+    format('v',5); // выставление нужного формата
     legenda = []; 
     legendaFit = [];
     colorLoc = GRAPH_COLOR;
@@ -329,6 +330,7 @@ function __drawDX__(filenames, bases, levels, DXs)
     prepareGraphic("График изменения дисперсий (логарифмические оси)", "log2( pow(N,l) )", "log2( D(X / EX) )");    
     scf(3);
     prepareGraphic("График изменения дисперсий (логарифмические оси)", "log2( pow(N,l) )", "log2( D(X / EX) )");
+    format('v',10); // возвращение стандартного формата
 endfunction
 
 // функция для минимизации для построения линии МНК
