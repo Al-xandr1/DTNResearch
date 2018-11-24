@@ -8,13 +8,13 @@ function printPstFolder(folder)
     pstFiles = getFiles(PATH, "*.pst");
 
     tags = ["ROOTS-DIMENSION-HISTOGRAM/MIN" ; "ROOTS-DIMENSION-HISTOGRAM/MAX" ; "ROOTS-DIMENSION-HISTOGRAM/AVERAGE"]
-    privatePrintTable(pstFiles, tags);
+    __privatePrintTable__(pstFiles, tags);
     
     tags = ["ROOT-LENGTH-HISTOGRAM/MIN" ; "ROOT-LENGTH-HISTOGRAM/MAX" ; "ROOT-LENGTH-HISTOGRAM/AVERAGE"]
-    privatePrintTable(pstFiles, tags);
+    __privatePrintTable__(pstFiles, tags);
 
     tags = ["NEW-PERSISTENCE/ETHALON-ROOT/ROOT-NUM" ; "NEW-PERSISTENCE/ETHALON-ROOT/COEF"]
-    privatePrintTable(pstFiles, tags);
+    __privatePrintTable__(pstFiles, tags);
 
     PATH = SAVE_PATH;
 endfunction
@@ -29,9 +29,9 @@ function drawWPHistogramsFolder(folder)
     if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
     statisticFiles = getFiles(PATH, "*.stat");
     
-    //privateDrawHistograms(statisticFiles, "FLIGHT-LENGTH-HISTOGRAM", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
-    privateDrawHistograms(statisticFiles, "VELOCITY-HISTOGRAM", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
-    //privateDrawHistograms(statisticFiles, "PAUSE-HISTOGRAM", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
+    //__privateDrawHistograms__(statisticFiles, "FLIGHT-LENGTH-HISTOGRAM", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
+    __privateDrawHistograms__(statisticFiles, "VELOCITY-HISTOGRAM", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
+    //__privateDrawHistograms__(statisticFiles, "PAUSE-HISTOGRAM", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
     
     PATH = SAVE_PATH;
 endfunction
@@ -47,9 +47,9 @@ function drawWPHistograms(varargin)
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    privateDrawHistograms(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
-    privateDrawHistograms(fileNames, "VELOCITY-HISTOGRAM", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
-    privateDrawHistograms(fileNames, "PAUSE-HISTOGRAM", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
+    __privateDrawHistograms__(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
+    __privateDrawHistograms__(fileNames, "VELOCITY-HISTOGRAM", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
+    __privateDrawHistograms__(fileNames, "PAUSE-HISTOGRAM", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
 endfunction
 
 
@@ -62,8 +62,8 @@ function drawNodeHistogramsFolder(folder)
     if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
     statisticFiles = getFiles(PATH, "*.xml");
     
-    privateDrawHistograms(statisticFiles, "LIFE-TIME-HISTOGRAM", "время жизни, [с]", 0, 0, 1);    // "Life time [sec]"
-    privateDrawHistograms(statisticFiles, "ICT-HISTOGRAM", "время контакта, [с]", 0, 0, 1);       // "ICT [sec]"
+    __privateDrawHistograms__(statisticFiles, "LIFE-TIME-HISTOGRAM", "время жизни, [с]", 0, 0, 1);    // "Life time [sec]"
+    __privateDrawHistograms__(statisticFiles, "ICT-HISTOGRAM", "время контакта, [с]", 0, 0, 1);       // "ICT [sec]"
     
     PATH = SAVE_PATH;
 endfunction
@@ -79,8 +79,8 @@ function drawNodeHistograms(varargin)
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    privateDrawHistograms(fileNames, "LIFE-TIME-HISTOGRAM", "время жизни, [с]", 0, 0, 1);         // "Life time [sec]"
-    privateDrawHistograms(fileNames, "ICT-HISTOGRAM", "время между контактами, [с]", 0, 0, 1);    // "ICT [sec]"
+    __privateDrawHistograms__(fileNames, "LIFE-TIME-HISTOGRAM", "время жизни, [с]", 0, 0, 1);         // "Life time [sec]"
+    __privateDrawHistograms__(fileNames, "ICT-HISTOGRAM", "время между контактами, [с]", 0, 0, 1);    // "ICT [sec]"
 endfunction
 
 
@@ -92,7 +92,7 @@ function printNodeValuesFolder(folder)
     statisticFiles = getFiles(PATH, "*.xml");
     
     tags = ["DELIVERED-PACKETS" ; "LIFE-TIME-HISTOGRAM/MEAN"]
-    privatePrintTable(statisticFiles, tags);
+    __privatePrintTable__(statisticFiles, tags);
     
     PATH = SAVE_PATH;
 endfunction
@@ -109,32 +109,25 @@ function printNodeValues(varargin)
     end
     
     tags = ["DELIVERED-PACKETS" ; "LIFE-TIME-HISTOGRAM/MEAN"]
-    privatePrintTable(fileNames, tags);
+    __privatePrintTable__(fileNames, tags);
 endfunction
 
 
 //-------------------- Private функции для статистики --------------------------
 
 //Рисование гистрограммы из вектора файлов статистики
-function privateDrawHistograms(filenames, tag, xlable, pdf, cdf, ccdf)
+function __privateDrawHistograms__(filenames, tag, xlable, pdf, cdf, ccdf)
     fileCount = size(filenames, 1);
     
     cells = []; cellWidth = []; leftBound = []; rightBound = [];
     for i=1:fileCount
         doc = xmlRead(PATH + filenames(i));
-        cellsLoc = getDoubleFromXml(doc, "//" + tag + "/CELLS/text()");
-        cellWidthLoc = getDoubleFromXml(doc, "//" + tag + "/CELL-WIDTH/text()");
-        leftBoundLoc = getDoubleFromXml(doc, "//" + tag + "/LEFT-BOUND/text()");
-        rightBoundLoc = getDoubleFromXml(doc, "//" + tag + "/RIGHT-BOUND/text()");
-        
-        
-        cells      = [cells ; cellsLoc]; 
-        cellWidth  = [cellWidth ; cellWidthLoc];
-        leftBound  = [leftBound ; leftBoundLoc];
-        rightBound = [rightBound ; rightBoundLoc];
+        cells      = [cells      ; getDoubleFromXml(doc, "//" + tag + "/CELLS/text()")]; 
+        cellWidth  = [cellWidth  ; getDoubleFromXml(doc, "//" + tag + "/CELL-WIDTH/text()")];
+        leftBound  = [leftBound  ; getDoubleFromXml(doc, "//" + tag + "/LEFT-BOUND/text()")];
+        rightBound = [rightBound ; getDoubleFromXml(doc, "//" + tag + "/RIGHT-BOUND/text()")];
         xmlDelete(doc);
     end
-    
     
     if (pdf == 1) then
         scf();
@@ -147,7 +140,7 @@ function privateDrawHistograms(filenames, tag, xlable, pdf, cdf, ccdf)
             plot2d(len, pdf, colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('PDF из  ' + filenames(i)) ];
+            legenda = [ legenda ; ('PDF от  ' + filenames(i)) ];
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then hl=legend(legenda); end
@@ -170,7 +163,7 @@ function privateDrawHistograms(filenames, tag, xlable, pdf, cdf, ccdf)
             plot2d(log2(secs), log2(cdf1), colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('CDF из  ' + filenames(i)) ];
+            legenda = [ legenda ; ('CDF от  ' + filenames(i)) ];
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then h1=legend(legenda, 4); end
@@ -193,7 +186,7 @@ function privateDrawHistograms(filenames, tag, xlable, pdf, cdf, ccdf)
             plot2d(log2(secs), log2(ccdf1), colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('CCDF из  ' + filenames(i)) ];
+            legenda = [ legenda ; ('CCDF от  ' + filenames(i)) ];
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
@@ -203,7 +196,7 @@ endfunction
 
 
 //Вывод в таблицу указанного вектора значений из вектора файлов статистики
-function privatePrintTable(filenames, tags)
+function __privatePrintTable__(filenames, tags)
     fileCount = size(filenames, 1);
     tagCount = size(tags, 1);
     
@@ -307,15 +300,14 @@ function __drawDX__(filenames, bases, levels, DXs)
         z = [LOG_areaCount; LOG_DX];
         c = [0; 0;];
         [a,S] = datafit(F,z,c);
-        t = min(LOG_areaCount):0.01:max(LOG_areaCount);
-        Yt = a(1)*t + a(2);
+        mnkLine = a(1) * LOG_areaCount + a(2);
         plot2d(LOG_areaCount, LOG_DX, -colorLoc);  // рисуем точки дисперсий
-        plot2d(t, Yt, colorLoc);                   // рисуем прямую МНК
+        plot2d(LOG_areaCount, mnkLine, colorLoc);  // рисуем прямую МНК
 
-        legenda = [ legenda ; ('D(X / EX) из  ' + filename) ];
+        legenda = [ legenda ; ('D(X / EX) от  ' + filename) ];
         b = atan(a(1));   
         H = 1-abs(b)/2;
-        legendaFit = [ legendaFit ; ('D(X / EX) из  ' + filename); "Линия по МНК для " + filename + ": H = " + string(H) ];
+        legendaFit = [ legendaFit ; ('D(X / EX) от  ' + filename); "Прямая по МНК для " + filename + ": H = " + string(H) ];
         
         colorLoc = colorLoc + COLOR_OFFSET;
         if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
@@ -336,7 +328,7 @@ function __drawDX__(filenames, bases, levels, DXs)
     scf(2);
     prepareGraphic("График изменения дисперсий (логарифмические оси)" , "log2( pow(N,l) )", "log2( D(X / EX) )");    
     scf(3);
-    prepareGraphic("График изменения дисперсий (логарифмические оси) с аппроксимирующей прямой ", "log2( pow(N,l) )", "log2( D(X / EX) )");
+    prepareGraphic("График изменения дисперсий (логарифмические оси) с прямой по МНК", "log2( pow(N,l) )", "log2( D(X / EX) )");
 endfunction
 
 // функция для минимизации для построения линии МНК

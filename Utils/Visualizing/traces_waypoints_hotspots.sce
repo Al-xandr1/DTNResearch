@@ -161,7 +161,7 @@ function drawWPFiles(varargin)
         wpFiles = [wpFiles ; varargin(i)];
     end
     
-    privateAllWPFiles(wpFiles);
+    __privateAllWPFiles__(wpFiles);
 endfunction
 
 
@@ -172,7 +172,7 @@ function drawWPFilesFolder(folder)
     PATH = PATH + folder + SEPARATOR;
     wpFiles = getFiles(PATH, "*.wpt");
 
-    privateAllWPFiles(wpFiles);
+    __privateAllWPFiles__(wpFiles);
     xtitle("WayPoints from " + folder);
     
     PATH = SAVE_PATH;
@@ -180,7 +180,7 @@ endfunction
 
 
 //Рисование WayPoint'ов из входного вектора с именами файлов (ФУНКЦИЯ НЕ ДЛЯ ПРЯМОГО ИСПОЛЬЗОВАНИЯ)
-function privateAllWPFiles(fileNamesVector)
+function __privateAllWPFiles__(fileNamesVector)
     fileCount = size(fileNamesVector, 1);
     if (fileCount < 1) then
         error(msprintf("privateAllWPFiles: Нет файлов для обработки"));
