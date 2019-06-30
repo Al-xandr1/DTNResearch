@@ -116,7 +116,7 @@ endfunction
 //-------------------- Private функции для статистики --------------------------
 
 //Рисование гистрограммы из вектора файлов статистики
-function __privateDrawHistograms__(filenames, tag, graphicName, xlable, pdf, cdf, ccdf)
+function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, isCdf, isCcdf)
     fileCount = size(filenames, 1);
     
     cells = []; cellWidth = []; leftBound = []; rightBound = [];
@@ -129,7 +129,7 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, pdf, cdf
         xmlDelete(doc);
     end
     
-    if (pdf == 1) then
+    if (isPdf == 1) then
         scf();
         //рисуем полигон частот
         legenda = [];  colorLoc = GRAPH_COLOR;
@@ -147,20 +147,20 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, pdf, cdf
         prepareGraphic("PDF для " + graphicName + " (логарифмические оси)", xlable, "PDF");
     end
 
-    if (cdf == 1) then
+    if (isCdf == 1) then
         scf();
         legenda = [];  colorLoc = GRAPH_COLOR;
         for i=1:fileCount
             doc = xmlRead(PATH + filenames(i));
             len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
             cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells(i));
-            cdf1 = [];
-            for k=1:cells(i)
-                if (cdf(k) < 1) then cdf1(k) = cdf(k); else break; end;
-            end
+
+            cdf_cutted = [];
+            for k=1:cells(i) if (cdf(k) < 1) then cdf_cutted(k) = cdf(k); else break; end; end
             secs = [];
-            for k=1:size(cdf1, 1) secs(k) = len(k); end
-            plot2d(log2(secs), log2(cdf1), colorLoc);
+            for k=1:size(cdf_cutted, 1) secs(k) = len(k); end
+
+            plot2d(log2(secs), log2(cdf_cutted), colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
             legenda = [ legenda ; ('CDF ' + filenames(i)) ];
@@ -170,28 +170,56 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, pdf, cdf
         prepareGraphic("CDF для " + graphicName + " (логарифмические оси)", "log2( " + xlable + " )", "log2( CDF : P(X < x) )");
     end
 
-    if (ccdf == 1) then
+    if (isCcdf == 1) then
         scf();    
-        legenda = [];  colorLoc = GRAPH_COLOR;
+        legenda = [];  colorLoc = GRAPH_COLOR; ethalonLen = []; ethalonCcdf = [];
         for i=1:fileCount
             doc = xmlRead(PATH + filenames(i));
             len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
             ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells(i));
-            ccdf1 = [];
-            for k=1:cells(i)
-                if (ccdf(k) > 0) then ccdf1(k) = ccdf(k); else break; end;
-            end
+
+            diff = -1;
+            if (i == 1) then ethalonLen = len; ethalonCcdf = ccdf; end
+            diff = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf);
+
+            ccdf_cutted = [];
+            for k=1:cells(i) if (ccdf(k) > 0) then ccdf_cutted(k) = ccdf(k); else break; end; end
             secs = [];
-            for k=1:size(ccdf1, 1) secs(k) = len(k); end
-            plot2d(log2(secs), log2(ccdf1), colorLoc);
+            for k=1:size(ccdf_cutted, 1) secs(k) = len(k); end
+
+            plot2d(log2(secs), log2(ccdf_cutted), colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('CCDF ' + filenames(i)) ];
+            legenda = [ legenda ; ('CCDF ' + filenames(i) + ', Diff = ' + string(diff))];
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
         prepareGraphic("CCDF для " + graphicName + " (логарифмические оси)", "log2( " + xlable + " )", "log2( CCDF : P(X > x) )");
     end
+endfunction
+
+
+//Функция расчёта отклонения графиков друг от друга
+//В общем виде могут быть следующие случаи:
+// 1) сетки гист. с одинаковыми разбиением и границами
+// 2) сетки гист. с одинаковым разбиением и разными границами
+// 3) сетки гист с разными разбиениями и границами
+function [diff] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
+    if (size(ethalonLen, 2) <> size(len, 2) || size(ethalonCcdf, 1) <> size(ccdf, 1) || size(ethalonLen, 2) <> size(ethalonCcdf, 1)) then
+        disp(size(ethalonLen, 2)); disp(size(len, 2)); disp(size(ethalonCcdf, 1)); disp(size(ccdf, 1)); 
+        error(msprintf("__computeDiff__: разные длины векторов"));
+    end
+    for (i=1:size(ethalonLen, 2))
+        if (ethalonLen(i) <> len(i)) then
+            error(msprintf("__computeDiff__: значени компонент в векторах ethalonLen и len: i=" + i + ", ethalonLen(i)=" + ethalonLen(i) + ", len(i)=" + len(i)));
+        end
+    end
+    
+    diff = 0;
+    for (i=1:size(ethalonLen, 2))
+        diff = diff + (ethalonCcdf(i)-ccdf(i))^2
+    end
+    diff = sqrt(diff)
 endfunction
 
 
