@@ -178,9 +178,8 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, i
             len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
             ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells(i));
 
-            diff = -1;
             if (i == 1) then ethalonLen = len; ethalonCcdf = ccdf; end
-            diff = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf);
+            [d0, d1, d2, d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf);
 
             ccdf_cutted = [];
             for k=1:cells(i) if (ccdf(k) > 0) then ccdf_cutted(k) = ccdf(k); else break; end; end
@@ -190,7 +189,7 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, i
             plot2d(log2(secs), log2(ccdf_cutted), colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('CCDF ' + filenames(i) + ', Diff = ' + string(diff))];
+            legenda = [ legenda ; ('CCDF ' + filenames(i) + ', d0=' + string(d0) + ', d1='  + string(d1) + ', d2='  + string(d2) + ', d3='  + string(d3) + ', d4=' + string(d4))];
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
@@ -204,7 +203,7 @@ endfunction
 // 1) сетки гист. с одинаковыми разбиением и границами
 // 2) сетки гист. с одинаковым разбиением и разными границами
 // 3) сетки гист с разными разбиениями и границами
-function [diff] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
+function [d0, d1, d2, d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
     if (size(ethalonLen, 2) <> size(len, 2) || size(ethalonCcdf, 1) <> size(ccdf, 1) || size(ethalonLen, 2) <> size(ethalonCcdf, 1)) then
         disp(size(ethalonLen, 2)); disp(size(len, 2)); disp(size(ethalonCcdf, 1)); disp(size(ccdf, 1)); 
         error(msprintf("__computeDiff__: разные длины векторов"));
@@ -215,11 +214,22 @@ function [diff] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
         end
     end
     
-    diff = 0;
+    d1 = 0
+    d2 = 0
+    d4 = 0
+    q = 1/2
     for (i=1:size(ethalonLen, 2))
-        diff = diff + (ethalonCcdf(i)-ccdf(i))^2
+        d1 = d1 + (ethalonCcdf(i)-ccdf(i))^2
+        if (ethalonCcdf(i) <> 0) then d2 = d2 + ((ethalonCcdf(i)-ccdf(i))/ethalonCcdf(i))^2; disp(ccdf(i)) end
+        d4 = d4 + q * (ethalonCcdf(i)-ccdf(i))^2
+        q = q^2
     end
-    diff = sqrt(diff)
+    
+    d0 = norm(ethalonCcdf - ccdf) // евклидово расстояние 
+    d1 = sqrt(d1 / size(ethalonLen, 2)) // СКО 
+    d2 = sqrt(d2 / size(ethalonLen, 2)) // СКО из относительных велечин
+    d3 = norm(ethalonCcdf - ccdf) / norm(ethalonCcdf) // относительная ошибка вектора
+    d4 = sqrt(d4 / size(ethalonLen, 2)) // СКО взвешенное
 endfunction
 
 
