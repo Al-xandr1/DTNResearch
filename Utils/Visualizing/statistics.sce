@@ -189,7 +189,7 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, i
             plot2d(log2(secs), log2(ccdf_cutted), colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('CCDF ' + filenames(i) +  ', d3='  + string(d3) + ', d4=' + string(d4))];
+            legenda = [ legenda ; ('CCDF ' + filenames(i) +  '       d3='  + string(d3) + ',       d4=' + string(d4))];
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
