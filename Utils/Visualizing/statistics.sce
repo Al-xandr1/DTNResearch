@@ -205,8 +205,8 @@ endfunction
 // 3) сетки гист с разными разбиениями и границами - NOT SUPPORTED
 function [d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
     if (size(ethalonLen, "c") <> size(len, "c") || size(ethalonCcdf, "r") <> size(ccdf, "r") || size(ethalonLen, "c") <> size(ethalonCcdf, "r")) then
-//        disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
-        disp(msprintf("__computeDiff__: разные длины векторов"));
+        disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
+        disp(msprintf("__computeDiff__: разные длины векторов. Обрезаем."));
         if (size(ethalonLen, "c") <> size(ethalonCcdf, "r") || size(len, "c") <> size(ccdf, "r")) then
             error(msprintf("__computeDiff__: разные длины ethalonLen и ethalonCcdf или len и ccdf"))
         end
@@ -215,16 +215,16 @@ function [d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
         len = len(1, 1:minSize)
         ethalonCcdf = ethalonCcdf(1:minSize, 1)
         ccdf = ccdf(1:minSize, 1)
-//        disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
+        disp(msprintf("__computeDiff__: Обрезали:"));
+        disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
     end
-    
     
     for (i=1:size(ethalonLen, 2))
         if (ethalonLen(i) <> len(i)) then
-            error(msprintf("__computeDiff__: значени компонент в векторах ethalonLen и len: i=" + i + ", ethalonLen(i)=" + ethalonLen(i) + ", len(i)=" + len(i)));
+            error(msprintf("__computeDiff__: значени компонент в векторах ethalonLen и len: i=" + string(i) + ", ethalonLen(i)=" + string(ethalonLen(i)) + ", len(i)=" + string(len(i))));
         end
     end
-    
+
     d4 = 0
     q = 1/2
     for (i=1:size(ethalonLen, 2))
