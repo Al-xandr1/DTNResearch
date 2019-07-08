@@ -170,6 +170,7 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, i
         prepareGraphic("CDF для " + graphicName + " (логарифмические оси)", "log2( " + xlable + " )", "log2( CDF : P(X < x) )");
     end
 
+    table_err = ["trace", "d3", "d4"]
     if (isCcdf == 1) then
         scf();    
         legenda = [];  colorLoc = GRAPH_COLOR; ethalonLen = []; ethalonCcdf = [];
@@ -190,10 +191,13 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, i
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
             legenda = [ legenda ; ('CCDF ' + filenames(i) +  '       d3='  + string(d3) + ',       d4=' + string(d4))];
+            table_err = [table_err; filenames(i), string(d3), string(d4)]
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
         prepareGraphic("CCDF для " + graphicName + " (логарифмические оси)", "log2( " + xlable + " )", "log2( CCDF : P(X > x) )");
+        disp("Errors table for " + tag)
+        disp(table_err)
     end
 endfunction
 
@@ -205,8 +209,8 @@ endfunction
 // 3) сетки гист с разными разбиениями и границами - NOT SUPPORTED
 function [d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
     if (size(ethalonLen, "c") <> size(len, "c") || size(ethalonCcdf, "r") <> size(ccdf, "r") || size(ethalonLen, "c") <> size(ethalonCcdf, "r")) then
-        disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
-        disp(msprintf("__computeDiff__: разные длины векторов. Обрезаем."));
+        //disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
+        //disp(msprintf("__computeDiff__: разные длины векторов. Обрезаем."));
         if (size(ethalonLen, "c") <> size(ethalonCcdf, "r") || size(len, "c") <> size(ccdf, "r")) then
             error(msprintf("__computeDiff__: разные длины ethalonLen и ethalonCcdf или len и ccdf"))
         end
@@ -215,8 +219,8 @@ function [d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
         len = len(1, 1:minSize)
         ethalonCcdf = ethalonCcdf(1:minSize, 1)
         ccdf = ccdf(1:minSize, 1)
-        disp(msprintf("__computeDiff__: Обрезали:"));
-        disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
+        //disp(msprintf("__computeDiff__: Обрезали:"));
+        //disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
     end
     
     for (i=1:size(ethalonLen, 2))
