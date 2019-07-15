@@ -170,7 +170,7 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, i
         prepareGraphic("CDF для " + graphicName + " (логарифмические оси)", "log2( " + xlable + " )", "log2( CDF : P(X < x) )");
     end
 
-    table_err = ["trace", "d3", "d4"]
+    table_err = ["TRACE", "d2", "d3", "d4"]
     if (isCcdf == 1) then
         scf();    
         legenda = [];  colorLoc = GRAPH_COLOR; ethalonLen = []; ethalonCcdf = [];
@@ -180,7 +180,7 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, i
             ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells(i));
 
             if (i == 1) then ethalonLen = len; ethalonCcdf = ccdf; end
-            [d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf);
+            [d2, d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf);
 
             ccdf_cutted = [];
             for k=1:cells(i) if (ccdf(k) > 0) then ccdf_cutted(k) = ccdf(k); else break; end; end
@@ -190,8 +190,8 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, i
             plot2d(log2(secs), log2(ccdf_cutted), colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('CCDF ' + filenames(i) +  '       d3='  + string(d3) + ',       d4=' + string(d4))];
-            table_err = [table_err; filenames(i), string(d3), string(d4)]
+            legenda = [ legenda ; ('CCDF ' + filenames(i) +  '       d2=' + string(d2) + '       d3='  + string(d3) + ',       d4=' + string(d4))];
+            table_err = [table_err; filenames(i), string(d2), string(d3), string(d4)]
             xmlDelete(doc);
         end
         if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
@@ -207,7 +207,7 @@ endfunction
 // 1) сетки гист. с одинаковыми разбиением и границами - DONE
 // 2) сетки гист. с одинаковым разбиением и разными границами - DONE
 // 3) сетки гист с разными разбиениями и границами - NOT SUPPORTED
-function [d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
+function [d2, d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
     if (size(ethalonLen, "c") <> size(len, "c") || size(ethalonCcdf, "r") <> size(ccdf, "r") || size(ethalonLen, "c") <> size(ethalonCcdf, "r")) then
         //disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
         //disp(msprintf("__computeDiff__: разные длины векторов. Обрезаем."));
@@ -229,15 +229,17 @@ function [d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
         end
     end
 
-    d4 = 0
-    q = 1/2
-    for (i=1:size(ethalonLen, 2))
-        d4 = d4 + q * (ethalonCcdf(i)-ccdf(i))^2
-        q = q^2
+    d2 = 0; actualCount = 0
+    d3 = norm(ethalonCcdf - ccdf) / norm(ethalonCcdf) // относительная ошибка вектора    
+    d4 = 0; b1 = 1; bn = b1; q = 1.125; count = size(ethalonLen, 2)
+    for (i=1:count)
+        if (ethalonCcdf(i) <> 0) then d2 = d2 + ((ethalonCcdf(i)-ccdf(i))/ethalonCcdf(i))^2; actualCount = actualCount + 1; end
+        d4 = d4 + bn * (ethalonCcdf(i)-ccdf(i))^2
+        bn = bn * q; //член геометрической прогр
     end
-    
-    d3 = norm(ethalonCcdf - ccdf) / norm(ethalonCcdf) // относительная ошибка вектора
-    d4 = sqrt(d4 / size(ethalonLen, 2)) // СКО взвешенное
+    d2 = sqrt(d2 / actualCount) // СКО из относительных велечин
+    coefSum = (b1 * (1 - q^count)) / (1 - q) //сумма геометрической прогр.
+    d4 = sqrt(d4 / coefSum) // СКО взвешенное
 endfunction
 
 
