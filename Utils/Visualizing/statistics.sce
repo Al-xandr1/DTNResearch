@@ -190,7 +190,7 @@ function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, i
             plot2d(log2(secs), log2(ccdf_cutted), colorLoc);
             colorLoc = colorLoc + COLOR_OFFSET;
             if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-            legenda = [ legenda ; ('CCDF ' + filenames(i) +  '       d2=' + string(d2) + '       d3='  + string(d3) + ',       d4=' + string(d4))];
+            legenda = [ legenda ; ('CCDF ' + filenames(i))];
             table_err = [table_err; filenames(i), string(d2), string(d3), string(d4)]
             xmlDelete(doc);
         end
@@ -380,6 +380,7 @@ function __drawDX__(filenames, bases, levels, DXs)
     prepareGraphic("График изменения дисперсий (логарифмические оси)", "log2( pow(N,l) )", "log2( D(X / EX) )");
     format('v',10); // возвращение стандартного формата
 endfunction
+
 
 // функция для минимизации для построения линии МНК
 function [zr]=F(c,z)
