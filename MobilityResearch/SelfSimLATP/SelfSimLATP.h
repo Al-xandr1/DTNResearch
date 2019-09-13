@@ -22,10 +22,16 @@
 class SelfSimLATP : public LineSegmentsMobilityBase {
 protected:
     int NodeID;
+    bool movementsFinished;    // показывает окончил ли пользователь движение или нет
 
+    RootsCollection *rc;
+    unsigned int RootNumber;
+    vector<HotSpotData *> *currentRoot;
+    bool isRootReady;
+
+private:
     bool isPause;
     long step;
-    bool movementsFinished;    // показывает окончил ли пользователь движение или нет
     double powAforHS;
     double powAforWP;
 
@@ -40,11 +46,6 @@ protected:
     int currentHSindex;
 
     HSDistanceMatrix *hsd;
-
-    RootsCollection *rc;
-    unsigned int RootNumber;
-    vector<HotSpotData *> *currentRoot;
-    bool isRootReady;
 
     SelfSimMapGenerator *gen;
 
@@ -91,6 +92,8 @@ public:
     Coord getConstraintAreaMin() { return this->constraintAreaMin; };
 
     Coord getConstraintAreaMax() { return this->constraintAreaMax; };
+
+    MovementHistory* getMovementHistory() { return this->mvnHistory; };
 
     void setCurrentHSindex(int hsIndex);
 

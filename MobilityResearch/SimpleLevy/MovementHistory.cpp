@@ -8,6 +8,19 @@ MovementHistory::MovementHistory(const int nodeId) {
     trFileName = createFileName(trFileName, 0, "traceOfNode", NodeId, TRACE_TYPE);
 }
 
+MovementHistory::MovementHistory(const MovementHistory &another) {
+    this->NodeId = another.NodeId;
+    this->wpFileName = new char[256];
+    this->trFileName = new char[256];
+    this->wpFileName = strcpy(this->wpFileName, another.wpFileName);
+    this->trFileName = strcpy(this->trFileName, another.trFileName);
+
+    for (unsigned int i = 0; i < another.inTimes.size(); i++) inTimes.push_back(another.inTimes[i]);
+    for (unsigned int i = 0; i < another.outTimes.size(); i++) outTimes.push_back(another.outTimes[i]);
+    for (unsigned int i = 0; i < another.xCoordinates.size(); i++) xCoordinates.push_back(another.xCoordinates[i]);
+    for (unsigned int i = 0; i < another.yCoordinates.size(); i++) yCoordinates.push_back(another.yCoordinates[i]);
+}
+
 MovementHistory::~MovementHistory() {
     myDelete(wpFileName);
     myDelete(trFileName);

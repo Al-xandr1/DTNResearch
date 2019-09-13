@@ -21,10 +21,15 @@ private:
 
 public:
     MovementHistory(const int nodeId);
+    MovementHistory(const MovementHistory &another);
     virtual ~MovementHistory();
 
     char* getWpFileName() {return wpFileName;};
     char* getTrFileName() {return trFileName;};
+    std::vector<simtime_t>* getInTimes() {return &inTimes;};
+    std::vector<simtime_t>* getOutTimes() {return &outTimes;};
+    std::vector<double>* getXCoordinates() {return &xCoordinates;};
+    std::vector<double>* getYCoordinates() {return &yCoordinates;};
     void collect(simtime_t inTime, simtime_t outTime, double x, double y);
     void save(const char *wpsDir, const char *trsDir);
 };

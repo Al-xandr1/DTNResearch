@@ -2,8 +2,23 @@
 
 Define_Module(RegularSelfSimLATP);
 
+RegularSelfSimLATP::RegularSelfSimLATP() {
+    mvnHistoryForRepeat = NULL;
+    repetitionOfTraceEnabled = false;
+
+    isPause = false;
+    step = 0;
+    timeOffset = 0;
+    distance = -1;
+    speed = -1;
+    travelTime = 0;
+}
+
 void RegularSelfSimLATP::initialize(int stage) {
     SelfSimLATP::initialize(stage);
+
+    if (hasPar("repetitionOfTraceEnabled")) repetitionOfTraceEnabled = par("repetitionOfTraceEnabled");
+    cout << "RegularSelfSimLATP::initialize: repetitionOfTraceEnabled = " << repetitionOfTraceEnabled << endl;
 }
 
 void RegularSelfSimLATP::handleMessage(cMessage *message) {
@@ -31,14 +46,64 @@ void RegularSelfSimLATP::handleMessage(cMessage *message) {
 }
 
 void RegularSelfSimLATP::setTargetPosition() {
+    // Перемещение по модели вызываем в любом случае
     SelfSimLATP::setTargetPosition();
 
     if (movementsFinished) {
+        if (repetitionOfTraceEnabled) {
+            // при окончании маршрута и при вклчённом повторении мы сохраняем текущий трейс
+            // сохраняем только один раз (при первом обращении)
+            if (!mvnHistoryForRepeat) mvnHistoryForRepeat = new MovementHistory(*getMovementHistory());
+        }
+
         // очищают статус и планируем в бесконечность - чтобы приостановить, но не завершить
         endRoute();
         movementsFinished = false;
         nextChange = MAXTIME;
     }
+}
+
+bool RegularSelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextChange) {
+    // если повторение маршрута ВЫКЛЮЧЕНО, то ходим по SLAW всё время
+    if (!repetitionOfTraceEnabled)
+        return SelfSimLATP::generateNextPosition(targetPosition, nextChange);
+
+    // если повторение маршрута ВКЛЮЧЕНО, то проверяем наличие сохранённого трейса
+    // если трейс ещё не сохранён, то ходим по SLAW, для генерации трейса
+    if (!mvnHistoryForRepeat)
+        return SelfSimLATP::generateNextPosition(targetPosition, nextChange);
+
+    // если трейс уже сохранён, то ходим по нему, пока не закончиться
+
+    ASSERT(0 <= step);
+    if (step >= mvnHistoryForRepeat->getXCoordinates()->size())
+        return false; // маршрут кончился
+
+    if (isPause) {
+        nextChange = simTime() + (mvnHistoryForRepeat->getOutTimes()->at(step) - mvnHistoryForRepeat->getInTimes()->at(step));
+        ASSERT(nextChange == (timeOffset + mvnHistoryForRepeat->getOutTimes()->at(step)));
+
+        // увеличивам шаг после пары "перешли и подождали"
+        step++;
+    } else {
+        // сейчас НЕ пауза и мы выбираем новыую точку из Трейса
+        const simtime_t previousNaxtChange = nextChange;
+        nextChange = timeOffset + mvnHistoryForRepeat->getInTimes()->at(step);
+        targetPosition.x = mvnHistoryForRepeat->getXCoordinates()->at(step);
+        targetPosition.y = mvnHistoryForRepeat->getYCoordinates()->at(step);
+
+        distance = lastPosition.distance(targetPosition);
+        ASSERT(distance >= 0);
+
+        travelTime = nextChange - previousNaxtChange;
+        ASSERT(travelTime > 0);
+
+        speed = distance / travelTime;
+        ASSERT(speed >= 0);
+    }
+    isPause = !isPause;
+
+    return true;
 }
 
 void RegularSelfSimLATP::nodeTurnedOff() {
@@ -52,8 +117,8 @@ void RegularSelfSimLATP::endRoute() {
 }
 
  void RegularSelfSimLATP::makeRoot() {
+     // для того, чтобы метод SelfSimLATP::makeNewRoot() отработал, нужно даже при влключённом повторении построить currentRoot.
      ASSERT(!currentRoot);
-
      if (!isRootReady) {
          unsigned int day = RoutingDaemon::instance->getCurrentDay();
          ASSERT(day >= 1);
@@ -82,4 +147,21 @@ void RegularSelfSimLATP::endRoute() {
          cout << "NodeId = " << NodeID << ": "  << "Root made for day " << day << endl;
      }
      isRootReady = true;
+
+
+     if (repetitionOfTraceEnabled && mvnHistoryForRepeat) {
+         // если при включённом повторении маршрута трейс уже сохранён, то берём начальную точку из него и выходим из функции
+         unsigned int day = RoutingDaemon::instance->getCurrentDay();
+         ASSERT(day >= 1);
+
+         timeOffset = (day-1) * RoutingDaemon::instance->getDayDuration();
+         step = 0;
+         isPause = false;
+         cout << "Repeatable Root made! day = " << day << ", NodeID = " << NodeID << ", simTime = " << simTime() << ", timeOffset = " << timeOffset << endl;
+
+//         lastPosition.x = currentTrace->at(0).X;
+//         lastPosition.y = currentTrace->at(0).Y;
+//         lastPosition.z = 0;
+//         targetPosition = lastPosition;
+     }
 }

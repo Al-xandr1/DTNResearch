@@ -47,9 +47,6 @@ void SelfSimLATP::initialize(int stage) {
         powAforHS = par("powAforHS").doubleValue();
         powAforWP = par("powAforWP").doubleValue();
 
-        ASSERT(!movement);
-        movement = new Movement(this, -1);
-
         ASSERT(!hsc);
         // загрузка данных о докациях
         hsc = HotSpotsCollection::getInstance();
@@ -59,6 +56,9 @@ void SelfSimLATP::initialize(int stage) {
         constraintAreaMin.y = minY;
         constraintAreaMax.x = maxX;
         constraintAreaMax.y = maxY;
+
+        ASSERT(!movement);
+        movement = new Movement(this, (constraintAreaMax - constraintAreaMin).length());
 
         ASSERT(!hsd);
         hsd = HSDistanceMatrix::getInstance(powAforHS);
@@ -77,9 +77,9 @@ void SelfSimLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
     setCurrentWpt(rand() % waypts->size());
-    lastPosition.x = waypts->at(getCurrentWpt())->x;
-    lastPosition.y = waypts->at(getCurrentWpt())->y;
+    lastPosition = *(waypts->at(getCurrentWpt()));
     targetPosition = lastPosition;
+
     cout << "Initial position: point #" << getCurrentWpt() << " x=" << lastPosition.x << " y=" << lastPosition.y << endl;
 }
 
@@ -125,8 +125,8 @@ bool SelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextCha
     if (findNextWpt()) {
         targetPosition = *(waypts->at(getCurrentWpt()));
 
-        const double distance = sqrt(  (targetPosition.x - lastPosition.x) * (targetPosition.x - lastPosition.x)
-                                     + (targetPosition.y - lastPosition.y) * (targetPosition.y - lastPosition.y));
+        const double distance = lastPosition.distance(targetPosition);
+
         if (distance != 0) {
             movement->setDistance(distance, (string("DEBUG SelfSimLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
             nextChange = simTime() + movement->getTravelTime();
@@ -143,11 +143,10 @@ bool SelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextCha
         isWptMatrixReady = false;
         buildWptMatrix();
         setCurrentWpt(rand() % waypts->size());
-        targetPosition.x = waypts->at(getCurrentWpt())->x;
-        targetPosition.y = waypts->at(getCurrentWpt())->y;
+        targetPosition = *(waypts->at(getCurrentWpt()));
 
-        const double distance = sqrt(  (targetPosition.x - lastPosition.x) * (targetPosition.x - lastPosition.x)
-                                     + (targetPosition.y - lastPosition.y) * (targetPosition.y - lastPosition.y));
+        const double distance = lastPosition.distance(targetPosition);
+
         if (distance != 0) {
             movement->setDistance(distance, (string("DEBUG SelfSimLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
             nextChange = simTime() + movement->getTravelTime();
@@ -263,8 +262,8 @@ void SelfSimLATP::buildDstMatrix() {
             vector<double> *dij = new vector<double>;
             dij->push_back(0);
             for (unsigned int j = i + 1; j < currentRoot->size(); j++) {
-                dij->push_back(sqrt((hscntr[i].x - hscntr[j].x) * (hscntr[i].x - hscntr[j].x) +
-                                    (hscntr[i].y - hscntr[j].y) * (hscntr[i].y - hscntr[j].y)));
+                dij->push_back(hscntr[i].distance(hscntr[j]));
+
             }
             dstMatrix.push_back(dij);
         }
@@ -333,8 +332,7 @@ void SelfSimLATP::buildWptMatrix() {
             vector<double> *wij = new vector<double>;
             wij->push_back(0);
             for (unsigned int j = i + 1; j < waypts->size(); j++) {
-                wij->push_back(sqrt((waypts->at(i)->x - waypts->at(j)->x) * (waypts->at(i)->x - waypts->at(j)->x) +
-                                    (waypts->at(i)->y - waypts->at(j)->y) * (waypts->at(i)->y - waypts->at(j)->y)));
+                wij->push_back(waypts->at(i)->distance(*(waypts->at(j))));
             }
             wptMatrix.push_back(wij);
         }

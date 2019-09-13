@@ -23,14 +23,28 @@ using namespace std;
 
 class RegularSelfSimLATP : public SelfSimLATP {
 
+private:
+    //statistics collection for ONE day (for repeat)
+    MovementHistory* mvnHistoryForRepeat;
+    bool repetitionOfTraceEnabled;
+
+    bool isPause;
+    unsigned long step;
+    simtime_t timeOffset;
+    double distance;
+    double speed;
+    simtime_t travelTime;
+
 protected:
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
-    virtual void handleMessage(cMessage *message);
+    virtual void handleMessage(cMessage *message); /** @brief Overridden from SelfSimLATP.*/
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
+    virtual bool generateNextPosition(Coord &targetPosition, simtime_t &nextChange); /** @brief Overridden from SelfSimLATP.*/
     void endRoute();
-    virtual void makeRoot();
+    virtual void makeRoot(); /** @brief Overridden from SelfSimLATP.*/
 
 public:
+    RegularSelfSimLATP();
     void nodeTurnedOff();
 };
 
