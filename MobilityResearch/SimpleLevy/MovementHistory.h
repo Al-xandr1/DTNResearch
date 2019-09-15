@@ -30,6 +30,10 @@ public:
     std::vector<simtime_t>* getOutTimes() {return &outTimes;};
     std::vector<double>* getXCoordinates() {return &xCoordinates;};
     std::vector<double>* getYCoordinates() {return &yCoordinates;};
+    int getSize() {
+        ASSERT(inTimes.size() == outTimes.size() && outTimes.size() == xCoordinates.size() && xCoordinates.size() == yCoordinates.size());
+        return xCoordinates.size();
+    }
     void collect(simtime_t inTime, simtime_t outTime, double x, double y);
     void save(const char *wpsDir, const char *trsDir);
 };

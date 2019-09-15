@@ -17,6 +17,7 @@ SelfSimLATP::SelfSimLATP() {
     powAforWP = 2.0;
 
     movement = NULL;
+    waitTime = -1;
 
     hsc = NULL;
     hsd = NULL;
@@ -101,15 +102,16 @@ void SelfSimLATP::setTargetPosition() {
     };
 
     // так как данный метод вызывается на этапе инициализации, то этот вызов мы и пропускаем
-    if (step++ == 0) return;
+    if (step == 0) { step++; return; }
 
     if (isPause) {
-        const bool success = movement->genPause( (string("DEBUG SelfSimLATP::setTargetPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+        const bool success = generatePause(nextChange);
         ASSERT(success);
-        nextChange = simTime() + movement->getWaitTime();
+        // увеличивам шаг после пары "перешли и подождали"
+        step++;
     } else {
         ASSERT(simTime() >= movement->getWaitTime());
-        mvnHistory->collect(simTime() - movement->getWaitTime(), simTime(), lastPosition.x, lastPosition.y);
+        mvnHistory->collect(simTime() - getWaitTime(), simTime(), lastPosition.x, lastPosition.y);
         movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
         if (movementsFinished) {
@@ -119,6 +121,13 @@ void SelfSimLATP::setTargetPosition() {
         };
     }
     isPause = !isPause;
+}
+
+bool SelfSimLATP::generatePause(simtime_t &nextChange) {
+    const bool success = movement->genPause( (string("DEBUG SelfSimLATP::setTargetPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+    setWaitTime(movement->getWaitTime());
+    nextChange = simTime() + getWaitTime();
+    return success;
 }
 
 bool SelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextChange) {

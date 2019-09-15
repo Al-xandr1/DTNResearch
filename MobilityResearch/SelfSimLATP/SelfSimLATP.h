@@ -36,6 +36,7 @@ private:
     double powAforWP;
 
     Movement *movement;
+    simtime_t waitTime;
 
     // текущая локация
     Coord currentHSMin, currentHSMax, currentHSCenter;
@@ -65,12 +66,27 @@ protected:
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
 
     void setCurrentWpt(unsigned int i);
+
+    void setWaitTime(simtime_t time) {
+        ASSERT(time > 0);
+        this->waitTime = time;
+    }
+
+    simtime_t getWaitTime() {
+        ASSERT(waitTime > 0);
+        return waitTime;
+    };
+
+    bool getIsPause() { return this->isPause; };
+    long getStep() {return this->step; };
+
     unsigned int getCurrentWpt();
 
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setInitialPosition();
 
-    bool generateNextPosition(Coord &targetPosition, simtime_t &nextChange);
+    virtual bool generatePause(simtime_t &nextChange);
+    virtual bool generateNextPosition(Coord &targetPosition, simtime_t &nextChange);
 
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
 

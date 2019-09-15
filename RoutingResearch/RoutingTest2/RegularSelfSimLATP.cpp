@@ -6,8 +6,6 @@ RegularSelfSimLATP::RegularSelfSimLATP() {
     mvnHistoryForRepeat = NULL;
     repetitionOfTraceEnabled = false;
 
-    isPause = false;
-    step = 0;
     timeOffset = 0;
     distance = -1;
     speed = -1;
@@ -18,7 +16,7 @@ void RegularSelfSimLATP::initialize(int stage) {
     SelfSimLATP::initialize(stage);
 
     if (hasPar("repetitionOfTraceEnabled")) repetitionOfTraceEnabled = par("repetitionOfTraceEnabled");
-    cout << "RegularSelfSimLATP::initialize: repetitionOfTraceEnabled = " << repetitionOfTraceEnabled << endl;
+    log(string("RegularSelfSimLATP::initialize: repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled) + string(" stage = ") + std::to_string(stage));
 }
 
 void RegularSelfSimLATP::handleMessage(cMessage *message) {
@@ -53,7 +51,20 @@ void RegularSelfSimLATP::setTargetPosition() {
         if (repetitionOfTraceEnabled) {
             // при окончании маршрута и при вклчённом повторении мы сохраняем текущий трейс
             // сохраняем только один раз (при первом обращении)
-            if (!mvnHistoryForRepeat) mvnHistoryForRepeat = new MovementHistory(*getMovementHistory());
+            if (!mvnHistoryForRepeat) {
+                mvnHistoryForRepeat = new MovementHistory(*getMovementHistory());
+
+                // for debug
+//                const char *wpsDir = "outTrace/first_day_wps";
+//                const char *trsDir = "outTrace/first_day_trs";
+//                if (CreateDirectory(wpsDir, NULL)) cout << "create output directory: " << wpsDir << endl;
+//                else cout << "error create output directory: " << wpsDir << endl;
+//                if (CreateDirectory(trsDir, NULL)) cout << "create output directory: " << trsDir << endl;
+//                else cout << "error create output directory: " << trsDir << endl;
+//                mvnHistoryForRepeat->save(wpsDir, trsDir);
+//                log(string("RegularSelfSimLATP::setTargetPosition: first trace saved! repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled));
+                // for debug
+            }
         }
 
         // очищают статус и планируем в бесконечность - чтобы приостановить, но не завершить
@@ -62,6 +73,26 @@ void RegularSelfSimLATP::setTargetPosition() {
         nextChange = MAXTIME;
     }
 }
+
+bool RegularSelfSimLATP::generatePause(simtime_t &nextChange) {
+    // если повторение маршрута ВЫКЛЮЧЕНО, то ходим по SLAW всё время
+    if (!repetitionOfTraceEnabled)
+        return SelfSimLATP::generatePause(nextChange);
+
+    // если повторение маршрута ВКЛЮЧЕНО, то проверяем наличие сохранённого трейса
+    // если трейс ещё не сохранён, то ходим по SLAW, для генерации трейса
+    if (!mvnHistoryForRepeat)
+        return SelfSimLATP::generatePause(nextChange);
+
+
+    // если трейс уже сохранён, то ходим по нему, пока не закончиться. Берём паузу
+    long step = (getStep() - 1) % mvnHistoryForRepeat->getSize();
+    setWaitTime(mvnHistoryForRepeat->getOutTimes()->at(step) - mvnHistoryForRepeat->getInTimes()->at(step));
+    nextChange = simTime() + getWaitTime();
+    ASSERT(nextChange == (timeOffset + mvnHistoryForRepeat->getOutTimes()->at(step)));
+    log(string("RegularSelfSimLATP::generateNextPosition: pause timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
+}
+
 
 bool RegularSelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &nextChange) {
     // если повторение маршрута ВЫКЛЮЧЕНО, то ходим по SLAW всё время
@@ -73,35 +104,27 @@ bool RegularSelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &
     if (!mvnHistoryForRepeat)
         return SelfSimLATP::generateNextPosition(targetPosition, nextChange);
 
-    // если трейс уже сохранён, то ходим по нему, пока не закончиться
 
-    ASSERT(0 <= step);
-    if (step >= mvnHistoryForRepeat->getXCoordinates()->size())
-        return false; // маршрут кончился
+    // если трейс уже сохранён, то ходим по нему, пока не закончиться. Берём позицию
+    long step = (getStep() - 1) % mvnHistoryForRepeat->getSize();
+    if (step == 0)
+        return false; // нулевую точку мы устанавливаем вручную. Считаем, что маршрут кончился.
 
-    if (isPause) {
-        nextChange = simTime() + (mvnHistoryForRepeat->getOutTimes()->at(step) - mvnHistoryForRepeat->getInTimes()->at(step));
-        ASSERT(nextChange == (timeOffset + mvnHistoryForRepeat->getOutTimes()->at(step)));
+    // сейчас НЕ пауза и мы выбираем новую точку из Трейса
+    const simtime_t previousNaxtChange = nextChange;
+    nextChange = timeOffset + mvnHistoryForRepeat->getInTimes()->at(step);
+    targetPosition.x = mvnHistoryForRepeat->getXCoordinates()->at(step);
+    targetPosition.y = mvnHistoryForRepeat->getYCoordinates()->at(step);
 
-        // увеличивам шаг после пары "перешли и подождали"
-        step++;
-    } else {
-        // сейчас НЕ пауза и мы выбираем новыую точку из Трейса
-        const simtime_t previousNaxtChange = nextChange;
-        nextChange = timeOffset + mvnHistoryForRepeat->getInTimes()->at(step);
-        targetPosition.x = mvnHistoryForRepeat->getXCoordinates()->at(step);
-        targetPosition.y = mvnHistoryForRepeat->getYCoordinates()->at(step);
+    distance = lastPosition.distance(targetPosition);
+    ASSERT(distance >= 0);
 
-        distance = lastPosition.distance(targetPosition);
-        ASSERT(distance >= 0);
+    travelTime = nextChange - previousNaxtChange;
+    ASSERT(travelTime > 0);
 
-        travelTime = nextChange - previousNaxtChange;
-        ASSERT(travelTime > 0);
-
-        speed = distance / travelTime;
-        ASSERT(speed >= 0);
-    }
-    isPause = !isPause;
+    speed = distance / travelTime;
+    ASSERT(speed >= 0);
+    log(string("RegularSelfSimLATP::generateNextPosition: move timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
 
     return true;
 }
@@ -144,24 +167,26 @@ void RegularSelfSimLATP::endRoute() {
          for (unsigned int i = 0; i < collection->getRootsData()->at(RootNumber)->size(); i++) {
              currentRoot->push_back(new HotSpotData(collection->getRootsData()->at(RootNumber)->at(i)));
          }
-         cout << "NodeId = " << NodeID << ": "  << "Root made for day " << day << endl;
+         log(string("Root made for day = ") + std::to_string(day));
      }
      isRootReady = true;
 
 
      if (repetitionOfTraceEnabled && mvnHistoryForRepeat) {
-         // если при включённом повторении маршрута трейс уже сохранён, то берём начальную точку из него и выходим из функции
+         // если при включённом повторении маршрута трейс уже сохранён, то берём начальную точку из него
          unsigned int day = RoutingDaemon::instance->getCurrentDay();
          ASSERT(day >= 1);
 
          timeOffset = (day-1) * RoutingDaemon::instance->getDayDuration();
-         step = 0;
-         isPause = false;
-         cout << "Repeatable Root made! day = " << day << ", NodeID = " << NodeID << ", simTime = " << simTime() << ", timeOffset = " << timeOffset << endl;
+         log(string("Repeatable Root made! day = ") + std::to_string(day)
+             + string(", simTime = ") +  std::to_string(simTime().dbl())
+             + string(", timeOffset = ") + std::to_string(timeOffset.dbl()));
 
-//         lastPosition.x = currentTrace->at(0).X;
-//         lastPosition.y = currentTrace->at(0).Y;
-//         lastPosition.z = 0;
-//         targetPosition = lastPosition;
+         long step = (getStep() - 1) % mvnHistoryForRepeat->getSize();
+         ASSERT(step == 0);
+         lastPosition.x = mvnHistoryForRepeat->getXCoordinates()->at(step);
+         lastPosition.y = mvnHistoryForRepeat->getYCoordinates()->at(step);
+         lastPosition.z = 0;
+         targetPosition = lastPosition;
      }
 }

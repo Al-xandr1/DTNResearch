@@ -28,8 +28,6 @@ private:
     MovementHistory* mvnHistoryForRepeat;
     bool repetitionOfTraceEnabled;
 
-    bool isPause;
-    unsigned long step;
     simtime_t timeOffset;
     double distance;
     double speed;
@@ -39,6 +37,7 @@ protected:
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
     virtual void handleMessage(cMessage *message); /** @brief Overridden from SelfSimLATP.*/
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
+    virtual bool generatePause(simtime_t &nextChange); /** @brief Overridden from SelfSimLATP.*/
     virtual bool generateNextPosition(Coord &targetPosition, simtime_t &nextChange); /** @brief Overridden from SelfSimLATP.*/
     void endRoute();
     virtual void makeRoot(); /** @brief Overridden from SelfSimLATP.*/
