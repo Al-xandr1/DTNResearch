@@ -25,6 +25,16 @@ using namespace std;
 
 class RegularRootLATP : public LevyHotSpotsLATP
 {
+  private:
+    //statistics collection for ONE day (for repeat)
+    MovementHistory* mvnHistoryForRepeat;
+    bool repetitionOfTraceEnabled;
+
+    simtime_t timeOffset;
+    double distance;
+    double speed;
+    simtime_t travelTime;
+
   protected:
 
     RootsCollection* rc;
@@ -62,7 +72,11 @@ class RegularRootLATP : public LevyHotSpotsLATP
     void makeNewRoot();
     virtual bool findNextHotSpot();
     void setCurRootIndex(unsigned int curRootIndex, bool writeIndexToTrack);
-    virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound = false);
+
+    virtual bool generatePause(simtime_t &nextChange); /** @brief Overridden from LevyHotSpotsLATP.*/
+    virtual bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound = false); /** @brief Overridden from LevyHotSpotsLATP.*/
+    bool localGenerateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound = false);
+
     virtual void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
 
   public:

@@ -17,6 +17,7 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     powA=2.0;
 
     movement = NULL;
+    waitTime = -1;
 
     currentHSMin = Coord::ZERO;
     currentHSMax = Coord::ZERO;
@@ -43,9 +44,6 @@ void LevyHotSpotsLATP::initialize(int stage) {
         if (!hasPar("powA")) {cout << "It is necessary to specify 'powA' parameter"; exit(-112);}
         powA = par("powA").doubleValue();
 
-        ASSERT(!movement);
-        movement = new Movement(this, (constraintAreaMax - constraintAreaMin).length());
-
         ASSERT(!hsc);
         // загрузка данных о локациях
         hsc = HotSpotsCollection::getInstance();
@@ -53,6 +51,9 @@ void LevyHotSpotsLATP::initialize(int stage) {
         hsc->getTotalSize(minX, maxX, minY, maxY);
         constraintAreaMin.x=minX; constraintAreaMin.y=minY;
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
+
+        ASSERT(!movement);
+        movement = new Movement(this, (constraintAreaMax - constraintAreaMin).length());
 
         ASSERT(!hsd);
         hsd = HSDistanceMatrix::getInstance(powA);
@@ -94,24 +95,25 @@ bool LevyHotSpotsLATP::isHotSpotEmpty() {
 
 void LevyHotSpotsLATP::setTargetPosition() {
     if (movementsFinished) {
-        log(" End of root!");
+        log("LevyHotSpotsLATP::setTargetPosition: End of root! (before generation)");
         nextChange = -1;
         return;
     };
 
-    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
-    ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+    //    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
+    //    ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
 
     // так как данный метод вызывается на этапе инициализации, то этот вызов мы и пропускаем
-    if (step++ == 0) return;
+    if (step == 0) { step++; return; }
 
     if (isPause) {
-        const bool success = movement->genPause( (string("DEBUG LevyHotSpotsLATP::setTargetPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+        const bool success = generatePause(nextChange);
         ASSERT(success);
-        nextChange = simTime() + movement->getWaitTime();
+        // увеличивам шаг после пары "перешли и подождали"
+        step++;
     } else {
-        ASSERT(simTime() >= movement->getWaitTime());
-        collectStatistics(simTime() - movement->getWaitTime(), simTime(), lastPosition.x, lastPosition.y);
+        ASSERT(simTime() >= getWaitTime());
+        collectStatistics(simTime() - getWaitTime(), simTime(), lastPosition.x, lastPosition.y);
         // если количество первых прыжков, которые нужно пропустить для текущей локации больше нуля,
         // то регенерируем прыжки в случае выхода за границу
         bool regenerateIfOutOfBound = (countOfFirstSkippedLongFlight > 0);
@@ -119,13 +121,21 @@ void LevyHotSpotsLATP::setTargetPosition() {
         if (regenerateIfOutOfBound) countOfFirstSkippedLongFlight--;
 
         if (movementsFinished) {
-            log(" End of root!");
+            log("LevyHotSpotsLATP::setTargetPosition: End of root! (after generation)");
             nextChange = -1;
             return;
         };
-        ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+        //        ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
     }
     isPause = !isPause;
+}
+
+
+bool LevyHotSpotsLATP::generatePause(simtime_t &nextChange) {
+    const bool success = movement->genPause( (string("DEBUG LevyHotSpotsLATP::setTargetPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+    setWaitTime(movement->getWaitTime());
+    nextChange = simTime() + getWaitTime();
+    return success;
 }
 
 
@@ -202,9 +212,7 @@ bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
         targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
         targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
-        movement->setDistance(sqrt(  (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)
-                                   + (targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) ),
-                              (string("DEBUG RegularRootLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
+        movement->setDistance(lastPosition.distance(targetPosition), (string("DEBUG RegularRootLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
         nextChange = simTime() + movement->getTravelTime();
         return true;
     }

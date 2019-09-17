@@ -90,7 +90,7 @@ bool RegularSelfSimLATP::generatePause(simtime_t &nextChange) {
     setWaitTime(mvnHistoryForRepeat->getOutTimes()->at(step) - mvnHistoryForRepeat->getInTimes()->at(step));
     nextChange = simTime() + getWaitTime();
     ASSERT(nextChange == (timeOffset + mvnHistoryForRepeat->getOutTimes()->at(step)));
-    log(string("RegularSelfSimLATP::generateNextPosition: pause timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
+    log(string("RegularSelfSimLATP::generatePause timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
 }
 
 
@@ -111,7 +111,7 @@ bool RegularSelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &
         return false; // нулевую точку мы устанавливаем вручную. Считаем, что маршрут кончился.
 
     // сейчас НЕ пауза и мы выбираем новую точку из Трейса
-    const simtime_t previousNaxtChange = nextChange;
+    const simtime_t previousNextChange = nextChange;
     nextChange = timeOffset + mvnHistoryForRepeat->getInTimes()->at(step);
     targetPosition.x = mvnHistoryForRepeat->getXCoordinates()->at(step);
     targetPosition.y = mvnHistoryForRepeat->getYCoordinates()->at(step);
@@ -119,12 +119,12 @@ bool RegularSelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &
     distance = lastPosition.distance(targetPosition);
     ASSERT(distance >= 0);
 
-    travelTime = nextChange - previousNaxtChange;
+    travelTime = nextChange - previousNextChange;
     ASSERT(travelTime > 0);
 
     speed = distance / travelTime;
     ASSERT(speed >= 0);
-    log(string("RegularSelfSimLATP::generateNextPosition: move timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
+    log(string("RegularSelfSimLATP::generateNextPosition timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
 
     return true;
 }
