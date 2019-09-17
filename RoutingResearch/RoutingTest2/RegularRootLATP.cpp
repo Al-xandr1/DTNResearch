@@ -322,14 +322,14 @@ void RegularRootLATP::setTargetPosition() {
                 mvnHistoryForRepeat = new MovementHistory(*getMovementHistory());
 
                 // for debug
-                const char *wpsDir = "outTrace/first_day_wps";
-                const char *trsDir = "outTrace/first_day_trs";
-                if (CreateDirectory(wpsDir, NULL)) cout << "create output directory: " << wpsDir << endl;
-                else cout << "error create output directory: " << wpsDir << endl;
-                if (CreateDirectory(trsDir, NULL)) cout << "create output directory: " << trsDir << endl;
-                else cout << "error create output directory: " << trsDir << endl;
-                mvnHistoryForRepeat->save(wpsDir, trsDir);
-                log(string("RegularRootLATP::setTargetPosition: first trace saved! repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled));
+//                const char *wpsDir = "outTrace/first_day_wps";
+//                const char *trsDir = "outTrace/first_day_trs";
+//                if (CreateDirectory(wpsDir, NULL)) cout << "create output directory: " << wpsDir << endl;
+//                else cout << "error create output directory: " << wpsDir << endl;
+//                if (CreateDirectory(trsDir, NULL)) cout << "create output directory: " << trsDir << endl;
+//                else cout << "error create output directory: " << trsDir << endl;
+//                mvnHistoryForRepeat->save(wpsDir, trsDir);
+//                log(string("RegularRootLATP::setTargetPosition: first trace saved! repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled));
                 // for debug
             }
         }
