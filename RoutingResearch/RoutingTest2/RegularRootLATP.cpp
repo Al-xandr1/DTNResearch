@@ -539,6 +539,14 @@ void RegularRootLATP::makeNewRoot() {
             + string(", timeOffset = ") + std::to_string(timeOffset.dbl()));
 
         long step = calculateStep();
+        log("RegularRootLATP::makeNewRoot: step = " + std::to_string(step)
+                + ", getStep() = " + std::to_string(getStep())
+                + ", mvnHistoryForRepeat->getSize() = " + std::to_string(mvnHistoryForRepeat->getSize()));
+        // в случае, когда строим новый маршрут (из-за нового дня), то число точек на одну меньше чем шагов (т.к новый мог день вклиниться по среди паузы).
+        if (step > 0) {
+            decreaseStep();
+            step = calculateStep();
+        }
         ASSERT(step == 0);
         lastPosition.x = mvnHistoryForRepeat->getXCoordinates()->at(step);
         lastPosition.y = mvnHistoryForRepeat->getYCoordinates()->at(step);

@@ -80,6 +80,7 @@ protected:
     bool getIsPause()   { return this->isPause; };
     long getStep()      { return this->step; };
     void decreaseStep() { this->step--; };
+    MovementHistory* getMovementHistory() { return this->mvnHistory; };
 
     unsigned int getCurrentWpt();
 
@@ -109,8 +110,6 @@ public:
     Coord getConstraintAreaMin() { return this->constraintAreaMin; };
 
     Coord getConstraintAreaMax() { return this->constraintAreaMax; };
-
-    MovementHistory* getMovementHistory() { return this->mvnHistory; };
 
     void setCurrentHSindex(int hsIndex);
 

@@ -57,8 +57,9 @@ class LevyHotSpotsLATP : public LineSegmentsMobilityBase {
         return waitTime;
     };
 
-    bool getIsPause() { return this->isPause; };
-    long getStep() {return this->step; };
+    bool getIsPause()   { return this->isPause; };
+    long getStep()      { return this->step; };
+    void decreaseStep() { this->step--; };
     MovementHistory* getMovementHistory() { return this->mvnHistory; };
 
     bool isHotSpotEmpty();
