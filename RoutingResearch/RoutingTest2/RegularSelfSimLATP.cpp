@@ -52,18 +52,8 @@ void RegularSelfSimLATP::setTargetPosition() {
             // при окончании маршрута и при вклчённом повторении мы сохраняем текущий трейс
             // сохраняем только один раз (при первом обращении)
             if (!mvnHistoryForRepeat) {
-                mvnHistoryForRepeat = new MovementHistory(*getMovementHistory());
-
-                // for debug
-//                const char *wpsDir = "outTrace/first_day_wps";
-//                const char *trsDir = "outTrace/first_day_trs";
-//                if (CreateDirectory(wpsDir, NULL)) cout << "create output directory: " << wpsDir << endl;
-//                else cout << "error create output directory: " << wpsDir << endl;
-//                if (CreateDirectory(trsDir, NULL)) cout << "create output directory: " << trsDir << endl;
-//                else cout << "error create output directory: " << trsDir << endl;
-//                mvnHistoryForRepeat->save(wpsDir, trsDir);
-//                log(string("RegularSelfSimLATP::setTargetPosition: first trace saved! repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled));
-                // for debug
+                mvnHistoryForRepeat = buildFirstTrace();
+                log(string("RegularSelfSimLATP::setTargetPosition: First trace is built! repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled));
             }
         }
 
@@ -86,11 +76,12 @@ bool RegularSelfSimLATP::generatePause(simtime_t &nextChange) {
 
 
     // если трейс уже сохранён, то ходим по нему, пока не закончиться. Берём паузу
-    long step = (getStep() - 1) % mvnHistoryForRepeat->getSize();
+    long step = calculateStep();
     setWaitTime(mvnHistoryForRepeat->getOutTimes()->at(step) - mvnHistoryForRepeat->getInTimes()->at(step));
     nextChange = simTime() + getWaitTime();
     ASSERT(nextChange == (timeOffset + mvnHistoryForRepeat->getOutTimes()->at(step)));
-    log(string("RegularSelfSimLATP::generatePause timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
+    //    log(string("RegularSelfSimLATP::generatePause timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
+    return true;
 }
 
 
@@ -106,7 +97,7 @@ bool RegularSelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &
 
 
     // если трейс уже сохранён, то ходим по нему, пока не закончиться. Берём позицию
-    long step = (getStep() - 1) % mvnHistoryForRepeat->getSize();
+    long step = calculateStep();
     if (step == 0)
         return false; // нулевую точку мы устанавливаем вручную. Считаем, что маршрут кончился.
 
@@ -124,7 +115,7 @@ bool RegularSelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &
 
     speed = distance / travelTime;
     ASSERT(speed >= 0);
-    log(string("RegularSelfSimLATP::generateNextPosition timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
+    //    log(string("RegularSelfSimLATP::generateNextPosition timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
 
     return true;
 }
@@ -140,13 +131,18 @@ void RegularSelfSimLATP::endRoute() {
 }
 
  void RegularSelfSimLATP::makeRoot() {
+     unsigned int day = RoutingDaemon::instance->getCurrentDay();
+     ASSERT(day >= 1);
+     cout << endl;
+     log(string("RegularSelfSimLATP::makeRoot: Start root making for day = ") + std::to_string(day)
+             + string(", isRootReady = ") + std::to_string(isRootReady)
+             + string(", repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled)
+             + string(", mvnHistoryForRepeat = ") + std::to_string((mvnHistoryForRepeat != NULL)));
+
      // для того, чтобы метод SelfSimLATP::makeNewRoot() отработал, нужно даже при влключённом повторении построить currentRoot.
      ASSERT(!currentRoot);
      if (!isRootReady) {
-         unsigned int day = RoutingDaemon::instance->getCurrentDay();
-         ASSERT(day >= 1);
          RootsCollection *collection = NULL;
-
          vector<RootsCollection *> *dailyRoot = rc->getDailyRoot();
          if (dailyRoot) {
              // если наборы маршрутов для КАЖДОГО дня есть, то ходим по ним
@@ -167,22 +163,33 @@ void RegularSelfSimLATP::endRoute() {
          for (unsigned int i = 0; i < collection->getRootsData()->at(RootNumber)->size(); i++) {
              currentRoot->push_back(new HotSpotData(collection->getRootsData()->at(RootNumber)->at(i)));
          }
-         log(string("Root made for day = ") + std::to_string(day));
+         log(string("RegularSelfSimLATP::makeRoot: Root made for day = ") + std::to_string(day) + string(", RootNumber = ") + std::to_string(RootNumber));
      }
      isRootReady = true;
 
 
+     if (repetitionOfTraceEnabled && !mvnHistoryForRepeat) {
+         // в случае, когда строим новый маршрут (из-за нового дня), а трейса первого дня нет, то сохраняем на основе того, что есть.
+         mvnHistoryForRepeat = buildFirstTrace();
+         log(string("RegularSelfSimLATP::makeRoot: First trace is built! repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled));
+     }
+
      if (repetitionOfTraceEnabled && mvnHistoryForRepeat) {
          // если при включённом повторении маршрута трейс уже сохранён, то берём начальную точку из него
-         unsigned int day = RoutingDaemon::instance->getCurrentDay();
-         ASSERT(day >= 1);
-
          timeOffset = (day-1) * RoutingDaemon::instance->getDayDuration();
-         log(string("Repeatable Root made! day = ") + std::to_string(day)
+         log(string("RegularSelfSimLATP::makeRoot: Repeatable root is made! day = ") + std::to_string(day)
              + string(", simTime = ") +  std::to_string(simTime().dbl())
              + string(", timeOffset = ") + std::to_string(timeOffset.dbl()));
 
-         long step = (getStep() - 1) % mvnHistoryForRepeat->getSize();
+         long step = calculateStep();
+         log("RegularSelfSimLATP::makeRoot: step = " + std::to_string(step)
+                 + ", getStep() = " + std::to_string(getStep())
+                 + ", mvnHistoryForRepeat->getSize() = " + std::to_string(mvnHistoryForRepeat->getSize()));
+         // в случае, когда строим новый маршрут (из-за нового дня), то число точек на одну меньше чем шагов (т.к новый мог день вклиниться по среди паузы).
+         if (step > 0) {
+             decreaseStep();
+             step = calculateStep();
+         }
          ASSERT(step == 0);
          lastPosition.x = mvnHistoryForRepeat->getXCoordinates()->at(step);
          lastPosition.y = mvnHistoryForRepeat->getYCoordinates()->at(step);
@@ -190,3 +197,22 @@ void RegularSelfSimLATP::endRoute() {
          targetPosition = lastPosition;
      }
 }
+
+ MovementHistory* RegularSelfSimLATP::buildFirstTrace() {
+     MovementHistory* history = new MovementHistory(*getMovementHistory());
+     // for debug
+     //                const char *wpsDir = "outTrace/first_day_wps";
+     //                const char *trsDir = "outTrace/first_day_trs";
+     //                if (CreateDirectory(wpsDir, NULL)) cout << "create output directory: " << wpsDir << endl;
+     //                else cout << "error create output directory: " << wpsDir << endl;
+     //                if (CreateDirectory(trsDir, NULL)) cout << "create output directory: " << trsDir << endl;
+     //                else cout << "error create output directory: " << trsDir << endl;
+     //                mvnHistoryForRepeat->save(wpsDir, trsDir);
+     // for debug
+     return history;
+ }
+
+ long RegularSelfSimLATP::calculateStep() {
+     ASSERT(mvnHistoryForRepeat);
+     return (getStep() - 1) % mvnHistoryForRepeat->getSize();
+ }

@@ -41,6 +41,8 @@ protected:
     virtual bool generateNextPosition(Coord &targetPosition, simtime_t &nextChange); /** @brief Overridden from SelfSimLATP.*/
     void endRoute();
     virtual void makeRoot(); /** @brief Overridden from SelfSimLATP.*/
+    MovementHistory* buildFirstTrace();
+    long calculateStep();
 
 public:
     RegularSelfSimLATP();

@@ -79,6 +79,9 @@ class RegularRootLATP : public LevyHotSpotsLATP
 
     virtual void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
 
+    MovementHistory* buildFirstTrace();
+    long calculateStep();
+
   public:
     RegularRootLATP();
     void loadFirstRoot();
