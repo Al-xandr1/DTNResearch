@@ -242,8 +242,8 @@ void RoutingDaemon::processNewDay() {
     if (RoutingDaemon::connectivityPerDay->size() > countOfDays) {
         simtime_t** oldest = RoutingDaemon::connectivityPerDay->front();
         RoutingDaemon::connectivityPerDay->erase(RoutingDaemon::connectivityPerDay->begin());
-        for(int i = 1; i < RoutingDaemon::numHosts; i++) delete[] oldest[i];
-        delete[] oldest;
+        for(int i = 1; i < RoutingDaemon::numHosts; i++) myDeleteArray(oldest[i]);
+        myDeleteArray(oldest);
     }
 
     // ѕриводим в начальное состо€ние все матрицы
@@ -282,11 +282,11 @@ bool RoutingDaemon::processIfCan(Request* request) {
             take(response);
             sendDirect(response, getParentModule()->getSubmodule("host", request->getSourceId())->gate("in"));
 
-            delete neighbors;
+            myDelete(neighbors);
             return true;
         }
     }
-    delete neighbors;
+    myDelete(neighbors);
     return false;
 }
 

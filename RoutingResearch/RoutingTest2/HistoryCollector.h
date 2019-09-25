@@ -48,7 +48,7 @@ private:
     static RoutingDaemon* rd;
 
     static unsigned int currentFilePartOfCollectedPackets;
-    static unsigned int collectedPackets;
+    static unsigned int collectedInformationUnits;
     static unsigned int createdPackets;
     static unsigned int deliveredPackets;
     // for route history: 1 dimension - nodeId, 2 - routes
@@ -74,7 +74,7 @@ private:
     static ofstream* createPacketsHistoryPartFile();
     static void write(int nodeId, vector<RouteInfoForNode*>* routesForNode, ostream* out);
     static void insertRow(Packet* packet, char* event, int nodeId, Coord position);
-    static bool write(Packet* packet, ostream* out);
+    static bool write(Packet* packet, ostream* out, unsigned int &informationUnits);
     static void write(simtime_t ict, ostream* out);
 };
 

@@ -29,6 +29,8 @@ void StatisticsCollector2::initialize()
             packetsHistoryDoc = new xml_document();
             xml_parse_result packetsHistoryDocResult = packetsHistoryDoc->load_file(packetsHistoryPartDocName);
             cout << endl << "Result of loading packetsHistoryPartDocName (" << packetsHistoryPartDocName << "): " << packetsHistoryDocResult.description() << endl;
+            if (status_out_of_memory == packetsHistoryDocResult.status)
+                exit(-1923);
 
             processPacketHistory();
 

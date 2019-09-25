@@ -20,7 +20,7 @@ void MobileHost::handleMessage(cMessage *msg) {
 
        case DAY_START: {           // Сообщение о начале нового "дня"
            startRoute();
-           delete msg;
+           myDelete(msg);
            break;
        }
 
@@ -68,13 +68,13 @@ void MobileHost::handleMessage(cMessage *msg) {
            }
            ASSERT(wasSend); // todo remove
            if (wasSend) {
-               delete request;
-               delete response;
+               myDelete(request);
+               myDelete(response);
            } else {
                //todo костыль, описанный выше из-за величины параметра updateInterval. Todo придумать лучше...
                take(request);
                sendDirect(request, rdGate);
-               delete response;
+               myDelete(response);
            }
 
            //} else {
@@ -84,14 +84,14 @@ void MobileHost::handleMessage(cMessage *msg) {
            //    // Поэтому будем "костылить": перепосылать запрос на маршрутизацию, т.к. не можем обработать сейчас. Todo придумать лучше...
            //    take(request);
            //    sendDirect(request, rdGate);
-           //    delete response;
+           //    myDelete(response);
            //}
            break;
        }
 
        case END_ROUTE: {
            endRoute();
-           delete msg;
+           myDelete(msg);
            break;
        }
 
@@ -226,6 +226,6 @@ void MobileHost::destroyPacket(Packet* packet) {
     packet->setReceivedTime(simTime());
     HistoryCollector::insertRowDelivered(packet, nodeId, getMobility()->getCurrentPosition());
     HistoryCollector::collectPacket(packet);
-    delete packet;
+    myDelete(packet);
 }
 

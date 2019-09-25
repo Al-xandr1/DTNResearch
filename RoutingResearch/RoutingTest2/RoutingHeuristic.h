@@ -3,6 +3,7 @@
 
 #include <omnetpp.h>
 #include "RoutingDaemon.h"
+#include "DevelopmentHelper.h"
 
 #define OH_HEURISTIC    (char*)"OneHopHeuristic"
 #define TH_HEURISTIC    (char*)"TwoHopsHeuristic"
@@ -41,7 +42,9 @@ public:
     }
 
     ~RoutingHeuristic() {
-        if (name) {delete name; name = NULL;}
+        myDeleteArray(name);
+        rd = NULL;
+        settings = NULL;
     };
 
     char* getName() {return name;}

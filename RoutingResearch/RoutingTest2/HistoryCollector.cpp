@@ -4,13 +4,13 @@ ofstream* HistoryCollector::packetsHistoryFile = NULL;   // файл с информацией о
 ofstream* HistoryCollector::ictHistoryFile = NULL;       // файл с информацией о времени взаимодействия узлов
 ofstream* HistoryCollector::routeHistoryFile = NULL;     // файл с информацией о времени взаимодействия узлов
 unsigned int HistoryCollector::currentFilePartOfCollectedPackets = 0;
-unsigned int HistoryCollector::collectedPackets = 0;
+unsigned int HistoryCollector::collectedInformationUnits = 0;
 unsigned int HistoryCollector::createdPackets = 0;
 unsigned int HistoryCollector::deliveredPackets = 0;
 RoutingDaemon* HistoryCollector::rd = NULL;
 vector<vector<RouteInfoForNode*>*>* HistoryCollector::routeHistory = NULL;
 
-#define MAX_COLLECTED_PACKETS_IN_HISTORY_PART 100000
+#define MAX_COLLECTED_INFORMATION_UNITS_IN_HISTORY_PART 6000000
 
 void HistoryCollector::initialize(RoutingDaemon* rd) {
     HistoryCollector::rd = rd;
@@ -71,14 +71,13 @@ void HistoryCollector::collectPacket(Packet* packet) {
         packetsHistoryFile = createPacketsHistoryPartFile();
     }
 
-    if (write(packet, packetsHistoryFile)) {
-        collectedPackets++;
-
-        if (collectedPackets % MAX_COLLECTED_PACKETS_IN_HISTORY_PART == 0) {
+    if (write(packet, packetsHistoryFile, collectedInformationUnits)) {
+        if (collectedInformationUnits >= MAX_COLLECTED_INFORMATION_UNITS_IN_HISTORY_PART) {
             // откусываем кусок файла
             closeXmlFile(packetsHistoryFile, "</PACKETS-HISTORY>");
             myDelete(packetsHistoryFile);
             currentFilePartOfCollectedPackets++;
+            collectedInformationUnits = 0; // обнуляем счётчик количества информации на файл
         }
     }
 }
@@ -103,7 +102,7 @@ void HistoryCollector::insertRowRemoved(Packet* packet, int nodeId, Coord positi
 void HistoryCollector::insertRowDelivered(Packet* packet, int nodeId, Coord position)   {insertRow(packet, DELIVERED_EVENT,   nodeId, position);
                                                                                             deliveredPackets++; ASSERT(deliveredPackets <= createdPackets);}
 
-void HistoryCollector::printHistory(Packet* packet) {write(packet, &cout);}
+void HistoryCollector::printHistory(Packet* packet) {unsigned int fake = 0; write(packet, &cout, fake);}
 
 
 //-------------------------------------- private ------------------------------------------------
@@ -143,7 +142,7 @@ void HistoryCollector::insertRow(Packet* packet, char* event, int nodeId, Coord 
     }
 }
 
-bool HistoryCollector::write(Packet* packet, ostream* out) {
+bool HistoryCollector::write(Packet* packet, ostream* out, unsigned int &informationUnits) {
     if (rd && rd->canCollectStatistics()) {
         double threshold = rd->getUseCountOfDaysForStat() ? (rd->getCountOfDays() * rd->getDayDuration()) : 0;
         if (packet->getCreationTime() >= threshold) {
@@ -157,10 +156,12 @@ bool HistoryCollector::write(Packet* packet, ostream* out) {
                 (*out) <<TAB<<TAB<<TAB<<"<"<<packet->eventHistory[i]<<">"<<packet->IDhistory[i]<<DLM<<packet->timeHistory[i]
                        <<DLM<<packet->xCoordinates[i]<<DLM<<packet->yCoordinates[i]<<DLM<<packet->heuristicHistory[i]
                        <<"</"<<packet->eventHistory[i]<<">"<<endl;
+                informationUnits += 1;
             }
 
             (*out) <<TAB<<TAB<<"</HISTORY>"<<endl;
             (*out) <<TAB<<"</PACKET>"<<endl;
+            informationUnits += 5;
             return true;
         } else {
             //проверить, что учитываемый пакет НЕ имеет событие о создании

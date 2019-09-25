@@ -58,6 +58,11 @@ public:
 
     ~Packet() {
         lastHeuristric = NULL;
+        eventHistory.clear();
+        IDhistory.clear();
+        timeHistory.clear();
+        xCoordinates.clear();
+        yCoordinates.clear();
     }
 
     int   getSourceId()       {return sourceId;}
@@ -94,6 +99,10 @@ public:
         this->setKind(REQUEST_FOR_ROUTING);
     }
 
+    ~Request() {
+        packet = NULL;
+    }
+
     int     getSourceId()       {return sourceId;}
     int     getDestinationId()  {return destinationId;}
     Packet* getPacket()         {return packet;}
@@ -114,6 +123,10 @@ public:
         this->destinationId = destinationId;
         this->request = request;
         this->setKind(RESPONSE_FOR_REQUEST);
+    }
+
+    ~Response() {
+        request = NULL;
     }
 
     int      getDestinationId()  {return destinationId;}
