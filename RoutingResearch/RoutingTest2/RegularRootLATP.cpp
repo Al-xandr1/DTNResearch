@@ -553,107 +553,108 @@ void RegularRootLATP::makeNewRoot() {
         lastPosition.z = 0;
         targetPosition = lastPosition;
 
-    } else {
-
-        if(currentRoot != NULL) {
-            /* Сохраняем для статистики сгенерированный маршрут, который реально был пройден (маршрут от предыдущего дня).
-               Сохранение тут происходит со второго дня. Первый день сохраняется сразу после создания в initialize.
-             */
-            for(unsigned int i = 0; i < currentRootCounterSAVED->size(); i++) {
-                // вычисляем фактически пройденный маршрут как actualCurrentRootCounter = currentRootCounterSAVED - currentRootCounter
-                (*currentRootCounterSAVED)[i] -= (*currentRootCounter)[i];
-                ASSERT((*currentRootCounterSAVED)[i] >= 0);
-            }
-
-            // for debug
-            //        const int counterSum = getSum(*currentRootCounterSAVED);
-            //        ASSERT(counterSum >= 0);
-            //        // Каждое посещение локации фиксируется в currentRootActualTrack.
-            //        // Однако в RegularRootLATP::findNextHotSpot последняя локация с несколькими посещениесми заменяется одним посещением
-            //        // Поэтому сумма всех посещений, должна быть больше или равна длине трека
-            //        if (((unsigned int) counterSum) < currentRootActualTrack->size()) {
-            //            cout << "ALERT: counterSum=" << counterSum << endl;
-            //            cout << "ALERT: currentRootActualTrack->size()=" << currentRootActualTrack->size() << endl;
-            //            printCurrentRoot();
-            //            for(unsigned int i = 0; i < currentRootCounterSAVED->size(); i++) {
-            //                cout << "currentRootCounterSAVED(" << i << ")=" << currentRootCounterSAVED->at(i) << endl;
-            //            }
-            //            for(unsigned int i = 0; i < currentRootActualTrack->size(); i++) {
-            //                cout << "currentRootActualTrack(" << i << ")=" << currentRootActualTrack->at(i) << endl;
-            //            }
-            //        }
-            //        ASSERT(((unsigned int) counterSum) >= currentRootActualTrack->size()); todo this assert brakes program
-            ASSERT(currentRootActualTrack->size() == currentRootActualTrackSumTime->size());
-            ASSERT(currentRootActualTrack->size() == currentRootActualTrackWaypointNum->size());
-            // for debug
-
-
-            RootsCollection::getInstance()->collectActualRoot(currentRoot,
-                                                              currentRootSnumber,
-                                                              currentRootCounterSAVED,
-                                                              currentRootActualTrack,
-                                                              currentRootActualTrackSumTime,
-                                                              currentRootActualTrackWaypointNum,
-                                                              NodeID,
-                                                              day - 1);
-
-            cout << endl;
-            log(string("Saved old root at previous day: ") + std::to_string(day - 1));
-
-            // удаляем старый маршрут
-            deleteLocalProbMatrix();
-            myDelete(currentRoot);
-            myDelete(currentRootSnumber);
-            myDelete(currentRootCounter);
-            myDelete(currentRootWptsPerVisit);
-            myDelete(currentRootCounterSAVED);
-            myDelete(currentRootActualTrack);
-            myDelete(currentRootActualTrackSumTime);
-            myDelete(currentRootActualTrackWaypointNum);
-        }
-
-
-        rootGenerator->generateNewRoot(
-                firstRoot, firstRootSnumber, firstRootCounter, firstRootWptsPerVisit,
-                currentRoot, currentRootSnumber, currentRootCounter, currentRootWptsPerVisit);
-        if (!getParentModule()->getParentModule()->par("useFixedHomeLocation").boolValue()) {
-            setHomeLocation(currentRoot);
-        }
-
-
-        // for debug
-        ASSERT(currentRoot && currentRootSnumber && currentRootCounter && currentRootWptsPerVisit);
-        printFirstRoot();
-        printCurrentRoot();
-        // проверка, что домашняя локация в новом маршруте сохранилась
-        checkHomeLocationIn(currentRoot);
-        // суммы посещений должно быть больше нуля в маршрутах
-        ASSERT(getSum(*currentRootCounter) > 0);
-        ASSERT(getSum(*firstRootCounter) > 0);
-        // все структуры одинаковы по размеру
-        ASSERT((currentRoot->size() == currentRootSnumber->size())
-                && (currentRoot->size() == currentRootCounter->size())
-                && (currentRoot->size() == currentRootWptsPerVisit->size()));
-        // for debug
-
-
-        makeLocalProbMatrix(powA);
-        // начальнаЯ локациЯ - это перваЯ локациЯ текущего маршрута - она же домашняя
-        currentRootActualTrack = new vector<unsigned int>();
-        currentRootActualTrackSumTime = new vector<double>();
-        currentRootActualTrackWaypointNum = new vector<int>();
-        setCurRootIndex(0, true);
-        targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
-        targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
-
-
-        /* Сохраняем для статистики сгенерированный маршрут для текущего дня в RootsCollection.
-           Сохранение тут происходит со второго дня. Первый день сохраняется сразу после создания в initialize.
-           Тут сохраняется только что созданный маршут, по которому ещё не ходили.
-         */
-        RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, day);
-        currentRootCounterSAVED = new vector<int>(*currentRootCounter);
     }
+
+
+    if(currentRoot != NULL) {
+        /* Сохраняем для статистики сгенерированный маршрут, который реально был пройден (маршрут от предыдущего дня).
+           Сохранение тут происходит со второго дня. Первый день сохраняется сразу после создания в initialize.
+         */
+        for(unsigned int i = 0; i < currentRootCounterSAVED->size(); i++) {
+            // вычисляем фактически пройденный маршрут как actualCurrentRootCounter = currentRootCounterSAVED - currentRootCounter
+            (*currentRootCounterSAVED)[i] -= (*currentRootCounter)[i];
+            ASSERT((*currentRootCounterSAVED)[i] >= 0);
+        }
+
+        // for debug
+        //        const int counterSum = getSum(*currentRootCounterSAVED);
+        //        ASSERT(counterSum >= 0);
+        //        // Каждое посещение локации фиксируется в currentRootActualTrack.
+        //        // Однако в RegularRootLATP::findNextHotSpot последняя локация с несколькими посещениесми заменяется одним посещением
+        //        // Поэтому сумма всех посещений, должна быть больше или равна длине трека
+        //        if (((unsigned int) counterSum) < currentRootActualTrack->size()) {
+        //            cout << "ALERT: counterSum=" << counterSum << endl;
+        //            cout << "ALERT: currentRootActualTrack->size()=" << currentRootActualTrack->size() << endl;
+        //            printCurrentRoot();
+        //            for(unsigned int i = 0; i < currentRootCounterSAVED->size(); i++) {
+        //                cout << "currentRootCounterSAVED(" << i << ")=" << currentRootCounterSAVED->at(i) << endl;
+        //            }
+        //            for(unsigned int i = 0; i < currentRootActualTrack->size(); i++) {
+        //                cout << "currentRootActualTrack(" << i << ")=" << currentRootActualTrack->at(i) << endl;
+        //            }
+        //        }
+        //        ASSERT(((unsigned int) counterSum) >= currentRootActualTrack->size()); todo this assert brakes program
+        //        ASSERT(currentRootActualTrack->size() == currentRootActualTrackSumTime->size());
+        //        ASSERT(currentRootActualTrack->size() == currentRootActualTrackWaypointNum->size());
+        // for debug
+
+
+        RootsCollection::getInstance()->collectActualRoot(currentRoot,
+                                                          currentRootSnumber,
+                                                          currentRootCounterSAVED,
+                                                          currentRootActualTrack,
+                                                          currentRootActualTrackSumTime,
+                                                          currentRootActualTrackWaypointNum,
+                                                          NodeID,
+                                                          day - 1);
+
+        cout << endl;
+        log(string("Saved old root at previous day: ") + std::to_string(day - 1));
+
+        // удаляем старый маршрут
+        deleteLocalProbMatrix();
+        myDelete(currentRoot);
+        myDelete(currentRootSnumber);
+        myDelete(currentRootCounter);
+        myDelete(currentRootWptsPerVisit);
+        myDelete(currentRootCounterSAVED);
+        myDelete(currentRootActualTrack);
+        myDelete(currentRootActualTrackSumTime);
+        myDelete(currentRootActualTrackWaypointNum);
+    }
+
+
+    rootGenerator->generateNewRoot(
+            firstRoot, firstRootSnumber, firstRootCounter, firstRootWptsPerVisit,
+            currentRoot, currentRootSnumber, currentRootCounter, currentRootWptsPerVisit);
+    if (!getParentModule()->getParentModule()->par("useFixedHomeLocation").boolValue()) {
+        setHomeLocation(currentRoot);
+    }
+
+
+    // for debug
+    //    ASSERT(currentRoot && currentRootSnumber && currentRootCounter && currentRootWptsPerVisit);
+    //    printFirstRoot();
+    //    printCurrentRoot();
+    //    // проверка, что домашняя локация в новом маршруте сохранилась
+    //    checkHomeLocationIn(currentRoot);
+    //    // суммы посещений должно быть больше нуля в маршрутах
+    //    ASSERT(getSum(*currentRootCounter) > 0);
+    //    ASSERT(getSum(*firstRootCounter) > 0);
+    //    // все структуры одинаковы по размеру
+    //    ASSERT((currentRoot->size() == currentRootSnumber->size())
+    //            && (currentRoot->size() == currentRootCounter->size())
+    //            && (currentRoot->size() == currentRootWptsPerVisit->size()));
+    // for debug
+
+
+    makeLocalProbMatrix(powA);
+    // начальнаЯ локациЯ - это перваЯ локациЯ текущего маршрута - она же домашняя
+    currentRootActualTrack = new vector<unsigned int>();
+    currentRootActualTrackSumTime = new vector<double>();
+    currentRootActualTrackWaypointNum = new vector<int>();
+    setCurRootIndex(0, true);
+    targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
+    targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+
+
+    /* Сохраняем для статистики сгенерированный маршрут для текущего дня в RootsCollection.
+       Сохранение тут происходит со второго дня. Первый день сохраняется сразу после создания в initialize.
+       Тут сохраняется только что созданный маршут, по которому ещё не ходили.
+    */
+    RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, day);
+    currentRootCounterSAVED = new vector<int>(*currentRootCounter);
+
 
     // начинаем маршрут с паузы, чтобы мы "нормально прошли" первую точку (например постояли в ней)
     // а не так, чтобы при инициализации маршрута мы её поставили и при первой генерации сразу выбрали новую
