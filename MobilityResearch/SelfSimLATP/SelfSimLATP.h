@@ -13,26 +13,30 @@
 #include "Data.h"
 #include "HotSpotsCollection.h"
 #include "RootsCollection.h"
+#include "Movement.h"
 #include "SelfSimMap.h"
+#include "Messages.h"
+#include "MovementHistory.h"
 #include "DevelopmentHelper.h"
 
 class SelfSimLATP : public LineSegmentsMobilityBase {
 protected:
-
     int NodeID;
+    bool movementsFinished;    // показывает окончил ли пользователь движение или нет
 
+    RootsCollection *rc;
+    unsigned int RootNumber;
+    vector<HotSpotData *> *currentRoot;
+    bool isRootReady;
+
+private:
     bool isPause;
     long step;
-
-    double kForSpeed;
-    double roForSpeed;
-
-    LeviPause *pause;
-
     double powAforHS;
     double powAforWP;
 
-    bool movementsFinished;    // показывает окончил ли пользователь движение или нет
+    Movement *movement;
+    simtime_t waitTime;
 
     // текущая локация
     Coord currentHSMin, currentHSMax, currentHSCenter;
@@ -44,11 +48,6 @@ protected:
 
     HSDistanceMatrix *hsd;
 
-    RootsCollection *rc;
-    unsigned int RootNumber;
-    vector<HotSpotData *> *currentRoot;
-    bool isRootReady;
-
     SelfSimMapGenerator *gen;
 
     vector<vector<double> *> dstMatrix;
@@ -59,28 +58,43 @@ protected:
     bool isWptMatrixReady;
 
     //statistics collection
-    char *wpFileName;
-    char *trFileName;
-    simtime_t waitTime;
-    std::vector<simtime_t> inTimes;
-    std::vector<simtime_t> outTimes;
-    std::vector<double> xCoordinates;
-    std::vector<double> yCoordinates;
+    MovementHistory* mvnHistory;
 
 protected:
     virtual int numInitStages() const { return 3; }
 
     virtual void initialize(int stage);   /** @brief Initializes mobility model parameters.*/
-    virtual void handleMessage(cMessage *message);
+
+    void setCurrentWpt(unsigned int i);
+
+    void setWaitTime(simtime_t time) {
+        ASSERT(time > 0);
+        this->waitTime = time;
+    }
+
+    simtime_t getWaitTime() {
+        ASSERT(waitTime > 0);
+        return waitTime;
+    };
+
+    bool getIsPause()   { return this->isPause; };
+    long getStep()      { return this->step; };
+    void decreaseStep() { this->step--; };
+    MovementHistory* getMovementHistory() { return this->mvnHistory; };
+
+    unsigned int getCurrentWpt();
 
     virtual void setTargetPosition();     /** @brief Overridden from LineSegmentsMobilityBase.*/
     virtual void setInitialPosition();
 
-    bool generateNextPosition(Coord &targetPosition, simtime_t &nextChange);
+    virtual bool generatePause(simtime_t &nextChange);
+    virtual bool generateNextPosition(Coord &targetPosition, simtime_t &nextChange);
 
     virtual bool findNextHotSpot();       // ищем новую локацию и устанавливаем её новые границы и центр
 
     virtual void finish() { saveStatistics(); };
+
+    void log(string log);
 
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
 
@@ -97,7 +111,11 @@ public:
 
     Coord getConstraintAreaMax() { return this->constraintAreaMax; };
 
-    void makeRoot();
+    void setCurrentHSindex(int hsIndex);
+
+    void makeNewRoot();
+
+    virtual void makeRoot();
 
     void buildDstMatrix();
 

@@ -4,47 +4,81 @@ Define_Module(StatisticsCollector2);
 
 void StatisticsCollector2::initialize()
 {
-    //todo сделать напрямую из файлов отсюда
-    //ifstream* packetsHistoryFile = new ifstream(buildFullName(OUT_DIR, PACKETS_HIST));
-    //ifstream* ictHistoryFile = new ifstream(buildFullName(OUT_DIR, ICT_HIST));
-    //ifstream* routeInfoHistoryFile = new ifstream(buildFullName(OUT_DIR, RT_HIST));
-
-    packetsHistoryDoc = par("packetsHistoryDoc");
-    ictHistoryDoc = par("ictHistoryDoc");
-    routeHistoryDoc = par("routeHistoryDoc");
-
+    // Обоработка ИСТОРИИ ПАКЕТОВ
     createdPackets = 0;
     deliveredPackets = 0;
 
     lifeTimePDF = new cDoubleHistogram("LIFE-TIME-HISTOGRAM", 300);
     lifeTimePDF->setRange(0.0, 81000);
 
+    // Чтение данных из файлов
+    string filename;
+    size_t found;
+    string tmp(PACKETS_HIST);
+    if ((found = tmp.find(".")) != string::npos) {
+        filename = tmp.substr(0, found) + string("_")
+                + string(buildParameter("part", "*"))
+                + tmp.substr(found, tmp.size());
+    }
+    const char* packetHistoryFileNamePattern = buildFullName(OUT_DIR, filename.c_str());
+    WIN32_FIND_DATA f;
+    HANDLE h = FindFirstFile(packetHistoryFileNamePattern, &f);
+    if(h != INVALID_HANDLE_VALUE) {
+        do {
+            const char* packetsHistoryPartDocName = buildFullName(OUT_DIR, f.cFileName);
+            packetsHistoryDoc = new xml_document();
+            xml_parse_result packetsHistoryDocResult = packetsHistoryDoc->load_file(packetsHistoryPartDocName);
+            cout << endl << "Result of loading packetsHistoryPartDocName (" << packetsHistoryPartDocName << "): " << packetsHistoryDocResult.description() << endl;
+            if (status_out_of_memory == packetsHistoryDocResult.status)
+                exit(-1923);
+
+            processPacketHistory();
+
+            myDelete(packetsHistoryDoc);
+            myDeleteArray(packetsHistoryPartDocName);
+        }
+        while(FindNextFile(h, &f));
+    } else cout << "Directory or files not found\n";
+
+
+    // Обоработка ИСТОРИИ ICT
     ictPDF = new cDoubleHistogram("ICT-HISTOGRAM", 300);
     ictPDF->setRange(0.0, 45000);
 
-    commonRoutesDurationPDF = NULL;
+    ictHistoryDoc = new xml_document();
+    const char* ictHistoryDocName = buildFullName(OUT_DIR, ICT_HIST);
+    xml_parse_result ictHistoryDocResult = ictHistoryDoc->load_file(ictHistoryDocName);
+    cout << endl << "Result of loading ictHistoryDoc (" << ictHistoryDocName << "): " << ictHistoryDocResult.description() << endl;
 
+    processICTHistory();
+    myDelete(ictHistoryDoc);
+
+
+    // Обоработка ИСТОРИИ МАРШРУТОВ
+    commonRoutesDurationPDF = NULL;
     routesDurationPDFbyNode = new vector<cDoubleHistogram*>();
 
-    cout << "StatisticsCollector2: initialized" << endl;
+    routeHistoryDoc = new xml_document();
+    const char* routeHistoryDocName = buildFullName(OUT_DIR, RT_HIST);
+    xml_parse_result routeHistoryDocResult = routeHistoryDoc->load_file(routeHistoryDocName);
+    cout << endl << "Result of loading routeHistoryDoc (" << routeHistoryDocName << "): " << routeHistoryDocResult.description() << endl;
 
-    processPacketHistory();
-    processICTHistory();
     processRouteHistory();
+    myDelete(routeHistoryDoc);
 
     cout << "StatisticsCollector2: statistics collected" << endl;
 }
 
 
 void StatisticsCollector2::processPacketHistory() {
-    cXMLElementList packetTags = packetsHistoryDoc->getChildren();
+    xml_node packetsHistory = packetsHistoryDoc->child("PACKETS-HISTORY");
 
-    for(vector<cXMLElement*>::iterator packetPT = packetTags.begin(); packetPT != packetTags.end(); packetPT++) {
-        cXMLElement* packet = (*packetPT);
+    for (xml_node_iterator packetPT = packetsHistory.begin(); packetPT != packetsHistory.end(); ++packetPT) {
+        xml_node packet = (*packetPT);
 
         // считывание тега SUMMARY
-        cXMLElement* summary = packet->getElementByPath("./SUMMARY");
-        cStringTokenizer summaryTok(summary->getNodeValue());
+        xml_node summary = packet.child("SUMMARY");
+        cStringTokenizer summaryTok(summary.child_value());
         vector<double> summaryVec = summaryTok.asDoubleVector();
         double sourceId         = summaryVec[0];
         double destinationId    = summaryVec[1];
@@ -52,16 +86,15 @@ void StatisticsCollector2::processPacketHistory() {
         double receivedTime     = summaryVec[3];
 
         // считывание тега HISTORY
-        cXMLElement* history = packet->getElementByPath("./HISTORY");
+        xml_node history = packet.child("HISTORY");
         bool created = false,
              removed = false,
              delivered = false;
 
-        cXMLElementList events = history->getChildren();
-        for(vector<cXMLElement*>::iterator eventPT = events.begin(); eventPT != events.end(); eventPT++) {
-            cXMLElement* event = (*eventPT);
+        for (xml_node_iterator eventPT = history.begin(); eventPT != history.end(); ++eventPT) {
+            xml_node event = (*eventPT);
 
-            const char* eventName = event->getTagName();
+            const char* eventName = event.name();
 
             if (strcmp(eventName, CREATED_EVENT) == 0) {
 //                ASSERT(!created);   //т.е. данное событие для пакета встречается только один раз
@@ -101,7 +134,8 @@ void StatisticsCollector2::processPacketHistory() {
 
 
 void StatisticsCollector2::processICTHistory() {
-    cStringTokenizer tok(ictHistoryDoc->getNodeValue());
+    xml_node ictHistory = ictHistoryDoc->child("ICT-HISTORY");
+    cStringTokenizer tok(ictHistory.child_value());
     vector<double> ictValues = tok.asDoubleVector();
     for (unsigned int i=0; i<ictValues.size(); i++) {
 //        ASSERT(ictValues[i] >= 0);
@@ -112,40 +146,39 @@ void StatisticsCollector2::processICTHistory() {
 
 void StatisticsCollector2::processRouteHistory() {
     ASSERT(routesDurationPDFbyNode->size() == 0);
-    double maxDayDuration = atof(routeHistoryDoc->getAttribute("maxDayDuration"));
+    xml_node routeHistory = routeHistoryDoc->child("ROUTE-HISTORY");
+    double maxDayDuration = routeHistory.attribute("maxDayDuration").as_double();
 
     commonRoutesDurationPDF = new cDoubleHistogram("COMMON-ROUTE-DURATION-HISTOGRAM", 10);
     commonRoutesDurationPDF->setRange(0.0, maxDayDuration + 1);
 
-    cXMLElementList nodes = routeHistoryDoc->getChildren();
-    for(vector<cXMLElement*>::iterator nodePT = nodes.begin(); nodePT != nodes.end(); nodePT++) {
-         cXMLElement* node = (*nodePT);
-         int nodeId = atoi(node->getAttribute((char*) "nodeId"));
+    for (xml_node_iterator nodePT = routeHistory.begin(); nodePT != routeHistory.end(); ++nodePT) {
+        xml_node node = (*nodePT);
+        int nodeId = node.attribute("nodeId").as_int();
 
-         cDoubleHistogram* routeDurationHist = new cDoubleHistogram("ROUTE-DURATION-HISTOGRAM", 10);
-         routeDurationHist->setRange(0.0, maxDayDuration + 1);
-         routesDurationPDFbyNode->push_back(routeDurationHist);
+        cDoubleHistogram* routeDurationHist = new cDoubleHistogram("ROUTE-DURATION-HISTOGRAM", 10);
+        routeDurationHist->setRange(0.0, maxDayDuration + 1);
+        routesDurationPDFbyNode->push_back(routeDurationHist);
 
-         // ensures that nodeId match to the index of list
-         ASSERT((*routesDurationPDFbyNode)[nodeId] == routeDurationHist);
+        // ensures that nodeId match to the index of list
+        ASSERT((*routesDurationPDFbyNode)[nodeId] == routeDurationHist);
 
-         cXMLElementList rotes = node->getChildren();
-         for(vector<cXMLElement*>::iterator routePT = rotes.begin(); routePT != rotes.end(); routePT++) {
-             cXMLElement* route = (*routePT);
+        for (xml_node_iterator routePT = node.begin(); routePT != node.end(); ++routePT) {
+            xml_node route = (*routePT);
 
-             cStringTokenizer summaryTok(route->getNodeValue());
-             vector<double> routeInfo = summaryTok.asDoubleVector();
-             const double day      = routeInfo[0];
-             const double dayStart = routeInfo[1];
-             const double dayEnd   = routeInfo[2];
-             const double savedDuration = routeInfo[3];
+            cStringTokenizer summaryTok(route.child_value());
+            vector<double> routeInfo = summaryTok.asDoubleVector();
+            const double day      = routeInfo[0];
+            const double dayStart = routeInfo[1];
+            const double dayEnd   = routeInfo[2];
+            const double savedDuration = routeInfo[3];
 
-             // для расчёта длительности дня используем начало и конец дня. savedDuration игнорируем
-             double duration = dayEnd - dayStart;
-             ASSERT(duration >= 0);
-             routeDurationHist->collect(duration);
-             commonRoutesDurationPDF->collect(duration);
-         }
+            // для расчёта длительности дня используем начало и конец дня. savedDuration игнорируем
+            double duration = dayEnd - dayStart;
+            ASSERT(duration >= 0);
+            routeDurationHist->collect(duration);
+            commonRoutesDurationPDF->collect(duration);
+        }
     }
 }
 
@@ -212,7 +245,9 @@ void StatisticsCollector2::finish() {
 
     ASSERT(deliveredPackets <= createdPackets);
     double deliveredPercentage = (100.0 * deliveredPackets) / (1.0 * createdPackets);
-    ASSERT(deliveredPercentage <= 100);
+    if (deliveredPercentage < 0 || deliveredPercentage > 100 || deliveredPercentage != deliveredPercentage)
+        cout << endl << "\t!!! WARNING !!! deliveredPercentage = " << deliveredPercentage
+        << ", deliveredPackets = " << deliveredPackets << ", createdPackets = " << createdPackets << endl << endl;
     out << "    <DELIVERED-PACKETS> " << deliveredPercentage << " </DELIVERED-PACKETS>" << endl << endl;
 
 

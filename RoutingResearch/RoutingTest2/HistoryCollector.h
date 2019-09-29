@@ -4,9 +4,12 @@
 #include <iostream>
 #include <fstream>
 #include <omnetpp.h>
+#include <string>
 #include <Messages.h>
 #include <RoutingDaemon.h>
 #include "DevelopmentHelper.h"
+
+using namespace std;
 
 // Коды сообытий, происходящими с сообщениями
 #define CREATED_EVENT        (char*) "CRT"    // событие создания пакета в системе
@@ -44,6 +47,8 @@ private:
     static ofstream* routeHistoryFile;    // файл с информацией о пройденных маршрутах узлов
     static RoutingDaemon* rd;
 
+    static unsigned int currentFilePartOfCollectedPackets;
+    static unsigned int collectedInformationUnits;
     static unsigned int createdPackets;
     static unsigned int deliveredPackets;
     // for route history: 1 dimension - nodeId, 2 - routes
@@ -66,10 +71,10 @@ public:
     static void printHistory(Packet* packet);
 
 private:
+    static ofstream* createPacketsHistoryPartFile();
     static void write(int nodeId, vector<RouteInfoForNode*>* routesForNode, ostream* out);
     static void insertRow(Packet* packet, char* event, int nodeId, Coord position);
-    static void collectPacket(ofstream* out, Packet* packet);
-    static void write(Packet* packet, ostream* out);
+    static bool write(Packet* packet, ostream* out, unsigned int &informationUnits);
     static void write(simtime_t ict, ostream* out);
 };
 

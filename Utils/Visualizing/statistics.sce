@@ -8,19 +8,34 @@ function printPstFolder(folder)
     pstFiles = getFiles(PATH, "*.pst");
 
     tags = ["ROOTS-DIMENSION-HISTOGRAM/MIN" ; "ROOTS-DIMENSION-HISTOGRAM/MAX" ; "ROOTS-DIMENSION-HISTOGRAM/AVERAGE"]
-    privatePrintTable(pstFiles, tags);
+    __privatePrintTable__(pstFiles, tags);
     
     tags = ["ROOT-LENGTH-HISTOGRAM/MIN" ; "ROOT-LENGTH-HISTOGRAM/MAX" ; "ROOT-LENGTH-HISTOGRAM/AVERAGE"]
-    privatePrintTable(pstFiles, tags);
+    __privatePrintTable__(pstFiles, tags);
 
     tags = ["NEW-PERSISTENCE/ETHALON-ROOT/ROOT-NUM" ; "NEW-PERSISTENCE/ETHALON-ROOT/COEF"]
-    privatePrintTable(pstFiles, tags);
+    __privatePrintTable__(pstFiles, tags);
 
     PATH = SAVE_PATH;
 endfunction
 
 
 //--------------------- Функции для Статистики Мобильности ---------------------
+
+//Рисование всех гистрограмм из одного файла статистики мобильности, взятых из папки folder
+function drawWPHistogramsFolder(folder)
+    SAVE_PATH = PATH;
+    
+    if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
+    statisticFiles = getFiles(PATH, "*.stat");
+    
+    __privateDrawHistograms__(statisticFiles, "FLIGHT-LENGTH-HISTOGRAM", "длины перемещений", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
+    __privateDrawHistograms__(statisticFiles, "VELOCITY-HISTOGRAM", "скорости перемещений", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
+    __privateDrawHistograms__(statisticFiles, "PAUSE-HISTOGRAM", "паузы в путевых точках", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
+    
+    PATH = SAVE_PATH;
+endfunction
+
 
 //Рисование всех гистрограмм из файлов статистики мобильности
 function drawWPHistograms(varargin)
@@ -32,9 +47,9 @@ function drawWPHistograms(varargin)
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    privateDrawHistograms(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "Flight length, meters");
-    privateDrawHistograms(fileNames, "VELOCITY-HISTOGRAM", "Velocity magnitude, meters/sec");
-    privateDrawHistograms(fileNames, "PAUSE-HISTOGRAM", "Pause time, sec");
+    __privateDrawHistograms__(fileNames, "FLIGHT-LENGTH-HISTOGRAM", "длины перемещений", "длина, [м]", 0, 0, 1);      // "Flight length [meters]"
+    __privateDrawHistograms__(fileNames, "VELOCITY-HISTOGRAM", "скорости перемещений", "скорость, [м/с]", 0, 0, 1);      // "Velocity magnitude [meters/sec]"
+    __privateDrawHistograms__(fileNames, "PAUSE-HISTOGRAM", "паузы в путевых точках", "пауза, [с]", 0, 0, 1);              // "Pause time [sec]"
 endfunction
 
 
@@ -47,8 +62,8 @@ function drawNodeHistogramsFolder(folder)
     if (folder<>"") then PATH = PATH + folder + SEPARATOR; end
     statisticFiles = getFiles(PATH, "*.xml");
     
-    privateDrawHistograms(statisticFiles, "LIFE-TIME-HISTOGRAM", "Life time, simsecs");
-    privateDrawHistograms(statisticFiles, "ICT-HISTOGRAM", "ICT, simsecs");
+    __privateDrawHistograms__(statisticFiles, "LIFE-TIME-HISTOGRAM", "времени жизни пакета", "время жизни, [с]", 0, 0, 1);    // "Life time [sec]"
+    __privateDrawHistograms__(statisticFiles, "ICT-HISTOGRAM", "времени взаимодействия узлов", "время контакта, [с]", 0, 0, 1);       // "ICT [sec]"
     
     PATH = SAVE_PATH;
 endfunction
@@ -64,8 +79,8 @@ function drawNodeHistograms(varargin)
         error(msprintf("drawWPHistograms: Ожидалось один или более параметров (имён файлов)"));
     end
     
-    privateDrawHistograms(fileNames, "LIFE-TIME-HISTOGRAM", "Life time, simsecs");
-    privateDrawHistograms(fileNames, "ICT-HISTOGRAM", "ICT, simsecs");
+    __privateDrawHistograms__(fileNames, "LIFE-TIME-HISTOGRAM", "времени жизни пакета", "время жизни, [с]", 0, 0, 1);         // "Life time [sec]"
+    __privateDrawHistograms__(fileNames, "ICT-HISTOGRAM", "времени взаимодействия узлов", "время между контактами, [с]", 0, 0, 1);    // "ICT [sec]"
 endfunction
 
 
@@ -77,7 +92,7 @@ function printNodeValuesFolder(folder)
     statisticFiles = getFiles(PATH, "*.xml");
     
     tags = ["DELIVERED-PACKETS" ; "LIFE-TIME-HISTOGRAM/MEAN"]
-    privatePrintTable(statisticFiles, tags);
+    __privatePrintTable__(statisticFiles, tags);
     
     PATH = SAVE_PATH;
 endfunction
@@ -94,95 +109,142 @@ function printNodeValues(varargin)
     end
     
     tags = ["DELIVERED-PACKETS" ; "LIFE-TIME-HISTOGRAM/MEAN"]
-    privatePrintTable(fileNames, tags);
+    __privatePrintTable__(fileNames, tags);
 endfunction
 
 
 //-------------------- Private функции для статистики --------------------------
 
 //Рисование гистрограммы из вектора файлов статистики
-function privateDrawHistograms(filenames, tag, xlable)
+function __privateDrawHistograms__(filenames, tag, graphicName, xlable, isPdf, isCdf, isCcdf)
     fileCount = size(filenames, 1);
     
     cells = []; cellWidth = []; leftBound = []; rightBound = [];
     for i=1:fileCount
         doc = xmlRead(PATH + filenames(i));
-        cellsLoc = getDoubleFromXml(doc, "//" + tag + "/CELLS/text()");
-        cellWidthLoc = getDoubleFromXml(doc, "//" + tag + "/CELL-WIDTH/text()");
-        leftBoundLoc = getDoubleFromXml(doc, "//" + tag + "/LEFT-BOUND/text()");
-        rightBoundLoc = getDoubleFromXml(doc, "//" + tag + "/RIGHT-BOUND/text()");
-        
-        
-        cells      = [cells ; cellsLoc]; 
-        cellWidth  = [cellWidth ; cellWidthLoc];
-        leftBound  = [leftBound ; leftBoundLoc];
-        rightBound = [rightBound ; rightBoundLoc];
+        cells      = [cells      ; getDoubleFromXml(doc, "//" + tag + "/CELLS/text()")]; 
+        cellWidth  = [cellWidth  ; getDoubleFromXml(doc, "//" + tag + "/CELL-WIDTH/text()")];
+        leftBound  = [leftBound  ; getDoubleFromXml(doc, "//" + tag + "/LEFT-BOUND/text()")];
+        rightBound = [rightBound ; getDoubleFromXml(doc, "//" + tag + "/RIGHT-BOUND/text()")];
         xmlDelete(doc);
     end
     
-    
-//    scf();
-//    //рисуем полигон частот
-//    legenda = [];  colorLoc = GRAPH_COLOR;
-//    for i=1:fileCount
-//        doc = xmlRead(PATH + filenames(i));
-//        len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
-//        pdf = getVector(doc, "//" + tag + "/PDF-VALS/text()", cells(i));
-//        plot2d(len, pdf, colorLoc);
-//        colorLoc = colorLoc + COLOR_OFFSET;
-//        legenda = [ legenda ; ('PDF from  ' + filenames(i)) ];
-//        xmlDelete(doc);
-//    end
-//    if (SHOW_LEGEND == 1) then hl=legend(legenda); end
-//    prepareGraphic("PDF for "+ tag, xlable, "PDF");
-
-
-//    scf();
-//    legenda = [];  colorLoc = GRAPH_COLOR;
-//    for i=1:fileCount
-//        doc = xmlRead(PATH + filenames(i));
-//        len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
-//        cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells(i));
-//        cdf1 = [];
-//        for k=1:cells(i)
-//            if (cdf(k) < 1) then cdf1(k) = cdf(k); else break; end;
-//        end
-//        meters = [];
-//        for k=1:size(cdf1, 1) meters(k) = len(k); end
-//        plot2d(meters, cdf1, colorLoc);
-//        colorLoc = colorLoc + COLOR_OFFSET;
-//        legenda = [ legenda ; ('CDF from  ' + filenames(i)) ];
-//        xmlDelete(doc);
-//    end
-//    if (SHOW_LEGEND == 1) then h1=legend(legenda); end
-//    prepareGraphic("CDF for "+ tag, xlable, "CDF : P(X < x))");
-
-
-    scf();    
-    legenda = [];  colorLoc = GRAPH_COLOR;
-    for i=1:fileCount
-        doc = xmlRead(PATH + filenames(i));
-        len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
-        ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells(i));
-        ccdf1 = [];
-        for k=1:cells(i)
-            if (ccdf(k) > 0) then ccdf1(k) = ccdf(k); else break; end;
+    if (isPdf == 1) then
+        scf();
+        //рисуем полигон частот
+        legenda = [];  colorLoc = GRAPH_COLOR;
+        for i=1:fileCount
+            doc = xmlRead(PATH + filenames(i));
+            len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
+            pdf = getVector(doc, "//" + tag + "/PDF-VALS/text()", cells(i));
+            plot2d(len, pdf, colorLoc);
+            colorLoc = colorLoc + COLOR_OFFSET;
+            if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
+            legenda = [ legenda ; ('PDF ' + filenames(i)) ];
+            xmlDelete(doc);
         end
-        secs = [];
-        for k=1:size(ccdf1, 1) secs(k) = len(k); end
-        plot2d(log2(secs), log2(ccdf1), colorLoc);
-        colorLoc = colorLoc + COLOR_OFFSET;
-        if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-        legenda = [ legenda ; ('CCDF из  ' + filenames(i)) ];
-        xmlDelete(doc);
+        if (SHOW_LEGEND == 1) then hl=legend(legenda); end
+        prepareGraphic("PDF для " + graphicName + " (логарифмические оси)", xlable, "PDF");
     end
-    if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
-    prepareGraphic("CCDF для "+ tag, "LOG( " + xlable + " )", "LOG( CCDF : P(X > x) )");
+
+    if (isCdf == 1) then
+        scf();
+        legenda = [];  colorLoc = GRAPH_COLOR;
+        for i=1:fileCount
+            doc = xmlRead(PATH + filenames(i));
+            len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
+            cdf = getVector(doc, "//" + tag + "/CDF-VALS/text()", cells(i));
+
+            cdf_cutted = [];
+            for k=1:cells(i) if (cdf(k) < 1) then cdf_cutted(k) = cdf(k); else break; end; end
+            secs = [];
+            for k=1:size(cdf_cutted, 1) secs(k) = len(k); end
+
+            plot2d(log2(secs), log2(cdf_cutted), colorLoc);
+            colorLoc = colorLoc + COLOR_OFFSET;
+            if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
+            legenda = [ legenda ; ('CDF ' + filenames(i)) ];
+            xmlDelete(doc);
+        end
+        if (SHOW_LEGEND == 1) then h1=legend(legenda, 4); end
+        prepareGraphic("CDF для " + graphicName + " (логарифмические оси)", "log2( " + xlable + " )", "log2( CDF : P(X < x) )");
+    end
+
+    table_err = ["TRACE", "d2", "d3", "d4"]
+    if (isCcdf == 1) then
+        scf();    
+        legenda = [];  colorLoc = GRAPH_COLOR; ethalonLen = []; ethalonCcdf = [];
+        for i=1:fileCount
+            doc = xmlRead(PATH + filenames(i));
+            len = (leftBound(i)+cellWidth(i)/2):cellWidth(i):rightBound(i);
+            ccdf = getVector(doc, "//" + tag + "/CCDF-VALS/text()", cells(i));
+
+            if (i == 1) then ethalonLen = len; ethalonCcdf = ccdf; end
+            [d2, d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf);
+
+            ccdf_cutted = [];
+            for k=1:cells(i) if (ccdf(k) > 0) then ccdf_cutted(k) = ccdf(k); else break; end; end
+            secs = [];
+            for k=1:size(ccdf_cutted, 1) secs(k) = len(k); end
+
+            plot2d(log2(secs), log2(ccdf_cutted), colorLoc);
+            colorLoc = colorLoc + COLOR_OFFSET;
+            if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
+            legenda = [ legenda ; ('CCDF ' + filenames(i))];
+            table_err = [table_err; filenames(i), string(d2), string(d3), string(d4)]
+            xmlDelete(doc);
+        end
+        if (SHOW_LEGEND == 1) then hl=legend(legenda, 3); end
+        prepareGraphic("CCDF для " + graphicName + " (логарифмические оси)", "log2( " + xlable + " )", "log2( CCDF : P(X > x) )");
+        disp("Errors table for " + tag)
+        disp(table_err)
+    end
+endfunction
+
+
+//Функция расчёта отклонения графиков друг от друга
+//В общем виде могут быть следующие случаи:
+// 1) сетки гист. с одинаковыми разбиением и границами - DONE
+// 2) сетки гист. с одинаковым разбиением и разными границами - DONE
+// 3) сетки гист с разными разбиениями и границами - NOT SUPPORTED
+function [d2, d3, d4] = __computeDiff__(ethalonLen, ethalonCcdf, len, ccdf)
+    if (size(ethalonLen, "c") <> size(len, "c") || size(ethalonCcdf, "r") <> size(ccdf, "r") || size(ethalonLen, "c") <> size(ethalonCcdf, "r")) then
+        //disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
+        //disp(msprintf("__computeDiff__: разные длины векторов. Обрезаем."));
+        if (size(ethalonLen, "c") <> size(ethalonCcdf, "r") || size(len, "c") <> size(ccdf, "r")) then
+            error(msprintf("__computeDiff__: разные длины ethalonLen и ethalonCcdf или len и ccdf"))
+        end
+        minSize = min(size(ethalonLen, "c"), size(len, "c"))
+        ethalonLen = ethalonLen(1, 1:minSize); 
+        len = len(1, 1:minSize)
+        ethalonCcdf = ethalonCcdf(1:minSize, 1)
+        ccdf = ccdf(1:minSize, 1)
+        //disp(msprintf("__computeDiff__: Обрезали:"));
+        //disp(size(ethalonLen, "c")); disp(size(len, "c")); disp(size(ethalonCcdf, "r")); disp(size(ccdf, "r")); 
+    end
+    
+    for (i=1:size(ethalonLen, 2))
+        if (ethalonLen(i) <> len(i)) then
+            error(msprintf("__computeDiff__: значени компонент в векторах ethalonLen и len: i=" + string(i) + ", ethalonLen(i)=" + string(ethalonLen(i)) + ", len(i)=" + string(len(i))));
+        end
+    end
+
+    d2 = 0; actualCount = 0
+    d3 = norm(ethalonCcdf - ccdf) / norm(ethalonCcdf) // относительная ошибка вектора    
+    d4 = 0; b1 = 1; bn = b1; q = 1.125; count = size(ethalonLen, 2)
+    for (i=1:count)
+        if (ethalonCcdf(i) <> 0) then d2 = d2 + ((ethalonCcdf(i)-ccdf(i))/ethalonCcdf(i))^2; actualCount = actualCount + 1; end
+        d4 = d4 + bn * (ethalonCcdf(i)-ccdf(i))^2
+        bn = bn * q; //член геометрической прогр
+    end
+    d2 = sqrt(d2 / actualCount) // СКО из относительных велечин
+    coefSum = (b1 * (1 - q^count)) / (1 - q) //сумма геометрической прогр.
+    d4 = sqrt(d4 / coefSum) // СКО взвешенное
 endfunction
 
 
 //Вывод в таблицу указанного вектора значений из вектора файлов статистики
-function privatePrintTable(filenames, tags)
+function __privatePrintTable__(filenames, tags)
     fileCount = size(filenames, 1);
     tagCount = size(tags, 1);
     
@@ -210,54 +272,28 @@ endfunction
 
 //----------------- Функции для работы с файлами дисперсий ---------------------
 
-//Рисование зависимости Dx от масштаба по имени файла СТАТИСТИКИ (*.STAT)
-function drawDX(filename)
-    doc = xmlRead(PATH + filename);
-    
-    base = getDoubleFromXml(doc, "//BASE/text()");
-    level = getDoubleFromXml(doc, "//LEVELS/text()");
-    levels = 1:1:level;
-    DX = getVector(doc, "//DX/text()", level); 
-
-    plot2d(base^levels, DX, GRAPH_COLOR);
-    if (SHOW_LEGEND == 1) then
-        hl=legend([ 'DX' ]);
+// Рисование зависимости Dx от масштаба и рисование зависимости log(Dx) от log(масштаба) по именам файлов СТАТИСТИКИ (*.STAT) 
+function drawDXxml(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("drawDXxml: Ожидалось один или более параметров (имён файлов со статистикой)"));
     end
-    prepareGraphic("Dx of points from: " + filename, "count_of_subareas_per_level", "DX");
-    
-    xmlDelete(doc);
-endfunction
 
-
-//Рисование зависимости log(Dx) от log(масштаба) по имени файла СТАТИСТИКИ (*.STAT)
-function drawLogLogDX(filename)
-    doc = xmlRead(PATH + filename);
-    
-    base = getDoubleFromXml(doc, "//BASE/text()");
-    level = getDoubleFromXml(doc, "//LEVELS/text()");
-    levels = 1:1:level;
-    LOG_areaCount = log2(base^levels);
-    LOG_DX = log2(getVector(doc, "//DX/text()", level)');  
-
-    plot2d(LOG_areaCount, LOG_DX, -4);
-    //Построение линии методом наименьших квадратов
-    z = [LOG_areaCount; LOG_DX];
-    c = [0; 0;];
-    [a,S] = datafit(F,z,c);
-    t = min(LOG_areaCount):0.01:max(LOG_areaCount);
-    Yt = a(1)*t + a(2);
-
-    plot2d(t, Yt, 5);  
-    if (SHOW_LEGEND == 1) then
-        b = atan(a(1));   
-        H = 1-abs(b)/2;
-        hl=legend([ "log2( DX )" ; "Least squares line, b = " + string(b) + ", H = " + string(H) ]);
+    filenames = [];
+    bases = [];
+    levels = [];
+    DXs = [];
+    for i = 1 : rhs
+        doc = xmlRead(PATH + varargin(i));
+        filenames = [filenames ; varargin(i)];
+        bases     = [bases     ; getDoubleFromXml(doc, "//BASE/text()")];
+        levels    = [levels    ; getDoubleFromXml(doc, "//LEVELS/text()")];
+        DXs       = [DXs       , getVector(doc, "//DX/text()", levels(i))]; 
+        xmlDelete(doc);
     end
-    prepareGraphic("log-log Dx of points from: " + filename, "log2( count_of_subareas_per_level )", "log2( DX )");
-    
-    xmlDelete(doc);
-endfunction
 
+    __drawDX__(filenames, bases, levels, DXs);
+endfunction
 
 //Рисование зависимости Dx от масштаба по имени файла variances.txt
 function drawDXtxt(varargin)
@@ -266,37 +302,83 @@ function drawDXtxt(varargin)
         error(msprintf("drawDXtxt: Ожидалось один или более параметров (имён файлов с дисперсиями)"));
     end
 
-    base = 4;   // число подобластей на каждом уровне    
-    legenda = [];  colorLoc = GRAPH_COLOR;
+    filenames = [];
+    bases = [];
+    levels = [];
+    DXs = [];
     for i = 1 : rhs
-        dispertionPerLevel = read(PATH + varargin(i), 8, 2);
-        levels = dispertionPerLevel(1:8, 1);
-        DX = dispertionPerLevel(1:8, 2); 
+        dispertionAndSizePerLevel = read(PATH + varargin(i), 10, 4);
+        filenames = [filenames ; varargin(i)];
+        bases     = [bases     ; 4]; // число подобластей на каждом уровне
+        levels    = [levels    ; 9]; // число уровней
+        DXs       = [DXs       , dispertionAndSizePerLevel(2:10, 2)];
+    end
+    
+    __drawDX__(filenames, bases, levels, DXs);
+endfunction
 
-        scf(1); 
-        plot2d(base^levels, DX, colorLoc);
+// Private. Рисование графиков дисперсии
+function __drawDX__(filenames, bases, levels, DXs)
+    count = size(filenames, 1);
+    
+    format('v',5); // выставление нужного формата
+    legenda = []; 
+    legendaFit = [];
+    colorLoc = GRAPH_COLOR;
+    for i = 1 : count
+        filename = filenames(i);
+        base = bases(i);
+        level = levels(i);
+        DX = DXs(1:level, i);    
+
+        lvls = 1:1:level;      // создаём массив из всех уровней для одного файла
+        areaCount = base^lvls; // количесто прямоугольников на уровнях
+        LOG_areaCount = log2(areaCount);
+        LOG_DX = log2(DX');
         
+        // рисование обычного графика
+        scf(1); 
+        plot2d(areaCount, DX, colorLoc);
+        
+        // рисование графика в логарифмических осях
         scf(2); 
-        LOG_areaCount = log2(base^levels);
-        LOG_DX = log2(DX);  
         plot2d(LOG_areaCount, LOG_DX, colorLoc);
+        
+        // Построение линии методом наименьших квадратов
+        scf(3);
+        z = [LOG_areaCount; LOG_DX];
+        c = [0; 0;];
+        [a,S] = datafit(F,z,c);
+        mnkLine = a(1) * LOG_areaCount + a(2);
+        b = atan(a(1));
+        H = 1-abs(b)/2;
+        plot2d(LOG_areaCount, LOG_DX, -colorLoc);  // рисуем точки дисперсий
+        plot2d(LOG_areaCount, mnkLine, colorLoc);  // рисуем прямую МНК
+        
+        legenda = [ legenda ; ('Нормированная дисперсия ' + filename) ];
+        legendaFit = [ legendaFit ; ('Нормированная дисперсия ' + filename); "МНК для " + filename + ": H = " + string(H) ];
         
         colorLoc = colorLoc + COLOR_OFFSET;
         if (colorLoc == 8) then colorLoc = colorLoc + COLOR_OFFSET; end // перешагиваем белый цвет
-        legenda = [ legenda ; ('DX из  ' + varargin(i)) ];
     end
-
+    
     if (SHOW_LEGEND == 1) then 
+        whereLegenda = 4;
         scf(1); 
-        hl=legend(legenda, 3); 
+        hl=legend(legenda, whereLegenda); 
         scf(2); 
-        hl=legend(legenda, 3);
+        hl=legend(legenda, whereLegenda);
+        scf(3);
+        hl=legend(legendaFit, whereLegenda);
     end
     
     scf(1); 
-    prepareGraphic("График изменения дисперсий", "pow(N,l)", "DX");
+    prepareGraphic("График изменения дисперсий", "pow(N,l)", "D(X / EX)");
     scf(2);
-    prepareGraphic("График изменения дисперсий (логарифмические оси)" , "log2( pow(N,l) )", "log2( DX )");    
+    prepareGraphic("График изменения дисперсий (логарифмические оси)", "log2( pow(N,l) )", "log2( D(X / EX) )");    
+    scf(3);
+    prepareGraphic("График изменения дисперсий (логарифмические оси)", "log2( pow(N,l) )", "log2( D(X / EX) )");
+    format('v',10); // возвращение стандартного формата
 endfunction
 
 

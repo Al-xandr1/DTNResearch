@@ -98,6 +98,10 @@ void RoutingDaemon::initialize() {
     // ------------------------------------------------------------------------------------------
 }
 
+void RoutingDaemon::finish() {
+    deleteVector(requests, false);
+}
+
 void RoutingDaemon::matricesCreation() {
     // Создаём нижнетреугольную матрицу связности
     connections = new bool*[numHosts];
@@ -167,7 +171,7 @@ void RoutingDaemon::handleMessage(cMessage *msg) {
 
                 processNewDay();
 
-                //"асинхронное" оповещение об окончании дня
+                //"асинхронное" оповещение о начале нового дня
                 if (getCurrentDay() >= 1)
                     for (int i=0; i < numHosts; i++)
                         sendDirect(new cMessage("Start of the Day", DAY_START), getParentModule()->getSubmodule("host", i)->gate("in"));
@@ -238,8 +242,8 @@ void RoutingDaemon::processNewDay() {
     if (RoutingDaemon::connectivityPerDay->size() > countOfDays) {
         simtime_t** oldest = RoutingDaemon::connectivityPerDay->front();
         RoutingDaemon::connectivityPerDay->erase(RoutingDaemon::connectivityPerDay->begin());
-        for(int i = 1; i < RoutingDaemon::numHosts; i++) delete[] oldest[i];
-        delete[] oldest;
+        for(int i = 1; i < RoutingDaemon::numHosts; i++) myDeleteArray(oldest[i]);
+        myDeleteArray(oldest);
     }
 
     // Приводим в начальное состояние все матрицы
@@ -278,11 +282,11 @@ bool RoutingDaemon::processIfCan(Request* request) {
             take(response);
             sendDirect(response, getParentModule()->getSubmodule("host", request->getSourceId())->gate("in"));
 
-            delete neighbors;
+            myDelete(neighbors);
             return true;
         }
     }
-    delete neighbors;
+    myDelete(neighbors);
     return false;
 }
 

@@ -242,7 +242,7 @@ int GenerationRootsByStatisticsStrategy::generate(vector<double>* pdf)
 {
     int random = -1;
     double rn, probability = 0;
-    rn = ((double) rand()) / RAND_MAX;
+    do { rn = ((double) rand()) / RAND_MAX; } while (rn == 0 || rn == 1);
     if (rn <= 0 || rn >=1) {cout << "1 WARNING: rn=" << rn << endl; exit(-441);};
 
     for(unsigned int i = 0; i < pdf->size(); i++) {

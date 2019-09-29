@@ -5,7 +5,9 @@ using namespace std;
 
 struct Cell
 {
-    double value;
+    double pdfValue;
+    double width;
+    double hight;
     double leftBound;
     double rightBound;
 };
@@ -43,47 +45,54 @@ class Histogram {
 
 		double getCheckSum(){
 			double checkSum = 0;
-			for(int i = 0; i < cells; i++)
-                checkSum += getHistValue(i);
+            vector<double>* pdf = toPDFVector();
+			for(unsigned int i = 0; i < pdf->size(); i++)
+                checkSum += pdf->at(i);
+            delete pdf;
 			return checkSum;
 		};
 
 		vector<double>* toPDFVector()
 		{
 		    vector<double>* pdf = new vector<double>();
-            for (int i = 0; i < this->cells; i++)
-                pdf->push_back(getHistValue(i));
+            for (unsigned int i = 0; i < this->cells; i++)
+                pdf->push_back(getPDFValue(i));
             return pdf;
 		}
 
 		vector<double>* toCDFVector()
 		{
 		    vector<double>* cdf = new vector<double>();
-            for (int i = 0; i < this->cells; i++)
+            vector<double>* pdf = toPDFVector();
+            for (unsigned int i = 0; i < pdf->size(); i++)
             {
                 double val = 0;
-                for (int j = 0; j <= i; j++) val+= getHistValue(j);
+                for (unsigned int j = 0; j <= i; j++) val += pdf->at(j);
                 cdf->push_back(val);
             }
+            delete pdf;
             return cdf;
 		}
 
-		vector<double>* toCCDFVector()
+        vector<double>* toCCDFVector()
 		{
 		    vector<double>* ccdf = new vector<double>();
-            for (int i = 0; i < this->cells; i++)
-            {
+            vector<double>* pdf = toPDFVector();
+            for (int i = 0; i < pdf->size(); i++) {
                 double val = 0;
-                for (int j = i+1; j < this->cells; j++) val+= getHistValue(j);
+                for (int j = i+1; j < pdf->size(); j++) val+= pdf->at(j);
                 ccdf->push_back(val);
             }
+            delete pdf;
             return ccdf;
 		}
 
 		Cell getCell(int index)
 		{
 		    Cell cell;
-		    cell.value = hist[index] / this->puttedValues;
+		    cell.pdfValue = hist[index] / this->puttedValues;
+            cell.width = this->widthOfCell;
+            cell.hight = cell.pdfValue / cell.width;
 		    cell.leftBound = this->widthOfCell * index;
 		    cell.rightBound = this->widthOfCell * (index+1);
 		    return cell;
@@ -100,7 +109,7 @@ class Histogram {
             }
         }
 
-		double getHistValue(int index) {return getCell(index).value;}
+		double getPDFValue(int index) {return getCell(index).pdfValue;}
 		int getCells()                 {return cells;}
 		double getRightBound()         {return rightBound;}
 		double getLeftBound()          {return 0;}

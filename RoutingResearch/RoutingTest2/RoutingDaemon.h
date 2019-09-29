@@ -69,8 +69,12 @@ public:
         neighbors              = NULL;
     }
 
+    unsigned int getCurrentDay() {
+        // Костыль. Нумерация дней начинаеся с 1, а тут мы обращаемся до его проставления в 1
+        if (currentDay == 0) return 1;
+        return currentDay;
+    }
     int          getNumHosts()              {return numHosts;}
-    unsigned int getCurrentDay()            {return currentDay;}
     simtime_t    getStartTimeOfCurrentDay() {return startTimeOfCurrentDay;}
     double       getDayDuration()           {return dayDuration;}
     unsigned int getCountOfDays()           {return countOfDays;}
@@ -80,6 +84,7 @@ public:
     void matricesInitialization();
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
+    virtual void finish();
 
     bool canCollectStatistics();
     void processNewDay();

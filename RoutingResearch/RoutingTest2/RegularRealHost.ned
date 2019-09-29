@@ -1,11 +1,10 @@
-module NewRealMobilityHost
+module RegularRealHost
 {
     parameters:
-        
         @node();
         @display("i=device/pocketpc_s");
         
-        int NodeID_ = default(0);
+        int NodeID_ = default(-1);
         
 		@class(MobileHost);
         
@@ -17,7 +16,7 @@ module NewRealMobilityHost
         input in @directIn;
         
     submodules:
-        mobility: RealMobility {
+        mobility: RegularRealMobility {
             parameters: 
                 @display("is=s;p=72,44");
             	NodeID = NodeID_;

@@ -1,11 +1,5 @@
 #include "LeviStatic.h"
 
-#include <math.h>
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include <vector>
-
 using namespace std;
 
 // FFT ----------------------------------------------------------------------------------------------
@@ -182,6 +176,17 @@ double LeviJump::get_Levi_rv() {
 }
 
 
+double LeviJump::get_Levi_rv(const double maxPermittedValue) {
+    ASSERT(maxPermittedValue > 0);
+    double result = get_Levi_rv();
+    while (result > maxPermittedValue) {
+        cout << "WARNING!!! Value is too long: LeviJump::get_Levi_rv = " << result << ", maxPermittedValue = " << maxPermittedValue <<  endl;
+        result = get_Levi_rv();
+    }
+    return result;
+}
+
+
 
 // =========================================================================
 
@@ -342,4 +347,15 @@ double LeviPause::get_Levi_rv() {
     else            x = i*Join*DeltaX + y*Join*DeltaX;
 
     return x;
+}
+
+
+double LeviPause::get_Levi_rv(const double maxPermittedValue) {
+    ASSERT(maxPermittedValue > 0);
+    double result = get_Levi_rv();
+    while (result > maxPermittedValue) {
+        cout << "WARNING!!! Value is too long: LeviPause::get_Levi_rv = " << result << ", maxPermittedValue = " << maxPermittedValue << endl;
+        result = get_Levi_rv();
+    }
+    return result;
 }

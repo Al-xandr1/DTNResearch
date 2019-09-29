@@ -11,6 +11,9 @@
 using namespace std;
 using namespace boost::multiprecision;
 
+#define ASSERT_1(trueVal, errorCode) if(!(trueVal)){exit(errorCode);}
+#define ASSERT_2(trueVal, errorCode, message) if(!(trueVal)){cout<<message<<endl;exit(errorCode);}
+
 class SelfSimCalculator {
 protected:
     int levels;
@@ -56,7 +59,7 @@ SelfSimCalculator::SelfSimCalculator(char *boundFile, int lvl = 9) {
         exit(3);
     }
     for (long int i = 0; i < arraySize; i++) pointsInArea[i] = 0;
-    variance = new double[levels];
+    variance = new double[levels + 1];
 }
 
 SelfSimCalculator::~SelfSimCalculator() {
@@ -88,7 +91,7 @@ void SelfSimCalculator::loadWaypoints(char *WaypointFile) {
         (*wfile) >> xcoord >> ycoord >> tb >> te;
         pointsInArea[0]++;
 
-        for (index = 0, lvl = 1; lvl < levels; lvl++) {
+        for (index = 0, lvl = 1; lvl <= levels; lvl++) {
             if (xcoord <= (hx = (xmin + xmax) / 2)) {
                 xmax = hx;
                 if (ycoord <= (hy = (ymin + ymax) / 2)) {
@@ -145,45 +148,68 @@ void SelfSimCalculator::loadAllDir(char *WaypoitDir) {
 
 void SelfSimCalculator::calculateVariances() {
     int lvl;
-    long int index, hsize;
-    //double MX2, MX;
+    int index, hsize;
     float128 MX2, MX;
+    double MX2_Test, MX_Test;
+    const double initialSquare = (Xmax - Xmin) * (Ymax - Ymin);
 
-    for (lvl = 0, hsize = 1, index = 0; lvl < levels; lvl++) {
-        MX2 = 0;
-        MX = 0;
-        //for(long int i=0; i<hsize; i++) { MX2+=pointsInArea[index+i]*pointsInArea[index+i]; MX+=pointsInArea[index+i]; }
+    double deltaX = Xmax - Xmin;
+    double deltaY = Ymax - Ymin;
+    for (lvl = 0, hsize = 1, index = 0; lvl <= levels; lvl++) {
+        MX2 = MX = 0;
+        MX2_Test = MX_Test = 0;
         for (long int i = 0; i < hsize; i++) {
-            MX2 += float128(pointsInArea[index + i]) * pointsInArea[index + i];
-            MX += pointsInArea[index + i];
+            double points = pointsInArea[index + i] / (initialSquare / hsize);
+            MX2 += float128(points) * float128(points);
+            MX += float128(points);
+            MX2_Test += points * points;
+            MX_Test += points;
         }
-        // variance[lvl]=MX2/hsize-(MX/hsize)*(MX/hsize);
-        //variance[lvl]=MX2*hsize/(MX*MX)-1;
-        variance[lvl] = double(MX2 * hsize / (MX * MX)) - 1;
-        cout << lvl << "\t" << variance[lvl] << endl;
+
+        //region For debug
+//        double MX2toDbl = double(MX2);
+//        double MXMXtoDbl = double(MX * MX);
+//        printf("%d\t TotalSquare= %12.0f,\t hsize = %d,\t SquareForLevel = %12.0f\n", lvl, initialSquare, hsize, (initialSquare / hsize));
+//        printf("%d\t MX2      = %12.0f,\t hsize = %d,\t MX*MX          = %12.0f\n", lvl, MX2toDbl, hsize, MXMXtoDbl);
+//        printf("%d\t MX2_Test = %12.0f,\t hsize = %d,\t MX_Test*MX_Test= %12.0f\n", lvl, MX2_Test, hsize, (MX_Test * MX_Test));
+//        printf("%d\t delta_MX2= %12.0f,\t hsize = %d,\t delta_MX_Test= %12.0f\n", lvl, MX2toDbl - MX2_Test, hsize, MXMXtoDbl - (MX_Test * MX_Test));
+//        ASSERT_1((MX2toDbl - MX2_Test) == 0, -123);
+//        ASSERT_1((MXMXtoDbl - (MX_Test * MX_Test)) == 0, -124);
+//        ASSERT_1((double(MX2 * float128(hsize)) - MX2_Test*hsize) == 0, -125);
+        //endregion
+
+        variance[lvl] = double(MX2 * float128(hsize) / (MX * MX)) - 1;
+        if (lvl != 0) {deltaX/=2;  deltaY/=2;}
+        cout << lvl << "\t" << variance[lvl] << "\t" << deltaX << "\t" << deltaY << endl;
         index += hsize;
         hsize *= 4;
     }
+
     double Mxy = 0, Mx = 0, My = 0, Mx2 = 0;
-    for (int i = 1; i < levels; i++) {
-        Mx += 2 * i;
-        My += log2(variance[i]);
-        Mx2 += 4 * i * i;
-        Mxy += log2(variance[i]) * 2 * i;
+    for (lvl = 1; lvl <= levels; lvl++) {
+        Mx += 2 * lvl;
+        My += log2(variance[lvl]);
+        Mx2 += 4 * lvl * lvl;
+        Mxy += log2(variance[lvl]) * 2 * lvl;
     }
-    Mx /= levels - 1;
-    My /= levels - 1;
-    Mx2 /= levels - 1;
-    Mxy /= levels - 1;
+    Mx /= levels;
+    My /= levels;
+    Mx2 /= levels;
+    Mxy /= levels;
     double c, b, H;
     b = (Mxy - Mx * My) / (Mx2 - Mx * Mx);
     c = My - b * Mx;
     H = 1 - fabs(b) / 2;
+
     cout << "b=" << b << "\t c=" << c << "\t H=" << H << endl;
     ofstream *file1 = new ofstream("herst.txt");
     (*file1) << "b=" << b << "\t c=" << c << "\t H=" << H << endl;
     ofstream *file2 = new ofstream("variances.txt");
-    for (int i = 1; i < levels; i++) (*file2) << i << "\t" << variance[i] << endl;
+    deltaX = Xmax - Xmin; deltaY = Ymax - Ymin;
+    for (int i = 0; i <= levels; i++) {
+        if (i != 0) {deltaX/=2;  deltaY/=2;}
+        (*file2) << i << "\t" << variance[i] << "\t" << deltaX << "\t" << deltaY << endl;
+    }
     file1->close();
     file2->close();
 }
@@ -202,24 +228,19 @@ void SelfSimCalculator::showArray(int level) {
 int main(int argc, char **argv) {
     cout << "Hello world!" << endl;
 
-    char *WaypointDir;
-    char *boundFile;
-    int lvl;
+    char *WaypointDir = "./waypointfiles";
+    char *boundFile = "bounds.bnd";
+    int lvl = 9;
     switch (argc) {
         case 1 :
-            WaypointDir = "./waypointfiles";
-            boundFile = "bounds.bnd";
-            lvl = 9;
+            // оставляем значения по умолчанию
             break;
         case 2 :
             WaypointDir = argv[1];
-            boundFile = "bounds.bnd";
-            lvl = 9;
             break;
         case 3 :
             WaypointDir = argv[1];
             boundFile = argv[2];
-            lvl = 9;
             break;
         case 4:
         default:

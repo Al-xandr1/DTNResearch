@@ -126,6 +126,7 @@ CMakeLists.txt
 #Code::Block files 
 *.layout
 *.depend
+venv/
 
 # Specific files by Omnet++
 .oppbuildspec
@@ -160,6 +161,7 @@ ictstatistics2.xml
 statistics.xml
 statistics_*.xml
 packetsHistory.xml
+packetsHistory_*.xml
 ictHistory.xml
 routeHistory.xml
 routeHistory_another.xml

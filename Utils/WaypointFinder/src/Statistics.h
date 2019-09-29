@@ -29,7 +29,7 @@ public:
     {
         this->areaTree = Area::createTreeStructure(bounds);
         this->lengthHist =   new Histogram(10000, bounds->getDiagLength());
-        this->velocityHist = new Histogram(1000, 10);
+        this->velocityHist = new Histogram(5000, 50);
         this->pauseHist =    new Histogram(1000, 100000);
         this->previous = NULL;
     }
@@ -141,33 +141,54 @@ public:
 private:
     void writeAreaStatistics(ofstream* out, Area* rootArea)
     {
-        double** ExDxPerLevel = Area::computeExDx(rootArea);
+        double b, c, H;
+        double** ExDxPerLevel = Area::computeExDxH(rootArea, b, c, H);
         double areasCount = Area::getSubAreasCount();
+        int levels = Area::getLevels();
         cout << endl << endl;
         cout << "\t<EX-DX-STAT>" << endl;
         *out << "  <EX-DX-STAT>" << endl;
-        *out << "    <BASE>" << Area::getSubAreasCount() << "</BASE>" << endl;
-        *out << "    <LEVELS>" << Area::getLevels() << "</LEVELS>" << endl;
+        *out << "    <BASE>" << areasCount << "</BASE>" << endl;
+        *out << "    <LEVELS>" << levels << "</LEVELS>" << endl;
         *out << "    <EX>";
-        for(int l = 0; l < Area::getLevels(); l++)
+        for(int l = 0; l < levels; l++)
         {
             cout << "\t" << "Level= " << (l+1) << "  areas= " << areasCount << "\tEX=" << ExDxPerLevel[0][l] << "\tDX=" << ExDxPerLevel[1][l] << endl;
-            areasCount *= Area::getSubAreasCount();
+            areasCount *= areasCount;
             *out << ExDxPerLevel[0][l];
-            if (l != Area::getLevels()-1) *out << "  ";
+            if (l != levels - 1) *out << "  ";
         }
         *out << "</EX>" << endl;
         *out << "    <DX>";
-        for(int l = 0; l < Area::getLevels(); l++)
+        for(int l = 0; l < levels; l++)
         {
             *out << ExDxPerLevel[1][l];
-            if (l != Area::getLevels()-1) *out << "  ";
+            if (l != levels - 1) *out << "  ";
         }
         *out << "</DX>" << endl;
+        *out << "    <RECTANGLE-X>";
+        for(int l = 0; l < levels; l++)
+        {
+            *out << ExDxPerLevel[2][l];
+            if (l != levels - 1) *out << "  ";
+        }
+        *out << "</RECTANGLE-X>" << endl;
+        *out << "    <RECTANGLE-Y>";
+        for(int l = 0; l < levels; l++)
+        {
+            *out << ExDxPerLevel[3][l];
+            if (l != levels - 1) *out << "  ";
+        }
+        *out << "</RECTANGLE-Y>" << endl;
+        *out << "    <B>" << b << "</B>" << endl;
+        *out << "    <C>" << c << "</C>" << endl;
+        *out << "    <H>" << H << "</H>" << endl;
         *out << "  </EX-DX-STAT>" << endl;
         cout << "\t</EX-DX-STAT>" << endl;
         delete ExDxPerLevel[0];
         delete ExDxPerLevel[1];
+        delete ExDxPerLevel[2];
+        delete ExDxPerLevel[3];
         delete ExDxPerLevel;
     }
 

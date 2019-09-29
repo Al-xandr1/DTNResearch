@@ -4,6 +4,14 @@ Define_Module(RegularRootLATP);
 
 RegularRootLATP::RegularRootLATP()
 {
+    mvnHistoryForRepeat = NULL;
+    repetitionOfTraceEnabled = false;
+
+    timeOffset = 0;
+    distance = -1;
+    speed = -1;
+    travelTime = 0;
+
     rc = NULL;
     rootStatistics  = NULL;
     rootPersistence = -1;
@@ -23,6 +31,8 @@ RegularRootLATP::RegularRootLATP()
     currentRootCounter = NULL;
 
     currentRootActualTrack  = NULL;
+    currentRootActualTrackSumTime = NULL;
+    currentRootActualTrackWaypointNum = NULL;
     currentRootCounterSAVED = NULL;
 
     isLProbReady = false;
@@ -170,6 +180,8 @@ void RegularRootLATP::deleteLocalProbMatrix()
 void RegularRootLATP::initialize(int stage) {
     LevyHotSpotsLATP::initialize(stage);
 
+    if (hasPar("repetitionOfTraceEnabled")) repetitionOfTraceEnabled = par("repetitionOfTraceEnabled");
+    log(string("RegularRootLATP::initialize: repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled) + string(" stage = ") + std::to_string(stage));
 
     // загрузка данных об эталонных маршрутах
     if (!rc) rc = RootsCollection::getInstance();
@@ -218,15 +230,17 @@ void RegularRootLATP::initialize(int stage) {
         currentRootWptsPerVisit = new vector<int>(*firstRootWptsPerVisit);
         currentRootCounterSAVED = new vector<int>(*currentRootCounter);
         currentRootActualTrack = new vector<unsigned int>();
+        currentRootActualTrackSumTime = new vector<double>();
+        currentRootActualTrackWaypointNum = new vector<int>();
 
         // начальнаЯ локациЯ - это перваЯ локациЯ текущего маршрута
         setCurRootIndex(0, true);
         //printCurrentRoot();
 
         // Сохраняем для статистики сгенерированный маршрут для первого дня в RootsCollection.
-        const int currentDay = RoutingDaemon::instance->getCurrentDay();
-        ASSERT(currentDay == 0);
-        RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, currentDay+1);
+        const int day = RoutingDaemon::instance->getCurrentDay();
+//        ASSERT(day == 1);
+        RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, day);
     }
 
     if (!LocalProbMatrix) makeLocalProbMatrix(powA);
@@ -252,7 +266,20 @@ void RegularRootLATP::setCurRootIndex(unsigned int currentRootIndex, bool writeI
         ASSERT(currentRootActualTrack);
         ASSERT(curRootIndex >= 0);
         currentRootActualTrack->push_back(curRootIndex);
+        currentRootActualTrackSumTime->push_back(0.0);
+        currentRootActualTrackWaypointNum->push_back(0);
     }
+}
+
+
+void RegularRootLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
+    LevyHotSpotsLATP::collectStatistics(inTime, outTime, x, y);
+
+    ASSERT(currentRootActualTrack->size() == currentRootActualTrackSumTime->size());
+    ASSERT(currentRootActualTrack->size() == currentRootActualTrackWaypointNum->size());
+    //трек только растёт, поэтому последняя добавленная локация - текущяя. Значит суммируем в неё
+    currentRootActualTrackSumTime->at(currentRootActualTrackSumTime->size()-1) += (outTime - inTime).dbl();
+    currentRootActualTrackWaypointNum->at(currentRootActualTrackWaypointNum->size()-1)++;
 }
 
 
@@ -264,10 +291,17 @@ void RegularRootLATP::handleMessage(cMessage * message)
         switch (message->getKind()) {
             // используется для "пинка" для мобильности, чтобы снова начать ходить
             case MOBILITY_START:{
+                ASSERT(RoutingDaemon::instance->getCurrentDay() >= 1);
+                // для первого дня маршрут построен при инициализации мобильности
+                if (RoutingDaemon::instance->getCurrentDay() > 1) {
+                    makeNewRoot();
+                }
+
                 nextChange = simTime();
                 MovingMobilityBase::scheduleUpdate();
                 emitMobilityStateChangedSignal();
 //                ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+                myDelete(message);
                 break;
             }
             default:
@@ -277,9 +311,19 @@ void RegularRootLATP::handleMessage(cMessage * message)
 
 
 void RegularRootLATP::setTargetPosition() {
+    // Перемещение по модели вызываем в любом случае
     LevyHotSpotsLATP::setTargetPosition();
 
     if (movementsFinished) {
+        if (repetitionOfTraceEnabled) {
+            // при окончании маршрута и при вклчённом повторении мы сохраняем текущий трейс
+            // сохраняем только один раз (при первом обращении)
+            if (!mvnHistoryForRepeat) {
+                mvnHistoryForRepeat = buildFirstTrace();
+                log(string("RegularRootLATP::setTargetPosition: First trace is built! repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled));
+            }
+        }
+
         // очищают статус и планируем в бесконечность - чтобы приостановить, но не завершить
         movementsFinished = false;
         nextChange = MAXTIME;
@@ -317,7 +361,7 @@ bool RegularRootLATP::findNextHotSpot()
     }
     // случайным образом выбираем новую локацию
     double rn, pr=0;
-    rn=(double)rand()/RAND_MAX;
+    do { rn = ((double) rand()) / RAND_MAX; } while (rn == 0 || rn == 1);
     for(unsigned int i=0; i<currentRoot->size(); i++) {
         if(curRootIndex != i) pr+=LocalProbMatrix[curRootIndex][i];
         if(rn <= pr) {
@@ -332,8 +376,64 @@ bool RegularRootLATP::findNextHotSpot()
 }
 
 
-bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound)
-{
+bool RegularRootLATP::generatePause(simtime_t &nextChange) {
+    // если повторение маршрута ВЫКЛЮЧЕНО, то ходим по  всё время
+    if (!repetitionOfTraceEnabled)
+        return LevyHotSpotsLATP::generatePause(nextChange);
+
+    // если повторение маршрута ВКЛЮЧЕНО, то проверяем наличие сохранённого трейса
+    // если трейс ещё не сохранён, то ходим по SLAW, для генерации трейса
+    if (!mvnHistoryForRepeat)
+        return LevyHotSpotsLATP::generatePause(nextChange);
+
+
+    // если трейс уже сохранён, то ходим по нему, пока не закончиться. Берём паузу
+    long step = calculateStep();
+    setWaitTime(mvnHistoryForRepeat->getOutTimes()->at(step) - mvnHistoryForRepeat->getInTimes()->at(step));
+    nextChange = simTime() + getWaitTime();
+//    ASSERT(nextChange == (timeOffset + mvnHistoryForRepeat->getOutTimes()->at(step)));
+    //    log(string("RegularRootLATP::generatePause: timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
+    return true;
+}
+
+
+bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound) {
+    // если повторение маршрута ВЫКЛЮЧЕНО, то ходим по SLAW всё время
+    if (!repetitionOfTraceEnabled)
+        return localGenerateNextPosition(targetPosition, nextChange, regenerateIfOutOfBound);
+
+    // если повторение маршрута ВКЛЮЧЕНО, то проверяем наличие сохранённого трейса
+    // если трейс ещё не сохранён, то ходим по SLAW, для генерации трейса
+    if (!mvnHistoryForRepeat)
+        return localGenerateNextPosition(targetPosition, nextChange, regenerateIfOutOfBound);
+
+
+    // если трейс уже сохранён, то ходим по нему, пока не закончиться. Берём позицию
+    long step = calculateStep();
+    if (step == 0)
+        return false; // нулевую точку мы устанавливаем вручную. Считаем, что маршрут кончился.
+
+    // сейчас НЕ пауза и мы выбираем новую точку из Трейса
+    const simtime_t previousNextChange = nextChange;
+    nextChange = timeOffset + mvnHistoryForRepeat->getInTimes()->at(step);
+    targetPosition.x = mvnHistoryForRepeat->getXCoordinates()->at(step);
+    targetPosition.y = mvnHistoryForRepeat->getYCoordinates()->at(step);
+
+    distance = lastPosition.distance(targetPosition);
+//    ASSERT(distance >= 0);
+
+    travelTime = nextChange - previousNextChange;
+//    ASSERT(travelTime > 0);
+
+    speed = distance / travelTime;
+//    ASSERT(speed >= 0);
+    //    log(string("RegularRootLATP::generateNextPosition: timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
+
+    return true;
+}
+
+
+bool RegularRootLATP::localGenerateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound) {
     if (useWaypointCounter) {
         // используем счётчки
         ASSERT(currentHSWaypointNum >= 0);
@@ -360,7 +460,7 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
 
     } else {
         // если не используем счётчик, то генерируем через базовую реализацию
-        if (LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange)) {
+        if (LevyHotSpotsLATP::generateNextPosition(targetPosition, nextChange, regenerateIfOutOfBound)) {
             // ... и если находим точку, заканчиваем метод.
             return true;
         }
@@ -369,14 +469,14 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
 
     // маршрут кончился, идём домой
     if (useWaypointCounter) ASSERT(currentHSWaypointNum == 0);
-    setCurRootIndex(0, false);
+    setCurRootIndex(0, true);
 
     // проверЯем, не дома ли мы уже
     if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
         currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
 
         ASSERT(isRootFinished());
-        (check_and_cast<MobileHost*>(getParentModule()))->ensureEndRoute();
+        endRoute();
         return false;
     }
 
@@ -384,17 +484,15 @@ bool RegularRootLATP::generateNextPosition(Coord& targetPosition, simtime_t& nex
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
-    distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
-//    ASSERT(distance > 0);
-    speed = kForSpeed * pow(distance, 1 - roForSpeed);
-    travelTime = distance / speed;
-    nextChange = simTime() + travelTime;
+    movement->setDistance(lastPosition.distance(targetPosition), (string("DEBUG RegularRootLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
+
+    nextChange = simTime() + movement->getTravelTime();
     return true;
 }
 
 
 bool RegularRootLATP::isRootFinished() {
-    ASSERT(currentRoot->size() > 0);
+//    ASSERT(currentRoot->size() > 0);
     checkHomeLocationIn(currentRoot);
     bool finished = true;
     for (unsigned int i=1; i<currentRootCounter->size(); i++) {
@@ -409,11 +507,53 @@ bool RegularRootLATP::isRootFinished() {
 }
 
 
-void RegularRootLATP::makeNewRoot()
-{
-    const int currentDay = RoutingDaemon::instance->getCurrentDay();
-    ASSERT(currentDay >= 2); // Начинается создание новых маршрутов со второго дня
-    cout << endl << "Making new root for NodeID: " << NodeID << " at day: " << currentDay << endl;
+void RegularRootLATP::nodeTurnedOff() {
+    emitMobilityStateChangedSignal();
+}
+
+void RegularRootLATP::endRoute() {
+    cMessage* msg = new cMessage("END_ROUTE", END_ROUTE);
+    take(msg);
+    sendDirect(msg, getParentModule()->gate("in"));
+}
+
+void RegularRootLATP::makeNewRoot() {
+    const int day = RoutingDaemon::instance->getCurrentDay();
+//    ASSERT(day >= 2); // Начинается создание новых маршрутов со второго дня
+    cout << endl;
+    log(string("RegularRootLATP::makeNewRoot: Start root making for day = ") + std::to_string(day)
+            + string(", repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled)
+            + string(", mvnHistoryForRepeat = ") + std::to_string((mvnHistoryForRepeat != NULL)));
+
+    if (repetitionOfTraceEnabled && !mvnHistoryForRepeat) {
+        // в случае, когда строим новый маршрут (из-за нового дня), а трейса первого дня нет, то сохраняем на основе того, что есть.
+        mvnHistoryForRepeat = buildFirstTrace();
+        log(string("RegularRootLATP::makeNewRoot: First trace is built! repetitionOfTraceEnabled = ") + std::to_string(repetitionOfTraceEnabled));
+    }
+
+    if (repetitionOfTraceEnabled && mvnHistoryForRepeat) {
+        // если при включённом повторении маршрута трейс уже сохранён, то берём начальную точку из него
+        timeOffset = (day-1) * RoutingDaemon::instance->getDayDuration();
+        log(string("RegularRootLATP::makeNewRoot: Repeatable root is made! day = ") + std::to_string(day)
+            + string(", simTime = ") +  std::to_string(simTime().dbl())
+            + string(", timeOffset = ") + std::to_string(timeOffset.dbl()));
+
+        long step = calculateStep();
+        log("RegularRootLATP::makeNewRoot: step = " + std::to_string(step)
+                + ", getStep() = " + std::to_string(getStep())
+                + ", mvnHistoryForRepeat->getSize() = " + std::to_string(mvnHistoryForRepeat->getSize()));
+        // в случае, когда строим новый маршрут (из-за нового дня), то число точек на одну меньше чем шагов (т.к новый мог день вклиниться по среди паузы).
+        if (step > 0) {
+            decreaseStep();
+            step = calculateStep();
+        }
+        ASSERT(step == 0);
+        lastPosition.x = mvnHistoryForRepeat->getXCoordinates()->at(step);
+        lastPosition.y = mvnHistoryForRepeat->getYCoordinates()->at(step);
+        lastPosition.z = 0;
+        targetPosition = lastPosition;
+
+    }
 
 
     if(currentRoot != NULL) {
@@ -426,15 +566,40 @@ void RegularRootLATP::makeNewRoot()
 //            ASSERT((*currentRootCounterSAVED)[i] >= 0);
         }
 
-        const int counterSum = getSum(*currentRootCounterSAVED);
-        ASSERT(counterSum >= 0);
-        // Каждое посещение локации фиксируется в currentRootActualTrack.
-        // Однако в RegularRootLATP::findNextHotSpot последняя локация с несколькими посещениесми заменяется одним посещением
-        // Поэтому сумма всех посещений, должна быть больше или равна длине трека
-        ASSERT(((unsigned int) counterSum) >= currentRootActualTrack->size());
+        // for debug
+        //        const int counterSum = getSum(*currentRootCounterSAVED);
+        //        ASSERT(counterSum >= 0);
+        //        // Каждое посещение локации фиксируется в currentRootActualTrack.
+        //        // Однако в RegularRootLATP::findNextHotSpot последняя локация с несколькими посещениесми заменяется одним посещением
+        //        // Поэтому сумма всех посещений, должна быть больше или равна длине трека
+        //        if (((unsigned int) counterSum) < currentRootActualTrack->size()) {
+        //            cout << "ALERT: counterSum=" << counterSum << endl;
+        //            cout << "ALERT: currentRootActualTrack->size()=" << currentRootActualTrack->size() << endl;
+        //            printCurrentRoot();
+        //            for(unsigned int i = 0; i < currentRootCounterSAVED->size(); i++) {
+        //                cout << "currentRootCounterSAVED(" << i << ")=" << currentRootCounterSAVED->at(i) << endl;
+        //            }
+        //            for(unsigned int i = 0; i < currentRootActualTrack->size(); i++) {
+        //                cout << "currentRootActualTrack(" << i << ")=" << currentRootActualTrack->at(i) << endl;
+        //            }
+        //        }
+        //        ASSERT(((unsigned int) counterSum) >= currentRootActualTrack->size()); todo this assert brakes program
+        //        ASSERT(currentRootActualTrack->size() == currentRootActualTrackSumTime->size());
+        //        ASSERT(currentRootActualTrack->size() == currentRootActualTrackWaypointNum->size());
+        // for debug
 
-        RootsCollection::getInstance()->collectActualRoot(currentRoot, currentRootSnumber, currentRootCounterSAVED, currentRootActualTrack, NodeID, currentDay - 1);
-        cout << endl << "Saved old root for NodeID: " << NodeID << " at previous day: " << (currentDay - 1) << endl;
+
+        RootsCollection::getInstance()->collectActualRoot(currentRoot,
+                                                          currentRootSnumber,
+                                                          currentRootCounterSAVED,
+                                                          currentRootActualTrack,
+                                                          currentRootActualTrackSumTime,
+                                                          currentRootActualTrackWaypointNum,
+                                                          NodeID,
+                                                          day - 1);
+
+        cout << endl;
+        log(string("Saved old root at previous day: ") + std::to_string(day - 1));
 
         // удаляем старый маршрут
         deleteLocalProbMatrix();
@@ -444,6 +609,8 @@ void RegularRootLATP::makeNewRoot()
         myDelete(currentRootWptsPerVisit);
         myDelete(currentRootCounterSAVED);
         myDelete(currentRootActualTrack);
+        myDelete(currentRootActualTrackSumTime);
+        myDelete(currentRootActualTrackWaypointNum);
     }
 
 
@@ -456,23 +623,26 @@ void RegularRootLATP::makeNewRoot()
 
 
     // for debug
-//    ASSERT(currentRoot && currentRootSnumber && currentRootCounter && currentRootWptsPerVisit);
-//    printFirstRoot();
-//    printCurrentRoot();
-//    // проверка, что домашняя локация в новом маршруте сохранилась
-//    checkHomeLocationIn(currentRoot);
-//    // суммы посещений должно быть больше нуля в маршрутах
-//    ASSERT(getSum(*currentRootCounter) > 0);
-//    ASSERT(getSum(*firstRootCounter) > 0);
-//    // все структуры одинаковы по размеру
-//    ASSERT((currentRoot->size() == currentRootSnumber->size())
-//            && (currentRoot->size() == currentRootCounter->size())
-//            && (currentRoot->size() == currentRootWptsPerVisit->size()));
+    //    ASSERT(currentRoot && currentRootSnumber && currentRootCounter && currentRootWptsPerVisit);
+    //    printFirstRoot();
+    //    printCurrentRoot();
+    //    // проверка, что домашняя локация в новом маршруте сохранилась
+    //    checkHomeLocationIn(currentRoot);
+    //    // суммы посещений должно быть больше нуля в маршрутах
+    //    ASSERT(getSum(*currentRootCounter) > 0);
+    //    ASSERT(getSum(*firstRootCounter) > 0);
+    //    // все структуры одинаковы по размеру
+    //    ASSERT((currentRoot->size() == currentRootSnumber->size())
+    //            && (currentRoot->size() == currentRootCounter->size())
+    //            && (currentRoot->size() == currentRootWptsPerVisit->size()));
+    // for debug
 
 
     makeLocalProbMatrix(powA);
     // начальнаЯ локациЯ - это перваЯ локациЯ текущего маршрута - она же домашняя
     currentRootActualTrack = new vector<unsigned int>();
+    currentRootActualTrackSumTime = new vector<double>();
+    currentRootActualTrackWaypointNum = new vector<int>();
     setCurRootIndex(0, true);
     targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
     targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
@@ -481,7 +651,31 @@ void RegularRootLATP::makeNewRoot()
     /* Сохраняем для статистики сгенерированный маршрут для текущего дня в RootsCollection.
        Сохранение тут происходит со второго дня. Первый день сохраняется сразу после создания в initialize.
        Тут сохраняется только что созданный маршут, по которому ещё не ходили.
-     */
-    RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, currentDay);
+    */
+    RootsCollection::getInstance()->collectTheoryRoot(currentRoot, currentRootSnumber, currentRootCounter, NodeID, day);
     currentRootCounterSAVED = new vector<int>(*currentRootCounter);
+
+
+    // начинаем маршрут с паузы, чтобы мы "нормально прошли" первую точку (например постояли в ней)
+    // а не так, чтобы при инициализации маршрута мы её поставили и при первой генерации сразу выбрали новую
+    isPause = true;
+}
+
+MovementHistory* RegularRootLATP::buildFirstTrace() {
+    MovementHistory* history = new MovementHistory(*getMovementHistory());
+    // for debug
+    //                const char *wpsDir = "outTrace/first_day_wps";
+    //                const char *trsDir = "outTrace/first_day_trs";
+    //                if (CreateDirectory(wpsDir, NULL)) cout << "create output directory: " << wpsDir << endl;
+    //                else cout << "error create output directory: " << wpsDir << endl;
+    //                if (CreateDirectory(trsDir, NULL)) cout << "create output directory: " << trsDir << endl;
+    //                else cout << "error create output directory: " << trsDir << endl;
+    //                mvnHistoryForRepeat->save(wpsDir, trsDir);
+    // for debug
+    return history;
+}
+
+long RegularRootLATP::calculateStep() {
+//    ASSERT(mvnHistoryForRepeat);
+    return (getStep() - 1) % mvnHistoryForRepeat->getSize();
 }

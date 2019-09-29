@@ -1,12 +1,10 @@
 module RegularRootLATPHost
 {
     parameters:
-        string mobilityType = default("LevyHotSpotsRandom");
-        
         @node();
         @display("i=device/pocketpc_s");
         
-        int NodeID_ = default(0);
+        int NodeID_ = default(-1);
         
 		@class(MobileHost);
         
@@ -14,7 +12,7 @@ module RegularRootLATPHost
         double timeslot = default(50);
     	double lambda = default(0.3);
     							 		       
-    	bool useWaypointCounter = default(true); // флаг, показывающий нужно использовать счётчик путевых точек на локацию или нет 					 		     
+    	bool useWaypointCounter = default(false); // флаг, показывающий нужно использовать счётчик путевых точек на локацию или нет 					 		     
     
     gates:
         input in @directIn;

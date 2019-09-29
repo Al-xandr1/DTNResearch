@@ -75,6 +75,22 @@ char *createFileName(char *buffer, int numberOfExperiment,
     return result;
 }
 
+ofstream* createXmlFile(const char* filename, const char* openRootTag) {
+    ASSERT(filename);
+    ASSERT(openRootTag);
+    ofstream* xmlFile = new ofstream(buildFullName(OUT_DIR, filename));
+    (*xmlFile) << "<?xml version=\'1.0' ?>" << endl;
+    (*xmlFile) << openRootTag << endl;
+    return xmlFile;
+}
+
+void closeXmlFile(ofstream* xmlFile, const char* closeRootTag) {
+    ASSERT(xmlFile);
+    ASSERT(closeRootTag);
+    (*xmlFile) << closeRootTag << endl;
+    xmlFile->close();
+}
+
 int countMaxValue(list<int> queueSizePoints) {
     int maxQueueSize = 0;
     list<int>::iterator iterSize;
@@ -102,6 +118,10 @@ const char* buildIntParameter(const char* name, int value, int leftPadByZero) {
         valueStr = string("0") + valueStr;
     }
     return buildParameter(name, valueStr.c_str());
+}
+
+const char* buildDblParameter(const char* name, double value) {
+    return buildParameter(name, std::to_string(value).c_str());
 }
 
 const char* buildParameter(const char* name, const char* value) {
@@ -150,4 +170,12 @@ const char* extractParameter(const char* fileName, const char* parameter) {
     ASSERT(end < fileNameStr.length());
 
     return fileNameStr.substr(start+1, end-start-1).c_str();
+}
+
+double checkValue(const double value, const double maxPermittedValue, string where) {
+    if (value <= 0 || value > maxPermittedValue) {
+        cout << "ERROR!!! value=" << value << ", maxPermittedValue="  << maxPermittedValue << ", where = " << where << endl;
+    }
+    ASSERT(value > 0 && value <= maxPermittedValue);
+    return value;
 }

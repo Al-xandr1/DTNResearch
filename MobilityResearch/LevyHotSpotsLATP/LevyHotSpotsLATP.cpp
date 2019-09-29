@@ -5,118 +5,84 @@ Define_Module(LevyHotSpotsLATP);
 LevyHotSpotsLATP::LevyHotSpotsLATP() {
     NodeID = -1;
 
-    isPause = false;
+    // начинаем маршрут с паузы, чтобы мы "нормально прошли" первую точку (например постояли в ней)
+    // а не так, чтобы при инициализации маршрута мы её поставили и при первой генерации сразу выбрали новую
+    isPause = true;
+
+    // первый шаг нулевой. Далее на нём проверяем, что мы прошли инициализацию,
+    // и реально начали ходить (начиная с первого шага)
     step = 0;
-    jump = NULL;
-    pause = NULL;
-    kForSpeed =  1;
-    roForSpeed = 0;
-
-    currentHSindex = -1;
-
     movementsFinished = false;
-
-    angle = -1;
-    distance = -1;
-    speed = -1;
-    travelTime = 0;
-
-    hsc=NULL;
-    hsd=NULL;
-
+    countOfFirstSkippedLongFlight = -1;
     powA=2.0;
 
-    waitTime = 0;
+    movement = NULL;
+    waitTime = -1;
 
-    wpFileName = NULL;
-    trFileName = NULL;
+    currentHSMin = Coord::ZERO;
+    currentHSMax = Coord::ZERO;
+    currentHSCenter = Coord::ZERO;
+
+    hsc=NULL;
+    currentHSindex = -1;
+    hsd=NULL;
+
+    mvnHistory = NULL;
 }
 
 
 void LevyHotSpotsLATP::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
-    double ciJ,aliJ,deltaXJ,joinJ, ciP,aliP,deltaXP,joinP;
-
     if (stage == 0) {
-        stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
-
-        constraintAreaMin.x = par("constraintAreaMinX").doubleValue();
-        constraintAreaMax.x = par("constraintAreaMaxX").doubleValue();
-        constraintAreaMin.y = par("constraintAreaMinY").doubleValue();
-        constraintAreaMax.y = par("constraintAreaMaxY").doubleValue();
-
+        stationary = false;
         NodeID = (int) par("NodeID");
 
-        if (hasPar("ciJ") && hasPar("aliJ") && hasPar("deltaXJ") && hasPar("joinJ")
-                && hasPar("ciP") && hasPar("aliP") && hasPar("deltaXP") && hasPar("joinP")) {
+        if (!hasPar("countOfFirstSkippedLongFlight")) {cout << "It is necessary to specify 'countOfFirstSkippedLongFlight' parameter"; exit(-122);}
+        countOfFirstSkippedLongFlight = par("countOfFirstSkippedLongFlight").longValue();
 
-           ciJ  = par("ciJ").doubleValue();
-           aliJ = par("aliJ").doubleValue();
-           deltaXJ = par("deltaXJ").doubleValue();
-           joinJ = par("joinJ").doubleValue();
+        if (!hasPar("powA")) {cout << "It is necessary to specify 'powA' parameter"; exit(-112);}
+        powA = par("powA").doubleValue();
 
-           ciP  = par("ciP").doubleValue();
-           aliP = par("aliP").doubleValue();
-           deltaXP = par("deltaXP").doubleValue();
-           joinP = par("joinP").doubleValue();
-
-           powA = par("powA").doubleValue();
-
-        } else { cout << "It is necessary to specify ALL parameters for length and pause Levy distribution"; exit(-112);}
-
-        if (hasPar("kForSpeed") && hasPar("roForSpeed")) {
-            kForSpeed = par("kForSpeed").doubleValue();
-            roForSpeed = par("roForSpeed").doubleValue();
-        } else { cout << "It is necessary to specify ALL parameters for speed function"; exit(-212);}
-    }
-
-    if (jump  == NULL) jump  = new LeviJump(ciJ, aliJ, deltaXJ, joinJ);
-    if (pause == NULL) pause = new LeviPause(ciP, aliP, deltaXP, joinP);
-
-    if (!hsc) {
+        ASSERT(!hsc);
         // загрузка данных о локациях
         hsc = HotSpotsCollection::getInstance();
         double minX, maxX, minY, maxY;
         hsc->getTotalSize(minX, maxX, minY, maxY);
         constraintAreaMin.x=minX; constraintAreaMin.y=minY;
         constraintAreaMax.x=maxX; constraintAreaMax.y=maxY;
-    }
 
-    if (!hsd) hsd = HSDistanceMatrix::getInstance(powA);
+        ASSERT(!movement);
+        movement = new Movement(this, (constraintAreaMax - constraintAreaMin).length());
 
-    // выбор случайной локации
-    if (currentHSindex == -1) {
+        ASSERT(!hsd);
+        hsd = HSDistanceMatrix::getInstance(powA);
+
+        ASSERT(currentHSindex == -1);
+        // выбор случайной локации
         currentHSindex=rand() % hsc->getHSData()->size();
         LevyHotSpotsLATP::setCurrentHSbordersWith( &(hsc->getHSData()->at(currentHSindex)) );
-    }
 
-    if (wpFileName == NULL && trFileName == NULL) {
-        wpFileName = new char[256];
-        trFileName = new char[256];
-        wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), WAYPOINTS_TYPE);
-        trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), TRACE_TYPE);
+        ASSERT(!mvnHistory);
+        mvnHistory = new MovementHistory(NodeID);
     }
 }
 
 
-void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi)
-{
-    currentHSMin.x = hsi->Xmin;    //std::cout<<currentHSMin.x<<"\t";
-    currentHSMin.y = hsi->Ymin;    //std::cout<<currentHSMin.y<<"\t";
-    currentHSMax.x = hsi->Xmax;    //std::cout<<currentHSMax.x<<"\t";
-    currentHSMax.y = hsi->Ymax;    //std::cout<<currentHSMax.y<<"\n";
+void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi) {
+    currentHSMin.x = hsi->Xmin;
+    currentHSMin.y = hsi->Ymin;
+    currentHSMax.x = hsi->Xmax;
+    currentHSMax.y = hsi->Ymax;
     currentHSCenter=(currentHSMin+currentHSMax)*0.5;
 }
 
 
 void LevyHotSpotsLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
-    
-    lastPosition.x = uniform(currentHSMin.x, currentHSMax.x); 
-    lastPosition.y = uniform(currentHSMin.y, currentHSMax.y); 
+
+    lastPosition.x = uniform(currentHSMin.x, currentHSMax.x);
+    lastPosition.y = uniform(currentHSMin.y, currentHSMax.y);
     targetPosition = lastPosition;
 //    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
 }
@@ -128,40 +94,61 @@ bool LevyHotSpotsLATP::isHotSpotEmpty() {
 
 
 void LevyHotSpotsLATP::setTargetPosition() {
-    if (movementsFinished) {nextChange = -1; return;};
-//    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
-//    ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+    if (movementsFinished) {
+        log("LevyHotSpotsLATP::setTargetPosition: End of root! (before generation)");
+        nextChange = -1;
+        return;
+    };
 
-    step++;
+    //    ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
+    //    ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+
+    // так как данный метод вызывается на этапе инициализации, то этот вызов мы и пропускаем
+    if (step == 0) { step++; return; }
+
     if (isPause) {
-        waitTime = (simtime_t) pause->get_Levi_rv();
-//        ASSERT(waitTime > 0);
-        nextChange = simTime() + waitTime;
+        const bool success = generatePause(nextChange);
+//        ASSERT(success);
+        // увеличивам шаг после пары "перешли и подождали"
+        step++;
     } else {
-        collectStatistics(simTime() - waitTime, simTime(), lastPosition.x, lastPosition.y);
-        movementsFinished = !generateNextPosition(targetPosition, nextChange);
+//        ASSERT(simTime() >= getWaitTime());
+        collectStatistics(simTime() - getWaitTime(), simTime(), lastPosition.x, lastPosition.y);
+        // если количество первых прыжков, которые нужно пропустить для текущей локации больше нуля,
+        // то регенерируем прыжки в случае выхода за границу
+        bool regenerateIfOutOfBound = (countOfFirstSkippedLongFlight > 0);
+        movementsFinished = !generateNextPosition(targetPosition, nextChange, regenerateIfOutOfBound);
+        if (regenerateIfOutOfBound) countOfFirstSkippedLongFlight--;
 
-        if (movementsFinished) {nextChange = -1; return;};
-//        ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
+        if (movementsFinished) {
+            log("LevyHotSpotsLATP::setTargetPosition: End of root! (after generation)");
+            nextChange = -1;
+            return;
+        };
+        //        ASSERT(isCorrectCoordinates(targetPosition.x, targetPosition.y));
     }
     isPause = !isPause;
 }
 
 
+bool LevyHotSpotsLATP::generatePause(simtime_t &nextChange) {
+    const bool success = movement->genPause( (string("DEBUG LevyHotSpotsLATP::setTargetPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+    setWaitTime(movement->getWaitTime());
+    nextChange = simTime() + getWaitTime();
+    return success;
+}
+
+
 bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound) {
     while (true) {
-        // генерируем прыжок Леви как обычно
-        angle = uniform(0, 2 * PI);
-        distance = jump->get_Levi_rv();
-//        ASSERT(distance > 0);
-        speed = kForSpeed * pow(distance, 1 - roForSpeed);
-        Coord delta(distance * cos(angle), distance * sin(angle), 0);
-        deltaVector = delta;
-        travelTime = distance / speed;
-        const Coord remTargetPosition = targetPosition;  // сохраняем старое значение
-        targetPosition = lastPosition + delta;           // записываем новое значение
-//        ASSERT(targetPosition.x != lastPosition.x);
-        nextChange = simTime() + travelTime;
+        const bool success = movement->genFlight( (string("DEBUG LevyHotSpotsLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
+//        ASSERT(success);
+
+        const Coord remTargetPosition = targetPosition;             // сохраняем старое значение
+        targetPosition = lastPosition + movement->getDeltaVector(); // записываем новое значение
+        if (targetPosition == lastPosition) log();
+//        ASSERT(targetPosition != lastPosition);
+        nextChange = simTime() + movement->getTravelTime();
 
         // если вышли за пределы локации
         if (!isCorrectCoordinates(targetPosition.x, targetPosition.y)) {
@@ -194,7 +181,7 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
             }
 
             // проверяем, можем ли остаться в прямоугольнике текущей локации, если прыгать к дальнему углу прямоугольника
-            if ( distance > (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
+            if ( movement->getDistance() > (dir=sqrt(Xdir*Xdir+Ydir*Ydir)) ) {
                 // не можем остаться
                 if (regenerateIfOutOfBound) continue; // генерируем заново прыжок
                 else if (findNextHotSpotAndTargetPosition()) return true; // выбираем следующую локацию
@@ -205,8 +192,9 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
             }
 
             // можем остаться - прыгаем
-            delta.x = Xdir * distance/dir;
-            delta.y = Ydir * distance/dir;
+            Coord delta;
+            delta.x = Xdir * movement->getDistance()/dir;
+            delta.y = Ydir * movement->getDistance()/dir;
             targetPosition = lastPosition + delta;
         }
         break; //получили правильный targetPosition
@@ -218,14 +206,14 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
 
 bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
     if (findNextHotSpot()) {   // нашли следующую локацию - идём в её случайную точку
+        // перечитываем начальное количество первых длинных прижков, которые надо пропустить для новой локации
+        countOfFirstSkippedLongFlight = par("countOfFirstSkippedLongFlight").longValue();
+
         targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
         targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
-        distance = sqrt( (targetPosition.x-lastPosition.x)*(targetPosition.x-lastPosition.x)+(targetPosition.y-lastPosition.y)*(targetPosition.y-lastPosition.y) );
-//        ASSERT(distance > 0);
-        speed = kForSpeed * pow(distance, 1 - roForSpeed);
-        travelTime = distance / speed;
-        nextChange = simTime() + travelTime;
+        movement->setDistance(lastPosition.distance(targetPosition), (string("DEBUG RegularRootLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
+        nextChange = simTime() + movement->getTravelTime();
         return true;
     }
 
@@ -233,12 +221,11 @@ bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
 }
 
 
-bool LevyHotSpotsLATP::findNextHotSpot()
-{
+bool LevyHotSpotsLATP::findNextHotSpot() {
     int oldHSindex = currentHSindex;
     // выбираем новую локацию
     double rn, pr=0;
-    rn=(double)rand()/RAND_MAX;
+    do { rn = ((double) rand()) / RAND_MAX; } while (rn == 0 || rn == 1);
     for(unsigned int i=0; i<hsc->getHSData()->size(); i++) {
         if(i != currentHSindex ) pr+=(hsd->getProbabilityMatrix())[currentHSindex][i];
         if(rn <= pr) {currentHSindex=i; break; }
@@ -252,19 +239,20 @@ bool LevyHotSpotsLATP::findNextHotSpot()
 
 //-------------------------- Statistic collection ---------------------------------
 void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
-    inTimes.push_back(inTime);
-    outTimes.push_back(outTime);
-    xCoordinates.push_back(x);
-    yCoordinates.push_back(y);
-    hsc->getHSData()->at(currentHSindex).generatedSumTime += (outTime - inTime).dbl();
+    mvnHistory->collect(inTime, outTime, x, y);
+
+    double generatedSumTime = (outTime - inTime).dbl();
+//    ASSERT(generatedSumTime >= 0); // на этапе инициализации возникают отсчёты с нулевой длительностью
+    hsc->getHSData()->at(currentHSindex).generatedSumTime += generatedSumTime;
     hsc->getHSData()->at(currentHSindex).generatedWaypointNum++;
 
-    Waypoint h(x, y, inTime.dbl(), outTime.dbl(), wpFileName);
+    Waypoint h(x, y, inTime.dbl(), outTime.dbl(), mvnHistory->getWpFileName());
     hsc->getHSData()->at(currentHSindex).waypoints.push_back(h);
 }
 
 
 void LevyHotSpotsLATP::saveStatistics() {
+    log("Start saving statistics...");
     const char *outDir  = NamesAndDirs::getOutDir();
     const char *wpsDir  = NamesAndDirs::getOutWpsDir();
     const char *trsDir  = NamesAndDirs::getOutTrsDir();
@@ -293,124 +281,20 @@ void LevyHotSpotsLATP::saveStatistics() {
         if (CreateDirectory(acRtDir, NULL)) cout << "create output directory: " << acRtDir << endl;
         else cout << "error create output directory: " << acRtDir << endl;
 
+        // --- Write Locations ---
+        hsc->saveHotSpots(hsDir);
 
         // --- Write HotSpots ---
-        //todo перенести в HotSpotCollections
-        for (unsigned int i = 0; i < hsc->getHSData()->size(); i++) {
-            const char* fullNameHS = buildFullName(hsDir, hsc->getHSData()->at(i).hotSpotName);
-            ofstream* hsFile = new ofstream(fullNameHS);
-            (*hsFile) << hsc->getHSData()->at(i).Xmin << "\t" << hsc->getHSData()->at(i).Xmax << endl;
-            (*hsFile) << hsc->getHSData()->at(i).Ymin << "\t" << hsc->getHSData()->at(i).Ymax << endl;
-            (*hsFile) << hsc->getHSData()->at(i).generatedSumTime << "\t"<< hsc->getHSData()->at(i).generatedWaypointNum << endl;
-
-            for(unsigned int j = 0; j < hsc->getHSData()->at(i).waypoints.size(); j++)
-                (*hsFile) << hsc->getHSData()->at(i).waypoints[j].X  << "\t" << hsc->getHSData()->at(i).waypoints[j].Y  << "\t"
-                          << hsc->getHSData()->at(i).waypoints[j].Tb << "\t" << hsc->getHSData()->at(i).waypoints[j].Te << "\t"
-                          << hsc->getHSData()->at(i).waypoints[j].traceName << endl;
-
-            hsFile->close();
-            delete hsFile;
-        }
-
+        hsc->saveLocationsFile(locs);
 
         // --- Write Roots for every node & every day ---
-        //todo перенести в RootsCollection
-        //todo сделать один кастомизируемый метод для записи generatedTheoryRootsData & generatedActualRootsData
-        vector<RootDataShort> *rootsDataShort = RootsCollection::getInstance()->getRootsDataShort();
-        vector<vector<vector<HotSpotDataRoot*>*>*> *generatedTheoryRootsData = RootsCollection::getInstance()->getGeneratedTheoryRootsData();
-        vector<vector<vector<HotSpotDataRoot*>*>*> *generatedActualRootsData = RootsCollection::getInstance()->getGeneratedActualRootsData();
-        ASSERT(rootsDataShort->size() == generatedTheoryRootsData->size() && rootsDataShort->size() == generatedActualRootsData->size());
-        for (unsigned int i = 0; i < generatedTheoryRootsData->size(); i++) {
-
-            vector<vector<HotSpotDataRoot*>*>* theoryRootsPerNode = generatedTheoryRootsData->at(i);
-            for (unsigned int j = 0; j < theoryRootsPerNode->size(); j++) {
-                string filename("Gen_");
-                string simpleName = extractSimpleName(rootsDataShort->at(i).RootName);
-
-                std::size_t found;
-                if ((found = simpleName.find("_id=")) != std::string::npos) {
-                    // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
-                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
-
-                } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
-                    // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
-                    filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", j+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
-
-                } else {
-                    filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(rootsDataShort->at(i).RootName));
-                }
-
-                ofstream* rtFile = new ofstream(buildFullName(thRtDir, filename.c_str()));
-                vector<HotSpotDataRoot*>* dailyRoot = theoryRootsPerNode->at(j);
-                for (unsigned int k = 0; k < dailyRoot->size(); k++) {
-                    HotSpotDataRoot* hs = dailyRoot->at(k);
-                    (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                              << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-                }
-                rtFile->close();
-            }
-            cout << "\t Theory roots per node " << i << " are collected!";
-
-            vector<vector<HotSpotDataRoot*>*>* actualRootsPerNode = generatedActualRootsData->at(i);
-            for (unsigned int j = 0; j < actualRootsPerNode->size(); j++) {
-                string filename("Gen_");
-                string simpleName = extractSimpleName(rootsDataShort->at(i).RootName);
-
-                std::size_t found;
-                if ((found = simpleName.find("_id=")) != std::string::npos) {
-                    // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
-                    filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", j+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
-
-                } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
-                    // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
-                    filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", j+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
-
-                } else {
-                    filename += (string(buildIntParameter("day", j+1, 3)) + extractSimpleName(rootsDataShort->at(i).RootName));
-                }
-
-                ofstream* rtFile = new ofstream(buildFullName(acRtDir, filename.c_str()));
-                vector<HotSpotDataRoot*>* dailyRoot = actualRootsPerNode->at(j);
-                for (unsigned int k = 0; k < dailyRoot->size(); k++) {
-                    HotSpotDataRoot* hs = dailyRoot->at(k);
-                    (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
-                              << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
-                }
-                rtFile->close();
-            }
-            cout << "\t Actual roots per node " << i << " are collected!";
-        }
-
-
-        // --- Write Locations ---
-        //todo перенести в HotSpotCollections
-        ofstream lcfile(locs);
-        for(unsigned int i = 0; i < hsc->getHSData()->size(); i++) {
-            lcfile << hsc->getHSData()->at(i).hotSpotName << "\t"<< hsc->getHSData()->at(i).generatedSumTime << "\t" << "\t";
-            lcfile << hsc->getHSData()->at(i).generatedWaypointNum << "\t" << "\t";
-            lcfile << hsc->getHSData()->at(i).Xmin << "\t"<< hsc->getHSData()->at(i).Xmax << "\t";
-            lcfile << hsc->getHSData()->at(i).Ymin << "\t"<< hsc->getHSData()->at(i).Ymax << endl;
-        }
-        lcfile.close();
+        RootsCollection::getInstance()->saveRoots(thRtDir, acRtDir);
     }
-
 
     //--- Write points ---
-    ofstream wpFile(buildFullName(wpsDir, wpFileName));
-    ofstream trFile(buildFullName(trsDir, trFileName));
-    for (unsigned int i = 0; i < outTimes.size(); i++) {
-        simtime_t inTime = inTimes[i];
-        simtime_t outTime = outTimes[i];
-        double x = xCoordinates[i];
-        double y = yCoordinates[i];
-
-        wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
-        trFile << inTime << "\t" << x << "\t" << y << endl;
-    }
-    wpFile.close();
-    trFile.close();
+    mvnHistory->save(wpsDir, trsDir);
+    log("Statistics saved");
 }
-
 
 bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
     if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) return true;
@@ -418,6 +302,9 @@ bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
     return false;
 }
 
+void LevyHotSpotsLATP::log(string log) {
+    cout << "NodeId = " << NodeID << ": "  << log << endl;
+}
 
 void LevyHotSpotsLATP::log() {  // Отладочная функция
     cout << "----------------------------- LOG --------------------------------" << endl;
@@ -433,11 +320,12 @@ void LevyHotSpotsLATP::log() {  // Отладочная функция
     hsc->getHSData()->at(currentHSindex).print();
 
     if (isPause) {
-        cout << "waitTime = " << waitTime << endl;
+        cout << "waitTime = " << movement->getWaitTime() << endl;
     } else {
-        cout << "distance = " << distance << ", angle = " << angle << ", speed = " << speed << endl;
-        cout << "deltaVector = " << deltaVector << ", travelTime = " << travelTime << endl;
+        cout << "distance = " << movement->getDistance() << ", angle = " << movement->getAngle() << ", speed = " << movement->getSpeed() << endl;
+        cout << "deltaVector = " << movement->getDeltaVector() << ", travelTime = " << movement->getTravelTime() << endl;
     }
+    movement->log();
 
     cout << "targetPosition = " << targetPosition << endl;
     cout << "nextChange = " << nextChange << endl;

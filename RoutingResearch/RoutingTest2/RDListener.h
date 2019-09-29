@@ -11,6 +11,7 @@
 #include <LevyHotSpotsLATP.h>
 #include "SelfSimLATP.h"
 #include "RealMobility.h"
+#include "SimpleLevyMobility.h"
 #include <MobileHost.h>
 #include "DevelopmentHelper.h"
 
@@ -24,8 +25,10 @@ protected:
 
     int NodeId;
     Coord position;
+    bool isTurnedOn;
 
     vector<Coord> nodePositions;
+    vector<bool>  nodeIsTurnedOnStates;
 
 public:
     RD_Listener(RoutingDaemon* rd);

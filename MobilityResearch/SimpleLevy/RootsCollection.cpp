@@ -6,12 +6,12 @@ RootsCollection* RootsCollection::instance = NULL;            // указатель на si
 
 RootsCollection* RootsCollection::getInstance()
 {
-    if (!instance) instance = new RootsCollection();
+    if (!instance) instance = new RootsCollection(DEF_TR_DIR, ALLROOTS_FILE, DEF_RT_DIR, ROOT_PATTERT);
     return instance;
 }
 
 
-void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* rootsDir, char* filePattern)
+void RootsCollection::readRootsData(const char* TracesDir, const char* allRootsFile, const char* rootsDir, const char* filePattern)
 {
     // Инициализация структуры RootsData на основании набора файлов *.rot из rootfiles
     cout << "Initializing of RootsData..." << endl;
@@ -50,11 +50,11 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
 
                 root->push_back(HotSpotDataRoot(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum));
             }
-            infile->close();
-            delete infile;
-            delete[] inputFileName;
             RootsData->push_back(root);
             rootFileNames->push_back(string(inputFileName));
+            infile->close();
+            myDelete(infile);
+            myDeleteArray(inputFileName);
         }
         while(FindNextFile(h, &f));
     } else cout << "Directory or files not found\n";
@@ -65,12 +65,13 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
     cout << "Initializing of RootsDataShort..." << endl;
     ASSERT(!RootsDataShort);
     RootsDataShort = new vector<RootDataShort>();
-    ifstream rfile(buildFullName(TracesDir, allRootsFile));
-    if (rfile.good()) {
+    ifstream* rfile = NULL;
+    if (TracesDir && allRootsFile) rfile = new ifstream(buildFullName(TracesDir, allRootsFile));
+    if (TracesDir && allRootsFile && rfile->good()) {
         // Если файл allroots.roo существует - считываем из него
-        while(!rfile.eof()) {
+        while(!rfile->eof()) {
             string rootinfo;
-            getline(rfile, rootinfo);
+            getline((*rfile), rootinfo);
             RootsDataShort->push_back(RootDataShort(rootinfo));
         }
         RootsDataShort->pop_back(); // удаляем дубль в конце
@@ -119,12 +120,43 @@ void RootsCollection::readRootsData(char* TracesDir, char* allRootsFile, char* r
     cout << "Consistency is checked." << endl << endl;
 }
 
-void RootsCollection::collectTheoryRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day) {
-    collectRoot(generatedTheoryRootsData, root, rootSnumber, rootCounter, NULL, nodeId, day);
+void RootsCollection::readDailyRoots(const char* fakeTracesDir, const char* fakeAllRootsFile, const char* rootsDir, const char* filePattern) {
+    vector<string>* subDirectories = getSubDirectories(rootsDir);
+
+    if (!subDirectories->empty()) {
+        DailyRoot = new vector<RootsCollection*>();
+        for (unsigned int i = 0; i < subDirectories->size(); i++) {
+            double* day = extractDoubleParameter(subDirectories->at(i).c_str(), (char*)"day");
+            ASSERT((*day) == (i+1)); // проверяем, что порядковый номер папки равен номеру дня в названии папки
+            myDelete(day);
+
+            const char* subDir = buildFullName(rootsDir, subDirectories->at(i).c_str());
+            cout << "Start processing roots for day " << i + 1 << " from directory: " << subDir << "/" << filePattern <<  endl;
+            DailyRoot->push_back(new RootsCollection(NULL, NULL, subDir, filePattern));
+            cout << "Processed roots for day " << i + 1 << " from directory: " << subDir << "/" << filePattern <<  endl;
+        }
+    }
+
+    myDelete(subDirectories);
 }
 
-void RootsCollection::collectActualRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, vector<unsigned int>* rootTrack, unsigned int nodeId, unsigned int day) {
-    collectRoot(generatedActualRootsData, root, rootSnumber, rootCounter, rootTrack, nodeId, day);
+void RootsCollection::collectTheoryRoot(vector<HotSpotData*>* root,
+                                        vector<unsigned int>* rootSnumber,
+                                        vector<int>* rootCounter,
+                                        unsigned int nodeId,
+                                        unsigned int day) {
+    collectRoot(generatedTheoryRootsData, root, rootSnumber, rootCounter, NULL, NULL, NULL, nodeId, day);
+}
+
+void RootsCollection::collectActualRoot(vector<HotSpotData*>* root,
+                                        vector<unsigned int>* rootSnumber,
+                                        vector<int>* rootCounter,
+                                        vector<unsigned int>* rootTrack,
+                                        vector<double>* rootTrackSumTime,
+                                        vector<int>* rootTrackWaypointNum,
+                                        unsigned int nodeId,
+                                        unsigned int day) {
+    collectRoot(generatedActualRootsData, root, rootSnumber, rootCounter, rootTrack, rootTrackSumTime, rootTrackWaypointNum, nodeId, day);
 }
 
 void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData,
@@ -132,6 +164,8 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
                                   vector<unsigned int>* rootSnumber,
                                   vector<int>* rootCounter,
                                   vector<unsigned int>* rootTrack,
+                                  vector<double>* rootTrackSumTime,
+                                  vector<int>* rootTrackWaypointNum,
                                   unsigned int nodeId,
                                   unsigned int day)
 {
@@ -145,15 +179,12 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
 
     if (rootTrack) {
         // если трек есть, то записываем маршрут на основании его!
-        int counterSum = getSum(*rootCounter);
-        ASSERT(counterSum >= 0);
-        // Каждое посещение локации фиксируется в rootTrack.
-        // Однако в RegularRootLATP::findNextHotSpot последняя локация с несколькими посещениесми заменяется одним посещением
-        // Поэтому сумма всех посещений, должна быть больше или равна длине трека
-        ASSERT(((unsigned int) counterSum) >= rootTrack->size());
-
         for (unsigned int i = 0; i < rootTrack->size(); i++) {
             ASSERT(rootTrack->at(i) >= 0 && rootTrack->at(i) < root->size());
+
+            // Костыль. Т.к. в RegularRootLATP происходит запись последней локации,
+            // то появляются записи с нулевыми временем и количеством путевых точек
+            if (i == (rootTrack->size()-1) && (rootTrackSumTime->at(i) == 0 || rootTrackWaypointNum->at(i) == 0)) continue;
 
             HotSpotDataRoot* data = new HotSpotDataRoot();
             data->hotSpotName = new char[256];
@@ -162,10 +193,12 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
             data->Xmax = root->at(rootTrack->at(i))->Xmax;
             data->Ymin = root->at(rootTrack->at(i))->Ymin;
             data->Ymax = root->at(rootTrack->at(i))->Ymax;
-            //todo сделать запись фактических значений времени пребывания в локации и кот-ва путевых точек в локации (для узла в рамках одного маршрута)
-            data->sumTime = -1;
-            data->waypointNum = -1;
-            data->counter = -1;
+            //Запись фактических значений времени пребывания в локации и кот-ва путевых точек в локации (для узла в рамках одного маршрута)
+            ASSERT(rootTrackSumTime->at(i) > 0);
+            data->sumTime = rootTrackSumTime->at(i);
+            ASSERT(rootTrackWaypointNum->at(i) > 0);
+            data->waypointNum = rootTrackWaypointNum->at(i);
+            data->counter = -1; // далее это поле использоваться не должно!
             rootForHistory->push_back(data);
         }
     } else {
@@ -179,10 +212,10 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
                 data->Xmax = root->at(i)->Xmax;
                 data->Ymin = root->at(i)->Ymin;
                 data->Ymax = root->at(i)->Ymax;
-                //todo сделать запись фактических значений времени пребывания в локации и кот-ва путевых точек в локации (для узла в рамках одного маршрута)
+                //трека нет только в случае, когда записывается теоретический маршрут. В этом случае не заполняем поля sumTime & waypointNum!
                 data->sumTime = -1;
                 data->waypointNum = -1;
-                data->counter = -1;
+                data->counter = -1; // далее это поле использоваться не должно!
                 rootForHistory->push_back(data);
             }
         }
@@ -200,13 +233,6 @@ void RootsCollection::collectRoot(vector<vector<vector<HotSpotDataRoot*> *> *> *
 }
 
 
-void RootsCollection::printRootsDataShort()
-{
-    cout << "RootsCollection::printRootsDataShort RootsDataShort:" <<endl;
-    for (unsigned int i=0; i<RootsDataShort->size(); i++) (*RootsDataShort)[i].print();
-}
-
-
 void RootsCollection::printRootsData()
 {
     cout << "RootsCollection::printRootsDataShort RootsData:" <<endl;
@@ -214,4 +240,109 @@ void RootsCollection::printRootsData()
         cout << "Root " << i <<":" <<endl;
         for(unsigned int j=0; j<(*RootsData)[i]->size(); j++) (*RootsData)[i]->at(j).print();
     }
+}
+
+
+void RootsCollection::printRootsDataShort()
+{
+    cout << "RootsCollection::printRootsDataShort RootsDataShort:" <<endl;
+    for (unsigned int i=0; i<RootsDataShort->size(); i++) (*RootsDataShort)[i].print();
+}
+
+
+void RootsCollection::saveRoots(const char *thRtDir, const char *acRtDir)
+{
+    ASSERT(RootsDataShort->size() == generatedTheoryRootsData->size() && RootsDataShort->size() == generatedActualRootsData->size());
+
+    innerSaveRoots("Theory", thRtDir, generatedTheoryRootsData);
+    innerSaveRoots("Actual", acRtDir, generatedActualRootsData);
+}
+
+
+void RootsCollection::innerSaveRoots(const char *logPrefix, const char *rtDir, vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData)
+{
+    // Формируем плоский список всех файлов пользователей за все дни
+    for (unsigned int node = 0; node < generatedRootsData->size(); node++) {
+        // бежим по данным всех узлов и сохраняем их маршруты
+
+        vector<vector<HotSpotDataRoot*>*>* dailyRootsPerNode = generatedRootsData->at(node);
+        for (unsigned int day = 0; day < dailyRootsPerNode->size(); day++) {
+
+            // формируем имя файла для текущего маршрута day для текущего узла node ...
+            string filename = genFileName(node, day);
+
+            // бежим по маршрутам j за все дни текущего узла i
+            vector<HotSpotDataRoot*>* dailyRoot = dailyRootsPerNode->at(day);
+            writeRoot(node, day, rtDir, filename, dailyRoot);
+        }
+        cout << "\t " << logPrefix << " roots per node " << node << " are collected!" << endl;
+    }
+
+    // Формируем маршруты по дням (в папках)
+    // получаем число всех дней
+    unsigned int days = generatedRootsData->at(0)->size();
+    cout << "\t " << logPrefix << ": count of days = " << days << endl;
+    for (unsigned int day = 0; day < days; day++) {
+        // бежим по всем дням
+
+        // создаём папку с маршрутами текущего дня
+        const char *dirForDayRoots = buildFullName(rtDir, buildIntParameter("_day", day+1, 3));
+        if (CreateDirectory(dirForDayRoots, NULL)) cout << "create output directory: " << dirForDayRoots << endl;
+        else cout << "error create output directory: " << dirForDayRoots << endl;
+
+        cout << "\t " << logPrefix << ": DEBUG: generatedRootsData->size() = " << generatedRootsData->size() << endl;
+        for (unsigned int node = 0; node < generatedRootsData->size(); node++) {
+            vector<vector<HotSpotDataRoot*>*>* dailyRootsPerNode = generatedRootsData->at(node);
+            if (dailyRootsPerNode->size() == 0) {
+                // т.к. реальных пользователей может быть в моделировании меньше, то записываем только НЕ пустые маршруты
+                continue;
+            }
+
+            // бежим по всем пользователям (для каждого дня берём от всех пользователей маршруты)
+            cout << "\t " << logPrefix << ": DEBUG: generatedRootsData->at(node)->size() = " << generatedRootsData->at(node)->size() << ", node = " << node << ", day = " << day << endl;
+
+            // формируем имя файла для текущего маршрута node ...
+            string filename = genFileName(node, day);
+
+            // бежим по маршрутам за все дни текущего узла
+            vector<HotSpotDataRoot*>* dailyRoot = dailyRootsPerNode->at(day);
+            writeRoot(node, day, dirForDayRoots, filename, dailyRoot);
+        }
+
+        cout << "\t " << logPrefix << " roots per day " << day << " are collected!" << endl;
+    }
+}
+
+
+string RootsCollection::genFileName(unsigned int node, unsigned int day) {
+    // формируем имя файла для текущего маршрута node ...
+    string filename("Gen_");
+    string simpleName = extractSimpleName(RootsDataShort->at(node).RootName);
+    std::size_t found;
+    if ((found = simpleName.find("_id=")) != std::string::npos) {
+        // т.е. в названии файла мы нашли куда вставить номер дня (найден id - для The_dartmouth_cenceme_dataset_(v.2008-08-13))
+        filename += (simpleName.substr(0, (found + 8)) + string(buildIntParameter("day", day+1, 3)) + simpleName.substr((found + 8), simpleName.size()));
+    } else if ((found = simpleName.find("_30sec_")) != std::string::npos) {
+        // т.е. в названии файла мы нашли куда вставить номер дня (найден общий суффикс _30sec_ - для трасс KAIST, NCSU, NewYork, Orlando, Statefair)
+        filename += (simpleName.substr(0, (found + 10)) + string(buildIntParameter("_day", day+1, 3)) + simpleName.substr((found + 10), simpleName.size()));
+    } else {
+        filename += (string(buildIntParameter("day", day+1, 3)) + extractSimpleName(RootsDataShort->at(node).RootName));
+    }
+    return filename;
+}
+
+
+void RootsCollection::writeRoot(unsigned int node,
+                                unsigned int day,
+                                const char *dirForRoots,
+                                string filename,
+                                vector<HotSpotDataRoot*>* dailyRoot) {
+    // бежим по маршрутам за все дни текущего узла
+    ofstream* rtFile = new ofstream(buildFullName(dirForRoots, filename.c_str()));
+    for (unsigned int hsIndex = 0; hsIndex < dailyRoot->size(); hsIndex++) {
+        HotSpotDataRoot* hs = dailyRoot->at(hsIndex);
+        (*rtFile) << hs->hotSpotName << "\t" << hs->Xmin << "\t" << hs->Xmax << "\t" << hs->Ymin << "\t" << hs->Ymax
+                  << "\t" << hs->sumTime << "\t" << hs->waypointNum << endl;
+    }
+    rtFile->close();
 }

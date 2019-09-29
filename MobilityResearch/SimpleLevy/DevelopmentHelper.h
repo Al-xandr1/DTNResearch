@@ -6,6 +6,8 @@
 #include <math.h>
 #include <list>
 #include <sstream>
+#include <iostream>
+#include <fstream>
 #include <string>
 #include "stlutils.h"
 #include <omnetpp.h>
@@ -77,6 +79,10 @@ const char *buildFullName(const char *dir, const char *fileName);
 char *createFileName(char *buffer, int numberOfExperiment,
                      const char *rawName, int index, const char *fileType);
 
+ofstream* createXmlFile(const char* filename, const char* openRootTag) ;
+
+void closeXmlFile(ofstream* xmlFile, const char* closeRootTag);
+
 int countMaxValue(list<int> queueSizePoints);
 
 double getLength(double x1, double y1, double x2, double y2);
@@ -91,6 +97,11 @@ string extractSimpleName(const char* fullName);
  * Формирует параметр в строке с целочисленным значением (имени файла).
  */
 const char* buildIntParameter(const char* name, int value, int leftPadByZero);
+
+/**
+ * Формирует параметр в строке с вещественным значением (имени файла).
+ */
+const char* buildDblParameter(const char* name, double value) ;
 
 /**
  * Формирует параметр в строке (имени файла).
@@ -155,12 +166,39 @@ inline std::string &fullTrim(std::string &s) {
 }
 
 template <class T>
-void deleteInVector(vector<T*>*& deleteme, bool deleteVector) {
+void deleteVector(vector<T*>*& deleteme, bool deleteVector) {
     while(!deleteme->empty()) {
         myDelete(deleteme->back());
         deleteme->pop_back();
     }
     if (deleteVector) myDelete(deleteme);
 }
+
+inline vector<string>* getSubDirectories(const char* currentDirectory) {
+    vector<string>* subDirectories = new vector<string>();
+
+    WIN32_FIND_DATA fi;
+    HANDLE h = FindFirstFileEx(
+            (string(currentDirectory) + string("/*")).c_str(),
+            FindExInfoStandard,
+            &fi,
+            FindExSearchLimitToDirectories,
+            NULL,
+            0);
+    if (h != INVALID_HANDLE_VALUE) {
+        do {
+            if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                if (strcmp(fi.cFileName, (char*)".") != 0 && strcmp(fi.cFileName, (char*)"..") != 0) {
+                    subDirectories->push_back(string(fi.cFileName));
+                }
+            }
+        } while (FindNextFile(h, &fi));
+        FindClose(h);
+    }
+
+    return subDirectories;
+}
+
+double checkValue(const double value, const double maxPermittedValue, string where = string("unknown"));
 
 #endif // DEVELOPMENTHELPER_H_INCLUDED

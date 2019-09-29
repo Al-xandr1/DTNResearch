@@ -1,5 +1,43 @@
 IS_COMMON_SCE_LOADED = COMMON_SCE_LOADED;//чтобы убедиться, что файл common.sce загружен
 
+function drawSpeed(filename)
+    fd = mopen(PATH + filename, 'rt');
+    mtr = mfscanf(-1, fd, '%lg %lg');      
+    
+    n = size(mtr, 1); 
+    l = mtr(1:n, 1)';
+    t = mtr(1:n, 2)'; 
+    
+    disp(size(l));
+    disp(size(t));
+    
+    lSize = size(l, 2);
+    disp(lSize);
+    v = [];
+    for i=1 : lSize;
+        v = [v; (l(1, i) / t(1, i))];
+    end
+    
+    plot2d(l, v, [GRAPH_COLOR]);
+    a=gca(); 
+    poly1= a.children(1).children(1);
+    poly1.line_mode = 'off';
+    poly1.mark_style = 4;
+    poly1.mark_size_unit = 'point'
+    poly1.mark_size = 3
+    poly1.mark_foreground = GRAPH_COLOR;
+    poly1.mark_background = GRAPH_COLOR;
+    a.x_label.text="length, [m]";
+    a.x_label.font_size=3;
+    a.y_label.text="velocity, [m/s]";
+    a.Y_label.font_size=3;
+
+    xtitle("Speed.dat");
+    xgrid();
+    
+    mclose(fd);
+endfunction
+
 //------------------ Функции для рисования ТРАСС -------------------------------
 
 //Рисование трассы по имени файла
@@ -123,7 +161,7 @@ function drawWPFiles(varargin)
         wpFiles = [wpFiles ; varargin(i)];
     end
     
-    privateAllWPFiles(wpFiles);
+    __privateAllWPFiles__(wpFiles);
 endfunction
 
 
@@ -134,7 +172,7 @@ function drawWPFilesFolder(folder)
     PATH = PATH + folder + SEPARATOR;
     wpFiles = getFiles(PATH, "*.wpt");
 
-    privateAllWPFiles(wpFiles);
+    __privateAllWPFiles__(wpFiles);
     xtitle("WayPoints from " + folder);
     
     PATH = SAVE_PATH;
@@ -142,7 +180,7 @@ endfunction
 
 
 //Рисование WayPoint'ов из входного вектора с именами файлов (ФУНКЦИЯ НЕ ДЛЯ ПРЯМОГО ИСПОЛЬЗОВАНИЯ)
-function privateAllWPFiles(fileNamesVector)
+function __privateAllWPFiles__(fileNamesVector)
     fileCount = size(fileNamesVector, 1);
     if (fileCount < 1) then
         error(msprintf("privateAllWPFiles: Нет файлов для обработки"));
@@ -242,6 +280,10 @@ function drawWPTs(x, y, GRAPH_COLOR)
     poly1.mark_size = 1
     poly1.mark_foreground = GRAPH_COLOR;
     poly1.mark_background = GRAPH_COLOR;
+    a.x_label.text="x, [м]";
+    a.x_label.font_size=3;
+    a.y_label.text="y, [м]";
+    a.Y_label.font_size=3;
 endfunction
 
 
@@ -286,6 +328,21 @@ function [fileCount] = drawWPTsFolder(folder)
 endfunction
 
 
+function drawWPTFolders(varargin)
+    [lhs, rhs] = argn();// rhs - количество входных параметров
+    if (rhs < 1) then
+        error(msprintf("drawWPFolders: Ожидалось один или более параметров (имён папок)"));
+    end
+    
+    wpFolders = [];
+    for i = 1 : rhs
+        wpFolders = [wpFolders ; varargin(i)];
+    end
+    
+    drawAllWPTFolders(wpFolders);
+endfunction
+
+
 function drawAllWPTFolders(folders)
     folderCount = size(folders, 1);
     if (folderCount < 1) then
@@ -310,22 +367,7 @@ function drawAllWPTFolders(folders)
         hl=legend(legenda);
     end
     
-    xtitle("WayPoints");
-endfunction
-
-
-function drawWPTFolders(varargin)
-    [lhs, rhs] = argn();// rhs - количество входных параметров
-    if (rhs < 1) then
-        error(msprintf("drawWPFolders: Ожидалось один или более параметров (имён папок)"));
-    end
-    
-    wpFolders = [];
-    for i = 1 : rhs
-        wpFolders = [wpFolders ; varargin(i)];
-    end
-    
-    drawAllWPTFolders(wpFolders);
+    xtitle("Путевые точки");
 endfunction
 
 

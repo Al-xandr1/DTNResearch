@@ -7,7 +7,9 @@
 #include <fstream>
 #include <string>
 #include "math.h"
+#include "Messages.h"
 #include "DevelopmentHelper.h"
+#include "MovementHistory.h"
 #include "TracesCollection.h"
 
 
@@ -18,6 +20,7 @@ class RealMobility : public LineSegmentsMobilityBase
 
     long step;
 
+    simtime_t timeOffset;
     double distance;
     double speed;
     simtime_t travelTime;
@@ -28,24 +31,20 @@ class RealMobility : public LineSegmentsMobilityBase
     vector<TracePoint>* currentTrace;
 
     //statistics collection
-    char *wpFileName;
-    char *trFileName;
-    simtime_t waitTime;
-    std::vector<simtime_t> inTimes;
-    std::vector<simtime_t> outTimes;
-    std::vector<double> xCoordinates;
-    std::vector<double> yCoordinates;
+    MovementHistory* mvnHistory;
 
   protected:
     virtual int numInitStages() const { return 3; }
     virtual void initialize(int stage);
     virtual void setTargetPosition();
-    virtual void handleMessage(cMessage * message);
     virtual void setInitialPosition();
     bool generateNextPosition(Coord& targetPosition, simtime_t& nextChange);
+    virtual void makeNewRoot();
+    void endRoute();
     virtual void finish()        {saveStatistics();};
     void collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y);
     void saveStatistics();
+    void log(string log);
     void log();
 
   public:

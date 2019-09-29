@@ -85,6 +85,39 @@ void HotSpotsCollection::print()
 }
 
 
+void HotSpotsCollection::saveHotSpots(const char *hotSpotDirName)
+{
+    for (unsigned int i = 0; i < HSData->size(); i++) {
+        const char* fullNameHS = buildFullName(hotSpotDirName, HSData->at(i).hotSpotName);
+        ofstream* hsFile = new ofstream(fullNameHS);
+        (*hsFile) << HSData->at(i).Xmin << "\t" << HSData->at(i).Xmax << endl;
+        (*hsFile) << HSData->at(i).Ymin << "\t" << HSData->at(i).Ymax << endl;
+        (*hsFile) << HSData->at(i).generatedSumTime << "\t"<< HSData->at(i).generatedWaypointNum << endl;
+
+        for(unsigned int j = 0; j < HSData->at(i).waypoints.size(); j++)
+            (*hsFile) << HSData->at(i).waypoints[j].X  << "\t" << HSData->at(i).waypoints[j].Y  << "\t"
+                      << HSData->at(i).waypoints[j].Tb << "\t" << HSData->at(i).waypoints[j].Te << "\t"
+                      << HSData->at(i).waypoints[j].traceName << endl;
+
+        hsFile->close();
+        delete hsFile;
+    }
+}
+
+
+void HotSpotsCollection::saveLocationsFile(const char *locationsFileName)
+{
+    ofstream lcfile(locationsFileName);
+    for(unsigned int i = 0; i < HSData->size(); i++) {
+        lcfile << HSData->at(i).hotSpotName << "\t"<< HSData->at(i).generatedSumTime << "\t" << "\t";
+        lcfile << HSData->at(i).generatedWaypointNum << "\t" << "\t";
+        lcfile << HSData->at(i).Xmin << "\t"<< HSData->at(i).Xmax << "\t";
+        lcfile << HSData->at(i).Ymin << "\t"<< HSData->at(i).Ymax << endl;
+    }
+    lcfile.close();
+}
+
+
 HotSpotData* HotSpotsCollection::findHotSpotbyName(const char* HotSpotName, int& HotSpotNum)
 {
     for(unsigned int i=0; i<HSData->size(); i++)

@@ -1,0 +1,133 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# from scilab2py import scilab
+# scilab.getd('C:\\Program Files (x86)\\scilab-6.0.1\\bin')
+
+points = 14000
+
+k1 = 30.55      # from foreign papaer
+r1 = 0.89       # from foreign papaer
+thr = 500.0     # from foreign papaer
+k2 = 0.76       # from foreign papaer
+r2 = 0.28       # from foreign papaer
+
+# Константа скорости
+constV = 5
+
+# Вычисляем половину скачка функции
+deltaV = thr / 2 * abs(k2 * thr ** -r2 - k1 * thr ** -r1)
+
+
+# (FIRST) монотонно возрастающая функция (склеенная из двух) С точкой разрыва 1 рода
+def drawfun1():
+    d = range(points)
+    t = np.zeros(points)
+    for i in d:
+        if i < thr:
+            t[i] = k1 * d[i] ** (1 - r1)
+        else:
+            t[i] = k2 * d[i] ** (1 - r2)
+
+    draw(d, t, "First")
+
+
+# (SECOND) монотонно возрастающая функция (склеенная из двух) БЕЗ точки разрыва 1 рода
+def drawfun2():
+    d = range(points)
+    t = np.zeros(points)
+    for i in d:
+        if i < thr:
+            t[i] = k1 * d[i] ** (1 - r1)
+        else:
+            t[i] = k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) - k2 * thr ** (1 - r2))
+
+    draw(d, t, "Second")
+
+
+# (THIRD) функци, склеенная из двух: возрастающей и убывающей С точкой разрыва 1 рода
+def drawfun3():
+    d = range(points)
+    t = np.zeros(points)
+    for i in d:
+        if i < thr:
+            t[i] = k1 * d[i] ** (1 - r1)
+        else:
+            t[i] = -k2 * d[i] ** (1 - r2) + 2 * k2 * thr ** (1 - r2)
+
+    draw(d, t, "Third")
+
+
+# (THIRD_FIXED) функция THIRD "склеенная" через прибавление левой и вычитания из правой половины скачка функции
+def drawfun3fixed():
+    d = range(points)
+    v = np.zeros(points)
+    for i in d:
+        if i < thr:
+            v[i] = k1 * d[i] ** (1 - r1) + deltaV
+        else:
+            v[i] = -k2 * d[i] ** (1 - r2) + 2 * k2 * thr ** (1 - r2) - deltaV
+
+    draw(d, v, "Third_Fixed")
+
+
+# (THIRD) функци под номером THIRD с "обрезанной" верхушкой FIRST
+def drawfun3cuttedFirst():
+    d = range(points)
+    t = np.zeros(points)
+    for i in d:
+        if i < thr:
+            t[i] = min([constV, k1 * d[i] ** (1 - r1)])
+        else:
+            t[i] = min([constV, -k2 * d[i] ** (1 - r2) + 2 * k2 * thr ** (1 - r2)])
+
+    draw(d, t, "Third_Cutted_First")
+
+
+# (THIRD) функци под номером THIRD с "обрезанной" верхушкой SECOND
+def drawfun3cuttedSecond():
+    d = range(points)
+    t = np.zeros(points)
+    for i in d:
+        if i < thr:
+            t[i] = min([constV, (k1 * d[i] ** (1 - r1))])
+        else:
+            t[i] = constV
+
+    draw(d, t, "Third_Cutted_Second")
+
+
+# (FORTH) функци, склеенная из двух: возрастающей и убывающей БЕЗ точкой разрыва 1 рода
+def drawfun4():
+    d = range(points)
+    t = np.zeros(points)
+    for i in d:
+        if i < thr:
+            t[i] = k1 * d[i] ** (1 - r1)
+        else:
+            t[i] = -k2 * d[i] ** (1 - r2) + (k1 * thr ** (1 - r1) + k2 * thr ** (1 - r2))
+
+    draw(d, t, "Forth")
+
+
+def draw(d, t, version=""):
+    plt.plot(d, t)
+    plt.xlabel('Distance [m]')
+    plt.ylabel('Time [s]')
+    plt.title(f'"Distance - Time" {version} Function \n k1={k1}, r1={r1}, threshold={thr}, k2={k2}, r2={r2}')
+
+    plt.figure()
+    v = np.zeros(points)
+    for i in d:
+        v[i] = d[i] / t[i]
+    plt.plot(d, v)
+    plt.xlabel('Distance [m]')
+    plt.ylabel('Velocity [m/s')
+    plt.title(f'"Distance - Velocity (v=d/t)" {version} Function \n k1={k1}, r1={r1}, threshold={thr}, k2={k2}, r2={r2}')
+
+    plt.show()
+
+
+drawfun1()
+# drawfun3cuttedFirst()
+# drawfun3cuttedSecond()

@@ -20,11 +20,12 @@ using namespace std;
  */
 class RootsCollection {
 private:
-    static RootsCollection *instance;              // указатель на singleton объект
+    static RootsCollection *instance;                  // указатель на singleton объект
 
     // эти две коллекции хранят данные о локациях маршрута. Последовательность данных в них синхронизированна
-    vector<RootDataShort> *RootsDataShort;         // набор маршрутов пользователей. Структура соответствует файлу allroots.roo
-    vector<vector<HotSpotDataRoot> *> *RootsData;  // набор маршрутов пользователей. Структура - информация из файлов *.rot
+    vector<vector<HotSpotDataRoot> *> *RootsData;      // набор маршрутов пользователей. Структура - информация из файлов *.rot
+    vector<RootDataShort>             *RootsDataShort; // набор маршрутов пользователей. Структура соответствует файлу allroots.roo
+    vector<RootsCollection *>         *DailyRoot;      // набор коллекций маршрутов для каждого дня (из подпапок _day=***_ в папке rootfiles)
 
     /* Набор сгенерированных маршрутов пользователей. Набор данных - информация для записи в файлы *.rot
      * Структура данных:
@@ -38,14 +39,19 @@ private:
     vector<vector<vector<HotSpotDataRoot*> *> *> *generatedTheoryRootsData; // для хранение СГЕНЕРИРОВАННЫХ, НО НЕ ПРОЙДЕННЫХ маршрутов
     vector<vector<vector<HotSpotDataRoot*> *> *> *generatedActualRootsData; // для хранение ФАКТИЧЕСКИ ПРОЙДЕННЫХ маршрутов
 
-    RootsCollection() {
+    RootsCollection(const char* TracesDir, const char* allRootsFile, const char* rootsDir, const char* filePattern) {
         this->RootsDataShort = NULL;
         this->RootsData = NULL;
+        this->DailyRoot = NULL;
         this->generatedTheoryRootsData = NULL;
         this->generatedActualRootsData = NULL;
-        this->readRootsData(DEF_TR_DIR, ALLROOTS_FILE, DEF_RT_DIR, ROOT_PATTERT);
+        this->readRootsData(TracesDir, allRootsFile, rootsDir, filePattern);
+        this->readDailyRoots(TracesDir, allRootsFile, rootsDir, filePattern);
         this->printRootsData();
         this->printRootsDataShort();
+        if (DailyRoot) {
+            cout << "RootsCollection: dailyRoots loaded, count days = " << DailyRoot->size() << endl;
+        }
     }
 
     ~RootsCollection() {
@@ -92,7 +98,19 @@ private:
         }
     }
 
-    void readRootsData(char *TracesDir, char *allRootsFile, char *rootsDir, char *filePatter);
+    void readRootsData(const char* TracesDir, const char* allRootsFile, const char* rootsDir, const char* filePattern);
+
+    void readDailyRoots(const char* fakeTracesDir, const char* fakeAllRootsFile, const char* rootsDir, const char* filePattern);
+
+    void innerSaveRoots(const char *logPrefix, const char *rtDir, vector<vector<vector<HotSpotDataRoot*> *> *> *generatedRootsData);
+
+    string genFileName(unsigned int node, unsigned int day);
+
+    void writeRoot(unsigned int node,
+                   unsigned int day,
+                   const char *dirForRoots,
+                   string filename,
+                   vector<HotSpotDataRoot*>* dailyRoot);
 
 public:
     /**
@@ -100,9 +118,11 @@ public:
     */
     static RootsCollection *getInstance();
 
+    vector<vector<HotSpotDataRoot> *> *getRootsData() { return RootsData; }
+
     vector<RootDataShort> *getRootsDataShort() { return RootsDataShort; }
 
-    vector<vector<HotSpotDataRoot> *> *getRootsData() { return RootsData; }
+    vector<RootsCollection *> *getDailyRoot() { return DailyRoot; };
 
     RootDataShort *getRootDataShortByNodeId(int nodeId) {
         ASSERT(nodeId >= 0 && nodeId < RootsDataShort->size());
@@ -126,16 +146,29 @@ public:
     /**
      * Сохраняет указанный машрут в качестве СФОРМИРОВАННОГО, НО НЕ ПРОЙДЕННОГО для указанного пользователя в конкретный указанный день.
      */
-    void collectTheoryRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, unsigned int nodeId, unsigned int day);
+    void collectTheoryRoot(vector<HotSpotData*>* root,
+                           vector<unsigned int>* rootSnumber,
+                           vector<int>* rootCounter,
+                           unsigned int nodeId,
+                           unsigned int day);
 
     /**
      * Сохраняет указанный машрут в качестве ФАКТИЧЕСКИ ПРОЙДЕННОГО для указанного пользователя в конкретный указанный день.
      */
-    void collectActualRoot(vector<HotSpotData*>* root, vector<unsigned int>* rootSnumber, vector<int>* rootCounter, vector<unsigned int>* currentRootActualTrack, unsigned int nodeId, unsigned int day);
+    void collectActualRoot(vector<HotSpotData*>* root,
+                           vector<unsigned int>* rootSnumber,
+                           vector<int>* rootCounter,
+                           vector<unsigned int>* rootTrack,
+                           vector<double>* rootTrackSumTime,
+                           vector<int>* rootTrackWaypointNum,
+                           unsigned int nodeId,
+                           unsigned int day);
 
     void printRootsDataShort();
 
     void printRootsData();
+
+    void saveRoots(const char *thRtDir, const char *acRtDir);
 
 private:
     /**
@@ -148,6 +181,8 @@ private:
      *     vector<unsigned int>*      currentRootSnumber;  - сформированный вектор (текущий) с индексами локаций в структуре HotSpotsCollection
      *     vector<int>*               currentRootCounter;  - сформированный вектор (текущий) со счётчиками посещений локаций
      *     vector<unsigned int>*      rootTrack            - сформированный вектор фактической последовательности появления локаций в маршруте
+     *     vector<double>*            rootTrackSumTime     - сформированный вектор фактических времён, проведённых в появляющихся локациях маршрута
+     *     vector<int>*               rootTrackWaypointNum - сформированный вектор фактического количества путевых точек, пройденных в появляющихся локациях маршрута
      *     unsigned int               nodeId               - ID узла, для которого сохраняется маршрут
      *     unsigned int               day                  - номер дня, для которого сохраняется маршрут.
      *                                                       Дни нумеруются с 1, но структуре generatedRootsData они хранятся начиная с 0.
@@ -157,6 +192,8 @@ private:
                             vector<unsigned int>* rootSnumber,
                             vector<int>* rootCounter,
                             vector<unsigned int>* rootTrack,
+                            vector<double>* rootTrackSumTime,
+                            vector<int>* rootTrackWaypointNum,
                             unsigned int nodeId,
                             unsigned int day);
 };

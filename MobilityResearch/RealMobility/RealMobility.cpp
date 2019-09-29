@@ -12,12 +12,12 @@ RealMobility::RealMobility() {
     traces = NULL;
     currentTrace = NULL;
 
+    timeOffset = 0;
     distance = -1;
     speed = -1;
     travelTime = 0;
 
-    wpFileName = NULL;
-    trFileName = NULL;
+    mvnHistory = NULL;
 }
 
 
@@ -25,41 +25,41 @@ void RealMobility::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
     if (stage == 0) {
-        stationary = (par("speed").getType() == 'L' || par("speed").getType() == 'D') && (double) par("speed") == 0;
+        stationary = false;
         NodeID = (int) par("NodeID");
 
         lastPosition.x = 0;
         lastPosition.y = 0;
         lastPosition.z = 0;
-    }
 
-    if (!traces) {
+        ASSERT(!traces);
         traces = TracesCollection::getInstance();
-        currentTrace = traces->getTraces()->at(NodeID);
-        ASSERT(currentTrace->size() > 0);
-    }
+        makeNewRoot();
 
-    if (wpFileName == NULL && trFileName == NULL) {
-        wpFileName = new char[256];
-        trFileName = new char[256];
-        wpFileName = createFileName(wpFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), WAYPOINTS_TYPE);
-        trFileName = createFileName(trFileName, 0, par("traceFileName").stringValue(),
-                (int) ((par("NodeID"))), TRACE_TYPE);
+        ASSERT(!mvnHistory);
+        mvnHistory = new MovementHistory(NodeID);
     }
 }
 
+void RealMobility::makeNewRoot() {
+    if (!currentTrace) currentTrace = traces->getTraces()->at(NodeID);
+    ASSERT(currentTrace->size() > 0);
 
-void RealMobility::handleMessage(cMessage * message)
-{
-    if (message->isSelfMessage())
-        MobilityBase::handleMessage(message);
-    else
-        switch (message->getKind()) {
-            //todo Заглушка. Делать окончание и начало дня как для RegularRootLATP::handleMessage ИЛИ НЕТ! т.е. тут просто заглушка
-        }
+    step = 0;
+
+    lastPosition.x = currentTrace->at(0).X;
+    lastPosition.y = currentTrace->at(0).Y;
+    lastPosition.z = 0;
+
+    targetPosition = lastPosition;
 }
 
+void RealMobility::endRoute() {
+    cMessage* msg = new cMessage("END_ROUTE", END_ROUTE);
+    take(msg);
+    sendDirect(msg, getParentModule()->gate("in"));
+    nextChange = -1;
+}
 
 void RealMobility::setInitialPosition() {
     MobilityBase::setInitialPosition();
@@ -71,21 +71,18 @@ void RealMobility::setInitialPosition() {
     targetPosition = lastPosition;
 }
 
-#define ROUTE_ENDED          10 // сообщение об окончании маршрута
 void RealMobility::setTargetPosition() {
     if (movementsFinished) {
-        sendDirect(new cMessage("End of route", ROUTE_ENDED), getParentModule()->gate("in"));
-        nextChange = -1;
+        endRoute();
         return;
     };
 
     step++;
-    collectStatistics(simTime(), simTime(), lastPosition.x, lastPosition.y);
+    mvnHistory->collect(simTime(), simTime(), lastPosition.x, lastPosition.y);
     movementsFinished = !generateNextPosition(targetPosition, nextChange);
 
     if (movementsFinished) {
-        sendDirect(new cMessage("End of route", ROUTE_ENDED), getParentModule()->gate("in"));
-        nextChange = -1;
+        endRoute();
         return;
     };
 }
@@ -97,7 +94,7 @@ bool RealMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     if (step >= currentTrace->size()) return false; //маршрут кончился
 
     simtime_t previousNaxtChange = nextChange;
-    nextChange = currentTrace->at(step).T;
+    nextChange = timeOffset + currentTrace->at(step).T;
     targetPosition.x = currentTrace->at(step).X;
     targetPosition.y = currentTrace->at(step).Y;
 
@@ -113,17 +110,8 @@ bool RealMobility::generateNextPosition(Coord& targetPosition, simtime_t& nextCh
     return true;
 }
 
-
-//-------------------------- Statistic collection ---------------------------------
-void RealMobility::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
-    inTimes.push_back(inTime);
-    outTimes.push_back(outTime);
-    xCoordinates.push_back(x);
-    yCoordinates.push_back(y);
-}
-
-
 void RealMobility::saveStatistics() {
+    log("Start saving statistics...");
     const char *outDir = NamesAndDirs::getOutDir();
     const char *wpsDir = NamesAndDirs::getOutWpsDir();
     const char *trsDir = NamesAndDirs::getOutTrsDir();
@@ -141,23 +129,13 @@ void RealMobility::saveStatistics() {
     }
 
     //--- Write points ---
-    ofstream wpFile(buildFullName(wpsDir, wpFileName));
-    ofstream trFile(buildFullName(trsDir, trFileName));
-
-    for (unsigned int i = 0; i < outTimes.size(); i++) {
-        simtime_t inTime = inTimes[i];
-        simtime_t outTime = outTimes[i];
-        double x = xCoordinates[i];
-        double y = yCoordinates[i];
-
-        wpFile << x << "\t" << y << "\t" << inTime << "\t" << outTime << endl;
-        trFile << inTime << "\t" << x << "\t" << y << endl;
-    }
-
-    wpFile.close();
-    trFile.close();
+    mvnHistory->save(wpsDir, trsDir);
+    log("Statistics saved");
 }
 
+void RealMobility::log(string log) {
+    cout << "NodeId = " << NodeID << ": "  << log << endl;
+}
 
 void RealMobility::log() {  // Отладочная функция
     cout << "----------------------------- LOG --------------------------------" << endl;

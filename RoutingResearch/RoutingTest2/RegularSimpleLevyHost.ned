@@ -1,11 +1,10 @@
-module NewSelfSimLATPHost
+module RegularSimpleLevyHost
 {
     parameters:
-        
         @node();
         @display("i=device/pocketpc_s");
         
-        int NodeID_ = default(0);
+        int NodeID_ = default(-1);
         
 		@class(MobileHost);
         
@@ -17,9 +16,9 @@ module NewSelfSimLATPHost
         input in @directIn;
         
     submodules:
-        mobility: SelfSimLATP {
+        mobility: RegularSimpleLevyMobility {
             parameters: 
                 @display("is=s;p=72,44");
             	NodeID = NodeID_;
-        }        
+        }         
 }

@@ -1,9 +1,9 @@
-network NewRealMobilityNetwork extends CommonRoutingNetwork
+network RegularSimpleLevyNetwork extends CommonRoutingNetwork
 {
     submodules:
-        host[numHosts]: NewRealMobilityHost {
+        host[numHosts]: RegularSimpleLevyHost {
             parameters:
                 @display("p=300,300;r=,,#707070");
                 NodeID_ = index;
-        }
+        }    
 }
