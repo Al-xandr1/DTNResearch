@@ -37,8 +37,8 @@
 		- удаляем папки hotspotfiles\ и rootfiles\ из RepeatCounter\cmake-build-debug\
 		
 	- SelfSimCalculator:
-		- удаляем если есть папку waypointfiles\ из SelfSimCalculator\cmake-build-debug\
-		- копируем папку waypointfiles\ из папки_эксперимента в SelfSimCalculator\cmake-build-debug\
+		- удаляем если есть папку waypointfiles\ и файл bounds.bnd из SelfSimCalculator\cmake-build-debug\
+		- копируем папку waypointfiles\ и файл bounds.bnd из папки_эксперимента в SelfSimCalculator\cmake-build-debug\
 		- запускаем утилиту
 		- перемещаем файлы herst.txt и variances.txt из SelfSimCalculator\cmake-build-debug\ в папку_эксперимента
 		- копируем с переименованием файл variances.txt в соответствие с моделью (пусть задаётся параметром в конфиге). Например: "hybrid model (Variances)"
