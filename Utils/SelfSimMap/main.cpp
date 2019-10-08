@@ -64,7 +64,8 @@ public:
     void PutSetOnMap(char* mapfile);
 };
 
-SelfSimMapGenerator::SelfSimMapGenerator(char* boundFile, int lvl=9)
+// т.к. нулевой пропускается, а lvl не включается, то всего уровней 9: [1,9]
+SelfSimMapGenerator::SelfSimMapGenerator(char* boundFile, int lvl=10)
 {
     int i;
     long int h4;
@@ -101,12 +102,14 @@ void SelfSimMapGenerator::MakeSelfSimSet(char* varfile, int waypoints)
     int lvl, ii, j;
     long int index, hsize;
     unsigned int points;
-    double R, r, q1, q2, q3, q4, MX2, MX;
+    double R, r, q1, q2, q3, q4, MX2, MX, deltaX, deltaY;
 
     ifstream* vfile= new ifstream(varfile);
     if(vfile==NULL) {cout<<"No variance file\n"; exit(2); }
-    for(ii=1; ii<levels && !vfile->eof(); ii++) {
-        (*vfile)>>j>>variance[ii]; if(j!=ii) { cout<<"Bad variance file!"<<endl; exit(3);}
+    for(ii=0; ii<levels && !vfile->eof(); ii++) {
+        (*vfile)>>j>>variance[ii]>>deltaX>>deltaY;
+        if(j!=ii) { cout<<"Bad variance file!"<<endl; exit(3);}
+        if (ii == 0) continue; // пропускаем нулевой уровень из файла
     }
     if(ii<levels) { levels=ii; cout<<"Warning: variance file is too small: "<<levels<<" levels"<<endl; }
     vfile->close();
