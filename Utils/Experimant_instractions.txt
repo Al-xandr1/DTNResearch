@@ -1,0 +1,45 @@
+- Сбор данных о запуске ЛЮБОЙ модели:
+	- настраиваем модель...
+	- запускаем модель на выполнение 
+	- сохраняем все выходные данные модели
+	- копируем файлы: 
+		- bounds.bnd - из входных данных
+		- omnetpp.ini - из корня проекта
+		- out.txt - сохраняем лог от запуска модели
+		- roots_persistence_statistics.pst - из входных данных
+		
+	- Расчёт статистики StatisticsCollector:
+		- запускаем расчёт
+		- переименовать файл статистику в соответствие с моделью и ситуацией (задаётся наименованием общей папки с данными). Например: statistics_Hybird_n92_12d_aliP_05_uI01_PR
+		
+- Запуск Утилит: 
+	- WaypointFinder: 
+		- отключаем в программе нахождение WayPoint'ов (подготовка)
+		- удаляем если есть папку waypointfiles\ из WaypointFinder\cmake-build-debug\ 
+		- копируем папку waypointfiles\ из папки_эксперимента в WaypointFinder\cmake-build-debug\ 
+		- запускаем утилиту
+		- перемещаем папку waypointfiles\ из WaypointFinder\cmake-build-debug\ в папку_эксперимента 
+		- переименовываем файл statistics.stat добавляя суффикс, описывающий модель и ситуацию (задаётся наименованием общей папки с данными) Например: "statistics_Hybird_n92_12d_aliP_05_uI01_PR.stat"
+		- переименовываем файл statistics.stat в соответствие с моделью (пусть задаётся параметром в конфиге). Например: "гибридной модели  (Prophet)"
+		
+	- RootFinder: 
+		- удаляем если есть папки hotspotfiles\ и waypointfiles\ из RootFinder\cmake-build-debug\
+		- копируем папки hotspotfiles\ и waypointfiles\ из папки_эксперимента в RootFinder\cmake-build-debug\
+		- запускаем утилиту
+		- перемещаем папку и файлы rootfiles\, length.hst и allroots.roo из RootFinder\cmake-build-debug\ в папку_эксперимента
+		- удаляем папки hotspotfiles\ и waypointfiles\ из RootFinder\cmake-build-debug\
+
+	- RepeatCounter:
+		- удаляем если есть папки hotspotfiles\ и rootfiles\ из RepeatCounter\cmake-build-debug\
+		- копируем папки hotspotfiles\ и rootfiles\ из папки_эксперимента в RepeatCounter\cmake-build-debug\
+		- запускаем утилиту
+		- перемещаем файл spotcount.cnt из RepeatCounter\cmake-build-debug\ в папку_эксперимента
+		- удаляем папки hotspotfiles\ и rootfiles\ из RepeatCounter\cmake-build-debug\
+		
+	- SelfSimCalculator:
+		- удаляем если есть папку waypointfiles\ из SelfSimCalculator\cmake-build-debug\
+		- копируем папку waypointfiles\ из папки_эксперимента в SelfSimCalculator\cmake-build-debug\
+		- запускаем утилиту
+		- перемещаем файлы herst.txt и variances.txt из SelfSimCalculator\cmake-build-debug\ в папку_эксперимента
+		- копируем с переименованием файл variances.txt в соответствие с моделью (пусть задаётся параметром в конфиге). Например: "hybrid model (Variances)"
+		
