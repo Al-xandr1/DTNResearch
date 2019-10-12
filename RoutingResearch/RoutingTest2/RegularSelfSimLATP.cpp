@@ -79,7 +79,7 @@ bool RegularSelfSimLATP::generatePause(simtime_t &nextChange) {
     long step = calculateStep();
     setWaitTime(mvnHistoryForRepeat->getOutTimes()->at(step) - mvnHistoryForRepeat->getInTimes()->at(step));
     nextChange = simTime() + getWaitTime();
-    ASSERT(nextChange == (timeOffset + mvnHistoryForRepeat->getOutTimes()->at(step)));
+    //    ASSERT(nextChange == (timeOffset + mvnHistoryForRepeat->getOutTimes()->at(step)));
     //    log(string("RegularSelfSimLATP::generatePause timeOffset = " + std::to_string(timeOffset.dbl())) + string(", step = ") + std::to_string(step));
     return true;
 }
