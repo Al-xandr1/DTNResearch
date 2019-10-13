@@ -111,6 +111,7 @@ bool RegularSelfSimLATP::generateNextPosition(Coord &targetPosition, simtime_t &
     ASSERT(distance >= 0);
 
     travelTime = nextChange - previousNextChange;
+    if (travelTime <= 0) return false; //todo это костыль из-за проблемы на NCSU на 100% выполнения модели
     ASSERT(travelTime > 0);
 
     speed = distance / travelTime;
