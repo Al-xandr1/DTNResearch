@@ -88,6 +88,7 @@ struct RootDataShort {
  */
 struct HotSpotData {
     char* hotSpotName;                                  // (READ-ONLY) имя локации
+    double angle;            // !!!                        (READ-ONLY) угол поворота
     double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;    // (READ-ONLY) границы и центр локации
     double sumTime;                                     // (READ-ONLY) время нахождения в локации
     int waypointNum;                                    // (READ-ONLY) количество путевых точек в локации
@@ -99,6 +100,7 @@ struct HotSpotData {
 
     HotSpotData() :
         hotSpotName(NULL),
+        angle(0),
         Xmin(0), Xmax(0), Ymin(0), Ymax(0), Xcenter(0), Ycenter(0),
         sumTime(0),
         waypointNum(0),
@@ -106,8 +108,9 @@ struct HotSpotData {
         generatedSumTime(0),
         generatedWaypointNum(0) {}
 
-    HotSpotData(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, int waypointNum) {
+    HotSpotData(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, int waypointNum, double angle=0) {
         strcpy(this->hotSpotName = new char[256], hotSpotName);
+        this->angle = angle;        // !!!
         this->Xmin = Xmin;
         this->Xmax = Xmax;
         this->Ymin = Ymin;
@@ -122,6 +125,7 @@ struct HotSpotData {
      }
 
     HotSpotData(const HotSpotData& anotherData) :
+        angle(anotherData.angle),
         Xmin(anotherData.Xmin), Xmax(anotherData.Xmax),
         Ymin(anotherData.Ymin), Ymax(anotherData.Ymax),
         Xcenter(anotherData.Xcenter), Ycenter(anotherData.Ycenter),
@@ -144,6 +148,7 @@ struct HotSpotData {
     }
 
      void print() {
+         cout << "\t angle =" << angle << endl; 
          cout << "\t Xmin = " << Xmin << ", Xmax = " << Xmax << endl;
          cout << "\t Ymin = " << Ymin << ", Ymax = " << Ymax << endl;
          cout << "\t Xcenter = " << Xcenter << ", Ycenter = " << Ycenter << endl;

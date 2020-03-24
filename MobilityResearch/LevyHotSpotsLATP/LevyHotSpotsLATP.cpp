@@ -1,8 +1,8 @@
-#include "LevyHotSpotsLATP.h"
+#include "LevyHotSpotsLATP2.h"
 
-Define_Module(LevyHotSpotsLATP);
+Define_Module(LevyHotSpotsLATP2);
 
-LevyHotSpotsLATP::LevyHotSpotsLATP() {
+LevyHotSpotsLATP2::LevyHotSpotsLATP2() {     // !!!
     NodeID = -1;
 
     // начинаем маршрут с паузы, чтобы мы "нормально прошли" первую точку (например постояли в ней)
@@ -19,6 +19,7 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
     movement = NULL;
     waitTime = -1;
 
+    currentHSAngle = 0;             // !!!
     currentHSMin = Coord::ZERO;
     currentHSMax = Coord::ZERO;
     currentHSCenter = Coord::ZERO;
@@ -31,7 +32,7 @@ LevyHotSpotsLATP::LevyHotSpotsLATP() {
 }
 
 
-void LevyHotSpotsLATP::initialize(int stage) {
+void LevyHotSpotsLATP2::initialize(int stage) {
     LineSegmentsMobilityBase::initialize(stage);
 
     if (stage == 0) {
@@ -61,7 +62,7 @@ void LevyHotSpotsLATP::initialize(int stage) {
         ASSERT(currentHSindex == -1);
         // выбор случайной локации
         currentHSindex=rand() % hsc->getHSData()->size();
-        LevyHotSpotsLATP::setCurrentHSbordersWith( &(hsc->getHSData()->at(currentHSindex)) );
+        LevyHotSpotsLATP2::setCurrentHSbordersWith( &(hsc->getHSData()->at(currentHSindex)) );
 
         ASSERT(!mvnHistory);
         mvnHistory = new MovementHistory(NodeID);
@@ -69,7 +70,8 @@ void LevyHotSpotsLATP::initialize(int stage) {
 }
 
 
-void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi) {
+void LevyHotSpotsLATP2::setCurrentHSbordersWith(HotSpotData* hsi) {
+    currentHSAngle = hsi->angle;
     currentHSMin.x = hsi->Xmin;
     currentHSMin.y = hsi->Ymin;
     currentHSMax.x = hsi->Xmax;
@@ -78,22 +80,25 @@ void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi) {
 }
 
 
-void LevyHotSpotsLATP::setInitialPosition() {
+void LevyHotSpotsLATP2::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
-    lastPosition.x = uniform(currentHSMin.x, currentHSMax.x);
-    lastPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+    double x = uniform(currentHSMin.x, currentHSMax.x);
+    double y = uniform(currentHSMin.y, currentHSMax.y);
+    lastPosition.x =  cos(currentHSAngle)*x + sin(currentHSAngle)*y;    // !!!
+    lastPosition.y = -sin(currentHSAngle)*x + cos(currentHSAngle)*y;    // !!!
+
     targetPosition = lastPosition;
     ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
 }
 
 
-bool LevyHotSpotsLATP::isHotSpotEmpty() {
+bool LevyHotSpotsLATP2::isHotSpotEmpty() {
     return currentHSMin.x == currentHSMax.x || currentHSMin.y == currentHSMax.y;
 }
 
 
-void LevyHotSpotsLATP::setTargetPosition() {
+void LevyHotSpotsLATP2::setTargetPosition() {
     if (movementsFinished) {
         log("LevyHotSpotsLATP::setTargetPosition: End of root! (before generation)");
         nextChange = -1;
@@ -121,7 +126,7 @@ void LevyHotSpotsLATP::setTargetPosition() {
         if (regenerateIfOutOfBound) countOfFirstSkippedLongFlight--;
 
         if (movementsFinished) {
-            log("LevyHotSpotsLATP::setTargetPosition: End of root! (after generation)");
+            log("LevyHotSpotsLATP2::setTargetPosition: End of root! (after generation)");
             nextChange = -1;
             return;
         };
@@ -131,7 +136,7 @@ void LevyHotSpotsLATP::setTargetPosition() {
 }
 
 
-bool LevyHotSpotsLATP::generatePause(simtime_t &nextChange) {
+bool LevyHotSpotsLATP2::generatePause(simtime_t &nextChange) {
     const bool success = movement->genPause( (string("DEBUG LevyHotSpotsLATP::setTargetPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
     setWaitTime(movement->getWaitTime());
     nextChange = simTime() + getWaitTime();
@@ -139,7 +144,7 @@ bool LevyHotSpotsLATP::generatePause(simtime_t &nextChange) {
 }
 
 
-bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound) {
+bool LevyHotSpotsLATP2::generateNextPosition(Coord& targetPosition, simtime_t& nextChange, bool regenerateIfOutOfBound) {
     while (true) {
         const bool success = movement->genFlight( (string("DEBUG LevyHotSpotsLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str() );
         ASSERT(success);
@@ -168,11 +173,13 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
 
             // для ускорения вычислений определяем вспомогательные переменные
             double x, y, Xdir, Ydir, dir;
-            bool flag = ( (y=lastPosition.y) < currentHSCenter.y);
+            x = lastPosition.x * cos(currentHSAngle) - lastPosition.y * sin(currentHSAngle);
+            y = lastPosition.x * sin(currentHSAngle) + lastPosition.y * cos(currentHSAngle);
+            bool flag = ( y < currentHSCenter.y);
 
             // выбираем самую дальнюю от текущей позиции вершину прямоугольника текущей локации
             // и вычисляем координаты вектора из текущей позиции в эту вершину
-            if ( (x=lastPosition.x) < currentHSCenter.x ) {
+            if ( x < currentHSCenter.x ) {
                 if (flag) { Xdir=currentHSMax.x-x; Ydir=currentHSMax.y-y; }
                 else      { Xdir=currentHSMax.x-x; Ydir=currentHSMin.y-y; }
             } else {
@@ -204,13 +211,14 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
 }
 
 
-bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
+bool LevyHotSpotsLATP2::findNextHotSpotAndTargetPosition() {
     if (findNextHotSpot()) {   // нашли следующую локацию - идём в её случайную точку
         // перечитываем начальное количество первых длинных прижков, которые надо пропустить для новой локации
         countOfFirstSkippedLongFlight = par("countOfFirstSkippedLongFlight").longValue();
-
-        targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
-        targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+        double x = uniform(currentHSMin.x, currentHSMax.x);
+        double y = uniform(currentHSMin.y, currentHSMax.y);
+        targetPosition.x =  cos(currentHSAngle)*x + sin(currentHSAngle)*y;    // !!!
+        targetPosition.y = -sin(currentHSAngle)*x + cos(currentHSAngle)*y;    // !!!
 
         movement->setDistance(lastPosition.distance(targetPosition), (string("DEBUG RegularRootLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
         nextChange = simTime() + movement->getTravelTime();
@@ -221,7 +229,7 @@ bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
 }
 
 
-bool LevyHotSpotsLATP::findNextHotSpot() {
+bool LevyHotSpotsLATP2::findNextHotSpot() {
     int oldHSindex = currentHSindex;
     // выбираем новую локацию
     double rn, pr=0;
@@ -238,7 +246,7 @@ bool LevyHotSpotsLATP::findNextHotSpot() {
 
 
 //-------------------------- Statistic collection ---------------------------------
-void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
+void LevyHotSpotsLATP2::collectStatistics(simtime_t inTime, simtime_t outTime, double x, double y) {
     mvnHistory->collect(inTime, outTime, x, y);
 
     double generatedSumTime = (outTime - inTime).dbl();
@@ -251,7 +259,7 @@ void LevyHotSpotsLATP::collectStatistics(simtime_t inTime, simtime_t outTime, do
 }
 
 
-void LevyHotSpotsLATP::saveStatistics() {
+void LevyHotSpotsLATP2::saveStatistics() {
     log("Start saving statistics...");
     const char *outDir  = NamesAndDirs::getOutDir();
     const char *wpsDir  = NamesAndDirs::getOutWpsDir();
@@ -296,23 +304,26 @@ void LevyHotSpotsLATP::saveStatistics() {
     log("Statistics saved");
 }
 
-bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
+bool LevyHotSpotsLATP2::isCorrectCoordinates(double x0, double y0) {
+    double x = x0 * cos(currentHSAngle) - y0 * sin(currentHSAngle);
+    double y = x0 * sin(currentHSAngle) + y0 * cos(currentHSAngle);
     if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) return true;
     //log();
     return false;
 }
 
-void LevyHotSpotsLATP::log(string log) {
+void LevyHotSpotsLATP2::log(string log) {
     cout << "NodeId = " << NodeID << ": "  << log << endl;
 }
 
-void LevyHotSpotsLATP::log() {  // Отладочная функция
+void LevyHotSpotsLATP2::log() {  // Отладочная функция
     cout << "----------------------------- LOG --------------------------------" << endl;
     cout << "step = " << step << ", isPause = " << isPause << endl;
     cout << "simTime() = " << simTime() << endl;
     cout << "lastPosition = " << lastPosition << endl;
 
     cout << "currentHSindex = " << currentHSindex << endl;
+    cout << "currentHSAngle = " << currentHSAngle << endl;
     cout << "\t currentHSMin.x = " << currentHSMin.x << ", currentHSMax.x = " << currentHSMax.x << endl;
     cout << "\t currentHSMin.y = " << currentHSMin.y << ", currentHSMax.y = " << currentHSMax.y << endl;
     cout << "\t currentHSCenter.x = " << currentHSCenter.x << ", currentHSCenter.y = " << currentHSCenter.y << endl;

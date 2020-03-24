@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <windows.h>
 #include "INETDefs.h"
-#include "Data.h"
+#include "Data2.h"
 #include "Coord.h"
 #include "DevelopmentHelper.h"
 

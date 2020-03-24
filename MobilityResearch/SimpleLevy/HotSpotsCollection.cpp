@@ -1,21 +1,22 @@
-#include "HotSpotsCollection.h"
+#include "HotSpotsCollection2.h"
 
 
-HotSpotsCollection* HotSpotsCollection::instance = NULL;   // указатель на singleton объект
+HotSpotsCollection2* HotSpotsCollection2::instance = NULL;   // указатель на singleton объект
 
 
-HotSpotsCollection* HotSpotsCollection::getInstance() {
-    if (!instance) instance = new HotSpotsCollection();
+HotSpotsCollection2* HotSpotsCollection2::getInstance() {
+    if (!instance) instance = new HotSpotsCollection2();
     return instance;
 }
 
 
-void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, char* spotcountfile)
+void HotSpotsCollection2::readHotSpotsInfo(char* TracesDir, char* spotcountfile)
 {
     ASSERT(!HSData);
 
     HSData = new vector<HotSpotData>();
 
+    double angle;                // !!!
     double Xmin, Xmax, Ymin, Ymax;
 
     const char* spotInfoFileName = buildFullName(TracesDir, LOC_FILE);
@@ -28,9 +29,9 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, char* spotcountfile)
         char hotSpotName[256];
         double sumTime;
         unsigned int waypointNum;
-        (*spotInfoFile) >> hotSpotName >> sumTime >> waypointNum >> Xmin >> Xmax >> Ymin >> Ymax;
+        (*spotInfoFile) >> hotSpotName >> angle >> sumTime >> waypointNum >> Xmin >> Xmax >> Ymin >> Ymax;  // !!!
         if (strcmp(lastAddedName, hotSpotName)!=0) {
-            HotSpotData hsi(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum);
+            HotSpotData hsi(hotSpotName, Xmin, Xmax, Ymin, Ymax, sumTime, waypointNum, angle);    // !!!
             HSData->push_back(hsi);
             strcpy(lastAddedName, hotSpotName);
             hsi.print();
@@ -56,16 +57,23 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, char* spotcountfile)
 }
 
 
-void HotSpotsCollection::getTotalSize(double& minX, double& maxX, double& minY, double& maxY)
+void HotSpotsCollection2::getTotalSize(double& minX, double& maxX, double& minY, double& maxY)
 {
     double Xmin, Xmax, Ymin, Ymax;
-    Xmin=HSData->at(0).Xmin; Xmax=HSData->at(0).Xmax;
-    Ymin=HSData->at(0).Ymin; Ymax=HSData->at(0).Ymax;
+    Xmin = HSData->at(0).Xmin * cos(HSData->at(0).angle) + HSData->at(0).Ymin * sin(HSData->at(0).angle);
+    Xmax = HSData->at(0).Xmax * cos(HSData->at(0).angle) + HSData->at(0).Ymax * sin(HSData->at(0).angle);
+    Ymin = -HSData->at(0).Xmax * sin(HSData->at(0).angle) + HSData->at(0).Ymin * cos(HSData->at(0).angle);
+    Ymax = -HSData->at(0).Xmin * sin(HSData->at(0).angle) + HSData->at(0).Ymax * cos(HSData->at(0).angle);
     for(unsigned int i=1; i<HSData->size(); i++) {
-       if(HSData->at(i).Xmin < Xmin ) Xmin = HSData->at(i).Xmin;
-       if(HSData->at(i).Xmax > Xmax ) Xmax = HSData->at(i).Xmax;
-       if(HSData->at(i).Ymin < Ymin ) Xmin = HSData->at(i).Ymin;
-       if(HSData->at(i).Ymax > Ymax ) Ymax = HSData->at(i).Ymax;
+       double xmin_i, xmax_i, ymin_i, ymax_i;
+    xmin_i = HSData->at(i).Xmin * cos(HSData->at(i).angle) + HSData->at(i).Ymin * sin(HSData->at(i).angle);
+    xmax_i = HSData->at(i).Xmax * cos(HSData->at(i).angle) + HSData->at(i).Ymax * sin(HSData->at(i).angle);
+    ymin_i = -HSData->at(i).Xmax * sin(HSData->at(i).angle) + HSData->at(i).Ymin * cos(HSData->at(i).angle);
+    ymax_i = -HSData->at(i).Xmin * sin(HSData->at(i).angle) + HSData->at(i).Ymax * cos(HSData->at(i).angle);
+       if(xmin_i < Xmin ) Xmin = xmin_i;
+       if(xmax_i > Xmax ) Xmax = xmax_i;
+       if(ymin_i < Ymin ) Xmin = ymin_i;
+       if(ymax_i > Ymax ) Ymax = ymax_i;
     }
     minX = Xmin;
     maxX = Xmax;
@@ -74,22 +82,23 @@ void HotSpotsCollection::getTotalSize(double& minX, double& maxX, double& minY, 
 }
 
 
-void HotSpotsCollection::print()
+void HotSpotsCollection2::print()
 {
     for (unsigned int i=0; i < HSData->size(); i++) {
         HotSpotData info = HSData->at(i);
-        cout << info.hotSpotName<<": xMin=" << info.Xmin << " yMin=" << info.Ymin
+        cout << info.hotSpotName << ": angle=" << info.angle <<  " xMin=" << info.Xmin << " yMin=" << info.Ymin
                 << " xMax=" << info.Xmax << " yMax=" << info.Ymax << endl;
     }
     cout<<endl;
 }
 
 
-void HotSpotsCollection::saveHotSpots(const char *hotSpotDirName)
+void HotSpotsCollection2::saveHotSpots(const char *hotSpotDirName)
 {
     for (unsigned int i = 0; i < HSData->size(); i++) {
         const char* fullNameHS = buildFullName(hotSpotDirName, HSData->at(i).hotSpotName);
         ofstream* hsFile = new ofstream(fullNameHS);
+        (*hsFile) << HSData->at(i).angle << "\t";
         (*hsFile) << HSData->at(i).Xmin << "\t" << HSData->at(i).Xmax << endl;
         (*hsFile) << HSData->at(i).Ymin << "\t" << HSData->at(i).Ymax << endl;
         (*hsFile) << HSData->at(i).generatedSumTime << "\t"<< HSData->at(i).generatedWaypointNum << endl;
@@ -105,11 +114,11 @@ void HotSpotsCollection::saveHotSpots(const char *hotSpotDirName)
 }
 
 
-void HotSpotsCollection::saveLocationsFile(const char *locationsFileName)
+void HotSpotsCollection2::saveLocationsFile(const char *locationsFileName)
 {
     ofstream lcfile(locationsFileName);
     for(unsigned int i = 0; i < HSData->size(); i++) {
-        lcfile << HSData->at(i).hotSpotName << "\t"<< HSData->at(i).generatedSumTime << "\t" << "\t";
+        lcfile << HSData->at(i).hotSpotName << "\t"<< angle << "\t" << HSData->at(i).generatedSumTime << "\t" << "\t";
         lcfile << HSData->at(i).generatedWaypointNum << "\t" << "\t";
         lcfile << HSData->at(i).Xmin << "\t"<< HSData->at(i).Xmax << "\t";
         lcfile << HSData->at(i).Ymin << "\t"<< HSData->at(i).Ymax << endl;
@@ -118,7 +127,7 @@ void HotSpotsCollection::saveLocationsFile(const char *locationsFileName)
 }
 
 
-HotSpotData* HotSpotsCollection::findHotSpotbyName(const char* HotSpotName, int& HotSpotNum)
+HotSpotData* HotSpotsCollection2::findHotSpotbyName(const char* HotSpotName, int& HotSpotNum)
 {
     for(unsigned int i=0; i<HSData->size(); i++)
         if( strcmp(HSData->at(i).hotSpotName, HotSpotName) == 0 ) {
@@ -129,7 +138,7 @@ HotSpotData* HotSpotsCollection::findHotSpotbyName(const char* HotSpotName, int&
 }
 
 
-HotSpotData* HotSpotsCollection::randomRemove(vector<HotSpotData*>* hotSpots, int& HotSpotNum)
+HotSpotData* HotSpotsCollection2::randomRemove(vector<HotSpotData*>* hotSpots, int& HotSpotNum)
 {
     HotSpotNum = (int) round(uniform(0, (double) (hotSpots->size() - 1)));
     HotSpotData* removedItem = hotSpots->at(HotSpotNum);
