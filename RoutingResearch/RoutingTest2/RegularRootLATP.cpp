@@ -472,8 +472,9 @@ bool RegularRootLATP::localGenerateNextPosition(Coord& targetPosition, simtime_t
     setCurRootIndex(0, true);
 
     // проверяем, не дома ли мы уже
-    if( currentHSMin.x <= lastPosition.x &&  lastPosition.x <= currentHSMax.x &&
-        currentHSMin.y <= lastPosition.y &&  lastPosition.y <= currentHSMax.y ) {
+    double x = lastPosition.x * cos(currentHSAngle) - lastPosition.y * sin(currentHSAngle);
+    double y = lastPosition.x * sin(currentHSAngle) + lastPosition.y * cos(currentHSAngle);
+    if( currentHSMin.x <= x &&  x <= currentHSMax.x && currentHSMin.y <= y &&  y <= currentHSMax.y ) {
 
         ASSERT(isRootFinished());
         endRoute();
@@ -481,9 +482,10 @@ bool RegularRootLATP::localGenerateNextPosition(Coord& targetPosition, simtime_t
     }
 
     // если нет - идЄм домой
-    targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
-    targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
-
+    x = uniform(currentHSMin.x, currentHSMax.x);
+    y = uniform(currentHSMin.y, currentHSMax.y);
+    targetPosition.x =  x * cos(currentHSAngle) + y * sin(currentHSAngle);
+    targetPosition.y = -x * sin(currentHSAngle) + y * cos(currentHSAngle);
     movement->setDistance(lastPosition.distance(targetPosition), (string("DEBUG RegularRootLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
 
     nextChange = simTime() + movement->getTravelTime();
@@ -644,9 +646,11 @@ void RegularRootLATP::makeNewRoot() {
     currentRootActualTrackSumTime = new vector<double>();
     currentRootActualTrackWaypointNum = new vector<int>();
     setCurRootIndex(0, true);
-    targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
-    targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
 
+    double x = uniform(currentHSMin.x, currentHSMax.x);
+    double y = uniform(currentHSMin.y, currentHSMax.y);
+    targetPosition.x =  x * cos(currentHSAngle) + y * sin(currentHSAngle);
+    targetPosition.y = -x * sin(currentHSAngle) + y * cos(currentHSAngle);
 
     /* —охран€ем дл€ статистики сгенерированный маршрут дл€ текущего дн€ в RootsCollection.
        —охранение тут происходит со второго дн€. ѕервый день сохран€етс€ сразу после создани€ в initialize.

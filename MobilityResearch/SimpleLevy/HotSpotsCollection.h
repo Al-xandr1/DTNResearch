@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <windows.h>
 #include "INETDefs.h"
-#include "Data2.h"
+#include "Data.h"
 #include "Coord.h"
 #include "DevelopmentHelper.h"
 
@@ -83,7 +83,7 @@ private:
         }
         if (ProbabilityMatrix) {
             HotSpotsCollection* hsc = HotSpotsCollection::getInstance();
-            for(int i=0; i<hsc->getHSData()->size();i++) {
+            for(unsigned int i=0; i<hsc->getHSData()->size(); i++) {
                 delete[] ProbabilityMatrix[i];
             }
             delete[]  ProbabilityMatrix;

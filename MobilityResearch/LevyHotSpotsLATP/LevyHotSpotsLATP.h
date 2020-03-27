@@ -1,5 +1,5 @@
-#ifndef LEVY_HSLATP2_H
-#define LEVY_HSLATP2_H
+#ifndef LEVY_HSLATP_H
+#define LEVY_HSLATP_H
 
 #include <iostream>
 #include <fstream>
@@ -15,9 +15,9 @@
 #include "RootsCollection.h"
 #include "Movement.h"
 #include "MovementHistory.h"
-#include "HotSpotsCollection2.h"
+#include "HotSpotsCollection.h"
 
-class LevyHotSpotsLATP2 : public LineSegmentsMobilityBase {
+class LevyHotSpotsLATP : public LineSegmentsMobilityBase {
   protected:
     int NodeID;
 
@@ -31,10 +31,10 @@ class LevyHotSpotsLATP2 : public LineSegmentsMobilityBase {
     simtime_t waitTime;
 
     // текущая локация
-    double currentHSAngle;        // !!!
+    double currentHSAngle;
     Coord currentHSMin, currentHSMax, currentHSCenter;
 
-    HotSpotsCollection2* hsc;     // !!!
+    HotSpotsCollection* hsc;
     int currentHSindex;
 
     HSDistanceMatrix* hsd;
@@ -82,7 +82,7 @@ class LevyHotSpotsLATP2 : public LineSegmentsMobilityBase {
     void log();
 
   public:
-    LevyHotSpotsLATP2();
+    LevyHotSpotsLATP();
     int getNodeID()              {return this->NodeID;};
 
     Coord getConstraintAreaMin() {return this->constraintAreaMin;};
