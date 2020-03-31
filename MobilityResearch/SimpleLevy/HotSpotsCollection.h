@@ -27,7 +27,7 @@ private:
 
     HotSpotsCollection() {
         this->HSData = NULL;
-        this->readHotSpotsInfo(DEF_TR_DIR, SPC_FILE);
+        this->readHotSpotsInfo(DEF_TR_DIR);
         this->print();
     }
 
@@ -35,7 +35,7 @@ private:
         if (HSData) delete HSData;
     }
 
-    void readHotSpotsInfo(char* TracesDir, char* spotcountfile);
+    void readHotSpotsInfo(char* TracesDir);
 
 public:
     /**

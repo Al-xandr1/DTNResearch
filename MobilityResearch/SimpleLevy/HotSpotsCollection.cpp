@@ -10,7 +10,7 @@ HotSpotsCollection* HotSpotsCollection::getInstance() {
 }
 
 
-void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, char* spotcountfile)
+void HotSpotsCollection::readHotSpotsInfo(char* TracesDir)
 {
     ASSERT(!HSData);
 
@@ -37,7 +37,7 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, char* spotcountfile)
         }
     }
 
-    const char* spotCountFileName = buildFullName(TracesDir, spotcountfile);
+    const char* spotCountFileName = buildFullName(TracesDir, SPC_FILE);
     ifstream* spotCountFile = new ifstream(spotCountFileName);
     if (!spotCountFile) { cout << " No spotCountFile file: " << spotCountFileName << endl; exit(104); }
 
