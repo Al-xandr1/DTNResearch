@@ -135,8 +135,27 @@ const char* extractParameter(const char* fileName, const char* parameter);
  * Направление поворота точек.
  */
 enum Direction {
-    Forward = 1,    // движение ПРОТИВ часовой стрелки? (ПОЛОЖИТЕЛЬНОЕ направление)
-    Backward = -1   // движение ПО часовой стрелке? (ОТРИЦАТЕЛЬНОЕ направление)
+    /**
+     * Движение ПРОТИВ часовой стрелки? (ПОЛОЖИТЕЛЬНОЕ направление)
+     *
+     * x' = cos(a)*x - sin(a)*y
+     * y' = sin(a)*x + cos(a)*y
+     *
+     * (x')   ( cos(a)  -sin(a) ) (x)
+     * (y') = ( sin(a)   cos(a) ) (y)
+     */
+    Forward = 1,
+
+    /**
+     * Движение ПО часовой стрелке? (ОТРИЦАТЕЛЬНОЕ направление)
+     *
+     * x' = cos(a)*x + sin(a)*y
+     * y' = -sin(a)*x + cos(a)*y
+     *
+     * (x')   (  cos(a)  sin(a) ) (x)
+     * (y') = ( -sin(a)  cos(a) ) (y)
+     */
+    Backward = -1
 };
 
 /**
