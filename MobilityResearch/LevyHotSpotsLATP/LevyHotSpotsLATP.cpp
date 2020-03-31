@@ -83,10 +83,11 @@ void LevyHotSpotsLATP::setCurrentHSbordersWith(HotSpotData* hsi) {
 void LevyHotSpotsLATP::setInitialPosition() {
     MobilityBase::setInitialPosition();
 
-    double x = uniform(currentHSMin.x, currentHSMax.x);
-    double y = uniform(currentHSMin.y, currentHSMax.y);
-    lastPosition.x =  cos(currentHSAngle)*x + sin(currentHSAngle)*y;
-    lastPosition.y = -sin(currentHSAngle)*x + cos(currentHSAngle)*y;
+    // генерируем точку в повёрнутой системе координат
+    lastPosition.x = uniform(currentHSMin.x, currentHSMax.x);
+    lastPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+    // поворачиваем обратно в исходную систему координат
+    rotate(lastPosition, currentHSAngle, Direction::Backward);
     targetPosition = lastPosition;
     ASSERT(isCorrectCoordinates(lastPosition.x, lastPosition.y));
 }
@@ -172,8 +173,8 @@ bool LevyHotSpotsLATP::generateNextPosition(Coord& targetPosition, simtime_t& ne
 
             // для ускорения вычислений определяем вспомогательные переменные
             double x, y, Xdir, Ydir, dir;
-            x = lastPosition.x * cos(currentHSAngle) - lastPosition.y * sin(currentHSAngle);
-            y = lastPosition.x * sin(currentHSAngle) + lastPosition.y * cos(currentHSAngle);
+            // перед проверкой поворачиваем точку lastPosition (копируя в x,y) в систему координат, где определёна локация
+            getRotated(x, y, lastPosition, currentHSAngle, Direction::Forward);
             bool flag = ( y < currentHSCenter.y);
 
             // выбираем самую дальнюю от текущей позиции вершину прямоугольника текущей локации
@@ -215,10 +216,11 @@ bool LevyHotSpotsLATP::findNextHotSpotAndTargetPosition() {
         // перечитываем начальное количество первых длинных прижков, которые надо пропустить для новой локации
         countOfFirstSkippedLongFlight = par("countOfFirstSkippedLongFlight").longValue();
 
-        double x = uniform(currentHSMin.x, currentHSMax.x);
-        double y = uniform(currentHSMin.y, currentHSMax.y);
-        targetPosition.x =  cos(currentHSAngle)*x + sin(currentHSAngle)*y;
-        targetPosition.y = -sin(currentHSAngle)*x + cos(currentHSAngle)*y;
+        // генерируем точку в повёрнутой системе координат
+        targetPosition.x = uniform(currentHSMin.x, currentHSMax.x);
+        targetPosition.y = uniform(currentHSMin.y, currentHSMax.y);
+        // поворачиваем обратно в исходную систему координат
+        rotate(targetPosition, currentHSAngle, Direction::Backward);
 
         movement->setDistance(lastPosition.distance(targetPosition), (string("DEBUG RegularRootLATP::generateNextPosition: NodeId = ") + std::to_string(NodeID)).c_str());
         nextChange = simTime() + movement->getTravelTime();
@@ -304,9 +306,9 @@ void LevyHotSpotsLATP::saveStatistics() {
     log("Statistics saved");
 }
 
-bool LevyHotSpotsLATP::isCorrectCoordinates(double x0, double y0) {
-    double x = x0 * cos(currentHSAngle) - y0 * sin(currentHSAngle);
-    double y = x0 * sin(currentHSAngle) + y0 * cos(currentHSAngle);
+bool LevyHotSpotsLATP::isCorrectCoordinates(double x, double y) {
+    // перед проверкой поворачиваем точку (x,y) в систему координат, где определёна локация
+    rotate(x, y, currentHSAngle, Direction::Forward);
     if (currentHSMin.x <= x && x <= currentHSMax.x && currentHSMin.y <= y && y <= currentHSMax.y) return true;
     //log();
     return false;

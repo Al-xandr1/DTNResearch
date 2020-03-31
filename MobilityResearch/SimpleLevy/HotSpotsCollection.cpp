@@ -59,16 +59,14 @@ void HotSpotsCollection::readHotSpotsInfo(char* TracesDir, char* spotcountfile)
 void HotSpotsCollection::getTotalSize(double& minX, double& maxX, double& minY, double& maxY)
 {
     double Xmin, Xmax, Ymin, Ymax;
-    Xmin =  HSData->at(0).Xmin * cos(HSData->at(0).angle) + HSData->at(0).Ymin * sin(HSData->at(0).angle);
-    Xmax =  HSData->at(0).Xmax * cos(HSData->at(0).angle) + HSData->at(0).Ymax * sin(HSData->at(0).angle);
-    Ymin = -HSData->at(0).Xmax * sin(HSData->at(0).angle) + HSData->at(0).Ymin * cos(HSData->at(0).angle);
-    Ymax = -HSData->at(0).Xmin * sin(HSData->at(0).angle) + HSData->at(0).Ymax * cos(HSData->at(0).angle);
+    // Границы локации переводятся в исходную систему координат
+    getRotated(Xmin, Ymin, HSData->at(0).Xmin, HSData->at(0).Ymin, HSData->at(0).angle, Direction::Backward);
+    getRotated(Xmax, Ymax, HSData->at(0).Xmax, HSData->at(0).Ymax, HSData->at(0).angle, Direction::Backward);
     for(unsigned int i=1; i<HSData->size(); i++) {
         double xmin_i, xmax_i, ymin_i, ymax_i;
-        xmin_i =  HSData->at(i).Xmin * cos(HSData->at(i).angle) + HSData->at(i).Ymin * sin(HSData->at(i).angle);
-        xmax_i =  HSData->at(i).Xmax * cos(HSData->at(i).angle) + HSData->at(i).Ymax * sin(HSData->at(i).angle);
-        ymin_i = -HSData->at(i).Xmax * sin(HSData->at(i).angle) + HSData->at(i).Ymin * cos(HSData->at(i).angle);
-        ymax_i = -HSData->at(i).Xmin * sin(HSData->at(i).angle) + HSData->at(i).Ymax * cos(HSData->at(i).angle);
+        // Границы локации переводятся в исходную систему координат
+        getRotated(xmin_i, ymin_i, HSData->at(i).Xmin, HSData->at(i).Ymin, HSData->at(i).angle, Direction::Backward);
+        getRotated(xmax_i, ymax_i, HSData->at(i).Xmax, HSData->at(i).Ymax, HSData->at(i).angle, Direction::Backward);
         if(xmin_i < Xmin ) Xmin = xmin_i;
         if(xmax_i > Xmax ) Xmax = xmax_i;
         if(ymin_i < Ymin ) Xmin = ymin_i;

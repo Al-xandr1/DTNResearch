@@ -11,6 +11,7 @@
 #include <string>
 #include "stlutils.h"
 #include <omnetpp.h>
+#include "Coord.h"
 
 using namespace std;
 
@@ -129,6 +130,34 @@ double* extractDoubleParameter(const char* fileName, const char* parameter);
  * Значение параметра находиться после указанного имени параметра между знаками = и _
  */
 const char* extractParameter(const char* fileName, const char* parameter);
+
+/**
+ * Направление поворота точек.
+ */
+enum Direction {
+    Forward = 1,    // движение ПРОТИВ часовой стрелки? (ПОЛОЖИТЕЛЬНОЕ направление)
+    Backward = -1   // движение ПО часовой стрелке? (ОТРИЦАТЕЛЬНОЕ направление)
+};
+
+/**
+ * Поворот точки на определёный угол в зависимости от направления.
+ */
+void rotate(Coord &point, double angle, Direction);
+
+/**
+ * Получение входной точки Coord inPoint в повёрнутом виде (outX, outY) на определённый угол.
+ */
+void getRotated(double &outX, double &outY, Coord inPoint, double angle, Direction dir);
+
+/**
+ * Получение входной точки (inX, inY) в повёрнутом виде (outX, outY) на определённый угол.
+ */
+void getRotated(double &outX, double &outY, double inX, double inY, double angle, Direction dir);
+
+/**
+ * Поворот точки на определёный угол в зависимости от направления.
+ */
+void rotate(double &x, double &y, double angle, Direction);
 
 /**
  * Получение суммы элементов вектора

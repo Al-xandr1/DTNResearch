@@ -31,7 +31,7 @@ struct Location {
     char name[256];
 };
 
-struct OptLoc {              // !!!
+struct OptLoc {
     double angle;
     double Xmin, Xmax, Ymin, Ymax;
     double sumTime;
@@ -59,7 +59,7 @@ protected:
 
     int NumOfHotSpots;
     vector<Location> Locs;
-    vector<OptLoc> OptLocs;       // !!!
+    vector<OptLoc> OptLocs;
 
 public:
     HotSpotFinder(char *boundFile, bool skipEmptyHotSpots, double delta, double r);
@@ -76,7 +76,7 @@ public:
 
     void makeAllSpots(char *hotSpotFilesDir);
 
-    void optimizeHotSpotAngle(Cluster& HotSpot, OptLoc& optLc);   // !!!
+    void optimizeHotSpotAngle(Cluster &HotSpot, OptLoc &optLc);
 };
 
 HotSpotFinder::HotSpotFinder(char *boundFile, bool skipEmptyHotSpots = false, double delta = 70, double r = 100) {
@@ -237,7 +237,7 @@ void HotSpotFinder::makeAllSpots(char *hotSpotFilesDir) {
         char num[5];
         char name[128];
         char buffer[256];
-        sprintf(num,"%d",NumOfHotSpots);
+        sprintf(num, "%d", NumOfHotSpots);
         strcpy(name, "hotSpot");
         strcat(name, num);
         strcat(name, ".hts");
@@ -254,7 +254,7 @@ void HotSpotFinder::makeAllSpots(char *hotSpotFilesDir) {
         strcpy(lc.name, name);
         Locs.push_back(lc);
 
-        OptLoc optLc;     // !!!
+        OptLoc optLc;
         optimizeHotSpotAngle(HotSpot, optLc);
         strcpy(optLc.name, name);
         OptLocs.push_back(optLc);
@@ -271,54 +271,58 @@ void HotSpotFinder::makeAllSpots(char *hotSpotFilesDir) {
     lcfile.close();
 
     ofstream opfile("optlocs.loc");
-    for(unsigned int i=0; i<OptLocs.size(); i++) {
-        opfile<<(OptLocs[i]).angle<<"\t";
-        opfile<<(OptLocs[i]).name<<"\t"<<(OptLocs[i]).sumTime<<"\t"<<"\t"<<(OptLocs[i]).wPoints<<"\t"<<"\t";
-        opfile<<(OptLocs[i]).Xmin<<"\t"<<(OptLocs[i]).Xmax<<"\t";
-        opfile<<(OptLocs[i]).Ymin<<"\t"<<(OptLocs[i]).Ymax<<endl;
+    for (unsigned int i = 0; i < OptLocs.size(); i++) {
+        opfile << (OptLocs[i]).angle << "\t";
+        opfile << (OptLocs[i]).name << "\t" << (OptLocs[i]).sumTime << "\t" << "\t" << (OptLocs[i]).wPoints << "\t" << "\t";
+        opfile << (OptLocs[i]).Xmin << "\t" << (OptLocs[i]).Xmax << "\t";
+        opfile << (OptLocs[i]).Ymin << "\t" << (OptLocs[i]).Ymax << endl;
     }
     opfile.close();
 }
 
 
-// !!!!!!!!!!!!!!!!!!!!!!!!
-void HotSpotFinder::optimizeHotSpotAngle(Cluster& HotSpot, OptLoc& optLc)
-{
-    double AngleStep = 5*2*3.1415926/360; // шаг 5 градусов
-    int S=(int)ceil((3.1415926/2-AngleStep)/AngleStep);
+void HotSpotFinder::optimizeHotSpotAngle(Cluster &HotSpot, OptLoc &optLc) {
+    double AngleStep = 5 * 2 * 3.1415926 / 360; // шаг 5 градусов
+    int S = (int) ceil((3.1415926 / 2 - AngleStep) / AngleStep);
     double x_min[S], x_max[S], y_min[S], y_max[S], min_square, opt_angle;
     int opt_index;
 
-    for(int i=0; i<S; i++) {
-        x_min[i] = x_max[i]=cos(i*AngleStep)*(HotSpot.waypoint)[0].X - sin(i*AngleStep)*(HotSpot.waypoint)[0].Y;
-        y_min[i] = y_max[i]=sin(i*AngleStep)*(HotSpot.waypoint)[0].X + cos(i*AngleStep)*(HotSpot.waypoint)[0].Y;
+    for (int i = 0; i < S; i++) {
+        x_min[i] = x_max[i] =
+                cos(i * AngleStep) * (HotSpot.waypoint)[0].X - sin(i * AngleStep) * (HotSpot.waypoint)[0].Y;
+        y_min[i] = y_max[i] =
+                sin(i * AngleStep) * (HotSpot.waypoint)[0].X + cos(i * AngleStep) * (HotSpot.waypoint)[0].Y;
     }
 
-    for(unsigned int w=1; w<(HotSpot.waypoint).size(); w++){
-        for(int i=0; i<S; i++) {
-             double x,y;
-             x = cos(i*AngleStep)*(HotSpot.waypoint)[w].X - sin(i*AngleStep)*(HotSpot.waypoint)[w].Y;
-             y = sin(i*AngleStep)*(HotSpot.waypoint)[w].X + cos(i*AngleStep)*(HotSpot.waypoint)[w].Y;
-             if(x>x_max[i]) x_max[i]=x;
-             if(x<x_min[i]) x_min[i]=x;
-             if(y>y_max[i]) y_max[i]=y;
-             if(y<y_min[i]) y_min[i]=y;
+    for (unsigned int w = 1; w < (HotSpot.waypoint).size(); w++) {
+        for (int i = 0; i < S; i++) {
+            double x, y;
+            x = cos(i * AngleStep) * (HotSpot.waypoint)[w].X - sin(i * AngleStep) * (HotSpot.waypoint)[w].Y;
+            y = sin(i * AngleStep) * (HotSpot.waypoint)[w].X + cos(i * AngleStep) * (HotSpot.waypoint)[w].Y;
+            if (x > x_max[i]) x_max[i] = x;
+            if (x < x_min[i]) x_min[i] = x;
+            if (y > y_max[i]) y_max[i] = y;
+            if (y < y_min[i]) y_min[i] = y;
         }
     }
 
-    opt_index=0;
-    opt_angle=0;
-    min_square=(x_max[0]-x_min[0])*(y_max[0]-y_min[0]);
-    for(int i=1; i<S; i++)
-        if(min_square>(x_max[i]-x_min[i])*(y_max[i]-y_min[i])) {
-             min_square=(x_max[i]-x_min[i])*(y_max[i]-y_min[i]);
-             opt_index=i;
-             opt_angle=i*AngleStep;
+    opt_index = 0;
+    opt_angle = 0;
+    min_square = (x_max[0] - x_min[0]) * (y_max[0] - y_min[0]);
+    for (int i = 1; i < S; i++)
+        if (min_square > (x_max[i] - x_min[i]) * (y_max[i] - y_min[i])) {
+            min_square = (x_max[i] - x_min[i]) * (y_max[i] - y_min[i]);
+            opt_index = i;
+            opt_angle = i * AngleStep;
         }
 
-    optLc.angle=opt_angle;
-    optLc.Xmin=x_min[opt_index]; optLc.Xmax=x_max[opt_index]; optLc.Ymin=y_min[opt_index]; optLc.Ymax=y_max[opt_index];
-    optLc.sumTime=HotSpot.sumTime; optLc.wPoints=(HotSpot.waypoint).size();
+    optLc.angle = opt_angle;
+    optLc.Xmin = x_min[opt_index];
+    optLc.Xmax = x_max[opt_index];
+    optLc.Ymin = y_min[opt_index];
+    optLc.Ymax = y_max[opt_index];
+    optLc.sumTime = HotSpot.sumTime;
+    optLc.wPoints = (HotSpot.waypoint).size();
 }
 
 void HotSpotFinder::writeHotSpot(Cluster &HotSpot, char *SpotFileName) {

@@ -88,7 +88,7 @@ struct RootDataShort {
  */
 struct HotSpotData {
     char* hotSpotName;                                  // (READ-ONLY) имя локации
-    double angle;            // !!!                        (READ-ONLY) угол поворота
+    double angle;                                       // (READ-ONLY) угол поворота
     double Xmin, Xmax, Ymin, Ymax, Xcenter, Ycenter;    // (READ-ONLY) границы и центр локации
     double sumTime;                                     // (READ-ONLY) время нахождения в локации
     int waypointNum;                                    // (READ-ONLY) количество путевых точек в локации
@@ -110,7 +110,7 @@ struct HotSpotData {
 
     HotSpotData(char* hotSpotName, double Xmin, double Xmax, double Ymin, double Ymax, double sumTime, int waypointNum, double angle=0) {
         strcpy(this->hotSpotName = new char[256], hotSpotName);
-        this->angle = angle;        // !!!
+        this->angle = angle;
         this->Xmin = Xmin;
         this->Xmax = Xmax;
         this->Ymin = Ymin;

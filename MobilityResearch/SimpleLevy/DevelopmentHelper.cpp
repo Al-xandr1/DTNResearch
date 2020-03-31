@@ -179,3 +179,36 @@ double checkValue(const double value, const double maxPermittedValue, string whe
     ASSERT(value > 0 && value <= maxPermittedValue);
     return value;
 }
+
+void rotate(Coord &point, double angle, Direction dir) {
+    rotate(point.x, point.y, angle, dir);
+}
+
+void getRotated(double &outX, double &outY, Coord inPoint, double angle, Direction dir) {
+    getRotated(outX, outY, inPoint.x, inPoint.y, angle, dir);
+}
+
+void getRotated(double &outX, double &outY, double inX, double inY, double angle, Direction dir) {
+    outX = inX;
+    outY = inY;
+    rotate(outX, outY, angle, dir);
+}
+
+void rotate(double &x, double &y, double angle, Direction dir) {
+    double inX = x, inY = y;
+    switch (dir) {
+        case Forward:
+            x =  cos(angle)*inX - sin(angle)*inY;
+            y =  sin(angle)*inX + cos(angle)*inY;
+            break;
+
+        case Backward:
+            x =  cos(angle)*inX + sin(angle)*inY;
+            y = -sin(angle)*inX + cos(angle)*inY;
+            break;
+
+        default:
+            // Unreachable statement
+            exit(-94526);
+    }
+}
